@@ -1,0 +1,38 @@
+:root {
+  font-family: system-ui, -apple-system, sans-serif;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  padding-bottom: 0.5rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.workspace-name {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+.app-header nav {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
