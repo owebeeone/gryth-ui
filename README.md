@@ -14,6 +14,10 @@ Grip model:
   ("open the debugger").
 - **Doc scope** (`Doc.*`) — shared collaboration state.
 
+Coding rules: [dev-docs/CodingRules.md](dev-docs/CodingRules.md) — state is
+modeled **exclusively with grip**; `useState`/`useEffect` are banned (lint +
+test enforced). Working instructions: [AGENTS.md](AGENTS.md).
+
 ## Setup
 
 Requires sibling checkouts `../grip-core` and `../grip-react` with `dist/`

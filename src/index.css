@@ -1,38 +1,478 @@
 :root {
   font-family: system-ui, -apple-system, sans-serif;
   color-scheme: light dark;
+  /* Placeholder accent until the per-window colour pass lands. */
+  --accent: #5b8def;
 }
 
 body {
   margin: 0;
 }
 
-.app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1rem;
+html, body, #root {
+  height: 100%;
 }
 
-.app-header {
+/* Desktop shell: zen-style LHS sidebar + canvas. Theme presets set the
+   custom properties inline on this element (see desktop/themes.ts); borders
+   and tints derive from the text colour via currentColor mixes. */
+.desktop {
+  height: 100%;
   display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-  padding-bottom: 0.5rem;
+  flex-direction: row;
+  overflow: hidden; /* clip dragged windows at the app edge, not the canvas edge */
+  background: var(--bg, #e6e7ea);
+  color: var(--text, #2b2e33);
 }
 
-.app-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
+/* While a frame is being moved it may travel over the sidebar (drop targets
+   live there): un-clip the canvas and raise it into an explicit stacking
+   context so the dragged window paints ABOVE the sidebar in every engine —
+   implicit positioned-vs-flow paint order is not portable. */
+.desktop-canvas.dragging {
+  overflow: visible;
+  z-index: 1;
 }
 
-.workspace-name {
-  opacity: 0.6;
-  font-size: 0.9rem;
+.sidebar {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.6rem 0.5rem;
+  border-right: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  background: var(--panel, color-mix(in srgb, currentColor 6%, transparent));
+  font-size: 0.85rem;
 }
 
-.app-header nav {
+.sidebar.closed {
+  width: 44px;
+  align-items: center;
+  padding: 0.6rem 0.25rem;
+}
+.sidebar.closed .sidebar-desktops { flex-direction: column; }
+
+.sidebar-head { display: flex; align-items: center; }
+.sidebar-brand { font-weight: 700; padding: 0 0.25rem; }
+.sidebar-toggle {
   margin-left: auto;
-  display: flex;
-  gap: 0.5rem;
+  width: 1.6rem;
+  cursor: pointer;
 }
+.sidebar.closed .sidebar-toggle { margin-left: 0; }
+
+.sidebar-desktops {
+  display: flex;
+  gap: 0.3rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+/* Desktop thumbnails: flat mini-canvases, not native push buttons. */
+.desk-btn {
+  appearance: none;
+  position: relative;
+  width: 3rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+}
+.desk-btn:hover { border-color: color-mix(in srgb, currentColor 40%, transparent); }
+.desk-btn.current {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.desk-btn.drop { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+.thumb-box {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 1px;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+.thumb-box.focused {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.desk-num {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  font-size: 0.6rem;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.sidebar-launcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+.sidebar-launcher button { text-align: left; }
+
+.sidebar-windows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.side-win {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: left;
+}
+.side-win .gwin-id { margin-left: auto; }
+.side-win.focused {
+  outline: 1.5px solid var(--accent);
+  outline-offset: -1.5px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.side-win.minimized { opacity: 0.55; }
+.side-count {
+  font-size: 0.7rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 20%, transparent);
+}
+.side-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.side-group + .side-group { margin-top: 0.5rem; }
+.side-group-label {
+  appearance: none;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0 0.25rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  cursor: pointer;
+}
+span.side-group-label { cursor: default; }
+.side-group-label.current { color: var(--accent); opacity: 1; }
+
+.sidebar-workspace { opacity: 0.6; padding: 0 0.25rem; }
+
+.desktop-canvas {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, currentColor 6%, transparent), transparent 60%),
+    color-mix(in srgb, currentColor 3%, transparent);
+  /* wallpaper slice slides when switching desktops */
+  transition: background-position 0.3s ease;
+}
+
+.desktop:focus { outline: none; }
+
+/* Window chrome */
+.gwin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--win, Canvas);
+  box-shadow: 0 4px 16px color-mix(in srgb, currentColor 15%, transparent);
+  /* overview is the only transform user; entering AND exiting animate */
+  transform-origin: top left;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.gwin.overview { cursor: pointer; }
+.gwin.dimmed { opacity: 0.15; pointer-events: none; }
+
+.gwin.focused {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 8px 28px color-mix(in srgb, currentColor 30%, transparent);
+}
+.gwin.focused .gwin-titlebar {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.gwin.drop-target {
+  outline: 2px solid color-mix(in srgb, currentColor 70%, transparent);
+  outline-offset: 2px;
+}
+
+.gwin-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 32px; /* = ops.TITLEBAR_H: the header-drop hit band */
+  box-sizing: border-box;
+  padding: 0 0.6rem;
+  cursor: grab;
+  user-select: none;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.gwin-tabs { display: flex; gap: 0.25rem; overflow: hidden; }
+.gwin-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gwin-tab.active {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border-color: color-mix(in srgb, currentColor 25%, transparent);
+}
+.gwin-tab-close { opacity: 0.5; padding: 0 0.1rem; }
+.gwin-tab-close:hover { opacity: 1; }
+
+.gwin-title { font-weight: 600; font-size: 0.85rem; }
+.gwin-id { opacity: 0.45; font-size: 0.75rem; }
+.gwin-controls { margin-left: auto; display: flex; gap: 0.25rem; }
+.gwin-controls button {
+  width: 1.5rem;
+  line-height: 1.1rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.gwin-controls button:hover { background: color-mix(in srgb, currentColor 18%, transparent); }
+
+.gwin-body { flex: 1; overflow: auto; }
+.facet-pad { padding: 0.9rem; }
+.facet-pad h2 { margin-top: 0; }
+
+.gwin-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, color-mix(in srgb, currentColor 35%, transparent) 50%);
+}
+
+/* Drag overlay: captures mouse movement as React events while a drag grip is
+   set. Fixed over the WHOLE app so drops on sidebar desktop icons work. */
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.drag-overlay.move { cursor: grabbing; }
+.drag-overlay.resize { cursor: nwse-resize; }
+.drag-overlay.tab { cursor: grabbing; }
+
+.tab-ghost {
+  position: absolute;
+  z-index: 1001;
+  pointer-events: none;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  background: var(--win, Canvas);
+  box-shadow: 0 4px 12px color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.gwin-sticky, .side-sticky { opacity: 0.6; font-size: 0.8rem; }
+
+/* Edge snap: dock (top center, under the drag overlay) + preview outline */
+.snap-dock {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 8px;
+  background: var(--win, Canvas);
+  box-shadow: 0 6px 20px color-mix(in srgb, currentColor 25%, transparent);
+  z-index: 900;
+}
+.snap-zone {
+  position: relative;
+  width: 42px;
+  height: 26px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+.snap-zone::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+}
+.snap-zone.left::before { right: 50%; }
+.snap-zone.right::before { left: 50%; }
+.snap-zone.active { border-color: var(--accent); }
+.snap-zone.active::before { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+
+.snap-preview {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+  z-index: 850;
+  transition: left 0.12s ease, width 0.12s ease;
+  /* on first appearance, grow out of the dragged window (rect passed via
+     --fx/--fy/--fw/--fh custom properties) */
+  animation: snap-grow 0.18s ease;
+}
+
+@keyframes snap-grow {
+  from {
+    left: var(--fx, 0);
+    top: var(--fy, 0);
+    width: var(--fw, 100%);
+    height: var(--fh, 100%);
+    opacity: 0.3;
+  }
+}
+.snap-preview.full { left: 0; width: 100%; }
+.snap-preview.left { left: 0; width: 50%; }
+.snap-preview.right { left: 50%; width: 50%; }
+
+/* Titlebar context menu */
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+}
+.win-menu {
+  position: absolute;
+  z-index: 1600;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 8px;
+  background: var(--win, Canvas);
+  box-shadow: 0 8px 24px color-mix(in srgb, currentColor 30%, transparent);
+  font-size: 0.85rem;
+}
+.win-menu button {
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0.3rem 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.win-menu button:hover:not(:disabled) { background: color-mix(in srgb, currentColor 12%, transparent); }
+.win-menu button:disabled { opacity: 0.5; }
+.win-menu hr { border: none; border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); margin: 0.2rem 0; }
+
+
+/* Settings facet */
+.settings-facet h3 { margin: 0.4rem 0 0.5rem; }
+.settings-facet h3 + .theme-grid { margin-bottom: 1rem; }
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.theme-card {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  text-align: left;
+}
+.theme-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.theme-swatch {
+  position: relative;
+  width: 52px;
+  height: 34px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  overflow: hidden;
+  flex: none;
+}
+.theme-swatch-win {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 28px;
+  height: 20px;
+  border-radius: 2px;
+  font-size: 0.6rem;
+  line-height: 20px;
+  text-align: center;
+}
+.theme-swatch-accent {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.settings-hint { opacity: 0.6; font-size: 0.8rem; margin: 0 0 0.4rem; }
+.settings-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 5px;
+  background: var(--win, Canvas);
+  color: inherit;
+}
+.settings-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+/* Desktop-switch slide: outgoing windows exit opposite to travel, incoming
+   enter from the travel side. Cleared on animationend (Desktop canvas). */
+.gwin.desk-enter-right { animation: desk-enter-right 0.28s ease; }
+.gwin.desk-enter-left { animation: desk-enter-left 0.28s ease; }
+.gwin.desk-exit-left { animation: desk-exit-left 0.28s ease forwards; pointer-events: none; }
+.gwin.desk-exit-right { animation: desk-exit-right 0.28s ease forwards; pointer-events: none; }
+@keyframes desk-enter-right { from { transform: translateX(100vw); } }
+@keyframes desk-enter-left { from { transform: translateX(-100vw); } }
+@keyframes desk-exit-left { to { transform: translateX(-100vw); } }
+@keyframes desk-exit-right { to { transform: translateX(100vw); } }
