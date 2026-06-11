@@ -7,12 +7,15 @@ import {
   detachTab, moveTab, sendToDesktop, setSticky, isOnDesktop,
   moveWindowFree, overviewLayout, snapRect, snapWindow, unsnapSize,
   clampAllWindows,
+  areaRects, splitArea, closeArea, setSplitSizes,
+  placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
+  dockOrMerge, probeArea, normalizeFoundations, captureGrid,
 } from './ops';
-import type { WindowRecord } from '../grips.desktop';
+import type { FacetKind, LayoutNode, WindowRecord } from '../grips.desktop';
 
 const SIZE = { w: 400, h: 300 };
 
-function openMany(kinds: ('welcome' | 'chat')[]): WindowRecord[] {
+function openMany(kinds: FacetKind[]): WindowRecord[] {
   let list: WindowRecord[] = [];
   for (const k of kinds) list = openWindow(list, k, SIZE).list;
   return list;
@@ -242,6 +245,279 @@ describe('desktop ops', () => {
     // a manual resize forgets the snap memory
     const resized = resizeWindow(resnapped, id, 500, 400);
     expect(resized[0].presnap).toBeUndefined();
+  });
+
+  it('computes nested area rects from a layout tree', () => {
+    const tree: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [
+        { id: 'sidebar', size: 20 },
+        {
+          id: 'main', size: 80, direction: 'column',
+          children: [{ id: 'editor', size: 70 }, { id: 'term', size: 30 }],
+        },
+      ],
+    };
+    const rects = areaRects(tree, { x: 0, y: 0, w: 1000, h: 800 });
+    expect(rects.get('sidebar')).toEqual({ x: 0, y: 0, w: 200, h: 800 });
+    expect(rects.get('editor')).toEqual({ x: 200, y: 0, w: 800, h: 560 });
+    expect(rects.get('term')).toEqual({ x: 200, y: 560, w: 800, h: 240 });
+    expect(rects.has('main')).toBe(false); // interior nodes are not areas
+  });
+
+  it('splits a box (area id stays on the original), closes back, resizes splits', () => {
+    const tree: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'sidebar', size: 20 }, { id: 'editor', size: 80 }],
+    };
+    const split = splitArea(tree, 'editor', 'column');
+    const rects = areaRects(split.layout, { x: 0, y: 0, w: 1000, h: 800 });
+    // original keeps its id (docks stay valid) and the top half
+    expect(rects.get('editor')).toEqual({ x: 200, y: 0, w: 800, h: 400 });
+    expect(rects.get(split.newAreaId)).toEqual({ x: 200, y: 400, w: 800, h: 400 });
+
+    // newFirst places the new area on the leading side (left/top edge drops)
+    const before = splitArea(tree, 'editor', 'column', true);
+    expect(areaRects(before.layout, { x: 0, y: 0, w: 1000, h: 800 }).get(before.newAreaId))
+      .toEqual({ x: 200, y: 0, w: 800, h: 400 });
+
+    // closing the new area collapses back to the original shape
+    const closed = closeArea(split.layout, split.newAreaId);
+    expect(areaRects(closed, { x: 0, y: 0, w: 1000, h: 800 }).get('editor'))
+      .toEqual({ x: 200, y: 0, w: 800, h: 800 });
+    // the root leaf cannot be closed away
+    const single: LayoutNode = { id: 'only', size: 100 };
+    expect(closeArea(single, 'only')).toBe(single);
+
+    // splitter resize with a minimum-fraction clamp
+    const resized = setSplitSizes(tree, 'root', 0, 35, 65);
+    expect(areaRects(resized, { x: 0, y: 0, w: 1000, h: 800 }).get('sidebar')!.w).toBe(350);
+    const clamped = setSplitSizes(tree, 'root', 0, 1, 99);
+    const w = areaRects(clamped, { x: 0, y: 0, w: 1000, h: 800 }).get('sidebar')!.w;
+    expect(w).toBeGreaterThan(50); // not allowed to vanish
+    // an EMPTY side may shrink to a sliver (occupancy-aware minimum)
+    const sliver = setSplitSizes(tree, 'root', 0, 1, 99, 0.02, 0.08);
+    expect(areaRects(sliver, { x: 0, y: 0, w: 1000, h: 800 }).get('sidebar')!.w).toBe(20);
+  });
+
+  it('opens a foundation, adopts floaters, places docked windows, and reverts on close', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const DEF = { layout: TREE, designate: { chat: 'crew' as const }, fallback: 'stage' };
+    let list = openMany(['chat', 'welcome']);
+    list = setSticky(list, list[1].id, true); // sticky welcome must be skipped
+    const chatFloat = { x: list[0].x, y: list[0].y };
+
+    const out = openFoundation(list, 1, DEF);
+    const f = out.list.find((w) => w.id === out.id)!;
+    expect(f.foundation?.layout).toBe(TREE);
+    const chat = out.list.find((w) => w.tabs[0]?.facet === 'chat')!;
+    expect(chat.dock).toEqual({ foundation: out.id, area: 'crew' });
+    expect(out.list.find((w) => w.tabs[0]?.facet === 'welcome')!.dock).toBeUndefined();
+
+    // placement: foundation maximized and headerless — areas span the whole
+    // canvas; float memory intact
+    const placed = placeWindows(out.list, { w: 1000, h: 832 });
+    const pf = placed.find((w) => w.id === out.id)!;
+    expect(pf).toMatchObject({ x: 0, y: 0, w: 1000, h: 832 });
+    const pc = placed.find((w) => w.id === chat.id)!;
+    expect(pc).toMatchObject({ x: 0, y: 0, w: 300, h: 832 });
+    expect(chat.x).toBe(chatFloat.x); // record geometry untouched
+
+    // docking to a missing area degrades to float placement
+    const lost = dockWindow(out.list, chat.id, out.id, 'nope');
+    expect(placeWindows(lost, { w: 1000, h: 832 }).find((w) => w.id === chat.id))
+      .toMatchObject({ x: chatFloat.x, y: chatFloat.y });
+
+    // undock and close-foundation both restore float geometry
+    expect(undockWindow(out.list, chat.id).find((w) => w.id === chat.id)!.dock).toBeUndefined();
+    const closedList = closeFoundation(out.list, out.id);
+    expect(closedList.find((w) => w.id === out.id)).toBeUndefined();
+    expect(closedList.find((w) => w.id === chat.id)!.dock).toBeUndefined();
+  });
+
+  it('tabs windows together when an area is multiply allocated', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const DEF = { layout: TREE, designate: { chat: 'crew' as const, terminal: 'stage' as const }, fallback: 'stage' };
+    // adoption: welcome (fallback->stage) and terminal (designated->stage)
+    // must end up as ONE tabbed frame in the stage
+    const list = openMany(['welcome', 'terminal']);
+    const out = openFoundation(list, 1, DEF);
+    const stageFrames = out.list.filter((w) => w.dock?.area === 'stage');
+    expect(stageFrames).toHaveLength(1);
+    expect(stageFrames[0].tabs.map((t) => t.facet).sort()).toEqual(['terminal', 'welcome']);
+
+    // dockOrMerge: docking into an occupied area tabs into the occupant
+    const chat = openWindow(out.list, 'chat', SIZE, 1);
+    const merged = dockOrMerge(chat.list, chat.id, out.id, 'stage');
+    expect(merged.frameId).toBe(stageFrames[0].id);
+    expect(merged.list.find((w) => w.id === chat.id)).toBeUndefined(); // frame absorbed
+    expect(merged.list.find((w) => w.id === merged.frameId)!.tabs).toHaveLength(3);
+    // and into a hole it just docks
+    const solo = dockOrMerge(chat.list, chat.id, out.id, 'crew');
+    expect(solo.frameId).toBe(chat.id);
+    expect(solo.list.find((w) => w.id === chat.id)!.dock).toEqual({ foundation: out.id, area: 'crew' });
+  });
+
+  it('collapses ephemeral split areas when their last occupant leaves; preset holes persist', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const DEF = { layout: TREE, designate: {}, fallback: 'stage' };
+    const base = openFoundation(openMany(['welcome', 'chat']), 1, DEF); // both tabbed into stage
+    const fid = base.id;
+
+    // edge-drop style: ephemeral split of the stage, dock a detached chat there
+    const f = base.list.find((w) => w.id === fid)!;
+    const split = splitArea(f.foundation!.layout, 'stage', 'column', false, true);
+    let list = base.list.map((w) => (w.id === fid
+      ? { ...w, foundation: { ...w.foundation!, layout: split.layout } }
+      : w));
+    const stageFrame = list.find((w) => w.dock?.area === 'stage')!;
+    const chatTab = stageFrame.tabs.find((t) => t.facet === 'chat')!;
+    const out = detachTab(list, stageFrame.id, chatTab.id, { x: 0, y: 0 }, SIZE, 1);
+    list = dockOrMerge(out.list, out.id, fid, split.newAreaId).list;
+    expect(areaRects(list.find((w) => w.id === fid)!.foundation!.layout, { x: 0, y: 0, w: 100, h: 100 }).size).toBe(3);
+
+    // undocking the chat empties the ephemeral area -> it merges back
+    const after = undockWindow(list, out.id);
+    const layout = after.find((w) => w.id === fid)!.foundation!.layout;
+    const rects = areaRects(layout, { x: 0, y: 0, w: 1000, h: 800 });
+    expect(rects.size).toBe(2); // crew + stage only
+    expect(rects.get('stage')).toEqual({ x: 300, y: 0, w: 700, h: 800 }); // full height again
+
+    // the PRESET crew hole persists (decided: dockable holes remain)
+    expect(rects.has('crew')).toBe(true);
+
+    // a minimized occupant still counts as a reference: no collapse
+    const split2 = splitArea(layout, 'stage', 'column', false, true);
+    let list2 = after.map((w) => (w.id === fid
+      ? { ...w, foundation: { ...w.foundation!, layout: split2.layout } }
+      : w));
+    list2 = dockOrMerge(list2, out.id, fid, split2.newAreaId).list;
+    list2 = minimizeWindow(list2, out.id, true);
+    list2 = normalizeFoundations(list2);
+    expect(areaRects(list2.find((w) => w.id === fid)!.foundation!.layout, { x: 0, y: 0, w: 100, h: 100 }).size).toBe(3);
+
+    // closing an area out from under a docked window clears the dangling dock
+    const orphaned = list2.map((w) => (w.id === fid
+      ? { ...w, foundation: { ...w.foundation!, layout: closeArea(w.foundation!.layout, split2.newAreaId) } }
+      : w));
+    const normal = normalizeFoundations(orphaned);
+    expect(normal.find((w) => w.id === out.id)!.dock).toBeUndefined();
+
+    // identity preserved when nothing changes
+    const stable = normalizeFoundations(normal);
+    expect(stable).toBe(normal);
+  });
+
+  it('migrates ephemeral occupants home when the original half empties (expand-back)', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'column',
+      children: [{ id: 'stage', size: 70 }, { id: 'pulse', size: 30 }],
+    };
+    const DEF = { layout: TREE, designate: { terminal: 'pulse' as const }, fallback: 'stage' };
+    // terminal t1 adopted into pulse; split pulse's top edge for terminal t2
+    const base = openFoundation(openMany(['terminal']), 1, DEF);
+    const fid = base.id;
+    const t1 = base.list.find((w) => w.dock)!;
+    const split = splitArea(base.list.find((w) => w.id === fid)!.foundation!.layout, 'pulse', 'column', true, true);
+    let list = base.list.map((w) => (w.id === fid
+      ? { ...w, foundation: { ...w.foundation!, layout: split.layout } }
+      : w));
+    const t2 = openWindow(list, 'terminal', SIZE, 1);
+    list = dockOrMerge(t2.list, t2.id, fid, split.newAreaId).list;
+
+    // t1 (in the original 'pulse') closes -> t2 must EXPAND into pulse:
+    // occupants of the ephemeral half migrate home and the split collapses
+    const after = closeWindow(list, t1.id);
+    const t2After = after.find((w) => w.id === t2.id)!;
+    expect(t2After.dock).toEqual({ foundation: fid, area: 'pulse' });
+    const rects = areaRects(after.find((w) => w.id === fid)!.foundation!.layout, { x: 0, y: 0, w: 1000, h: 1000 });
+    expect(rects.size).toBe(2);
+    expect(rects.get('pulse')).toEqual({ x: 0, y: 700, w: 1000, h: 300 }); // full pulse again
+  });
+
+  it('grid memory round-trips: unlock stashes, re-lock restores layout and assignments', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const DEF = { layout: TREE, designate: { chat: 'crew' as const }, fallback: 'stage' };
+    const out = openFoundation(openMany(['chat', 'welcome']), 1, DEF);
+    // user customizes: persistent split of the stage, welcome moved into it
+    const f0 = out.list.find((w) => w.id === out.id)!;
+    const split = splitArea(f0.foundation!.layout, 'stage', 'column');
+    let list = out.list.map((w) => (w.id === out.id
+      ? { ...w, foundation: { ...w.foundation!, layout: split.layout } }
+      : w));
+    const welcome = list.find((w) => w.tabs[0].facet === 'welcome')!;
+    list = dockOrMerge(list, welcome.id, out.id, split.newAreaId).list;
+
+    // unlock: capture then close
+    const stash = captureGrid(list, 1)!;
+    expect(stash.assignments[welcome.id]).toBe(split.newAreaId);
+    const floated = closeFoundation(list, out.id);
+    expect(floated.every((w) => !w.dock && !w.foundation)).toBe(true);
+
+    // re-lock with the stash: same layout, same homes
+    const relock = openFoundation(floated, 1, stash.def, stash.assignments);
+    const welcomeBack = relock.list.find((w) => w.id === welcome.id)!;
+    expect(welcomeBack.dock).toEqual({ foundation: relock.id, area: split.newAreaId });
+    const rects = areaRects(relock.list.find((w) => w.id === relock.id)!.foundation!.layout, { x: 0, y: 0, w: 100, h: 100 });
+    expect([...rects.keys()].sort()).toEqual(['crew', 'stage', split.newAreaId].sort());
+
+    // an assignment to a vanished area degrades to designate/fallback
+    const badStash = { ...stash, assignments: { [welcome.id]: 'nope' } };
+    const relock2 = openFoundation(floated, 1, badStash.def, badStash.assignments);
+    expect(relock2.list.find((w) => w.id === welcome.id)!.dock?.area).toBe('stage');
+
+    // no foundation -> no stash
+    expect(captureGrid(floated, 1)).toBeNull();
+  });
+
+  it('clears the dock when a docked single-tab frame is tab-dragged out', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const out = openFoundation(openMany(['chat']), 1, { layout: TREE, designate: {}, fallback: 'stage' });
+    const chat = out.list.find((w) => w.dock)!;
+    const moved = detachTab(out.list, chat.id, chat.tabs[0].id, { x: 50, y: 60 }, SIZE, 1);
+    expect(moved.list.find((w) => w.id === chat.id)!.dock).toBeUndefined();
+    expect(moved.list.find((w) => w.id === chat.id)).toMatchObject({ x: 50, y: 60 });
+  });
+
+  it('probes areas for center-dock, occupant-merge, and edge-split intents', () => {
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 50 }, { id: 'stage', size: 50 }],
+    };
+    const DEF = { layout: TREE, designate: {}, fallback: 'stage' };
+    const out = openFoundation(openMany(['chat']), 1, DEF); // chat -> stage
+    const size = { w: 1000, h: 832 }; // body: y 32, areas 500px wide, 800 tall
+    // center of the empty crew area -> hole dock
+    expect(probeArea(out.list, size, 1, 250, 432, 28))
+      .toMatchObject({ areaId: 'crew', occupantId: null, edge: null });
+    // center of the occupied stage -> occupant merge
+    const chatFrame = out.list.find((w) => w.dock)!;
+    expect(probeArea(out.list, size, 1, 750, 432, 28))
+      .toMatchObject({ areaId: 'stage', occupantId: chatFrame.id, edge: null });
+    // near the OCCUPIED stage's right edge -> split intent
+    expect(probeArea(out.list, size, 1, 990, 432, 28))
+      .toMatchObject({ areaId: 'stage', edge: 'right' });
+    // near the EMPTY crew's top edge -> NO split: an empty box cannot be
+    // split; the whole hole is the drop target
+    expect(probeArea(out.list, size, 1, 250, 50, 28))
+      .toMatchObject({ areaId: 'crew', occupantId: null, edge: null });
+    // no foundation on desktop 2
+    expect(probeArea(out.list, size, 2, 250, 432, 28)).toBeNull();
   });
 
   it('lays out an overview grid with true scaling, inside the area', () => {

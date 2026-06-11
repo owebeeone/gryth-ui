@@ -10,9 +10,16 @@ import {
   WINDOW_MENU, WINDOW_MENU_TAP,
   DESKTOP_OVERVIEW, DESKTOP_OVERVIEW_TAP,
   DESK_SLIDE, DESK_SLIDE_TAP,
+  AREA_MENU, AREA_MENU_TAP,
+  CANVAS_SIZE, CANVAS_SIZE_TAP,
+  DESKTOP_ZOOM, DESKTOP_ZOOM_TAP,
+  DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP,
+  DESKTOP_GRID_MEMORY, DESKTOP_GRID_MEMORY_TAP,
   DESKTOP_THEME, DESKTOP_THEME_TAP,
   DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_TAP,
   DESKTOP_WALLPAPER_THEMED, DESKTOP_WALLPAPER_THEMED_TAP,
+  TICKER_HOVER, TICKER_HOVER_TAP,
+  TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
 import { openWindow } from './desktop/ops';
 
@@ -67,6 +74,26 @@ export const DeskSlideTap = createAtomValueTap(DESK_SLIDE, {
   initial: null,
   handleGrip: DESK_SLIDE_TAP,
 });
+export const AreaMenuTap = createAtomValueTap(AREA_MENU, {
+  initial: null,
+  handleGrip: AREA_MENU_TAP,
+});
+export const CanvasSizeTap = createAtomValueTap(CANVAS_SIZE, {
+  initial: { w: 0, h: 0 },
+  handleGrip: CANVAS_SIZE_TAP,
+});
+export const DesktopZoomTap = createAtomValueTap(DESKTOP_ZOOM, {
+  initial: 1,
+  handleGrip: DESKTOP_ZOOM_TAP,
+});
+export const DesktopFontScaleTap = createAtomValueTap(DESKTOP_FONT_SCALE, {
+  initial: 10,
+  handleGrip: DESKTOP_FONT_SCALE_TAP,
+});
+export const DesktopGridMemoryTap = createAtomValueTap(DESKTOP_GRID_MEMORY, {
+  initial: {},
+  handleGrip: DESKTOP_GRID_MEMORY_TAP,
+});
 export const DesktopThemeTap = createAtomValueTap(DESKTOP_THEME, {
   initial: 'light',
   handleGrip: DESKTOP_THEME_TAP,
@@ -78,6 +105,14 @@ export const DesktopWallpaperTap = createAtomValueTap(DESKTOP_WALLPAPER, {
 export const DesktopWallpaperThemedTap = createAtomValueTap(DESKTOP_WALLPAPER_THEMED, {
   initial: true,
   handleGrip: DESKTOP_WALLPAPER_THEMED_TAP,
+});
+export const TickerHoverTap = createAtomValueTap(TICKER_HOVER, {
+  initial: null,
+  handleGrip: TICKER_HOVER_TAP,
+});
+export const TickerBleedTap = createAtomValueTap(TICKER_BLEED, {
+  initial: null,
+  handleGrip: TICKER_BLEED_TAP,
 });
 
 export function registerAllTaps() {
@@ -94,4 +129,11 @@ export function registerAllTaps() {
   grok.registerTap(DesktopWallpaperTap);
   grok.registerTap(DesktopWallpaperThemedTap);
   grok.registerTap(DeskSlideTap);
+  grok.registerTap(AreaMenuTap);
+  grok.registerTap(CanvasSizeTap);
+  grok.registerTap(DesktopZoomTap);
+  grok.registerTap(DesktopFontScaleTap);
+  grok.registerTap(DesktopGridMemoryTap);
+  grok.registerTap(TickerHoverTap);
+  grok.registerTap(TickerBleedTap);
 }

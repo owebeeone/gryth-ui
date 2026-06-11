@@ -8,21 +8,36 @@ import {
   DESK_SLIDE, DESK_SLIDE_TAP,
   SIDEBAR_OPEN, SIDEBAR_OPEN_TAP,
   DESKTOP_THEME, DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_THEMED,
+  DESKTOP_ZOOM, DESKTOP_FONT_SCALE,
+  DESKTOP_GRID_MEMORY_TAP,
   WINDOW_DRAG, WINDOW_DRAG_TAP,
   WINDOW_MENU, WINDOW_MENU_TAP,
-  type FacetKind, type SnapTarget, type WindowRecord,
+  AREA_MENU, AREA_MENU_TAP,
+  CANVAS_SIZE, CANVAS_SIZE_TAP,
+  TICKER_BLEED, TICKER_BLEED_TAP,
+  type AreaEdge, type FacetKind, type SnapTarget, type WindowRecord,
 } from '../grips.desktop';
-import { SCHEME_WALLPAPERS, THEMES } from './themes';
-import { observeCanvas } from './canvasGuard';
 import { WORKSPACE_NAME } from '../grips';
 import {
   DESKTOP_IDS,
-  detachTab, hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
-  moveWindow, moveWindowFree, openWindow, overviewLayout, raiseWindow,
-  resizeWindow, sendToDesktop, setSticky, snapWindow, unsnapSize,
+  areaOccupants, captureGrid, childLeafIds, closeArea, closeFoundation,
+  detachTab, dockOrMerge, foundationOn,
+  hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
+  moveWindow, moveWindowFree, openFoundation, openWindow, overviewLayout,
+  placeWindows, probeArea, raiseWindow, resizeWindow, selectTab, sendToDesktop,
+  setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapSize,
+  type Rect,
 } from './ops';
 import { FACETS, FACET_KINDS } from './facets';
+import { SCHEME_WALLPAPERS, THEMES } from './themes';
+import { HUB } from './foundations';
+import { observeCanvas } from './canvasGuard';
+import { bleedRect, tickerWidths } from './ticker';
+import { bleedCancel, bleedHold, bleedLeave } from './tickerBleed';
 import Window from './Window';
+import FoundationWindow from './FoundationWindow';
+import TickerStrip from './TickerStrip';
+import { tickerNaturals } from './tickerDom';
 
 // The desktop shell: collapsible zen-style LHS sidebar (launcher, virtual
 // desktops, vertical window list — topmost first) and the window canvas.
@@ -30,7 +45,8 @@ import Window from './Window';
 // while the instance-scope WINDOW_DRAG grip is set; no window.addEventListener,
 // no effects (see dev-docs/CodingRules.md). Header-on-header drop merges
 // frames into tabbed windows; tab chips drag out to re-float; frames and
-// tabs drop onto desktop icons to move between virtual desktops.
+// tabs drop onto desktop icons to move between virtual desktops; on a
+// desktop with a foundation (grid) window, empty areas are dockable holes.
 
 function hoveredDesktopIcon(clientX: number, clientY: number): number | null {
   const el = document.elementsFromPoint(clientX, clientY)
@@ -40,6 +56,10 @@ function hoveredDesktopIcon(clientX: number, clientY: number): number | null {
 
 const activeFacetOf = (w: WindowRecord): FacetKind =>
   (w.tabs.find((t) => t.id === w.activeTab) ?? w.tabs[0]).facet;
+
+// Docked windows live where their foundation lives.
+const hostOf = (list: WindowRecord[], w: WindowRecord): WindowRecord =>
+  (w.dock ? list.find((f) => f.id === w.dock!.foundation) ?? w : w);
 
 // Show the snap dock while a moving frame's pointer is this close to the
 // top of the canvas.
@@ -52,13 +72,23 @@ function hoveredSnapZone(clientX: number, clientY: number): SnapTarget | null {
 }
 
 function canvasSize(): { w: number; h: number } {
-  const r = document.querySelector('.desktop-canvas')!.getBoundingClientRect();
-  return { w: r.width, h: r.height };
+  // layout px (zoom-independent) — the space window geometry lives in
+  const el = document.querySelector('.desktop-canvas') as HTMLElement;
+  return { w: el.offsetWidth, h: el.offsetHeight };
 }
 
 // Stable ref callback (module scope) so React runs it once on mount instead
 // of stealing focus on every render.
 const focusOnMount = (el: HTMLDivElement | null) => el?.focus();
+
+// The half of an area an edge-drop would split off (preview + intent).
+const splitHalf = (r: Rect, edge: AreaEdge): Rect => (
+  edge === 'left' ? { x: r.x, y: r.y, w: r.w / 2, h: r.h }
+    : edge === 'right' ? { x: r.x + r.w / 2, y: r.y, w: r.w / 2, h: r.h }
+      : edge === 'top' ? { x: r.x, y: r.y, w: r.w, h: r.h / 2 }
+        : { x: r.x, y: r.y + r.h / 2, w: r.w, h: r.h / 2 });
+
+const EDGE_BAND = 28;
 
 export default function Desktop() {
   const windows = useGrip(DESKTOP_WINDOWS) ?? [];
@@ -73,6 +103,8 @@ export default function Desktop() {
   const dragTap = useGrip(WINDOW_DRAG_TAP);
   const menu = useGrip(WINDOW_MENU) ?? null;
   const menuTap = useGrip(WINDOW_MENU_TAP);
+  const areaMenu = useGrip(AREA_MENU) ?? null;
+  const areaMenuTap = useGrip(AREA_MENU_TAP);
   const overview = useGrip(DESKTOP_OVERVIEW) ?? null;
   const overviewTap = useGrip(DESKTOP_OVERVIEW_TAP);
   const slide = useGrip(DESK_SLIDE) ?? null;
@@ -80,14 +112,18 @@ export default function Desktop() {
   const themeId = useGrip(DESKTOP_THEME) ?? 'light';
   const wallpaper = useGrip(DESKTOP_WALLPAPER) ?? '';
   const wallpaperThemed = useGrip(DESKTOP_WALLPAPER_THEMED) ?? true;
+  const uiZoom = useGrip(DESKTOP_ZOOM) ?? 1;
+  const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
+  const gridMemoryTap = useGrip(DESKTOP_GRID_MEMORY_TAP);
+  const canvas = useGrip(CANVAS_SIZE) ?? { w: 0, h: 0 };
+  const canvasTap = useGrip(CANVAS_SIZE_TAP);
+  const bleed = useGrip(TICKER_BLEED) ?? null;
+  const bleedTap = useGrip(TICKER_BLEED_TAP);
   const workspace = useGrip(WORKSPACE_NAME);
 
   const theme = THEMES[themeId];
   // Wallpaper: cover semantics, so the image's aspect ratio survives any
-  // canvas resize. The image is scaled to cover one desktop view; whatever
-  // horizontal overhang it has is panned across the desktops (a ~4x-wide
-  // image gives the full continuous-world slide; a screen-aspect image
-  // barely moves). Custom URL wins; otherwise the theme's scheme default
+  // canvas resize. Custom URL wins; otherwise the theme's scheme default
   // (when enabled); otherwise none.
   const effectiveWallpaper = wallpaper || (wallpaperThemed ? SCHEME_WALLPAPERS[theme.scheme] : '');
   const lastDesk = DESKTOP_IDS[DESKTOP_IDS.length - 1];
@@ -99,16 +135,31 @@ export default function Desktop() {
     }
     : undefined;
 
-  const visible = windows.filter((w) => isOnDesktop(w, current));
-  const shown = visible.filter((w) => !w.minimized);
-  const menuFrame = menu ? windows.find((w) => w.id === menu.frameId) : undefined;
+  // Effective geometry: foundations maximized, docked frames at their area
+  // rect, floaters at their own record geometry.
+  const placed = placeWindows(windows, canvas);
+  const placedById = new Map(placed.map((w) => [w.id, w]));
+  const rectOf = (w: WindowRecord) => {
+    const p = placedById.get(w.id) ?? w;
+    return { x: p.x, y: p.y, w: p.w, h: p.h };
+  };
 
-  // Overview placements: presentation-only grid over the shown windows
+  const visible = windows.filter((w) => isOnDesktop(hostOf(windows, w), current));
+  const shown = visible.filter((w) => !w.minimized);
+  const shownFoundations = shown.filter((w) => w.foundation);
+  const shownFrames = shown.filter((w) => !w.foundation);
+  const menuFrame = menu ? windows.find((w) => w.id === menu.frameId) : undefined;
+  const areaMenuFoundation = areaMenu ? windows.find((w) => w.id === areaMenu.foundationId) : undefined;
+
+  // Overview placements: presentation-only grid over the shown frames
   // ('all') or the focused application's windows ('app'; others dim).
+  // Foundations are not overview members.
   const overviewMembers = overview
-    ? (overview.mode === 'app' ? shown.filter((w) => activeFacetOf(w) === overview.facet) : shown)
+    ? (overview.mode === 'app' ? shownFrames.filter((w) => activeFacetOf(w) === overview.facet) : shownFrames)
     : [];
-  const placements = overview ? overviewLayout(overviewMembers, { w: overview.w, h: overview.h }) : null;
+  const placements = overview
+    ? overviewLayout(overviewMembers.map((w) => placedById.get(w.id) ?? w), { w: overview.w, h: overview.h })
+    : null;
 
   const pick = (id: string) => {
     windowsTap?.update((list) => raiseWindow(list, id));
@@ -116,9 +167,333 @@ export default function Desktop() {
     overviewTap?.set(null);
   };
 
+  const focusTopVisible = (list: WindowRecord[], desk: number) => {
+    const vis = list.filter((w) => !w.foundation && isOnDesktop(hostOf(list, w), desk) && !w.minimized);
+    focusedTap?.set(vis[vis.length - 1]?.id ?? null);
+  };
+
+  const open = (kind: FacetKind) => {
+    const wins = windowsTap?.get() ?? [];
+    const desk = currentTap?.get() ?? 1;
+    const result = openWindow(wins, kind, FACETS[kind].defaultSize, desk);
+    let next = result.list;
+    let focusId = result.id;
+    // a new window opened onto a gridded desktop docks straight into its
+    // home — tabbing with whatever already lives there
+    const f = foundationOn(next, desk);
+    if (f?.foundation) {
+      const dm = dockOrMerge(next, result.id, f.id, f.foundation.designate[kind] ?? f.foundation.fallback);
+      next = dm.list;
+      focusId = dm.frameId;
+    }
+    windowsTap?.set(next);
+    focusedTap?.set(focusId);
+    overviewTap?.set(null);
+  };
+
+  // Sidebar entries cover ALL desktops: activating a window on another
+  // desktop switches there first.
+  const restore = (id: string) => {
+    const wins = windowsTap?.get() ?? [];
+    const win = wins.find((w) => w.id === id);
+    if (!win) return;
+    if (!isOnDesktop(hostOf(wins, win), currentTap?.get() ?? 1)) currentTap?.set(hostOf(wins, win).desktop);
+    windowsTap?.update((list) => raiseWindow(minimizeWindow(list, id, false), id));
+    focusedTap?.set(id);
+    overviewTap?.set(null);
+  };
+
+  const switchDesktop = (desk: number) => {
+    const cur = currentTap?.get() ?? 1;
+    if (desk === cur) return;
+    const wins = windowsTap?.get() ?? [];
+    // slide only when some window actually enters or exits
+    const animates = wins.some((w) => !w.minimized && isOnDesktop(hostOf(wins, w), cur) !== isOnDesktop(hostOf(wins, w), desk));
+    slideTap?.set(animates ? { from: cur, to: desk } : null);
+    currentTap?.set(desk);
+    overviewTap?.set(null);
+    focusTopVisible(wins, desk);
+  };
+
+  // Directional slide classes during a desktop switch; sticky windows
+  // (visible on both sides) do not animate.
+  const deskAnimFor = (w: WindowRecord): string | null => {
+    if (!slide) return null;
+    const host = hostOf(windows, w);
+    const movingRight = slide.to > slide.from;
+    if (!isOnDesktop(host, slide.from)) return movingRight ? 'enter-right' : 'enter-left';
+    if (!isOnDesktop(host, slide.to)) return movingRight ? 'exit-left' : 'exit-right';
+    return null;
+  };
+  const exiting = slide
+    ? windows.filter((w) => {
+      const host = hostOf(windows, w);
+      return !w.minimized && isOnDesktop(host, slide.from) && !isOnDesktop(host, slide.to);
+    })
+    : [];
+
+  // Drag handlers read CURRENT atom state via the tap handles, never the
+  // render closure — a real mouse can move+release inside one notification
+  // cycle, and a stale closure would drop the gesture's final state.
+  const dragMove = (clientX: number, clientY: number, altKey: boolean = false) => {
+    let d = dragTap?.get();
+    if (!d) return;
+    const size = canvasTap?.get() ?? { w: 0, h: 0 };
+    if (d.kind === 'splitter') {
+      const s = d;
+      const deltaPx = (s.axis === 'row' ? clientX - s.pointerX : clientY - s.pointerY) / s.zoom;
+      const deltaW = (deltaPx / s.spanPx) * (s.baseA + s.baseB);
+      // empty sides may shrink to a sliver; occupied sides keep 8%
+      const winsNow = windowsTap?.get() ?? [];
+      const foundation = winsNow.find((w) => w.id === s.id);
+      const minOf = (i: number) => {
+        const ids = foundation?.foundation ? childLeafIds(foundation.foundation.layout, s.interiorId, i) : [];
+        const empty = ids.length > 0 && ids.every((id) => areaOccupants(winsNow, s.id, id).length === 0);
+        return empty ? 0.02 : 0.08;
+      };
+      const minA = minOf(s.index);
+      const minB = minOf(s.index + 1);
+      windowsTap?.update((list) => list.map((w) => (w.id === s.id && w.foundation
+        ? { ...w, foundation: { ...w.foundation, layout: setSplitSizes(w.foundation.layout, s.interiorId, s.index, s.baseA + deltaW, s.baseB - deltaW, minA, minB) } }
+        : w)));
+      return;
+    }
+    // Dragging a docked frame away: undock, restore float size under pointer.
+    if (d.kind === 'move') {
+      const frame = (windowsTap?.get() ?? []).find((w) => w.id === d!.id);
+      if (frame?.dock) {
+        const startX = (d.pointerX - d.canvasLeft) / d.zoom;
+        const startY = (d.pointerY - d.canvasTop) / d.zoom;
+        const grabRatio = Math.min(0.9, Math.max(0.05, (startX - d.baseX) / d.baseW));
+        const restored = {
+          ...d,
+          baseX: startX - grabRatio * frame.w,
+          baseY: startY - 10,
+          baseW: frame.w,
+          baseH: frame.h,
+        };
+        windowsTap?.update((list) => undockWindow(list, d!.id));
+        dragTap?.set(restored);
+        d = restored;
+      }
+    }
+    // Dragging a snapped frame away: restore its remembered size, keeping
+    // the grab point proportionally under the pointer.
+    if (d.kind === 'move') {
+      const frame = (windowsTap?.get() ?? []).find((w) => w.id === d!.id);
+      if (frame?.presnap) {
+        const startX = (d.pointerX - d.canvasLeft) / d.zoom;
+        const grabRatio = Math.min(0.9, Math.max(0.05, (startX - d.baseX) / d.baseW));
+        const restored = {
+          ...d,
+          baseX: startX - grabRatio * frame.presnap.w,
+          baseW: frame.presnap.w,
+          baseH: frame.presnap.h,
+        };
+        windowsTap?.update((list) => unsnapSize(list, d!.id));
+        dragTap?.set(restored);
+        d = restored;
+      }
+    }
+    const canvasX = (clientX - d.canvasLeft) / d.zoom;
+    const canvasY = (clientY - d.canvasTop) / d.zoom;
+    const desk = currentTap?.get() ?? 1;
+    const wins = windowsTap?.get() ?? [];
+    const placedNow = placeWindows(wins, size);
+    const onDesk = placedNow.filter((w) => !w.foundation && !w.minimized
+      && isOnDesktop(hostOf(wins, wins.find((x) => x.id === w.id) ?? w), desk));
+    const deskFoundation = foundationOn(wins, desk);
+    // Alt-drag = float intent: every dock/merge/split/snap target is
+    // suppressed; the drop lands free.
+    const floatIntent = altKey;
+    const dropDesktop = hoveredDesktopIcon(clientX, clientY);
+    // foundation areas: edge band = split intent, empty center = hole dock,
+    // occupied center = tab into the occupant
+    const probe = (dropDesktop || floatIntent) ? null : probeArea(wins, size, desk, canvasX, canvasY, EDGE_BAND);
+    const dropSplit = probe?.edge
+      ? { foundation: probe.foundationId, area: probe.areaId, edge: probe.edge, rect: splitHalf(probe.rect, probe.edge) }
+      : null;
+    const dropArea = (!dropSplit && probe && !probe.occupantId)
+      ? { foundation: probe.foundationId, area: probe.areaId }
+      : null;
+    const areaMerge = (!dropSplit && probe?.occupantId && probe.occupantId !== d.id)
+      ? probe.occupantId
+      : null;
+    if (d.kind === 'tab') {
+      const moved = d.moved
+        || Math.abs(clientX - d.pointerX) + Math.abs(clientY - d.pointerY) > 4;
+      // the press became a tear-off: the bleed picker shrinks away
+      if (moved && !d.moved) bleedCancel(bleedTap);
+      const dropTarget = (dropDesktop || dropArea || dropSplit || floatIntent)
+        ? null
+        : (areaMerge ?? hitTitlebar(onDesk, canvasX, canvasY, ''));
+      dragTap?.set({ ...d, moved, ghostX: canvasX + 10, ghostY: canvasY + 10, dropTarget, dropDesktop, dropArea, dropSplit });
+      return;
+    }
+    const fd = d;
+    const dx = (clientX - fd.pointerX) / fd.zoom;
+    const dy = (clientY - fd.pointerY) / fd.zoom;
+    windowsTap?.update((list) => (fd.kind === 'move'
+      ? moveWindowFree(list, fd.id, fd.baseX + dx, fd.baseY + dy)
+      : resizeWindow(list, fd.id, fd.baseW + dx, fd.baseH + dy)));
+    if (d.kind === 'move') {
+      const nearTop = !dropDesktop && !deskFoundation && !floatIntent && canvasY < SNAP_EDGE;
+      const snapTarget = nearTop ? hoveredSnapZone(clientX, clientY) : null;
+      const dropTarget = (dropDesktop || dropArea || dropSplit || snapTarget || floatIntent)
+        ? null
+        : (areaMerge ?? hitTitlebar(onDesk, canvasX, canvasY, d.id));
+      if (dropTarget !== d.dropTarget || dropDesktop !== d.dropDesktop
+        || nearTop !== d.nearTop || snapTarget !== d.snapTarget
+        || dropArea?.area !== d.dropArea?.area || dropArea?.foundation !== d.dropArea?.foundation
+        || dropSplit?.area !== d.dropSplit?.area || dropSplit?.edge !== d.dropSplit?.edge) {
+        dragTap?.set({ ...d, dropTarget, dropDesktop, nearTop, snapTarget, dropArea, dropSplit });
+      }
+    }
+  };
+
+  // Apply an edge-drop: split the area (new hole on the dropped side) and
+  // dock the frame into it.
+  const applySplitDrop = (
+    wins: WindowRecord[],
+    frameId: string,
+    ds: { foundation: string; area: string; edge: AreaEdge },
+  ) => {
+    const direction: 'row' | 'column' = ds.edge === 'left' || ds.edge === 'right' ? 'row' : 'column';
+    const newFirst = ds.edge === 'left' || ds.edge === 'top';
+    let newAreaId = '';
+    const next = wins.map((w) => {
+      if (w.id !== ds.foundation || !w.foundation) return w;
+      // edge-drop splits are ephemeral: they merge back when emptied
+      const s = splitArea(w.foundation.layout, ds.area, direction, newFirst, true);
+      newAreaId = s.newAreaId;
+      return { ...w, foundation: { ...w.foundation, layout: s.layout } };
+    });
+    if (!newAreaId) return null;
+    const dm = dockOrMerge(next, frameId, ds.foundation, newAreaId);
+    windowsTap?.set(raiseWindow(dm.list, dm.frameId));
+    focusedTap?.set(dm.frameId);
+    return dm.frameId;
+  };
+
+  // Alt at RELEASE always means float — the user may press it after the
+  // last mousemove, so the stored drop intents must yield to it.
+  const dragEnd = (clientX: number, clientY: number, altKey: boolean = false) => {
+    const d = dragTap?.get();
+    if (!d) return;
+    const wins = windowsTap?.get() ?? [];
+    const desk = currentTap?.get() ?? 1;
+    if (d.kind === 'move') {
+      const canvasX = (clientX - d.canvasLeft) / d.zoom;
+      const canvasY = (clientY - d.canvasTop) / d.zoom;
+      if (d.dropDesktop) {
+        // sent to a desktop (or dropped on the current one): the frame goes
+        // home to its pre-drag position
+        const homed = moveWindow(wins, d.id, d.baseX, d.baseY);
+        const next = d.dropDesktop !== desk ? sendToDesktop(homed, d.id, d.dropDesktop) : homed;
+        windowsTap?.set(next);
+        if (d.dropDesktop !== desk) focusTopVisible(next, desk);
+      } else if (!altKey && d.dropSplit) {
+        applySplitDrop(wins, d.id, d.dropSplit);
+      } else if (!altKey && d.dropArea) {
+        const dm = dockOrMerge(wins, d.id, d.dropArea.foundation, d.dropArea.area);
+        windowsTap?.set(raiseWindow(dm.list, dm.frameId));
+        focusedTap?.set(dm.frameId);
+      } else if (!altKey && d.snapTarget) {
+        windowsTap?.set(snapWindow(wins, d.id, d.snapTarget, canvasSize()));
+      } else if (!altKey && d.dropTarget) {
+        windowsTap?.set(mergeWindows(wins, d.id, d.dropTarget));
+        focusedTap?.set(d.dropTarget);
+      } else if (canvasX < 0 || canvasY < 0) {
+        // released off-canvas (over the sidebar) but not on a drop target:
+        // snap back
+        windowsTap?.set(moveWindow(wins, d.id, d.baseX, d.baseY));
+      } else {
+        // settle where dropped, re-clamped to the canvas
+        const win = wins.find((w) => w.id === d.id);
+        if (win) windowsTap?.set(moveWindow(wins, d.id, win.x, win.y));
+      }
+    } else if (d.kind === 'tab') {
+      // a press that never moved is a CLICK: select the tab, ignore intents.
+      // The drag overlay's mount faked a picker mouseleave — re-hold it so
+      // selection keeps the picker open.
+      if (!d.moved) {
+        windowsTap?.set(selectTab(wins, d.id, d.tabId));
+        dragTap?.set(null);
+        bleedHold(bleedTap);
+        return;
+      }
+      const canvasX = (clientX - d.canvasLeft) / d.zoom;
+      const canvasY = (clientY - d.canvasTop) / d.zoom;
+      const size = FACETS[d.facet].defaultSize;
+      if (d.dropDesktop) {
+        const out = detachTab(wins, d.id, d.tabId, { x: 96, y: 96 }, size, d.dropDesktop);
+        windowsTap?.set(out.list);
+        focusTopVisible(out.list, desk);
+      } else if (!altKey && d.dropSplit) {
+        const out = detachTab(wins, d.id, d.tabId, { x: 96, y: 96 }, size, desk);
+        applySplitDrop(out.list, out.id, d.dropSplit);
+      } else if (!altKey && d.dropArea) {
+        const out = detachTab(wins, d.id, d.tabId, { x: 96, y: 96 }, size, desk);
+        const dm = dockOrMerge(out.list, out.id, d.dropArea.foundation, d.dropArea.area);
+        windowsTap?.set(raiseWindow(dm.list, dm.frameId));
+        focusedTap?.set(dm.frameId);
+      } else if (!altKey && d.dropTarget) {
+        windowsTap?.set(moveTab(wins, d.id, d.tabId, d.dropTarget));
+        focusedTap?.set(d.dropTarget);
+      } else if (canvasX >= 0 && canvasY >= 0) {
+        const out = detachTab(wins, d.id, d.tabId, { x: canvasX - 40, y: canvasY - 12 }, size, desk);
+        windowsTap?.set(out.list);
+        focusedTap?.set(out.id);
+      }
+    }
+    dragTap?.set(null);
+  };
+
+  const sendFromMenu = (desk: number) => {
+    if (!menuFrame) return;
+    // a docked frame undocks before travelling
+    const wins = windowsTap?.get() ?? [];
+    const next = sendToDesktop(undockWindow(wins, menuFrame.id), menuFrame.id, desk);
+    windowsTap?.set(next);
+    focusTopVisible(next, currentTap?.get() ?? 1);
+    menuTap?.set(null);
+  };
+
+  const editFoundationLayout = (foundationId: string, edit: (f: NonNullable<WindowRecord['foundation']>) => NonNullable<WindowRecord['foundation']>) => {
+    windowsTap?.update((list) => list.map((w) => (w.id === foundationId && w.foundation
+      ? { ...w, foundation: edit(w.foundation) }
+      : w)));
+  };
+
+  // The lock toggles a desktop's grid. Unlocking stashes the layout +
+  // assignments (grid memory); re-locking restores them, with newcomers
+  // adopted by designate/fallback.
+  const toggleGrid = (desk: number) => {
+    const wins = windowsTap?.get() ?? [];
+    const f = foundationOn(wins, desk);
+    if (f) {
+      const stash = captureGrid(wins, desk);
+      if (stash) gridMemoryTap?.update((m) => ({ ...m, [desk]: stash }));
+      const next = closeFoundation(wins, f.id);
+      windowsTap?.set(next);
+      focusTopVisible(next, currentTap?.get() ?? 1);
+    } else {
+      const stash = (gridMemoryTap?.get() ?? {})[desk];
+      const out = openFoundation(wins, desk, stash?.def ?? HUB, stash?.assignments ?? {});
+      windowsTap?.set(out.list);
+      focusTopVisible(out.list, currentTap?.get() ?? 1);
+    }
+    overviewTap?.set(null);
+  };
+
+  const splitFromMenu = (foundationId: string, areaId: string, direction: 'row' | 'column') => {
+    editFoundationLayout(foundationId, (f) => ({ ...f, layout: splitArea(f.layout, areaId, direction).layout }));
+    areaMenuTap?.set(null);
+    menuTap?.set(null);
+  };
+
   // Shift+Up = all-windows overview; Shift+Down = focused app's windows;
-  // Escape (or the same chord again) exits. Reads state via tap handles per
-  // the gesture rule in dev-docs/CodingRules.md.
+  // Shift+Left/Right = previous/next desktop; Escape exits overview.
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const t = e.target as HTMLElement;
     if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
@@ -128,7 +503,6 @@ export default function Desktop() {
       return;
     }
     if (!e.shiftKey) return;
-    // Shift+Left/Right: previous/next desktop.
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const desk = currentTap?.get() ?? 1;
@@ -147,211 +521,69 @@ export default function Desktop() {
     }
     const wins = windowsTap?.get() ?? [];
     const desk = currentTap?.get() ?? 1;
-    const onDesk = wins.filter((w) => isOnDesktop(w, desk) && !w.minimized);
+    const onDesk = wins.filter((w) => isOnDesktop(hostOf(wins, w), desk) && !w.minimized && !w.foundation);
     if (onDesk.length === 0) return;
     let facet: FacetKind | null = null;
     if (mode === 'app') {
       const focusedWin = onDesk.find((w) => w.id === focusedTap?.get()) ?? onDesk[onDesk.length - 1];
       facet = activeFacetOf(focusedWin);
     }
-    const r = document.querySelector('.desktop-canvas')!.getBoundingClientRect();
-    overviewTap?.set({ mode, facet, w: r.width, h: r.height });
-  };
-
-  const focusTopVisible = (list: WindowRecord[], desk: number) => {
-    const vis = list.filter((w) => isOnDesktop(w, desk) && !w.minimized);
-    focusedTap?.set(vis[vis.length - 1]?.id ?? null);
-  };
-
-  const open = (kind: FacetKind) => {
-    const result = openWindow(windows, kind, FACETS[kind].defaultSize, current);
-    windowsTap?.set(result.list);
-    focusedTap?.set(result.id);
-    overviewTap?.set(null);
-  };
-
-  // Sidebar entries cover ALL desktops: activating a window on another
-  // desktop switches there first.
-  const restore = (id: string) => {
-    const wins = windowsTap?.get() ?? [];
-    const win = wins.find((w) => w.id === id);
-    if (!win) return;
-    if (!isOnDesktop(win, currentTap?.get() ?? 1)) currentTap?.set(win.desktop);
-    windowsTap?.update((list) => raiseWindow(minimizeWindow(list, id, false), id));
-    focusedTap?.set(id);
-    overviewTap?.set(null);
-  };
-
-  const switchDesktop = (desk: number) => {
-    const cur = currentTap?.get() ?? 1;
-    if (desk === cur) return;
-    const wins = windowsTap?.get() ?? [];
-    // slide only when some window actually enters or exits
-    const animates = wins.some((w) => !w.minimized && isOnDesktop(w, cur) !== isOnDesktop(w, desk));
-    slideTap?.set(animates ? { from: cur, to: desk } : null);
-    currentTap?.set(desk);
-    overviewTap?.set(null);
-    focusTopVisible(wins, desk);
-  };
-
-  // Directional slide classes during a desktop switch; sticky windows
-  // (visible on both sides) do not animate.
-  const deskAnimFor = (w: WindowRecord): string | null => {
-    if (!slide) return null;
-    const movingRight = slide.to > slide.from;
-    if (!isOnDesktop(w, slide.from)) return movingRight ? 'enter-right' : 'enter-left';
-    if (!isOnDesktop(w, slide.to)) return movingRight ? 'exit-left' : 'exit-right';
-    return null;
-  };
-  const exiting = slide
-    ? windows.filter((w) => !w.minimized && isOnDesktop(w, slide.from) && !isOnDesktop(w, slide.to))
-    : [];
-
-  // Drag handlers read CURRENT atom state via the tap handles, never the
-  // render closure — a real mouse can move+release inside one notification
-  // cycle, and a stale closure would drop the gesture's final state.
-  const dragMove = (clientX: number, clientY: number) => {
-    let d = dragTap?.get();
-    if (!d) return;
-    // Dragging a snapped frame away: restore its remembered size, keeping
-    // the grab point proportionally under the pointer.
-    if (d.kind === 'move') {
-      const frame = (windowsTap?.get() ?? []).find((w) => w.id === d!.id);
-      if (frame?.presnap) {
-        const grabRatio = Math.min(0.9, Math.max(0.05, ((d.pointerX - d.canvasLeft) - d.baseX) / d.baseW));
-        const restored = {
-          ...d,
-          baseX: (d.pointerX - d.canvasLeft) - grabRatio * frame.presnap.w,
-          baseW: frame.presnap.w,
-          baseH: frame.presnap.h,
-        };
-        windowsTap?.update((list) => unsnapSize(list, d!.id));
-        dragTap?.set(restored);
-        d = restored;
-      }
-    }
-    const canvasX = clientX - d.canvasLeft;
-    const canvasY = clientY - d.canvasTop;
-    const desk = currentTap?.get() ?? 1;
-    const onDesk = (windowsTap?.get() ?? []).filter((w) => isOnDesktop(w, desk));
-    const dropDesktop = d.kind !== 'resize' ? hoveredDesktopIcon(clientX, clientY) : null;
-    if (d.kind === 'tab') {
-      const dropTarget = dropDesktop ? null : hitTitlebar(onDesk, canvasX, canvasY, '');
-      dragTap?.set({ ...d, ghostX: canvasX + 10, ghostY: canvasY + 10, dropTarget, dropDesktop });
-      return;
-    }
-    const dx = clientX - d.pointerX;
-    const dy = clientY - d.pointerY;
-    windowsTap?.update((list) => (d.kind === 'move'
-      ? moveWindowFree(list, d.id, d.baseX + dx, d.baseY + dy)
-      : resizeWindow(list, d.id, d.baseW + dx, d.baseH + dy)));
-    if (d.kind === 'move') {
-      const nearTop = !dropDesktop && canvasY < SNAP_EDGE;
-      const snapTarget = nearTop ? hoveredSnapZone(clientX, clientY) : null;
-      const dropTarget = (dropDesktop || snapTarget) ? null : hitTitlebar(onDesk, canvasX, canvasY, d.id);
-      if (dropTarget !== d.dropTarget || dropDesktop !== d.dropDesktop
-        || nearTop !== d.nearTop || snapTarget !== d.snapTarget) {
-        dragTap?.set({ ...d, dropTarget, dropDesktop, nearTop, snapTarget });
-      }
-    }
-  };
-
-  const dragEnd = (clientX: number, clientY: number) => {
-    const d = dragTap?.get();
-    if (!d) return;
-    const wins = windowsTap?.get() ?? [];
-    const desk = currentTap?.get() ?? 1;
-    if (d.kind === 'move') {
-      const canvasX = clientX - d.canvasLeft;
-      const canvasY = clientY - d.canvasTop;
-      if (d.dropDesktop) {
-        // sent to a desktop (or dropped on the current one): the frame goes
-        // home to its pre-drag position
-        const homed = moveWindow(wins, d.id, d.baseX, d.baseY);
-        const next = d.dropDesktop !== desk ? sendToDesktop(homed, d.id, d.dropDesktop) : homed;
-        windowsTap?.set(next);
-        if (d.dropDesktop !== desk) focusTopVisible(next, desk);
-      } else if (d.snapTarget) {
-        windowsTap?.set(snapWindow(wins, d.id, d.snapTarget, canvasSize()));
-      } else if (d.dropTarget) {
-        windowsTap?.set(mergeWindows(wins, d.id, d.dropTarget));
-        focusedTap?.set(d.dropTarget);
-      } else if (canvasX < 0 || canvasY < 0) {
-        // released off-canvas (over the sidebar) but not on a drop target:
-        // snap back
-        windowsTap?.set(moveWindow(wins, d.id, d.baseX, d.baseY));
-      } else {
-        // settle where dropped, re-clamped to the canvas
-        const win = wins.find((w) => w.id === d.id);
-        if (win) windowsTap?.set(moveWindow(wins, d.id, win.x, win.y));
-      }
-    } else if (d.kind === 'tab') {
-      const canvasX = clientX - d.canvasLeft;
-      const canvasY = clientY - d.canvasTop;
-      const size = FACETS[d.facet].defaultSize;
-      if (d.dropDesktop) {
-        const out = detachTab(wins, d.id, d.tabId, { x: 96, y: 96 }, size, d.dropDesktop);
-        windowsTap?.set(out.list);
-        focusTopVisible(out.list, desk);
-      } else if (d.dropTarget) {
-        windowsTap?.set(moveTab(wins, d.id, d.tabId, d.dropTarget));
-        focusedTap?.set(d.dropTarget);
-      } else if (canvasX >= 0 && canvasY >= 0) {
-        const out = detachTab(wins, d.id, d.tabId, { x: canvasX - 40, y: canvasY - 12 }, size, desk);
-        windowsTap?.set(out.list);
-        focusedTap?.set(out.id);
-      }
-    }
-    dragTap?.set(null);
-  };
-
-  const sendFromMenu = (desk: number) => {
-    if (!menuFrame) return;
-    const next = sendToDesktop(windows, menuFrame.id, desk);
-    windowsTap?.set(next);
-    focusTopVisible(next, current);
-    menuTap?.set(null);
+    const { w, h } = canvasSize();
+    overviewTap?.set({ mode, facet, w, h });
   };
 
   // Sidebar window list, grouped: sticky windows first ("All desktops"),
   // then desktops in fixed numeric order (stable spatial memory; empty
   // groups skipped). Within a group: topmost first.
-  const topFirst = [...windows].reverse();
+  // foundations are scaffolding, not windows — they don't appear in the list
+  const topFirst = [...windows].reverse().filter((w) => !w.foundation);
   const windowGroups: { key: string; label: string; desk: number | null; wins: WindowRecord[] }[] = [];
-  const stickyWins = topFirst.filter((w) => w.sticky);
+  const stickyWins = topFirst.filter((w) => w.sticky && !w.dock);
   if (stickyWins.length) windowGroups.push({ key: 'all', label: 'All desktops', desk: null, wins: stickyWins });
   for (const d of DESKTOP_IDS) {
-    const wins = topFirst.filter((w) => !w.sticky && w.desktop === d);
-    if (wins.length) windowGroups.push({ key: `d${d}`, label: `Desktop ${d}`, desk: d, wins });
+    const wins = topFirst.filter((w) => !(w.sticky && !w.dock) && hostOf(windows, w).desktop === d);
+    // a gridded desktop shows its group even when empty (the lock lives there)
+    if (wins.length || foundationOn(windows, d)) windowGroups.push({ key: `d${d}`, label: `Desktop ${d}`, desk: d, wins });
   }
 
-  // Each desktop icon is a thumbnail mini-map of its windows. Boxes are
-  // scaled from canvas coords into a nominal viewport; they will pick up
-  // per-window colour when windows grow one.
-  const THUMB_VIEW = { w: 1500, h: 950 };
-  const pct = (v: number, axis: number) => `${Math.min(92, Math.max(0, (v / axis) * 100))}%`;
+  // Each desktop icon is a thumbnail mini-map of its windows, scaled by the
+  // REAL canvas size and letterboxed to its aspect; the margin outside the
+  // mapped region (inaccessible space) shows as a subtle checker.
+  const THUMB_ASPECT = 1.5; // .desk-btn inner aspect (3rem / 2rem)
+  const viewW = canvas.w > 0 ? canvas.w : 1500;
+  const viewH = canvas.h > 0 ? canvas.h : 950;
+  const viewAspect = viewW / viewH;
+  const thumbFit = viewAspect >= THUMB_ASPECT
+    ? { w: 100, h: (THUMB_ASPECT / viewAspect) * 100 }
+    : { w: (viewAspect / THUMB_ASPECT) * 100, h: 100 };
+  const pct = (v: number, axis: number) => `${Math.min(95, Math.max(0, (v / axis) * 100))}%`;
   const desktopIcons = (
     <nav className="sidebar-desktops">
       {DESKTOP_IDS.map((d) => (
         <button
           key={d}
           data-desktop-target={d}
-          title={`Desktop ${d} (${windows.filter((w) => isOnDesktop(w, d)).length} windows)`}
+          title={`Desktop ${d} (${windows.filter((w) => isOnDesktop(hostOf(windows, w), d)).length} windows)`}
           className={`desk-btn${d === current ? ' current' : ''}${drag?.dropDesktop === d ? ' drop' : ''}`}
           onClick={() => switchDesktop(d)}
         >
-          {windows.filter((w) => isOnDesktop(w, d) && !w.minimized).map((w) => (
-            <span
-              key={w.id}
-              className={`thumb-box${w.id === focused ? ' focused' : ''}`}
-              style={{
-                left: pct(w.x, THUMB_VIEW.w),
-                top: pct(w.y, THUMB_VIEW.h),
-                width: `max(14%, ${pct(w.w, THUMB_VIEW.w)})`,
-                height: `max(18%, ${pct(w.h, THUMB_VIEW.h)})`,
-              }}
-            />
-          ))}
+          <span className="thumb-view" style={{ width: `${thumbFit.w}%`, height: `${thumbFit.h}%` }}>
+            {windows.filter((w) => isOnDesktop(hostOf(windows, w), d) && !w.minimized && !w.foundation).map((w) => {
+              const r = rectOf(w);
+              return (
+                <span
+                  key={w.id}
+                  className={`thumb-box${w.id === focused ? ' focused' : ''}`}
+                  style={{
+                    left: pct(r.x, viewW),
+                    top: pct(r.y, viewH),
+                    width: `max(10%, ${pct(r.w, viewW)})`,
+                    height: `max(14%, ${pct(r.h, viewH)})`,
+                  }}
+                />
+              );
+            })}
+          </span>
           <span className="desk-num">{d}</span>
         </button>
       ))}
@@ -364,7 +596,14 @@ export default function Desktop() {
       tabIndex={0}
       ref={focusOnMount}
       onKeyDown={onKeyDown}
-      style={{ ...theme.vars, colorScheme: theme.scheme } as CSSProperties}
+      style={{
+        ...theme.vars,
+        colorScheme: theme.scheme,
+        zoom: uiZoom === 1 ? undefined : uiZoom,
+        // font scale 5–15 (10 = 100%); chrome fonts are em-based so all
+        // text follows, layout metrics (px/rem) do not
+        fontSize: `${(fontScale * 15) / 10}px`,
+      } as CSSProperties}
     >
       {sidebarOpen ? (
         <aside className="sidebar">
@@ -373,7 +612,7 @@ export default function Desktop() {
             <button className="sidebar-toggle" title="Collapse sidebar" onClick={() => sidebarTap?.set(false)}>&lt;</button>
           </div>
           <nav className="sidebar-launcher">
-            {FACET_KINDS.map((kind) => (
+            {FACET_KINDS.filter((kind) => kind !== 'grid').map((kind) => (
               <button key={kind} title={`Open ${FACETS[kind].title}`} onClick={() => open(kind)}>
                 + {FACETS[kind].title}
               </button>
@@ -383,14 +622,25 @@ export default function Desktop() {
           <nav className="sidebar-windows">
             {windowGroups.map((g) => (
               <div key={g.key} className="side-group">
-                {g.desk !== null ? (
-                  <button
-                    className={`side-group-label${g.desk === current ? ' current' : ''}`}
-                    onClick={() => switchDesktop(g.desk!)}
-                  >{g.label}</button>
-                ) : (
-                  <span className="side-group-label">{g.label}</span>
-                )}
+                <div className="side-group-head">
+                  {g.desk !== null ? (
+                    <button
+                      className={`side-group-label${g.desk === current ? ' current' : ''}`}
+                      onClick={() => switchDesktop(g.desk!)}
+                    >{g.label}</button>
+                  ) : (
+                    <span className="side-group-label">{g.label}</span>
+                  )}
+                  {g.desk !== null && (
+                    <button
+                      className="side-lock"
+                      title={foundationOn(windows, g.desk)
+                        ? `Unlock Desktop ${g.desk} — windows float back`
+                        : `Lock Desktop ${g.desk} into its grid`}
+                      onClick={() => toggleGrid(g.desk!)}
+                    >{foundationOn(windows, g.desk) ? '🔒' : '🔓'}</button>
+                  )}
+                </div>
                 {g.wins.map((w) => {
                   const active = w.tabs.find((t) => t.id === w.activeTab) ?? w.tabs[0];
                   return (
@@ -401,7 +651,7 @@ export default function Desktop() {
                     >
                       <span className="side-title">{FACETS[active.facet].title}</span>
                       {w.tabs.length > 1 && <span className="side-count">{w.tabs.length}</span>}
-                      <span className="gwin-id">{w.id}</span>
+                      <span className="gwin-id">{w.dock ? w.dock.area : w.id}</span>
                     </button>
                   );
                 })}
@@ -423,19 +673,23 @@ export default function Desktop() {
         onAnimationEnd={(e) => { if (e.animationName.startsWith('desk-')) slideTap?.set(null); }}
       >
         {exiting.map((w) => (
-          <Window key={w.id} win={w} focused={false} dropTarget={false} overview={null} deskAnim={deskAnimFor(w)} />
+          <Window key={w.id} win={w} rect={rectOf(w)} focused={false} dropTarget={false} overview={null} deskAnim={deskAnimFor(w)} />
         ))}
-        {shown.map((w) => (
+        {shownFoundations.map((w) => (
+          <FoundationWindow key={w.id} win={w} rect={rectOf(w)} />
+        ))}
+        {shownFrames.map((w) => (
           <Window
             key={w.id}
             win={w}
+            rect={rectOf(w)}
             focused={w.id === focused}
             dropTarget={drag?.dropTarget === w.id && drag.id !== w.id}
             overview={overview ? { placement: placements?.get(w.id), onPick: () => pick(w.id) } : null}
             deskAnim={deskAnimFor(w)}
           />
         ))}
-        {drag?.kind === 'tab' && (
+        {drag?.kind === 'tab' && drag.moved && (
           <div className="tab-ghost" style={{ left: drag.ghostX, top: drag.ghostY }}>
             {FACETS[drag.facet].title}
           </div>
@@ -449,6 +703,15 @@ export default function Desktop() {
             : undefined;
           return <div className={`snap-preview ${drag.snapTarget}`} style={fromRect} />;
         })()}
+        {drag && drag.kind !== 'splitter' && drag.dropSplit && (
+          <div
+            className="split-preview"
+            style={{
+              left: drag.dropSplit.rect.x, top: drag.dropSplit.rect.y,
+              width: drag.dropSplit.rect.w, height: drag.dropSplit.rect.h,
+            }}
+          />
+        )}
         {drag?.kind === 'move' && drag.nearTop && (
           <div className="snap-dock">
             {(['left', 'full', 'right'] as SnapTarget[]).map((t) => (
@@ -461,10 +724,59 @@ export default function Desktop() {
             ))}
           </div>
         )}
+        {bleed && !overview && (() => {
+          // The bleed picker: a clone of a squeezed header strip, inflated in
+          // place. Mounts at its expanded rect; the from-state (the anchor
+          // rect + the anchor-solved segment widths) rides custom properties
+          // into the open/close keyframes — the snap-preview pattern.
+          const frame = windows.find((w) => w.id === bleed.frameId);
+          if (!frame || frame.tabs.length < 2 || frame.minimized
+            || !isOnDesktop(hostOf(windows, frame), current)) return null;
+          const naturals = tickerNaturals(frame, fontScale);
+          const needed = naturals.reduce((a, b) => a + b, 0);
+          const er = bleedRect(bleed.anchor, needed, canvas);
+          const activeIdx = Math.max(0, frame.tabs.findIndex((t) => t.id === frame.activeTab));
+          const anchorWs = tickerWidths({ naturals, active: activeIdx, hover: null, width: bleed.anchor.w });
+          return (
+            <div
+              className={`tk-bleed${bleed.phase === 'closing' ? ' closing' : ''}`}
+              style={{
+                left: er.x, top: er.y, width: er.w, height: er.h,
+                '--ax': `${bleed.anchor.x}px`, '--ay': `${bleed.anchor.y}px`,
+                '--aw': `${bleed.anchor.w}px`, '--ah': `${bleed.anchor.h}px`,
+              } as CSSProperties}
+              onMouseEnter={() => bleedHold(bleedTap)}
+              onMouseLeave={() => bleedLeave(bleedTap)}
+              onAnimationEnd={(e) => { if (e.animationName === 'tk-bleed-out') bleedTap?.set(null); }}
+            >
+              <TickerStrip
+                win={frame}
+                width={er.w}
+                height={er.h}
+                bleed
+                from={{ x: bleed.anchor.x - er.x, widths: anchorWs }}
+              />
+            </div>
+          );
+        })()}
         {menu && menuFrame && (
           <>
             <div className="menu-backdrop" onMouseDown={() => menuTap?.set(null)} />
             <div className="win-menu" style={{ left: menu.x, top: menu.y }}>
+              {menuFrame.dock && (
+                <>
+                  <button onClick={() => { windowsTap?.update((l) => undockWindow(l, menuFrame.id)); menuTap?.set(null); }}>
+                    Undock (float)
+                  </button>
+                  <button onClick={() => splitFromMenu(menuFrame.dock!.foundation, menuFrame.dock!.area, 'row')}>
+                    Split area ⇆
+                  </button>
+                  <button onClick={() => splitFromMenu(menuFrame.dock!.foundation, menuFrame.dock!.area, 'column')}>
+                    Split area ⇵
+                  </button>
+                  <hr />
+                </>
+              )}
               {DESKTOP_IDS.map((d) => (
                 <button key={d} disabled={menuFrame.desktop === d && !menuFrame.sticky} onClick={() => sendFromMenu(d)}>
                   Send to Desktop {d}{menuFrame.desktop === d ? ' •' : ''}
@@ -482,13 +794,36 @@ export default function Desktop() {
             </div>
           </>
         )}
+        {areaMenu && areaMenuFoundation?.foundation && (
+          <>
+            <div className="menu-backdrop" onMouseDown={() => areaMenuTap?.set(null)} />
+            <div className="win-menu" style={{ left: areaMenu.x, top: areaMenu.y }}>
+              <button onClick={() => splitFromMenu(areaMenu.foundationId, areaMenu.areaId, 'row')}>
+                Split ⇆ (left/right)
+              </button>
+              <button onClick={() => splitFromMenu(areaMenu.foundationId, areaMenu.areaId, 'column')}>
+                Split ⇵ (top/bottom)
+              </button>
+              <hr />
+              <button
+                disabled={!areaMenu.hole}
+                onClick={() => {
+                  editFoundationLayout(areaMenu.foundationId, (f) => ({ ...f, layout: closeArea(f.layout, areaMenu.areaId) }));
+                  areaMenuTap?.set(null);
+                }}
+              >
+                Close area
+              </button>
+            </div>
+          </>
+        )}
       </div>
       {drag && (
         <div
-          className={`drag-overlay ${drag.kind}`}
-          onMouseMove={(e) => dragMove(e.clientX, e.clientY)}
-          onMouseUp={(e) => dragEnd(e.clientX, e.clientY)}
-          onMouseLeave={(e) => dragEnd(e.clientX, e.clientY)}
+          className={`drag-overlay ${drag.kind}${drag.kind === 'splitter' ? ` ${drag.axis}` : ''}`}
+          onMouseMove={(e) => dragMove(e.clientX, e.clientY, e.altKey)}
+          onMouseUp={(e) => dragEnd(e.clientX, e.clientY, e.altKey)}
+          onMouseLeave={(e) => dragEnd(e.clientX, e.clientY, e.altKey)}
           onContextMenu={(e) => e.preventDefault()}
         />
       )}

@@ -1,4 +1,4 @@
-import type { FacetKind, SnapTarget, WindowRecord } from '../grips.desktop';
+import type { AreaEdge, FacetKind, FoundationDef, LayoutNode, SnapTarget, WindowRecord } from '../grips.desktop';
 
 // Pure transforms over the desktop document (the DESKTOP_WINDOWS list).
 // Window chrome applies these through the atom tap handle; headless
@@ -57,7 +57,8 @@ export function openWindow(
 }
 
 export function closeWindow(list: WindowRecord[], id: string): WindowRecord[] {
-  return list.filter((w) => w.id !== id);
+  // a docked frame leaving may empty an ephemeral split area
+  return normalizeFoundations(list.filter((w) => w.id !== id));
 }
 
 export function raiseWindow(list: WindowRecord[], id: string): WindowRecord[] {
@@ -101,7 +102,8 @@ export function mergeWindows(list: WindowRecord[], sourceId: string, targetId: s
     tabs: [...target.tabs, ...source.tabs],
     activeTab: source.activeTab,
   };
-  return [...list.filter((w) => w.id !== sourceId && w.id !== targetId), merged];
+  // the absorbed frame's dock disappears with it
+  return normalizeFoundations([...list.filter((w) => w.id !== sourceId && w.id !== targetId), merged]);
 }
 
 export function selectTab(list: WindowRecord[], frameId: string, tabId: string): WindowRecord[] {
@@ -149,8 +151,9 @@ export function detachTab(
   const tab = frame?.tabs.find((t) => t.id === tabId);
   if (!frame || !tab) return { list, id: frameId };
   if (frame.tabs.length === 1) {
+    // a docked single-tab frame dragged out floats again (dock cleared)
     const moved = raiseWindow(
-      sendToDesktop(moveWindow(list, frameId, pos.x, pos.y), frameId, desktop),
+      sendToDesktop(moveWindow(undockWindow(list, frameId), frameId, pos.x, pos.y), frameId, desktop),
       frameId,
     );
     return { list: moved, id: frameId };
@@ -253,6 +256,363 @@ export function unsnapSize(list: WindowRecord[], id: string): WindowRecord[] {
   return list.map((w) => (w.id === id && w.presnap
     ? { ...w, w: w.presnap.w, h: w.presnap.h, presnap: undefined }
     : w));
+}
+
+// ---------------------------------------------------------------------------
+// Foundation windows: layout-tree math and dock transforms. All pure.
+
+export interface Rect { x: number; y: number; w: number; h: number }
+
+const r2 = (v: number) => Math.round(v * 100) / 100;
+
+// Leaf rects of a layout tree inside `rect`. Interior nodes split space
+// along `direction` by child `size` weights; leaves are AREAS.
+export function areaRects(node: LayoutNode, rect: Rect, out: Map<string, Rect> = new Map()): Map<string, Rect> {
+  if (!node.children || node.children.length === 0) {
+    out.set(node.id, { x: r2(rect.x), y: r2(rect.y), w: r2(rect.w), h: r2(rect.h) });
+    return out;
+  }
+  const total = node.children.reduce((acc, c) => acc + c.size, 0) || 1;
+  let offset = 0;
+  for (const child of node.children) {
+    const frac = child.size / total;
+    const r = node.direction === 'column'
+      ? { x: rect.x, y: rect.y + rect.h * offset, w: rect.w, h: rect.h * frac }
+      : { x: rect.x + rect.w * offset, y: rect.y, w: rect.w * frac, h: rect.h };
+    areaRects(child, r, out);
+    offset += frac;
+  }
+  return out;
+}
+
+function nextLayoutId(layout: LayoutNode, prefix: string): string {
+  let max = 0;
+  const walk = (n: LayoutNode) => {
+    const m = n.id.match(new RegExp(`^${prefix}(\\d+)$`));
+    if (m) max = Math.max(max, Number(m[1]));
+    n.children?.forEach(walk);
+  };
+  walk(layout);
+  return `${prefix}${max + 1}`;
+}
+
+// Split a box: the leaf becomes an interior node; the ORIGINAL area keeps
+// its id (docks stay valid). The new empty area (dockable hole) takes the
+// trailing half, or the leading half when `newFirst` (left/top edge drops).
+export function splitArea(
+  layout: LayoutNode,
+  areaId: string,
+  direction: 'row' | 'column',
+  newFirst: boolean = false,
+  ephemeral: boolean = false,
+): { layout: LayoutNode; newAreaId: string } {
+  const interiorId = nextLayoutId(layout, 'n');
+  const newAreaId = nextLayoutId(layout, 'a');
+  const walk = (n: LayoutNode): LayoutNode => {
+    if (!n.children || n.children.length === 0) {
+      if (n.id !== areaId) return n;
+      const fresh: LayoutNode = ephemeral
+        ? { id: newAreaId, size: 50, ephemeral: true }
+        : { id: newAreaId, size: 50 };
+      const old: LayoutNode = { id: n.id, size: 50, ephemeral: n.ephemeral };
+      const halves = newFirst ? [fresh, old] : [old, fresh];
+      return { id: interiorId, size: n.size, direction, children: halves };
+    }
+    return { ...n, children: n.children.map(walk) };
+  };
+  return { layout: walk(layout), newAreaId };
+}
+
+function collectLeaves(node: LayoutNode, out: LayoutNode[] = []): LayoutNode[] {
+  if (!node.children || node.children.length === 0) out.push(node);
+  else node.children.forEach((c) => collectLeaves(c, out));
+  return out;
+}
+
+// Housekeeping after any dock-removing mutation: occupants of an ephemeral
+// split-half migrate home when the original (non-ephemeral) sibling
+// empties; ephemeral areas with no remaining docked reference (minimized
+// included) merge back into their sibling; and dock refs pointing at areas
+// that no longer exist are cleared. Returns the SAME list reference when
+// nothing changes.
+export function normalizeFoundations(list: WindowRecord[]): WindowRecord[] {
+  let next = list;
+  let changed = false;
+  for (const f of list.filter((w) => w.foundation)) {
+    let layout = f.foundation!.layout;
+    let layoutChanged = false;
+    const refs = (areaId: string) =>
+      next.filter((w) => w.dock?.foundation === f.id && w.dock.area === areaId);
+    // migration: an occupied ephemeral half must not outlive an EMPTY
+    // non-ephemeral sibling — its tenants move home (the ephemeral then
+    // empties and the collapse below removes it)
+    const migrate = (node: LayoutNode) => {
+      if (!node.children) return;
+      node.children.forEach(migrate);
+      if (node.children.length !== 2) return;
+      const [a, b] = node.children;
+      const isLeaf = (n: LayoutNode) => !n.children || n.children.length === 0;
+      if (!isLeaf(a) || !isLeaf(b)) return;
+      const pairs: [LayoutNode, LayoutNode][] = [[a, b], [b, a]];
+      for (const [eph, home] of pairs) {
+        if (eph.ephemeral && !home.ephemeral && refs(eph.id).length > 0 && refs(home.id).length === 0) {
+          next = next.map((w) => (w.dock?.foundation === f.id && w.dock.area === eph.id
+            ? { ...w, dock: { foundation: f.id, area: home.id } }
+            : w));
+          changed = true;
+          return;
+        }
+      }
+    };
+    migrate(layout);
+    for (;;) {
+      const empty = collectLeaves(layout).find((leaf) => leaf.ephemeral
+        && !next.some((w) => w.dock?.foundation === f.id && w.dock.area === leaf.id));
+      if (!empty) break;
+      layout = closeArea(layout, empty.id);
+      layoutChanged = true;
+    }
+    if (layoutChanged) {
+      next = next.map((w) => (w.id === f.id ? { ...w, foundation: { ...w.foundation!, layout } } : w));
+      changed = true;
+    }
+    const areaIds = new Set(collectLeaves(layout).map((leaf) => leaf.id));
+    if (next.some((w) => w.dock?.foundation === f.id && !areaIds.has(w.dock.area))) {
+      next = next.map((w) => (w.dock?.foundation === f.id && !areaIds.has(w.dock.area)
+        ? { ...w, dock: undefined }
+        : w));
+      changed = true;
+    }
+  }
+  return changed ? next : list;
+}
+
+// Close an area: remove the leaf; a parent left with one child collapses
+// into it. The root leaf cannot be closed (returns the layout unchanged).
+export function closeArea(layout: LayoutNode, areaId: string): LayoutNode {
+  const walk = (n: LayoutNode): LayoutNode | null => {
+    if (!n.children || n.children.length === 0) return n.id === areaId ? null : n;
+    const children = n.children.map(walk).filter((c): c is LayoutNode => c !== null);
+    if (children.length === 0) return null;
+    if (children.length === 1) return { ...children[0], size: n.size };
+    return { ...n, children };
+  };
+  return walk(layout) ?? layout;
+}
+
+// Splitter resize: apply absolute sizes to the boundary pair of an interior
+// node. Minimum fractions are per side — an EMPTY side (no docked windows
+// anywhere under it) may shrink to a sliver, an occupied one keeps 8%.
+export function setSplitSizes(
+  layout: LayoutNode,
+  interiorId: string,
+  index: number,
+  a: number,
+  b: number,
+  minAFrac: number = 0.08,
+  minBFrac: number = 0.08,
+): LayoutNode {
+  const walk = (n: LayoutNode): LayoutNode => {
+    if (!n.children) return n;
+    if (n.id !== interiorId) return { ...n, children: n.children.map(walk) };
+    const pair = a + b;
+    const aClamped = Math.min(Math.max(a, pair * minAFrac), pair - pair * minBFrac);
+    const children = n.children.map((c, i) => (i === index
+      ? { ...c, size: aClamped }
+      : i === index + 1 ? { ...c, size: pair - aClamped } : c));
+    return { ...n, children };
+  };
+  return walk(layout);
+}
+
+// Leaf area ids under one child of an interior node (for occupancy-aware
+// splitter minimums).
+export function childLeafIds(layout: LayoutNode, interiorId: string, index: number): string[] {
+  let found: LayoutNode | undefined;
+  const find = (n: LayoutNode) => {
+    if (n.id === interiorId) found = n;
+    else n.children?.forEach(find);
+  };
+  find(layout);
+  const child = found?.children?.[index];
+  return child ? collectLeaves(child).map((leaf) => leaf.id) : [];
+}
+
+// Effective geometry: foundations render maximized to the canvas as pure
+// scaffolding (no chrome — areas span the whole canvas); docked frames take
+// their area's rect; a dangling dock degrades to the frame's float memory,
+// which is never overwritten. Returns records with substituted geometry so
+// every geometry consumer (render, hit-testing, overview, thumbnails) can
+// stay signature-stable.
+export function placeWindows(list: WindowRecord[], area: { w: number; h: number }): WindowRecord[] {
+  if (area.w <= 0 || area.h <= 0) return list;
+  const rectsByFoundation = new Map<string, Map<string, Rect>>();
+  for (const w of list) {
+    if (w.foundation) {
+      const body = { x: 0, y: 0, w: area.w, h: area.h };
+      rectsByFoundation.set(w.id, areaRects(w.foundation.layout, body));
+    }
+  }
+  return list.map((w) => {
+    if (w.foundation) return { ...w, x: 0, y: 0, w: area.w, h: area.h };
+    if (w.dock) {
+      const r = rectsByFoundation.get(w.dock.foundation)?.get(w.dock.area);
+      if (r) return { ...w, x: r.x, y: r.y, w: r.w, h: r.h };
+    }
+    return w;
+  });
+}
+
+export function dockWindow(list: WindowRecord[], id: string, foundation: string, area: string): WindowRecord[] {
+  // re-docking elsewhere may empty the frame's previous ephemeral area
+  return normalizeFoundations(
+    list.map((w) => (w.id === id ? { ...w, dock: { foundation, area }, minimized: false } : w)),
+  );
+}
+
+// Dock into an area, tabbing with the occupant when there is one: windows
+// allocated to the same area become ONE tabbed frame, never a hidden stack.
+// Returns the surviving frame id (the occupant when merged).
+export function dockOrMerge(
+  list: WindowRecord[],
+  id: string,
+  foundation: string,
+  area: string,
+): { list: WindowRecord[]; frameId: string } {
+  const occupant = areaOccupants(list, foundation, area).find((w) => w.id !== id);
+  if (occupant) return { list: mergeWindows(list, id, occupant.id), frameId: occupant.id };
+  return { list: dockWindow(list, id, foundation, area), frameId: id };
+}
+
+export function undockWindow(list: WindowRecord[], id: string): WindowRecord[] {
+  return normalizeFoundations(
+    list.map((w) => (w.id === id && w.dock ? { ...w, dock: undefined } : w)),
+  );
+}
+
+// Create a foundation on a desktop and adopt its floaters: remembered
+// assignments first (grid memory), then designated facets to their home,
+// the rest to the fallback area. Sticky floaters, minimized frames, and
+// other foundations are skipped.
+export function openFoundation(
+  list: WindowRecord[],
+  desktop: number,
+  def: FoundationDef,
+  assignments: Record<string, string> = {},
+): { list: WindowRecord[]; id: string } {
+  const id = nextWindowId(list);
+  const tabId = nextTabId(list);
+  const leafIds = new Set(collectLeaves(def.layout).map((leaf) => leaf.id));
+  let adopted = list.map((w) => {
+    if (w.desktop !== desktop || w.sticky || w.minimized || w.foundation || w.dock) return w;
+    const remembered = assignments[w.id];
+    const facet = (w.tabs.find((t) => t.id === w.activeTab) ?? w.tabs[0]).facet;
+    const area = (remembered && leafIds.has(remembered))
+      ? remembered
+      : def.designate[facet] ?? def.fallback;
+    return { ...w, dock: { foundation: id, area } };
+  });
+  // multiply-allocated areas tab together: fold later arrivals into the
+  // first frame per area
+  const firstByArea = new Map<string, string>();
+  for (const w of [...adopted]) {
+    if (w.dock?.foundation !== id) continue;
+    const first = firstByArea.get(w.dock.area);
+    if (!first) firstByArea.set(w.dock.area, w.id);
+    else adopted = mergeWindows(adopted, w.id, first);
+  }
+  const foundation: WindowRecord = {
+    id,
+    tabs: [{ id: tabId, facet: 'grid' }],
+    activeTab: tabId,
+    x: 24, y: 24, w: 640, h: 480, // float memory if foundations ever window
+    minimized: false,
+    desktop,
+    sticky: false,
+    foundation: def,
+  };
+  // sweep: a restored layout may carry ephemeral areas whose occupants are
+  // gone — they collapse immediately
+  return { list: normalizeFoundations([...adopted, foundation]), id };
+}
+
+// Grid memory: what unlock stashes so re-locking restores the same layout
+// (splits and sizes included) and the same homes for surviving windows.
+export interface GridStash {
+  def: FoundationDef;
+  assignments: Record<string, string>;
+}
+
+export function captureGrid(list: WindowRecord[], desktop: number): GridStash | null {
+  const f = foundationOn(list, desktop);
+  if (!f?.foundation) return null;
+  const assignments: Record<string, string> = {};
+  for (const w of list) {
+    if (w.dock?.foundation === f.id) assignments[w.id] = w.dock.area;
+  }
+  return { def: f.foundation, assignments };
+}
+
+// Close a foundation: every window docked to it falls back to its float
+// memory (docks cleared), the foundation is removed.
+export function closeFoundation(list: WindowRecord[], id: string): WindowRecord[] {
+  return list
+    .filter((w) => w.id !== id)
+    .map((w) => (w.dock?.foundation === id ? { ...w, dock: undefined } : w));
+}
+
+export function areaOccupants(list: WindowRecord[], foundation: string, area: string): WindowRecord[] {
+  return list.filter((w) => w.dock?.foundation === foundation && w.dock.area === area && !w.minimized);
+}
+
+export function foundationOn(list: WindowRecord[], desktop: number): WindowRecord | undefined {
+  return list.find((w) => w.foundation && w.desktop === desktop && !w.minimized);
+}
+
+// Probe the current desktop's foundation at a canvas point: which area is
+// under the pointer, whether it has an occupant frame (center-drop = tab
+// merge), and whether the pointer is in an edge band (drop = split that
+// side). An EMPTY box cannot be split — without an occupant the whole hole
+// is the drop target, so `edge` is only reported for occupied areas.
+// Returns null when no foundation or the point is outside all areas.
+export interface AreaProbe {
+  foundationId: string;
+  areaId: string;
+  rect: Rect;
+  occupantId: string | null;
+  edge: AreaEdge | null;
+}
+
+export function probeArea(
+  list: WindowRecord[],
+  size: { w: number; h: number },
+  desktop: number,
+  canvasX: number,
+  canvasY: number,
+  edgeBand: number,
+): AreaProbe | null {
+  const f = foundationOn(list, desktop);
+  if (!f?.foundation || size.w <= 0) return null;
+  const body = { x: 0, y: 0, w: size.w, h: size.h };
+  for (const [areaId, r] of areaRects(f.foundation.layout, body)) {
+    if (canvasX < r.x || canvasX > r.x + r.w || canvasY < r.y || canvasY > r.y + r.h) continue;
+    const distances: [AreaEdge, number][] = [
+      ['left', canvasX - r.x],
+      ['right', r.x + r.w - canvasX],
+      ['top', canvasY - r.y],
+      ['bottom', r.y + r.h - canvasY],
+    ];
+    const [edge, dist] = distances.reduce((a, b) => (b[1] < a[1] ? b : a));
+    const occupant = areaOccupants(list, f.id, areaId)[0];
+    return {
+      foundationId: f.id,
+      areaId,
+      rect: r,
+      occupantId: occupant?.id ?? null,
+      edge: occupant && dist <= edgeBand ? edge : null,
+    };
+  }
+  return null;
 }
 
 // Overview (Mission Control / App Exposé): grid placements for the given
