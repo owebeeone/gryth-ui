@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { useGrip } from '@owebeeone/grip-react';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
@@ -7,6 +7,7 @@ import {
   DESKTOP_OVERVIEW, DESKTOP_OVERVIEW_TAP,
   DESK_SLIDE, DESK_SLIDE_TAP,
   SIDEBAR_OPEN, SIDEBAR_OPEN_TAP,
+  SIDEBAR_WIDTH, SIDEBAR_WIDTH_TAP,
   DESKTOP_THEME, DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_THEMED,
   DESKTOP_ZOOM, DESKTOP_FONT_SCALE,
   DESKTOP_GRID_MEMORY_TAP,
@@ -25,7 +26,7 @@ import {
   hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
   moveWindow, moveWindowFree, openFoundation, openWindow, overviewLayout,
   placeWindows, probeArea, raiseWindow, resizeWindow, selectTab, sendToDesktop,
-  setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapSize,
+  setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapWindow,
   type Rect,
 } from './ops';
 import { FACETS, FACET_KINDS } from './facets';
@@ -99,6 +100,8 @@ export default function Desktop() {
   const currentTap = useGrip(DESKTOP_CURRENT_TAP);
   const sidebarOpen = useGrip(SIDEBAR_OPEN) ?? true;
   const sidebarTap = useGrip(SIDEBAR_OPEN_TAP);
+  const sidebarWidth = useGrip(SIDEBAR_WIDTH) ?? 200;
+  const sidebarWidthTap = useGrip(SIDEBAR_WIDTH_TAP);
   const drag = useGrip(WINDOW_DRAG) ?? null;
   const dragTap = useGrip(WINDOW_DRAG_TAP);
   const menu = useGrip(WINDOW_MENU) ?? null;
@@ -203,6 +206,22 @@ export default function Desktop() {
     overviewTap?.set(null);
   };
 
+  // The sidebar boundary drags like every other border. Width is environ
+  // state; the canvas observer republishes CANVAS_SIZE as it changes, so
+  // foundations and snapped frames track the boundary live.
+  const startSidebarDrag = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const aside = (e.currentTarget as HTMLElement).parentElement as HTMLElement;
+    const zoom = aside.offsetWidth ? aside.getBoundingClientRect().width / aside.offsetWidth : 1;
+    dragTap?.set({
+      kind: 'sidebar', id: 'sidebar', baseW: sidebarWidthTap?.get() ?? 200,
+      pointerX: e.clientX, pointerY: e.clientY,
+      canvasLeft: 0, canvasTop: 0, zoom,
+      dropTarget: null, dropDesktop: null, dropArea: null, dropSplit: null,
+    });
+    e.preventDefault();
+  };
+
   const switchDesktop = (desk: number) => {
     const cur = currentTap?.get() ?? 1;
     if (desk === cur) return;
@@ -239,17 +258,25 @@ export default function Desktop() {
     let d = dragTap?.get();
     if (!d) return;
     const size = canvasTap?.get() ?? { w: 0, h: 0 };
+    if (d.kind === 'sidebar') {
+      const dx = (clientX - d.pointerX) / d.zoom;
+      sidebarWidthTap?.set(Math.min(420, Math.max(150, d.baseW + dx)));
+      return;
+    }
     if (d.kind === 'splitter') {
       const s = d;
       const deltaPx = (s.axis === 'row' ? clientX - s.pointerX : clientY - s.pointerY) / s.zoom;
       const deltaW = (deltaPx / s.spanPx) * (s.baseA + s.baseB);
-      // empty sides may shrink to a sliver; occupied sides keep 8%
+      // empty sides may shrink to a few px (just a grab/dock target);
+      // occupied sides keep 8%. spanPx is the pair's exact pixel span, so
+      // px → weight-fraction is exact.
+      const EMPTY_MIN_PX = 6;
       const winsNow = windowsTap?.get() ?? [];
       const foundation = winsNow.find((w) => w.id === s.id);
       const minOf = (i: number) => {
         const ids = foundation?.foundation ? childLeafIds(foundation.foundation.layout, s.interiorId, i) : [];
         const empty = ids.length > 0 && ids.every((id) => areaOccupants(winsNow, s.id, id).length === 0);
-        return empty ? 0.02 : 0.08;
+        return empty ? EMPTY_MIN_PX / Math.max(EMPTY_MIN_PX, s.spanPx) : 0.08;
       };
       const minA = minOf(s.index);
       const minB = minOf(s.index + 1);
@@ -277,22 +304,34 @@ export default function Desktop() {
         d = restored;
       }
     }
-    // Dragging a snapped frame away: restore its remembered size, keeping
-    // the grab point proportionally under the pointer.
+    // Dragging a snapped frame away: release the snap; the float memory
+    // (the record's own geometry) provides the size, the grab point stays
+    // proportionally under the pointer.
     if (d.kind === 'move') {
       const frame = (windowsTap?.get() ?? []).find((w) => w.id === d!.id);
-      if (frame?.presnap) {
+      if (frame?.snap) {
         const startX = (d.pointerX - d.canvasLeft) / d.zoom;
         const grabRatio = Math.min(0.9, Math.max(0.05, (startX - d.baseX) / d.baseW));
         const restored = {
           ...d,
-          baseX: startX - grabRatio * frame.presnap.w,
-          baseW: frame.presnap.w,
-          baseH: frame.presnap.h,
+          baseX: startX - grabRatio * frame.w,
+          baseW: frame.w,
+          baseH: frame.h,
         };
-        windowsTap?.update((list) => unsnapSize(list, d!.id));
+        windowsTap?.update((list) => unsnapWindow(list, d!.id));
         dragTap?.set(restored);
         d = restored;
+      }
+    }
+    // Resizing a snapped frame: materialize its effective rect into the
+    // record first; the resize then owns a normal floater.
+    if (d.kind === 'resize') {
+      const fd0 = d;
+      const frame = (windowsTap?.get() ?? []).find((w) => w.id === fd0.id);
+      if (frame?.snap) {
+        windowsTap?.update((list) => list.map((w) => (w.id === fd0.id
+          ? { ...w, x: fd0.baseX, y: fd0.baseY, w: fd0.baseW, h: fd0.baseH, snap: undefined }
+          : w)));
       }
     }
     const canvasX = (clientX - d.canvasLeft) / d.zoom;
@@ -380,6 +419,10 @@ export default function Desktop() {
   const dragEnd = (clientX: number, clientY: number, altKey: boolean = false) => {
     const d = dragTap?.get();
     if (!d) return;
+    if (d.kind === 'sidebar') {
+      dragTap?.set(null);
+      return;
+    }
     const wins = windowsTap?.get() ?? [];
     const desk = currentTap?.get() ?? 1;
     if (d.kind === 'move') {
@@ -399,7 +442,7 @@ export default function Desktop() {
         windowsTap?.set(raiseWindow(dm.list, dm.frameId));
         focusedTap?.set(dm.frameId);
       } else if (!altKey && d.snapTarget) {
-        windowsTap?.set(snapWindow(wins, d.id, d.snapTarget, canvasSize()));
+        windowsTap?.set(snapWindow(wins, d.id, d.snapTarget));
       } else if (!altKey && d.dropTarget) {
         windowsTap?.set(mergeWindows(wins, d.id, d.dropTarget));
         focusedTap?.set(d.dropTarget);
@@ -606,7 +649,8 @@ export default function Desktop() {
       } as CSSProperties}
     >
       {sidebarOpen ? (
-        <aside className="sidebar">
+        <aside className="sidebar" style={{ width: sidebarWidth }}>
+          <div className="sidebar-resize" onMouseDown={startSidebarDrag} />
           <div className="sidebar-head">
             <span className="sidebar-brand">gryth</span>
             <button className="sidebar-toggle" title="Collapse sidebar" onClick={() => sidebarTap?.set(false)}>&lt;</button>

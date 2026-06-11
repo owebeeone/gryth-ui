@@ -35,7 +35,8 @@ html, body, #root {
 }
 
 .sidebar {
-  width: 200px;
+  width: 200px; /* default; the live width grip sets it inline */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -44,6 +45,19 @@ html, body, #root {
   background: var(--panel, color-mix(in srgb, currentColor 6%, transparent));
   font-size: 0.85em;
 }
+
+/* The sidebar boundary drags like every other border. */
+.sidebar-resize {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+.sidebar-resize:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.drag-overlay.sidebar { cursor: col-resize; }
 
 .sidebar.closed {
   width: 44px;
@@ -534,6 +548,7 @@ span.side-group-label { cursor: default; }
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden; /* sliver-thin holes clip their label */
 }
 .area-label {
   font-size: 0.75em;

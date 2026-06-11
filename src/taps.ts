@@ -6,6 +6,7 @@ import {
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
   DESKTOP_CURRENT, DESKTOP_CURRENT_TAP,
   SIDEBAR_OPEN, SIDEBAR_OPEN_TAP,
+  SIDEBAR_WIDTH, SIDEBAR_WIDTH_TAP,
   WINDOW_DRAG, WINDOW_DRAG_TAP,
   WINDOW_MENU, WINDOW_MENU_TAP,
   DESKTOP_OVERVIEW, DESKTOP_OVERVIEW_TAP,
@@ -61,6 +62,10 @@ export const DesktopCurrentTap = createAtomValueTap(DESKTOP_CURRENT, {
 export const SidebarOpenTap = createAtomValueTap(SIDEBAR_OPEN, {
   initial: true,
   handleGrip: SIDEBAR_OPEN_TAP,
+});
+export const SidebarWidthTap = createAtomValueTap(SIDEBAR_WIDTH, {
+  initial: 200,
+  handleGrip: SIDEBAR_WIDTH_TAP,
 });
 export const WindowMenuTap = createAtomValueTap(WINDOW_MENU, {
   initial: null,
@@ -123,6 +128,7 @@ export function registerAllTaps() {
   grok.registerTap(WindowDragTap);
   grok.registerTap(DesktopCurrentTap);
   grok.registerTap(SidebarOpenTap);
+  grok.registerTap(SidebarWidthTap);
   grok.registerTap(WindowMenuTap);
   grok.registerTap(DesktopOverviewTap);
   grok.registerTap(DesktopThemeTap);

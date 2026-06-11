@@ -51,9 +51,11 @@ export interface WindowRecord {
   minimized: boolean;
   desktop: number;     // which virtual desktop the frame lives on
   sticky: boolean;     // visible on all desktops
-  // Geometry remembered when the frame was edge-snapped; restored when the
-  // frame is dragged away, forgotten on manual resize.
-  presnap?: { x: number; y: number; w: number; h: number };
+  // Edge-snapped (Aero) frame: a symbolic dock onto the implicit 2×1/1×1
+  // grid. Effective geometry comes from the LIVE canvas in placeWindows —
+  // the frame stays glued to its half through canvas resizes (the
+  // grid-connect story); x/y/w/h above remain the FLOAT memory.
+  snap?: SnapTarget;
   // Foundation variant: this window provides docking areas (maximized).
   foundation?: FoundationDef;
   // Docked frame: rendered geometry is computed from the foundation's area;
@@ -78,6 +80,10 @@ export const DESKTOP_CURRENT_TAP = defineGrip<AtomTapHandle<number>>('Desktop.Cu
 // Sidebar collapsed/expanded (environ — desktop-geometry preference).
 export const SIDEBAR_OPEN = defineGrip<boolean>('Desktop.SidebarOpen', true);
 export const SIDEBAR_OPEN_TAP = defineGrip<AtomTapHandle<boolean>>('Desktop.SidebarOpen.Tap');
+
+// Sidebar width in layout px (environ): its boundary drags like any other.
+export const SIDEBAR_WIDTH = defineGrip<number>('Desktop.SidebarWidth', 200);
+export const SIDEBAR_WIDTH_TAP = defineGrip<AtomTapHandle<number>>('Desktop.SidebarWidth.Tap');
 
 // Display (environ): whole-UI zoom (true scaling) and a unitless FONT scale
 // 5–15 (10 = 100%) that scales text only — chrome font sizes are em-based
@@ -162,7 +168,12 @@ export interface SplitterDrag extends DragBase {
   baseB: number;
   spanPx: number;      // parent span in pixels along the axis
 }
-export type WindowDrag = FrameDrag | TabDrag | SplitterDrag;
+// Sidebar boundary drag: adjusts the sidebar width (an environ preference).
+export interface SidebarDrag extends DragBase {
+  kind: 'sidebar';
+  baseW: number; // sidebar width at drag start
+}
+export type WindowDrag = FrameDrag | TabDrag | SplitterDrag | SidebarDrag;
 export const WINDOW_DRAG = defineGrip<WindowDrag | null>('Desktop.WindowDrag', null);
 export const WINDOW_DRAG_TAP = defineGrip<AtomTapHandle<WindowDrag | null>>('Desktop.WindowDrag.Tap');
 

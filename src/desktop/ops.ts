@@ -84,8 +84,8 @@ export function moveWindowFree(list: WindowRecord[], id: string, x: number, y: n
 
 export function resizeWindow(list: WindowRecord[], id: string, w: number, h: number): WindowRecord[] {
   return list.map((win) => (win.id === id
-    // a manual resize forgets snap memory
-    ? { ...win, w: Math.max(MIN_W, w), h: Math.max(MIN_H, h), presnap: undefined }
+    // a manual resize releases an edge snap
+    ? { ...win, w: Math.max(MIN_W, w), h: Math.max(MIN_H, h), snap: undefined }
     : win));
 }
 
@@ -216,19 +216,13 @@ export function snapRect(target: SnapTarget, area: { w: number; h: number }): { 
     : { x: half, y: 0, w: area.w - half, h: area.h };
 }
 
-export function snapWindow(
-  list: WindowRecord[],
-  id: string,
-  target: SnapTarget,
-  area: { w: number; h: number },
-): WindowRecord[] {
-  const r = snapRect(target, area);
+// Snap is a SYMBOLIC dock onto the implicit 2×1/1×1 grid: only the target
+// is stored; placeWindows substitutes the live rect every render, so the
+// frame stays glued to its half through canvas resizes. The record's own
+// geometry is untouched — it remains the float memory.
+export function snapWindow(list: WindowRecord[], id: string, target: SnapTarget): WindowRecord[] {
   return list.map((w) => (w.id === id
-    ? {
-      ...w, x: r.x, y: r.y, w: r.w, h: r.h, minimized: false,
-      // remember the ORIGINAL geometry across re-snaps
-      presnap: w.presnap ?? { x: w.x, y: w.y, w: w.w, h: w.h },
-    }
+    ? { ...w, snap: target, dock: undefined, minimized: false }
     : w));
 }
 
@@ -250,12 +244,10 @@ export function clampAllWindows(list: WindowRecord[], area: { w: number; h: numb
   return changed ? next : list;
 }
 
-// Dragging a snapped frame away restores its remembered size; the drag owns
-// the position. No-op for frames with no snap memory.
-export function unsnapSize(list: WindowRecord[], id: string): WindowRecord[] {
-  return list.map((w) => (w.id === id && w.presnap
-    ? { ...w, w: w.presnap.w, h: w.presnap.h, presnap: undefined }
-    : w));
+// Release an edge snap: the frame floats again at its remembered (float
+// memory) geometry. No-op for unsnapped frames.
+export function unsnapWindow(list: WindowRecord[], id: string): WindowRecord[] {
+  return list.map((w) => (w.id === id && w.snap ? { ...w, snap: undefined } : w));
 }
 
 // ---------------------------------------------------------------------------
@@ -459,14 +451,19 @@ export function placeWindows(list: WindowRecord[], area: { w: number; h: number 
       const r = rectsByFoundation.get(w.dock.foundation)?.get(w.dock.area);
       if (r) return { ...w, x: r.x, y: r.y, w: r.w, h: r.h };
     }
+    if (w.snap) {
+      const r = snapRect(w.snap, area);
+      return { ...w, x: r.x, y: r.y, w: r.w, h: r.h };
+    }
     return w;
   });
 }
 
 export function dockWindow(list: WindowRecord[], id: string, foundation: string, area: string): WindowRecord[] {
-  // re-docking elsewhere may empty the frame's previous ephemeral area
+  // re-docking elsewhere may empty the frame's previous ephemeral area;
+  // dock and snap are exclusive homes
   return normalizeFoundations(
-    list.map((w) => (w.id === id ? { ...w, dock: { foundation, area }, minimized: false } : w)),
+    list.map((w) => (w.id === id ? { ...w, dock: { foundation, area }, snap: undefined, minimized: false } : w)),
   );
 }
 
@@ -510,7 +507,8 @@ export function openFoundation(
     const area = (remembered && leafIds.has(remembered))
       ? remembered
       : def.designate[facet] ?? def.fallback;
-    return { ...w, dock: { foundation: id, area } };
+    // adoption docks the frame; an edge snap yields (exclusive homes)
+    return { ...w, dock: { foundation: id, area }, snap: undefined };
   });
   // multiply-allocated areas tab together: fold later arrivals into the
   // first frame per area

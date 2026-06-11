@@ -5,7 +5,7 @@ import {
   moveWindow, resizeWindow,
   mergeWindows, selectTab, closeTab, hitTitlebar,
   detachTab, moveTab, sendToDesktop, setSticky, isOnDesktop,
-  moveWindowFree, overviewLayout, snapRect, snapWindow, unsnapSize,
+  moveWindowFree, overviewLayout, snapRect, snapWindow, unsnapWindow,
   clampAllWindows,
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
@@ -222,29 +222,39 @@ describe('desktop ops', () => {
     expect(r.x).toBe(l.x + l.w);
 
     const list = openMany(['chat', 'chat']);
-    const snapped = snapWindow(list, list[0].id, 'left', area);
-    expect(snapped[0]).toMatchObject({ x: 0, y: 0, w: 600, h: 800 });
-    expect(snapped[1]).toMatchObject({ x: list[1].x, y: list[1].y }); // others untouched
+    const snapped = snapWindow(list, list[0].id, 'left');
+    expect(snapped[0].snap).toBe('left');
+    expect(snapped[1].snap).toBeUndefined(); // others untouched
   });
 
-  it('remembers pre-snap geometry and restores it on unsnap', () => {
-    const area = { w: 1200, h: 800 };
+  it('snap is symbolic: the frame stays glued to the canvas through resizes', () => {
     const list = openMany(['chat']); // 400x300 at 48,48
     const id = list[0].id;
-    const snapped = snapWindow(list, id, 'left', area);
-    expect(snapped[0].presnap).toEqual({ x: 48, y: 48, w: 400, h: 300 });
-    // re-snapping keeps the ORIGINAL pre-snap geometry
-    const resnapped = snapWindow(snapped, id, 'right', area);
-    expect(resnapped[0].presnap).toEqual({ x: 48, y: 48, w: 400, h: 300 });
-    // unsnap restores size (position is the drag's business) and clears
-    const un = unsnapSize(resnapped, id);
-    expect(un[0]).toMatchObject({ w: 400, h: 300 });
-    expect(un[0].presnap).toBeUndefined();
-    // unsnap with no presnap is a no-op
-    expect(unsnapSize(list, id)[0]).toMatchObject({ w: 400, h: 300 });
-    // a manual resize forgets the snap memory
-    const resized = resizeWindow(resnapped, id, 500, 400);
-    expect(resized[0].presnap).toBeUndefined();
+    const snapped = snapWindow(list, id, 'right');
+    // float memory untouched — snap is a dock, not a geometry copy
+    expect(snapped[0]).toMatchObject({ x: 48, y: 48, w: 400, h: 300, snap: 'right' });
+    const placed = placeWindows(snapped, { w: 1201, h: 800 });
+    expect(placed[0]).toMatchObject({ x: 600, y: 0, w: 601, h: 800 });
+    // the canvas grows — the frame tracks its half (the grid-connect story)
+    const wider = placeWindows(snapped, { w: 1600, h: 900 });
+    expect(wider[0]).toMatchObject({ x: 800, y: 0, w: 800, h: 900 });
+    // re-snapping just retargets
+    expect(snapWindow(snapped, id, 'full')[0].snap).toBe('full');
+    // unsnap releases it; the float memory is exactly what it was
+    const un = unsnapWindow(snapped, id);
+    expect(un[0].snap).toBeUndefined();
+    expect(un[0]).toMatchObject({ x: 48, y: 48, w: 400, h: 300 });
+    // a manual resize op also releases the snap
+    expect(resizeWindow(snapped, id, 500, 400)[0].snap).toBeUndefined();
+    // docking releases the snap (dock and snap are exclusive homes)
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const f = openFoundation(snapped, 1, { layout: TREE, designate: {}, fallback: 'stage' });
+    const dockedFrame = f.list.find((w) => w.id === id)!;
+    expect(dockedFrame.dock).toBeTruthy();
+    expect(dockedFrame.snap).toBeUndefined();
   });
 
   it('computes nested area rects from a layout tree', () => {
