@@ -1,0 +1,124 @@
+/* Workspace viewer — @grythjs/plugin-workspace. Colors derive from the
+   desktop theme via currentColor mixes and var(--win); no theme coupling. */
+.ws-viewer {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+.ws-list {
+  width: 150px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  overflow: auto;
+  border-right: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+.ws-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+  text-align: left;
+}
+.ws-item:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.ws-item.active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.ws-icon { flex: none; font-size: 1.05em; }
+.ws-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ws-graph-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ws-viewer .graph-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ws-viewer .graph-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.graph-hint { font-size: 0.72em; opacity: 0.55; }
+.graph-ghost {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75em;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+}
+.graph-ghost:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.ws-viewer .graph-svg {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  user-select: none;
+}
+
+.gnode-body {
+  color: var(--text, inherit);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  height: 100%;
+}
+.gnode-title { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.gnode-title strong { font-size: 0.8em; }
+.gnode-meta { display: flex; gap: 6px; align-items: center; font-size: 0.65em; flex-wrap: wrap; opacity: 0.85; }
+.gnode-sha { font-family: ui-monospace, monospace; opacity: 0.7; }
+.gnode-ahead { color: #3fb950; }
+.gnode-behind { color: #f85149; }
+.gnode-state {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.62em;
+}
+.gnode-state.clean { background: color-mix(in srgb, #3fb950 18%, transparent); color: #3fb950; }
+.gnode-state.dirty { background: color-mix(in srgb, #e3b341 18%, transparent); color: #e3b341; }
+.gnode-files {
+  list-style: none;
+  padding: 0;
+  margin: 2px 0 0;
+  font-size: 0.66em;
+  overflow: auto;
+  font-family: ui-monospace, monospace;
+  opacity: 0.85;
+}
+.gnode-files li { margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.gnode-file-link {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gnode-file-link:hover { color: var(--accent); text-decoration: underline; }

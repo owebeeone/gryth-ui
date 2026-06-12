@@ -1,7 +1,5 @@
 import type { MouseEvent } from 'react';
-import type { WindowRecord } from '../grips.desktop';
 import { SEG_PAD } from './ticker';
-import { FACETS } from './facets';
 
 // DOM-side helpers for the ticker strip (separate from TickerStrip.tsx so
 // the component file only exports components — fast-refresh rule).
@@ -29,7 +27,9 @@ function measureLabel(text: string, px: number): number {
 // .tk-label is 0.78em of the desktop root font (fontScale 10 = 15px).
 const tickerLabelPx = (fontScale: number) => fontScale * 1.5 * 0.78;
 
-export function tickerNaturals(win: WindowRecord, fontScale: number): number[] {
+// Strings are data: the solver measures the tabs' canonical label text
+// (resolved from the registry by the caller), never components.
+export function tickerNaturals(labels: string[], fontScale: number): number[] {
   const px = tickerLabelPx(fontScale);
-  return win.tabs.map((t) => measureLabel(FACETS[t.facet].title, px) + SEG_PAD);
+  return labels.map((label) => measureLabel(label, px) + SEG_PAD);
 }

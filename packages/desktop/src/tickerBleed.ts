@@ -1,5 +1,5 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
-import type { TickerBleed } from '../grips.desktop';
+import type { TickerBleed } from './grips.desktop';
 import type { Rect } from './ops';
 
 // Gesture timing for the bleed picker (instance-scope module state, the

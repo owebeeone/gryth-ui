@@ -7,5 +7,5 @@ export default defineConfig({
   resolve: { dedupe: ['react', 'react-dom'] },
   optimizeDeps: { exclude: ['@owebeeone/grip-react'] },
   // scripts/*.test.mjs are node check scripts (run by `npm test` directly), not vitest suites
-  test: { include: ['src/**/*.test.{ts,tsx}'] },
+  test: { include: ['src/**/*.test.{ts,tsx}', 'packages/**/src/**/*.test.{ts,tsx}'] },
 })

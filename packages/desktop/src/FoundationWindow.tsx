@@ -4,7 +4,7 @@ import {
   DESKTOP_WINDOWS,
   WINDOW_DRAG, WINDOW_DRAG_TAP, AREA_MENU_TAP,
   type LayoutNode, type WindowRecord,
-} from '../grips.desktop';
+} from './grips.desktop';
 import { areaOccupants, areaRects, type Rect } from './ops';
 
 // A foundation is pure scaffolding: no chrome at all — just dockable holes

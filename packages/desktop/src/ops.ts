@@ -1,4 +1,4 @@
-import type { AreaEdge, FacetKind, FoundationDef, LayoutNode, SnapTarget, WindowRecord } from '../grips.desktop';
+import type { AreaEdge, FacetKind, FoundationDef, LayoutNode, SnapTarget, WindowRecord } from './grips.desktop';
 
 // Pure transforms over the desktop document (the DESKTOP_WINDOWS list).
 // Window chrome applies these through the atom tap handle; headless
@@ -37,13 +37,14 @@ export function openWindow(
   facet: FacetKind,
   size: { w: number; h: number },
   desktop: number = 1,
+  params?: Record<string, unknown>,
 ): { list: WindowRecord[]; id: string } {
   const id = nextWindowId(list);
   const tabId = nextTabId(list);
   const step = list.length % 8;
   const win: WindowRecord = {
     id,
-    tabs: [{ id: tabId, facet }],
+    tabs: [{ id: tabId, facet, params }],
     activeTab: tabId,
     x: ORIGIN + step * CASCADE,
     y: ORIGIN + step * CASCADE,
@@ -54,6 +55,30 @@ export function openWindow(
     sticky: false,
   };
   return { list: [...list, win], id };
+}
+
+// Open a tool from a LINK (toolId + serializable params): the one open
+// path shared by the launcher, plugins, and agents (the Desktop.OpenTool
+// intent). v1 window policy: ALWAYS a new window — find-or-switch is a
+// later optimization. On a gridded desktop the new window docks straight
+// into its designated home (tabbing with any occupant).
+export function openToolWindow(
+  list: WindowRecord[],
+  facet: FacetKind,
+  size: { w: number; h: number },
+  desktop: number,
+  params?: Record<string, unknown>,
+): { list: WindowRecord[]; id: string; focusId: string } {
+  const result = openWindow(list, facet, size, desktop, params);
+  let next = result.list;
+  let focusId = result.id;
+  const f = foundationOn(next, desktop);
+  if (f?.foundation) {
+    const dm = dockOrMerge(next, result.id, f.id, f.foundation.designate[facet] ?? f.foundation.fallback);
+    next = dm.list;
+    focusId = dm.frameId;
+  }
+  return { list: next, id: result.id, focusId };
 }
 
 export function closeWindow(list: WindowRecord[], id: string): WindowRecord[] {

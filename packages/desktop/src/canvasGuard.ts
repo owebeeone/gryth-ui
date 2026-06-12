@@ -1,5 +1,5 @@
-import { grok } from '../runtime';
-import { CANVAS_SIZE_TAP, DESKTOP_WINDOWS_TAP } from '../grips.desktop';
+import { grok } from '@grythjs/plugin-api';
+import { CANVAS_SIZE_TAP, DESKTOP_WINDOWS_TAP } from './grips.desktop';
 import { clampAllWindows } from './ops';
 
 // Imperative canvas watcher kept out of React (cf. terminalController /

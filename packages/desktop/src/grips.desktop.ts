@@ -1,7 +1,12 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
-import { defineGrip } from './runtime';
-import type { ThemeId } from './desktop/themes';
-import type { GridStash, Rect } from './desktop/ops';
+import { defineGrip, type GrythPlugin, type ToolId } from '@grythjs/plugin-api';
+import type { ThemeId } from './themes';
+import type { GridStash, Rect } from './ops';
+
+// The desktop's own plugin: the not-yet-converted builtin tools, published
+// at this grip like any other plugin (the chrome hard-codes ITS grip — the
+// desktop holds no plugin directory).
+export const DESKTOP_BUILTINS_PLUGIN = defineGrip<GrythPlugin>('Desktop.BuiltinTools.Plugin');
 
 // The desktop document — environ scope. This is the serializable class-1
 // atom map that persists and roams across the user's instances, and the
@@ -10,7 +15,10 @@ import type { GridStash, Rect } from './desktop/ops';
 // Z-order is array order (last = topmost); raise = move to end. Split to
 // per-window atoms when replication needs per-window LWW — not before.
 
-export type FacetKind = 'welcome' | 'chat' | 'terminal' | 'diff' | 'settings' | 'explorer' | 'grid';
+// Tool ids are open strings (any registered plugin can add tools); the
+// name FacetKind survives as the desktop document's vocabulary for "what a
+// tab shows". Unknown ids render the MissingTool placeholder.
+export type FacetKind = ToolId;
 
 // Foundation windows: a window whose job is to provide docking areas.
 // The layout tree's LEAVES are areas (untyped homes); interior nodes split
@@ -38,6 +46,10 @@ export interface FoundationDef {
 export interface TabRecord {
   id: string;
   facet: FacetKind;
+  // The LINK snapshot that opened this tab (serializable grip values —
+  // repo, path, ref, …). Seeded into the tool's per-tab context; rides
+  // along through merge/detach; rehydrates the view after reload.
+  params?: Record<string, unknown>;
 }
 
 export interface WindowRecord {

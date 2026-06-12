@@ -16,7 +16,15 @@ import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const srcDir = join(root, 'src');
+// app src + every workspace package's src
+const pkgSrcDirs = (dir) => {
+  try { return readdirSync(dir).map((p) => join(dir, p, 'src')); } catch { return []; }
+};
+const srcDirs = [
+  join(root, 'src'),
+  ...pkgSrcDirs(join(root, 'packages')),
+  ...pkgSrcDirs(join(root, 'packages', 'plugins')),
+].filter((d) => { try { return statSync(d).isDirectory(); } catch { return false; } });
 
 const BANNED = [
   'useState',
@@ -62,7 +70,7 @@ function stripCommentsAndStrings(code) {
 const violations = [];
 const usedApprovalIds = new Set();
 
-for (const file of walk(srcDir)) {
+for (const file of srcDirs.flatMap(walk)) {
   const relFile = relative(root, file).split('\\').join('/');
   const raw = readFileSync(file, 'utf8');
   const rawLines = raw.split('\n');

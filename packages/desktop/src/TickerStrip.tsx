@@ -1,16 +1,17 @@
 import type { CSSProperties, MouseEvent } from 'react';
 import { useGrip } from '@owebeeone/grip-react';
+import { PLUGIN_REGISTRY, allTools } from '@grythjs/plugin-api';
 import {
   DESKTOP_FONT_SCALE, DESKTOP_WINDOWS_TAP,
   TICKER_HOVER, TICKER_HOVER_TAP, TICKER_BLEED_TAP,
   WINDOW_DRAG_TAP,
   type WindowRecord,
-} from '../grips.desktop';
+} from './grips.desktop';
 import { selectTab } from './ops';
 import { SEG_PAD, clipFor, squeezeScale, tickerBoxes, tickerWidths } from './ticker';
 import { canvasOrigin, tickerNaturals } from './tickerDom';
 import { bleedEnter, bleedLeave } from './tickerBleed';
-import { FACETS } from './facets';
+import { resolveTool } from './facets';
 
 // The shaped-ticker tab strip: slanted interlocking segments that always
 // fill the strip exactly (ticker.ts solves the widths). The SAME component
@@ -32,8 +33,10 @@ export default function TickerStrip({ win, width, height, bleed, from }: {
   const hoverTap = useGrip(TICKER_HOVER_TAP);
   const bleedTap = useGrip(TICKER_BLEED_TAP);
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
+  const defs = allTools(useGrip(PLUGIN_REGISTRY));
 
-  const naturals = tickerNaturals(win, fontScale);
+  const labelOf = (facet: string) => resolveTool(defs, facet).label;
+  const naturals = tickerNaturals(win.tabs.map((t) => labelOf(t.facet)), fontScale);
   const activeIdx = Math.max(0, win.tabs.findIndex((t) => t.id === win.activeTab));
   const hoverIdx = hover?.frameId === win.id ? win.tabs.findIndex((t) => t.id === hover.tabId) : -1;
   const ws = tickerWidths({ naturals, active: activeIdx, hover: hoverIdx >= 0 ? hoverIdx : null, width });
@@ -100,7 +103,7 @@ export default function TickerStrip({ win, width, height, bleed, from }: {
           <button
             key={t.id}
             className={`tk-seg${isActive ? ' active' : ''}`}
-            title={FACETS[t.facet].title}
+            title={labelOf(t.facet)}
             style={{
               left: boxes[i].left,
               width: boxes[i].width,
@@ -115,7 +118,7 @@ export default function TickerStrip({ win, width, height, bleed, from }: {
               className="tk-label"
               style={{ transform: scale < 1 ? `scaleX(${scale})` : undefined }}
             >
-              {FACETS[t.facet].title}
+              {labelOf(t.facet)}
             </span>
           </button>
         );

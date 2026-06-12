@@ -1,12 +1,12 @@
 import { useGrip } from '@owebeeone/grip-react';
-import { WORKSPACE_NAME } from '../grips';
+import { WORKSPACE_NAME } from '@grythjs/plugin-api';
 import {
   DESKTOP_THEME, DESKTOP_THEME_TAP,
   DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_TAP,
   DESKTOP_WALLPAPER_THEMED, DESKTOP_WALLPAPER_THEMED_TAP,
   DESKTOP_ZOOM, DESKTOP_ZOOM_TAP,
   DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP,
-} from '../grips.desktop';
+} from './grips.desktop';
 import { THEMES, THEME_IDS } from './themes';
 
 // Facet components are ordinary grip components — they render content and
@@ -36,8 +36,26 @@ export function TerminalFacet() {
   return <div className="facet-pad">Terminal — waiting on flow-type design.</div>;
 }
 
-export function ExplorerFacet() {
-  // mock file tree until the workspace tree surface lands
+export function ExplorerFacet({ params }: { params?: Record<string, unknown> }) {
+  // mock file tree until the workspace tree surface lands. A link may ask
+  // us to REVEAL a file ('repo::path' in params): the tree renders that
+  // path expanded with the file highlighted.
+  const reveal = typeof params?.reveal === 'string' ? params.reveal : '';
+  if (reveal) {
+    const [repo, file] = reveal.split('::');
+    const segments = (file ?? '').split('/');
+    const fileName = segments[segments.length - 1];
+    const dirs = segments.slice(0, -1);
+    return (
+      <div className="facet-pad explorer-tree">
+        <div className="explorer-dir">{repo}/</div>
+        {dirs.map((d, i) => (
+          <div key={d} className={`explorer-dir indent-${Math.min(3, i + 1)}`}>{d}/</div>
+        ))}
+        <div className={`explorer-file revealed indent-${Math.min(3, dirs.length + 1)}`}>{fileName}</div>
+      </div>
+    );
+  }
   return (
     <div className="facet-pad explorer-tree">
       <div className="explorer-dir">gryth-ui/</div>
@@ -129,6 +147,17 @@ export function SettingsFacet() {
         value={wallpaper}
         onChange={(e) => wallpaperTap?.set(e.target.value)}
       />
+    </div>
+  );
+}
+
+// Rendered when no registered plugin provides the tab's tool id — partial
+// clients are a defined state, not a crash (see GrythPluginContract.md).
+export function MissingToolFacet({ toolId }: { toolId: string }) {
+  return (
+    <div className="facet-pad">
+      <h2>Missing tool</h2>
+      <p>No registered plugin provides <code>{toolId}</code>.</p>
     </div>
   );
 }

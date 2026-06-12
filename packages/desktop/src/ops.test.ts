@@ -5,13 +5,13 @@ import {
   moveWindow, resizeWindow,
   mergeWindows, selectTab, closeTab, hitTitlebar,
   detachTab, moveTab, sendToDesktop, setSticky, isOnDesktop,
-  moveWindowFree, overviewLayout, snapRect, snapWindow, unsnapWindow,
+  moveWindowFree, openToolWindow, overviewLayout, snapRect, snapWindow, unsnapWindow,
   clampAllWindows,
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
   dockOrMerge, probeArea, normalizeFoundations, captureGrid,
 } from './ops';
-import type { FacetKind, LayoutNode, WindowRecord } from '../grips.desktop';
+import type { FacetKind, LayoutNode, WindowRecord } from './grips.desktop';
 
 const SIZE = { w: 400, h: 300 };
 
@@ -576,5 +576,32 @@ describe('desktop ops', () => {
     expect(hitTitlebar(min, inside.x, inside.y, 'none')).toBeNull();
     // outside everything
     expect(hitTitlebar(list, 5, 5, 'none')).toBeNull();
+  });
+});
+
+describe('tool links and open intents', () => {
+  it('stores tab params on open; they ride along through merge and detach', () => {
+    const opened = openWindow([], 'viewer', SIZE, 1, { path: 'src/x.ts', repo: 'lib' });
+    expect(opened.list[0].tabs[0].params).toEqual({ path: 'src/x.ts', repo: 'lib' });
+    const two = openWindow(opened.list, 'chat', SIZE).list;
+    const merged = mergeWindows(two, opened.id, two[1].id);
+    const frame = merged.find((w) => w.tabs.some((t) => t.params))!;
+    const tab = frame.tabs.find((t) => t.params)!;
+    const out = detachTab(merged, frame.id, tab.id, { x: 5, y: 5 }, SIZE, 1);
+    const moved = out.list.find((w) => w.id === out.id)!;
+    expect(moved.tabs[0].params).toEqual({ path: 'src/x.ts', repo: 'lib' });
+  });
+
+  it('openToolWindow floats on a plain desktop and docks home on a gridded one', () => {
+    const plain = openToolWindow([], 'chat', SIZE, 1, { a: 1 });
+    expect(plain.list.find((w) => w.id === plain.id)!.tabs[0].params).toEqual({ a: 1 });
+    const TREE: LayoutNode = {
+      id: 'root', size: 100, direction: 'row',
+      children: [{ id: 'crew', size: 30 }, { id: 'stage', size: 70 }],
+    };
+    const f = openFoundation([], 1, { layout: TREE, designate: { chat: 'crew' }, fallback: 'stage' });
+    const out = openToolWindow(f.list, 'chat', SIZE, 1);
+    const frame = out.list.find((w) => w.id === out.focusId)!;
+    expect(frame.dock).toEqual({ foundation: f.id, area: 'crew' });
   });
 });

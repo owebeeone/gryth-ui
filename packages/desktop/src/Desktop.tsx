@@ -1,5 +1,6 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { useGrip } from '@owebeeone/grip-react';
+import { PLUGIN_REGISTRY, allTools, DESKTOP_OPEN_TOOL, WORKSPACE_NAME } from '@grythjs/plugin-api';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
@@ -17,19 +18,18 @@ import {
   CANVAS_SIZE, CANVAS_SIZE_TAP,
   TICKER_BLEED, TICKER_BLEED_TAP,
   type AreaEdge, type FacetKind, type SnapTarget, type WindowRecord,
-} from '../grips.desktop';
-import { WORKSPACE_NAME } from '../grips';
+} from './grips.desktop';
 import {
   DESKTOP_IDS,
   areaOccupants, captureGrid, childLeafIds, closeArea, closeFoundation,
   detachTab, dockOrMerge, foundationOn,
   hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
-  moveWindow, moveWindowFree, openFoundation, openWindow, overviewLayout,
+  moveWindow, moveWindowFree, openFoundation, overviewLayout,
   placeWindows, probeArea, raiseWindow, resizeWindow, selectTab, sendToDesktop,
   setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapWindow,
   type Rect,
 } from './ops';
-import { FACETS, FACET_KINDS } from './facets';
+import { resolveTool } from './facets';
 import { SCHEME_WALLPAPERS, THEMES } from './themes';
 import { HUB } from './foundations';
 import { observeCanvas } from './canvasGuard';
@@ -123,6 +123,11 @@ export default function Desktop() {
   const bleed = useGrip(TICKER_BLEED) ?? null;
   const bleedTap = useGrip(TICKER_BLEED_TAP);
   const workspace = useGrip(WORKSPACE_NAME);
+  const openTool = useGrip(DESKTOP_OPEN_TOOL);
+  // Tool resolution enumerates registry DATA — the chrome imports no
+  // plugin. Tool defs are stable within a gesture (plugins don't churn
+  // mid-drag), so handlers may read the render value.
+  const defs = allTools(useGrip(PLUGIN_REGISTRY));
 
   const theme = THEMES[themeId];
   // Wallpaper: cover semantics, so the image's aspect ratio survives any
@@ -175,22 +180,9 @@ export default function Desktop() {
     focusedTap?.set(vis[vis.length - 1]?.id ?? null);
   };
 
+  // The launcher opens through the SAME intent plugins and agents use.
   const open = (kind: FacetKind) => {
-    const wins = windowsTap?.get() ?? [];
-    const desk = currentTap?.get() ?? 1;
-    const result = openWindow(wins, kind, FACETS[kind].defaultSize, desk);
-    let next = result.list;
-    let focusId = result.id;
-    // a new window opened onto a gridded desktop docks straight into its
-    // home — tabbing with whatever already lives there
-    const f = foundationOn(next, desk);
-    if (f?.foundation) {
-      const dm = dockOrMerge(next, result.id, f.id, f.foundation.designate[kind] ?? f.foundation.fallback);
-      next = dm.list;
-      focusId = dm.frameId;
-    }
-    windowsTap?.set(next);
-    focusedTap?.set(focusId);
+    openTool?.({ toolId: kind });
     overviewTap?.set(null);
   };
 
@@ -467,7 +459,7 @@ export default function Desktop() {
       }
       const canvasX = (clientX - d.canvasLeft) / d.zoom;
       const canvasY = (clientY - d.canvasTop) / d.zoom;
-      const size = FACETS[d.facet].defaultSize;
+      const size = resolveTool(defs, d.facet).defaultSize;
       if (d.dropDesktop) {
         const out = detachTab(wins, d.id, d.tabId, { x: 96, y: 96 }, size, d.dropDesktop);
         windowsTap?.set(out.list);
@@ -656,11 +648,17 @@ export default function Desktop() {
             <button className="sidebar-toggle" title="Collapse sidebar" onClick={() => sidebarTap?.set(false)}>&lt;</button>
           </div>
           <nav className="sidebar-launcher">
-            {FACET_KINDS.filter((kind) => kind !== 'grid').map((kind) => (
-              <button key={kind} title={`Open ${FACETS[kind].title}`} onClick={() => open(kind)}>
-                + {FACETS[kind].title}
-              </button>
-            ))}
+            {Object.keys(defs).filter((kind) => kind !== 'grid').map((kind) => {
+              // tool ids are open strings at the contract; the desktop's
+              // window records keep the FacetKind union until Phase 4
+              const def = defs[kind];
+              const MenuTitle = def.menuTitle;
+              return (
+                <button key={kind} title={`Open ${def.label}`} onClick={() => open(kind as FacetKind)}>
+                  + {MenuTitle ? <MenuTitle /> : def.label}
+                </button>
+              );
+            })}
           </nav>
           {desktopIcons}
           <nav className="sidebar-windows">
@@ -693,7 +691,7 @@ export default function Desktop() {
                       className={`side-win${w.id === focused ? ' focused' : ''}${w.minimized ? ' minimized' : ''}`}
                       onClick={() => restore(w.id)}
                     >
-                      <span className="side-title">{FACETS[active.facet].title}</span>
+                      <span className="side-title">{resolveTool(defs, active.facet).label}</span>
                       {w.tabs.length > 1 && <span className="side-count">{w.tabs.length}</span>}
                       <span className="gwin-id">{w.dock ? w.dock.area : w.id}</span>
                     </button>
@@ -735,7 +733,7 @@ export default function Desktop() {
         ))}
         {drag?.kind === 'tab' && drag.moved && (
           <div className="tab-ghost" style={{ left: drag.ghostX, top: drag.ghostY }}>
-            {FACETS[drag.facet].title}
+            {resolveTool(defs, drag.facet).label}
           </div>
         )}
         {drag?.kind === 'move' && drag.snapTarget && (() => {
@@ -776,7 +774,7 @@ export default function Desktop() {
           const frame = windows.find((w) => w.id === bleed.frameId);
           if (!frame || frame.tabs.length < 2 || frame.minimized
             || !isOnDesktop(hostOf(windows, frame), current)) return null;
-          const naturals = tickerNaturals(frame, fontScale);
+          const naturals = tickerNaturals(frame.tabs.map((t) => resolveTool(defs, t.facet).label), fontScale);
           const needed = naturals.reduce((a, b) => a + b, 0);
           const er = bleedRect(bleed.anchor, needed, canvas);
           const activeIdx = Math.max(0, frame.tabs.findIndex((t) => t.id === frame.activeTab));

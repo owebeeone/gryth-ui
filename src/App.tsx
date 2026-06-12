@@ -1,4 +1,4 @@
-import Desktop from './desktop/Desktop';
+import { Desktop } from '@grythjs/desktop';
 
 export default function App() {
   return <Desktop />;

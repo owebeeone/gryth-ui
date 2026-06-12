@@ -1,14 +1,15 @@
 import type { MouseEvent } from 'react';
 import { useGrip } from '@owebeeone/grip-react';
+import { PLUGIN_REGISTRY, allTools } from '@grythjs/plugin-api';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP, DESKTOP_FOCUSED_TAP,
   WINDOW_DRAG_TAP, WINDOW_MENU_TAP, DESKTOP_FONT_SCALE,
   type WindowRecord,
-} from '../grips.desktop';
+} from './grips.desktop';
 import { closeTab, minimizeWindow, raiseWindow, type OverviewPlacement, type Rect } from './ops';
 import TickerStrip from './TickerStrip';
 import { canvasOrigin } from './tickerDom';
-import { FACETS } from './facets';
+import { resolveTool } from './facets';
 
 // Overview presentation handed down by the desktop: a placement transform
 // for members of the grid, dimming for non-members (App Exposé), and the
@@ -39,8 +40,11 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
   const dragTap = useGrip(WINDOW_DRAG_TAP);
   const menuTap = useGrip(WINDOW_MENU_TAP);
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
+  // tool resolution enumerates registry DATA — the chrome imports no plugin
+  const defs = allTools(useGrip(PLUGIN_REGISTRY));
   const active = win.tabs.find((t) => t.id === win.activeTab) ?? win.tabs[0];
-  const Facet = FACETS[active.facet].Component;
+  const activeDef = resolveTool(defs, active.facet);
+  const Facet = activeDef.windowComponent;
   const docked = !!win.dock;
 
   // The ticker strip fills the titlebar minus the chrome reserve; its
@@ -107,7 +111,7 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
         onContextMenu={openMenu}
       >
         {win.tabs.length === 1 ? (
-          <span className="gwin-title">{FACETS[active.facet].title}</span>
+          <span className="gwin-title">{activeDef.label}</span>
         ) : (
           <TickerStrip win={win} width={stripW} height={24} bleed={false} />
         )}
@@ -125,7 +129,7 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
         </span>
       </header>
       <div className="gwin-body">
-        <Facet />
+        <Facet tabId={active.id} params={active.params} />
       </div>
       {!docked && (
         <div className="gwin-resize" onMouseDown={(e) => { e.stopPropagation(); startFrameDrag(e, 'resize'); }} />

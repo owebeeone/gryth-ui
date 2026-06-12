@@ -1,4 +1,4 @@
-import type { FoundationDef } from '../grips.desktop';
+import type { FoundationDef } from './grips.desktop';
 
 // Foundation type presets (pure data). One per desktop for now; created via
 // the launcher's "+ Grid". The Hub: the social column (crew) is the
