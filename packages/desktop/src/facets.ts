@@ -1,22 +1,18 @@
 import { createElement } from 'react';
 import type { GrythPlugin, ToolDef, ToolId } from '@grythjs/plugin-api';
-import {
-  ChatFacet, DiffFacet, ExplorerFacet, GridFacet, MissingToolFacet,
-  SettingsFacet, WelcomeFacet,
-} from './facetComponents';
+import { GridFacet, MissingToolFacet, WelcomeFacet } from './facetComponents';
 
-// The desktop's builtin tools — published at DESKTOP_BUILTINS_PLUGIN by
-// registerDesktopTaps like any other plugin. These are the
-// not-yet-converted facets riding as one plugin object; each leaves for
-// its group package in migration Phase 1/2 (see PluginMigration.md).
+// The desktop's own builtin tools — published at DESKTOP_BUILTINS_PLUGIN by
+// registerDesktopTaps like any other plugin. These are SHELL tools, not
+// plugins: `welcome` is the first-run window the shell opens by id, and
+// `grid` is the foundation placeholder (foundations are core window
+// management). The migratable facets now live in their group packages —
+// settings → plugin-settings, explorer/diff → plugin-code, chat →
+// plugin-chat (see PluginMigration.md).
 
 export const DESKTOP_BUILTINS: GrythPlugin = {
   tools: {
     welcome: { label: 'Welcome', defaultSize: { w: 520, h: 280 }, windowComponent: WelcomeFacet },
-    chat: { label: 'Chat', defaultSize: { w: 380, h: 460 }, windowComponent: ChatFacet },
-    diff: { label: 'Diff', defaultSize: { w: 720, h: 480 }, windowComponent: DiffFacet },
-    settings: { label: 'Settings', defaultSize: { w: 460, h: 440 }, windowComponent: SettingsFacet },
-    explorer: { label: 'Explorer', defaultSize: { w: 280, h: 480 }, windowComponent: ExplorerFacet },
     grid: { label: 'Grid', defaultSize: { w: 640, h: 480 }, windowComponent: GridFacet },
   },
 };

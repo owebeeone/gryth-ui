@@ -17,6 +17,8 @@
     "@grythjs/plugin-code": "*",
     "@grythjs/plugin-terminals": "*",
     "@grythjs/plugin-vm": "*",
+    "@grythjs/plugin-settings": "*",
+    "@grythjs/plugin-chat": "*",
     "@owebeeone/grip-core": "file:../grip-core",
     "@owebeeone/grip-react": "file:../grip-react",
     "react": "^19.1.1",

@@ -37,3 +37,21 @@
   font-size: 0.78em;
   line-height: 1.5;
 }
+
+/* Explorer: mock file tree */
+.explorer-tree { font-size: 0.85em; line-height: 1.7; }
+.explorer-dir { font-weight: 600; }
+.explorer-dir::before { content: '▸ '; opacity: 0.5; }
+.explorer-file { opacity: 0.85; }
+.explorer-file:hover { color: var(--accent); cursor: pointer; }
+.explorer-file.revealed {
+  color: var(--accent);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 4px;
+  padding: 0 0.3rem;
+  display: inline-block;
+}
+.indent-1 { padding-left: 0.9rem; }
+.indent-2 { padding-left: 1.8rem; }
+.indent-3 { padding-left: 2.7rem; }

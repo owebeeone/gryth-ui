@@ -1,0 +1,65 @@
+/* Chat playground — @grythjs/plugin-chat. Theme-derived via currentColor. */
+.chat-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.chat-log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.chat-empty { opacity: 0.55; font-style: italic; font-size: 0.85em; }
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-width: 85%;
+  padding: 0.35rem 0.55rem;
+  border-radius: 9px;
+  font-size: 0.85em;
+  line-height: 1.45;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+.chat-msg.user {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.chat-who {
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+.chat-input {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.chat-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 6px;
+  background: var(--win, Canvas);
+  color: inherit;
+  font: inherit;
+}
+.chat-input button {
+  flex: none;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.chat-input button:disabled { opacity: 0.45; cursor: default; }

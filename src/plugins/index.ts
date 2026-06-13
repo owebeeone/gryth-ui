@@ -12,3 +12,5 @@ import '@grythjs/plugin-workspace';
 import '@grythjs/plugin-code';
 import '@grythjs/plugin-vm';
 import '@grythjs/plugin-terminals';
+import '@grythjs/plugin-settings';
+import '@grythjs/plugin-chat';

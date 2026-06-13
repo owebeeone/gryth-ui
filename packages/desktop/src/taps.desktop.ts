@@ -18,12 +18,7 @@ import {
   DESK_SLIDE, DESK_SLIDE_TAP,
   AREA_MENU, AREA_MENU_TAP,
   CANVAS_SIZE, CANVAS_SIZE_TAP,
-  DESKTOP_ZOOM, DESKTOP_ZOOM_TAP,
-  DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP,
   DESKTOP_GRID_MEMORY, DESKTOP_GRID_MEMORY_TAP,
-  DESKTOP_THEME, DESKTOP_THEME_TAP,
-  DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_TAP,
-  DESKTOP_WALLPAPER_THEMED, DESKTOP_WALLPAPER_THEMED_TAP,
   TICKER_HOVER, TICKER_HOVER_TAP,
   TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
@@ -31,8 +26,10 @@ import { openToolWindow, openWindow, setTabParams } from './ops';
 
 // Shell chrome taps — the desktop document (environ scope) plus the
 // instance-scope gesture state. These are the desktop itself, NOT plugins
-// (see dev-docs/PluginMigration.md). The appearance taps (theme, wallpaper,
-// zoom, font scale) move to the settings plugin in migration Phase 1.
+// (see dev-docs/PluginMigration.md). The appearance grips (theme, wallpaper,
+// zoom, font scale) still live here and the chrome consumes them, but their
+// PRODUCERS moved to @grythjs/plugin-settings; absent that plugin they fall
+// back to each grip's default.
 
 // First-run desktop: one welcome window. (Size literal duplicates the facet
 // registry default to keep this module free of React imports.)
@@ -82,29 +79,9 @@ export const CanvasSizeTap = createAtomValueTap(CANVAS_SIZE, {
   initial: { w: 0, h: 0 },
   handleGrip: CANVAS_SIZE_TAP,
 });
-export const DesktopZoomTap = createAtomValueTap(DESKTOP_ZOOM, {
-  initial: 1,
-  handleGrip: DESKTOP_ZOOM_TAP,
-});
-export const DesktopFontScaleTap = createAtomValueTap(DESKTOP_FONT_SCALE, {
-  initial: 10,
-  handleGrip: DESKTOP_FONT_SCALE_TAP,
-});
 export const DesktopGridMemoryTap = createAtomValueTap(DESKTOP_GRID_MEMORY, {
   initial: {},
   handleGrip: DESKTOP_GRID_MEMORY_TAP,
-});
-export const DesktopThemeTap = createAtomValueTap(DESKTOP_THEME, {
-  initial: 'light',
-  handleGrip: DESKTOP_THEME_TAP,
-});
-export const DesktopWallpaperTap = createAtomValueTap(DESKTOP_WALLPAPER, {
-  initial: '',
-  handleGrip: DESKTOP_WALLPAPER_TAP,
-});
-export const DesktopWallpaperThemedTap = createAtomValueTap(DESKTOP_WALLPAPER_THEMED, {
-  initial: true,
-  handleGrip: DESKTOP_WALLPAPER_THEMED_TAP,
 });
 export const TickerHoverTap = createAtomValueTap(TICKER_HOVER, {
   initial: null,
@@ -181,14 +158,9 @@ export function registerDesktopTaps(grok: Grok) {
   grok.registerTap(SidebarWidthTap);
   grok.registerTap(WindowMenuTap);
   grok.registerTap(DesktopOverviewTap);
-  grok.registerTap(DesktopThemeTap);
-  grok.registerTap(DesktopWallpaperTap);
-  grok.registerTap(DesktopWallpaperThemedTap);
   grok.registerTap(DeskSlideTap);
   grok.registerTap(AreaMenuTap);
   grok.registerTap(CanvasSizeTap);
-  grok.registerTap(DesktopZoomTap);
-  grok.registerTap(DesktopFontScaleTap);
   grok.registerTap(DesktopGridMemoryTap);
   grok.registerTap(TickerHoverTap);
   grok.registerTap(TickerBleedTap);

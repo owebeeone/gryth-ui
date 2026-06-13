@@ -3,7 +3,6 @@ import type { Grip } from '@owebeeone/grip-react';
 import { grok, WORKSPACE_NAME } from '@grythjs/plugin-api';
 import { registerAllTaps } from './taps';
 import {
-  DESKTOP_BUILTINS,
   DESKTOP_CURRENT, DESKTOP_CURRENT_TAP,
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   openWindow,
@@ -36,10 +35,11 @@ describe('grip seam', () => {
 
   it('lets a headless participant open a window on the desktop', async () => {
     // The "AI opens the debugger" path: the desktop is a document; opening a
-    // window is a data edit through the same ops the chrome uses.
+    // window is a data edit through the same ops the chrome uses. The facet
+    // id and size are plain data here — no plugin registry needed.
     const windowsTap = drip(DESKTOP_WINDOWS_TAP);
     await expect.poll(() => windowsTap.get()).toBeDefined();
-    windowsTap.get()!.update((list) => openWindow(list, 'chat', DESKTOP_BUILTINS.tools!.chat.defaultSize).list);
+    windowsTap.get()!.update((list) => openWindow(list, 'chat', { w: 380, h: 460 }).list);
     const windows = drip(DESKTOP_WINDOWS);
     const hasFacet = (facet: string) =>
       windows.get()?.some((w) => w.tabs.some((t) => t.facet === facet));
