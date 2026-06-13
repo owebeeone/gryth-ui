@@ -41,6 +41,30 @@ export interface ToolLink {
 export type OpenTool = (link: ToolLink) => void;
 export const DESKTOP_OPEN_TOOL = defineGrip<OpenTool>('Desktop.OpenTool');
 
+// Attribution surface for human- and agent-created things (sessions,
+// machines, runs): who acted, and on whose behalf.
+export interface PrincipalRef {
+  principal: string;
+  onBehalfOf?: string;
+}
+
+// Shell-provided READ surface: every tab's link (toolId + params),
+// published by the desktop as serializable data. This is how a plugin
+// learns "which views are open" without touching the window manager —
+// e.g. the session browser derives attached/orphaned sessions from it.
+export interface TabLinkInfo {
+  tabId: string;
+  toolId: ToolId;
+  params?: Record<string, unknown>;
+}
+export const DESKTOP_TAB_LINKS = defineGrip<TabLinkInfo[]>('Desktop.TabLinks', []);
+
+// Shell-provided intent: replace an existing tab's link params (the
+// "send to an EXISTING window" half of link invocation — the view
+// re-resolves against the new params).
+export type RetargetTab = (tabId: string, params: Record<string, unknown>) => void;
+export const DESKTOP_RETARGET_TAB = defineGrip<RetargetTab>('Desktop.RetargetTab');
+
 export interface ToolDef {
   label: string;                     // canonical text: measurement, a11y, agents
   defaultSize: { w: number; h: number };

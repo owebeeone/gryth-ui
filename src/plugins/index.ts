@@ -11,3 +11,4 @@ void modules;
 import '@grythjs/plugin-workspace';
 import '@grythjs/plugin-code';
 import '@grythjs/plugin-vm';
+import '@grythjs/plugin-terminals';

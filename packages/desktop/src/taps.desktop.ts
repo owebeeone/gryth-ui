@@ -1,7 +1,8 @@
-import { createAtomValueTap, type Grok } from '@owebeeone/grip-react';
+import { BaseTap, createAtomValueTap, type Grip, type GripContext, type Grok } from '@owebeeone/grip-react';
 import {
   addEntry, allTools, PluginRegistryTap,
-  DESKTOP_OPEN_TOOL, type ToolLink,
+  DESKTOP_OPEN_TOOL, DESKTOP_RETARGET_TAB, DESKTOP_TAB_LINKS,
+  type TabLinkInfo, type ToolLink,
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool } from './facets';
 import { DESKTOP_BUILTINS_PLUGIN } from './grips.desktop';
@@ -26,7 +27,7 @@ import {
   TICKER_HOVER, TICKER_HOVER_TAP,
   TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
-import { openToolWindow, openWindow } from './ops';
+import { openToolWindow, openWindow, setTabParams } from './ops';
 
 // Shell chrome taps — the desktop document (environ scope) plus the
 // instance-scope gesture state. These are the desktop itself, NOT plugins
@@ -134,6 +135,40 @@ export const OpenToolTap = createAtomValueTap(DESKTOP_OPEN_TOOL, {
   initial: openToolIntent,
 });
 
+// Desktop.RetargetTab intent: replace an existing tab's link params — the
+// "send to an EXISTING window" half of link invocation.
+export const RetargetTabTap = createAtomValueTap(DESKTOP_RETARGET_TAB, {
+  initial: (tabId: string, params: Record<string, unknown>) => {
+    DesktopWindowsTap.update((list) => setTabParams(list, tabId, params));
+  },
+});
+
+// Desktop.TabLinks: every tab's link (toolId + params) as serializable
+// data, derived from the desktop document — how plugins learn which views
+// are open (e.g. the session browser's attached/orphaned derivation)
+// without touching the window manager.
+class TabLinksTap extends BaseTap {
+  constructor() {
+    super({ provides: [DESKTOP_TAB_LINKS], homeParamGrips: [DESKTOP_WINDOWS] });
+  }
+
+  produce(opts?: { destContext?: GripContext }): void {
+    const windows = this.paramDrips.get(DESKTOP_WINDOWS as Grip<unknown>)?.get() as
+      | typeof DESKTOP_WINDOWS.defaultValue
+      | undefined;
+    const links: TabLinkInfo[] = [];
+    for (const w of windows ?? []) {
+      if (w.foundation) continue;
+      for (const t of w.tabs) links.push({ tabId: t.id, toolId: t.facet, params: t.params });
+    }
+    this.publish(new Map([[DESKTOP_TAB_LINKS as Grip<unknown>, links as unknown]]), opts?.destContext);
+  }
+
+  produceOnParams(): void { this.produce(); }
+  produceOnDestParams(): void {}
+}
+export const DesktopTabLinksTap = new TabLinksTap();
+
 export function registerDesktopTaps(grok: Grok) {
   // publish the not-yet-converted builtin tools at the desktop's own
   // plugin grip — the chrome consumes that grip like any plugin consumer
@@ -158,4 +193,6 @@ export function registerDesktopTaps(grok: Grok) {
   grok.registerTap(TickerHoverTap);
   grok.registerTap(TickerBleedTap);
   grok.registerTap(OpenToolTap);
+  grok.registerTap(RetargetTabTap);
+  grok.registerTap(DesktopTabLinksTap);
 }

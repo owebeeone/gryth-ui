@@ -1,0 +1,16 @@
+{
+  "name": "@grythjs/plugin-terminals",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@grythjs/plugin-api": "*"
+  },
+  "peerDependencies": {
+    "@owebeeone/grip-react": "*",
+    "react": "*"
+  }
+}

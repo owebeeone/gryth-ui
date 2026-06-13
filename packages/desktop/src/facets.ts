@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import type { GrythPlugin, ToolDef, ToolId } from '@grythjs/plugin-api';
 import {
   ChatFacet, DiffFacet, ExplorerFacet, GridFacet, MissingToolFacet,
-  SettingsFacet, TerminalFacet, WelcomeFacet,
+  SettingsFacet, WelcomeFacet,
 } from './facetComponents';
 
 // The desktop's builtin tools — published at DESKTOP_BUILTINS_PLUGIN by
@@ -14,7 +14,6 @@ export const DESKTOP_BUILTINS: GrythPlugin = {
   tools: {
     welcome: { label: 'Welcome', defaultSize: { w: 520, h: 280 }, windowComponent: WelcomeFacet },
     chat: { label: 'Chat', defaultSize: { w: 380, h: 460 }, windowComponent: ChatFacet },
-    terminal: { label: 'Terminal', defaultSize: { w: 640, h: 400 }, windowComponent: TerminalFacet },
     diff: { label: 'Diff', defaultSize: { w: 720, h: 480 }, windowComponent: DiffFacet },
     settings: { label: 'Settings', defaultSize: { w: 460, h: 440 }, windowComponent: SettingsFacet },
     explorer: { label: 'Explorer', defaultSize: { w: 280, h: 480 }, windowComponent: ExplorerFacet },

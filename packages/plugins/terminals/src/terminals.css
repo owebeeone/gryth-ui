@@ -1,0 +1,94 @@
+/* Terminals + session browser — @grythjs/plugin-terminals. */
+.term-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.term-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  font-size: 0.8em;
+}
+.term-cwd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.term-chip {
+  flex: none;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78em;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  opacity: 0.85;
+}
+.term-chip.owner.agent {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.term-chip.sid { font-family: ui-monospace, monospace; opacity: 0.6; }
+.term-body {
+  flex: 1;
+  margin: 0;
+  padding: 0.7rem;
+  overflow: auto;
+  font-size: 0.78em;
+  line-height: 1.55;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+.sess-browser {
+  height: 100%;
+  overflow: auto;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85em;
+}
+.sess-empty { opacity: 0.6; font-style: italic; }
+.sess-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+}
+.sess-row:hover { background: color-mix(in srgb, currentColor 7%, transparent); }
+.sess-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3fb950;
+}
+.sess-dot.orphan { background: #e3b341; }
+.sess-cwd { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sess-chip {
+  flex: none;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  font-size: 0.78em;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  opacity: 0.85;
+}
+.sess-chip.owner.agent {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  opacity: 1;
+}
+.sess-attach { flex: 1; min-width: 0; font-size: 0.82em; opacity: 0.6; white-space: nowrap; }
+.sess-actions { flex: none; display: flex; gap: 0.2rem; flex-wrap: wrap; }
+.sess-actions button {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78em;
+  border-radius: 5px;
+  padding: 0.05rem 0.4rem;
+  cursor: pointer;
+}
+.sess-actions button:hover { background: color-mix(in srgb, currentColor 12%, transparent); }

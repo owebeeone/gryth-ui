@@ -5,7 +5,7 @@ import {
   moveWindow, resizeWindow,
   mergeWindows, selectTab, closeTab, hitTitlebar,
   detachTab, moveTab, sendToDesktop, setSticky, isOnDesktop,
-  moveWindowFree, openToolWindow, overviewLayout, snapRect, snapWindow, unsnapWindow,
+  moveWindowFree, openToolWindow, overviewLayout, setTabParams, snapRect, snapWindow, unsnapWindow,
   clampAllWindows,
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
@@ -605,3 +605,13 @@ describe('tool links and open intents', () => {
     expect(frame.dock).toEqual({ foundation: f.id, area: 'crew' });
   });
 });
+
+  it('setTabParams replaces a tab link params in place (retarget)', () => {
+    const opened = openWindow([], 'terminal', SIZE, 1, { session: 'sess-1' });
+    const frame = opened.list[0];
+    const tabId = frame.tabs[0].id;
+    const next = setTabParams(opened.list, tabId, { session: 'sess-2' });
+    expect(next[0].tabs[0].params).toEqual({ session: 'sess-2' });
+    // unknown tab id: same list back (no notify churn)
+    expect(setTabParams(next, 'nope', { a: 1 })).toBe(next);
+  });

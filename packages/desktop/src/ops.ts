@@ -81,6 +81,21 @@ export function openToolWindow(
   return { list: next, id: result.id, focusId };
 }
 
+// Replace a tab's LINK params in place — the "send to an EXISTING window"
+// half of link invocation (Desktop.RetargetTab). The view re-resolves
+// against the new params. Returns the SAME list when the tab is unknown.
+export function setTabParams(
+  list: WindowRecord[],
+  tabId: string,
+  params: Record<string, unknown>,
+): WindowRecord[] {
+  const frame = list.find((w) => w.tabs.some((t) => t.id === tabId));
+  if (!frame) return list;
+  return list.map((w) => (w === frame
+    ? { ...w, tabs: w.tabs.map((t) => (t.id === tabId ? { ...t, params } : t)) }
+    : w));
+}
+
 export function closeWindow(list: WindowRecord[], id: string): WindowRecord[] {
   // a docked frame leaving may empty an ephemeral split area
   return normalizeFoundations(list.filter((w) => w.id !== id));
