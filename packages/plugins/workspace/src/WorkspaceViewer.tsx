@@ -1,11 +1,8 @@
-import {
-  useAtomValueTap, useGrip, useKeyedMatchingContext, useTap,
-} from '@owebeeone/grip-react';
+import { useGrip } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_TOOL, type ToolViewProps } from '@grythjs/plugin-api';
 import {
-  VIEWER_WORKSPACE, VIEWER_WORKSPACE_TAP, WORKSPACE_LIST,
+  GRAPH_ENGINE, VIEWER_WORKSPACE, VIEWER_WORKSPACE_TAP, WORKSPACE_LIST,
 } from './grips';
-import { simFor } from './graphEngine';
 import WorkspaceGraph from './WorkspaceGraph';
 import type { GraphRenderNode } from './types';
 
@@ -15,30 +12,25 @@ export function WorkspacesMenuTitle() {
   return <>Workspaces ({count})</>;
 }
 
-// The viewer window. Each window creates its OWN keyed matching context
-// (the CoinColumn pattern) keyed by its tab id: selection state and the
-// graph sim live in that context, so multiple viewers stay independent.
+// The viewer window. Chrome mounts it inside the tab's CHROME-HELD context
+// where ToolDef.tabTaps seeded the selection atom and the graph sim — so
+// plain useGrip resolves per-tab state, multiple viewers stay independent,
+// and selection survives unmount/remount (desktop switch, minimize).
 export function WorkspaceViewer({ tabId }: ToolViewProps) {
-  const ctx = useKeyedMatchingContext(`workspace-viewer:${tabId}`);
-  const sim = simFor(tabId);
-  useTap(() => sim, { ctx, deps: [sim, ctx] });
-
   const list = useGrip(WORKSPACE_LIST) ?? [];
-  const selTap = useAtomValueTap(VIEWER_WORKSPACE, {
-    ctx,
-    initial: '',
-    tapGrip: VIEWER_WORKSPACE_TAP,
-  });
-  const chosen = useGrip(VIEWER_WORKSPACE, ctx);
+  const selTap = useGrip(VIEWER_WORKSPACE_TAP);
+  const chosen = useGrip(VIEWER_WORKSPACE);
+  const engine = useGrip(GRAPH_ENGINE);
+  const openTool = useGrip(DESKTOP_OPEN_TOOL);
+
   const selected = chosen && list.some((w) => w.id === chosen) ? chosen : list[0]?.id ?? '';
   const record = list.find((w) => w.id === selected);
   // idempotent: the engine rebuilds only when the input key changes
-  sim.graph.setInput(record?.repos ?? [], record?.deps ?? [], `${tabId}:${selected}`);
+  engine?.setInput(record?.repos ?? [], record?.deps ?? [], `${tabId}:${selected}`);
 
   // Clicking a changed file fires TWO links through the desktop's open
   // intent: the explorer revealed at the file, and the viewer on the file
   // anchored to its ref (v1 policy: each link opens a new window).
-  const openTool = useGrip(DESKTOP_OPEN_TOOL);
   const openFile = (node: GraphRenderNode, path: string) => {
     openTool?.({ toolId: 'explorer', params: { reveal: `${node.name}::${path}` } });
     openTool?.({
@@ -54,7 +46,7 @@ export function WorkspaceViewer({ tabId }: ToolViewProps) {
           <button
             key={w.id}
             className={`ws-item${w.id === selected ? ' active' : ''}`}
-            onClick={() => selTap.set(w.id)}
+            onClick={() => selTap?.set(w.id)}
           >
             <span className="ws-icon">{w.icon}</span>
             <span className="ws-name">{w.name}</span>
@@ -62,7 +54,7 @@ export function WorkspaceViewer({ tabId }: ToolViewProps) {
         ))}
       </aside>
       <div className="ws-graph-pane">
-        <WorkspaceGraph ctx={ctx} engine={sim.graph} edges={record?.deps ?? []} scope={tabId} onOpenFile={openFile} />
+        <WorkspaceGraph engine={engine} edges={record?.deps ?? []} scope={tabId} onOpenFile={openFile} />
       </div>
     </div>
   );

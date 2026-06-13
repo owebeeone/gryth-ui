@@ -1,5 +1,7 @@
+import { createAtomValueTap } from '@owebeeone/grip-react';
 import { addEntry, grok } from '@grythjs/plugin-api';
-import { WORKSPACE_PLUGIN } from './grips';
+import { VIEWER_WORKSPACE, VIEWER_WORKSPACE_TAP, WORKSPACE_PLUGIN } from './grips';
+import { GraphSimTap } from './graphEngine';
 import { WorkspaceListTap } from './mock';
 import { WorkspacesMenuTitle, WorkspaceViewer } from './WorkspaceViewer';
 import './workspace.css';
@@ -17,6 +19,12 @@ addEntry(WORKSPACE_PLUGIN, {
       role: 'stage',
       menuTitle: WorkspacesMenuTitle,
       windowComponent: WorkspaceViewer,
+      // per-tab state seeded into the chrome-held tab context: the
+      // selection atom and the graph sim (engine ← tap ← context ← doc)
+      tabTaps: () => [
+        createAtomValueTap(VIEWER_WORKSPACE, { initial: '', handleGrip: VIEWER_WORKSPACE_TAP }),
+        new GraphSimTap(),
+      ],
     },
   },
 });

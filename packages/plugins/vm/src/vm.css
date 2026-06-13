@@ -1,0 +1,84 @@
+/* VM manager — @grythjs/plugin-vm. Theme-derived via currentColor. */
+.vm-manager {
+  height: 100%;
+  overflow: auto;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85em;
+}
+.vm-section { margin-bottom: 1rem; }
+.vm-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+}
+.vm-empty { opacity: 0.6; font-style: italic; }
+.vm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+}
+.vm-row:hover { background: color-mix(in srgb, currentColor 7%, transparent); }
+.vm-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 30%, transparent);
+}
+.vm-dot.running { background: #3fb950; }
+.vm-dot.registered { background: #8ab4ff; }
+.vm-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.vm-chip {
+  flex: none;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  font-size: 0.78em;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  opacity: 0.85;
+}
+.vm-meta { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.6; font-size: 0.85em; }
+.vm-state { flex: none; font-size: 0.78em; opacity: 0.8; }
+.vm-state.running { color: #3fb950; }
+.vm-state.registered { color: #8ab4ff; }
+.vm-actions { flex: none; display: flex; gap: 0.2rem; }
+.vm-actions button {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8em;
+  border-radius: 5px;
+  padding: 0.05rem 0.4rem;
+  cursor: pointer;
+}
+.vm-actions button:hover:not(:disabled) { background: color-mix(in srgb, currentColor 12%, transparent); }
+.vm-actions button:disabled { opacity: 0.3; cursor: default; }
+.vm-form { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+.vm-form input, .vm-form select {
+  font: inherit;
+  font-size: 0.9em;
+  color: inherit;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
+}
+.vm-form button {
+  font: inherit;
+  font-size: 0.9em;
+  color: inherit;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+}
+.vm-error {
+  margin-top: 0.4rem;
+  color: #f85149;
+  font-size: 0.85em;
+}

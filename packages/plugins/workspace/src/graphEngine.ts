@@ -1,5 +1,5 @@
 import { BaseTap } from '@owebeeone/grip-react';
-import { GRAPH_NODES } from './grips';
+import { GRAPH_ENGINE, GRAPH_NODES } from './grips';
 import type { DepEdge, GraphRenderNode, RepoInfo } from './types';
 
 // Force-directed graph simulation kept entirely outside React — ported from
@@ -222,14 +222,16 @@ export class GraphEngine {
   }
 }
 
-// Per-viewer sim tap: provides GRAPH_NODES inside ONE viewer's tab context.
-// The engine runs only while a consumer is connected (the tap-owning-a-loop
-// pattern): attach on first connect, detach when the last leaves.
+// Per-viewer sim tap, seeded by ToolDef.tabTaps into the viewer's
+// chrome-held tab context — the desktop document owns its lifetime. It
+// provides the node snapshots AND the engine itself (gesture surface).
+// The RAF loop runs only while a consumer is connected (the
+// tap-owning-a-loop pattern): attach on first connect, detach on last.
 export class GraphSimTap extends BaseTap {
   readonly graph = new GraphEngine();
 
   constructor() {
-    super({ provides: [GRAPH_NODES] });
+    super({ provides: [GRAPH_NODES, GRAPH_ENGINE] });
   }
 
   private publishNodes = (n: GraphRenderNode[]) => {
@@ -247,20 +249,15 @@ export class GraphSimTap extends BaseTap {
     if (!has) this.graph.detach();
   }
 
-  produce(): void {}
+  produce(opts?: { destContext?: unknown }): void {
+    this.publish(
+      new Map([
+        [GRAPH_NODES as never, this.graph.current() as never],
+        [GRAPH_ENGINE as never, this.graph as never],
+      ]),
+      opts?.destContext as never,
+    );
+  }
   produceOnParams(): void {}
   produceOnDestParams(): void {}
-}
-
-// One sim per viewer tab (keyed-ref pattern — module map, not React state).
-// Entries persist for the session; the RAF loop stops whenever the viewer's
-// consumers disconnect, so a closed tab costs a parked object only.
-const sims = new Map<string, GraphSimTap>();
-export function simFor(tabId: string): GraphSimTap {
-  let sim = sims.get(tabId);
-  if (!sim) {
-    sim = new GraphSimTap();
-    sims.set(tabId, sim);
-  }
-  return sim;
 }

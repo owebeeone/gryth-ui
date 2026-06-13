@@ -1,4 +1,4 @@
-import { useGrip, type GripContextLike } from '@owebeeone/grip-react';
+import { useGrip } from '@owebeeone/grip-react';
 import { GRAPH_NODES } from './grips';
 import { VBW, VBH, type GraphEngine } from './graphEngine';
 import type { DepEdge, GraphRenderNode } from './types';
@@ -22,14 +22,13 @@ function boundaryIntersection(from: GraphRenderNode, to: GraphRenderNode) {
 const edgeNodeId = (repoPath: string) => repoPath || 'root';
 const svgIdPart = (value: string) => value.replace(/[^A-Za-z0-9_-]/g, '_') || 'root';
 
-export default function WorkspaceGraph({ ctx, engine, edges, scope, onOpenFile }: {
-  ctx: GripContextLike;
-  engine: GraphEngine;
+export default function WorkspaceGraph({ engine, edges, scope, onOpenFile }: {
+  engine: GraphEngine | undefined; // resolved from the tab context's sim tap
   edges: DepEdge[];
   scope: string; // unique per viewer — namespaces the SVG marker ids
   onOpenFile?: (node: GraphRenderNode, path: string) => void;
 }) {
-  const nodes = useGrip(GRAPH_NODES, ctx) ?? [];
+  const nodes = useGrip(GRAPH_NODES) ?? [];
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const orderedNodes = [...nodes].sort((a, b) => Number(a.expanded) - Number(b.expanded));
   const markerScope = `graph-${svgIdPart(scope)}`;
@@ -58,16 +57,16 @@ export default function WorkspaceGraph({ ctx, engine, edges, scope, onOpenFile }
     <div className="graph-wrap">
       <div className="graph-toolbar">
         <span className="graph-hint">Drag nodes to anchor · click to pin · hover to expand</span>
-        <button className="graph-ghost" onClick={() => engine.scatter()}>↻ Re-layout</button>
+        <button className="graph-ghost" onClick={() => engine?.scatter()}>↻ Re-layout</button>
       </div>
       <svg
         className="graph-svg"
         viewBox={`0 0 ${VBW} ${VBH}`}
         preserveAspectRatio="xMidYMid meet"
-        onMouseMove={(e) => engine.moveDrag(toCanvas(e.currentTarget, e.clientX, e.clientY))}
-        onMouseUp={() => engine.endDrag()}
-        onMouseLeave={() => engine.endDrag()}
-        onClick={() => engine.pin(null)}
+        onMouseMove={(e) => engine?.moveDrag(toCanvas(e.currentTarget, e.clientX, e.clientY))}
+        onMouseUp={() => engine?.endDrag()}
+        onMouseLeave={() => engine?.endDrag()}
+        onClick={() => engine?.pin(null)}
       >
         <defs>
           {drawn.map((e) => (
@@ -102,13 +101,13 @@ export default function WorkspaceGraph({ ctx, engine, edges, scope, onOpenFile }
             <g
               key={n.id}
               transform={`translate(${n.x}, ${n.y})`}
-              onMouseEnter={() => engine.setHover(n.id)}
-              onMouseLeave={() => engine.setHover(null)}
+              onMouseEnter={() => engine?.setHover(n.id)}
+              onMouseLeave={() => engine?.setHover(null)}
               onMouseDown={(e) => {
                 const svg = (e.currentTarget as SVGGElement).ownerSVGElement;
-                if (svg) engine.startDrag(n.id, toCanvas(svg, e.clientX, e.clientY));
+                if (svg) engine?.startDrag(n.id, toCanvas(svg, e.clientX, e.clientY));
               }}
-              onClick={(e) => { e.stopPropagation(); engine.pin(n.id); }}
+              onClick={(e) => { e.stopPropagation(); engine?.pin(n.id); }}
               style={{ cursor: 'grab' }}
             >
               <rect

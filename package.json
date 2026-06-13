@@ -15,6 +15,7 @@
     "@grythjs/desktop": "*",
     "@grythjs/plugin-workspace": "*",
     "@grythjs/plugin-code": "*",
+    "@grythjs/plugin-vm": "*",
     "@owebeeone/grip-core": "file:../grip-core",
     "@owebeeone/grip-react": "file:../grip-react",
     "react": "^19.1.1",

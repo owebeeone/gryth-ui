@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
-import { useGrip } from '@owebeeone/grip-react';
-import { PLUGIN_REGISTRY, allTools } from '@grythjs/plugin-api';
+import { GripProvider, useGrip } from '@owebeeone/grip-react';
+import { PLUGIN_REGISTRY, allTools, grok } from '@grythjs/plugin-api';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP, DESKTOP_FOCUSED_TAP,
   WINDOW_DRAG_TAP, WINDOW_MENU_TAP, DESKTOP_FONT_SCALE,
@@ -10,6 +10,7 @@ import { closeTab, minimizeWindow, raiseWindow, type OverviewPlacement, type Rec
 import TickerStrip from './TickerStrip';
 import { canvasOrigin } from './tickerDom';
 import { resolveTool } from './facets';
+import { tabContextFor } from './tabContexts';
 
 // Overview presentation handed down by the desktop: a placement transform
 // for members of the grid, dimming for non-members (App Exposé), and the
@@ -45,6 +46,9 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
   const active = win.tabs.find((t) => t.id === win.activeTab) ?? win.tabs[0];
   const activeDef = resolveTool(defs, active.facet);
   const Facet = activeDef.windowComponent;
+  // the tab's CHROME-HELD context: lifetime = the tab record's, so
+  // instance state survives unmount/remount (desktop switch, minimize)
+  const tabCtx = tabContextFor(grok, active.id, activeDef);
   const docked = !!win.dock;
 
   // The ticker strip fills the titlebar minus the chrome reserve; its
@@ -129,7 +133,9 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
         </span>
       </header>
       <div className="gwin-body">
-        <Facet tabId={active.id} params={active.params} />
+        <GripProvider grok={grok} context={tabCtx}>
+          <Facet tabId={active.id} params={active.params} />
+        </GripProvider>
       </div>
       {!docked && (
         <div className="gwin-resize" onMouseDown={(e) => { e.stopPropagation(); startFrameDrag(e, 'resize'); }} />

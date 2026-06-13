@@ -10,3 +10,4 @@ void modules;
 // Plugin PACKAGES register the same way, by being imported here.
 import '@grythjs/plugin-workspace';
 import '@grythjs/plugin-code';
+import '@grythjs/plugin-vm';

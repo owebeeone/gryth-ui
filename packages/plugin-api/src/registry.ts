@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { createAtomValueTap, type AtomTapHandle, type Grip } from '@owebeeone/grip-react';
+import { createAtomValueTap, type AtomTapHandle, type Grip, type Tap } from '@owebeeone/grip-react';
 import { defineGrip } from './runtime';
 
 // The plugin registry is GRIP-KEYED (see dev-docs/GrythPluginContract.md):
@@ -48,6 +48,12 @@ export interface ToolDef {
   menuTitle?: GripComponentFactory;  // launcher entry; label renders when absent
   tabTitle?: GripComponentFactory;   // ticker segment; label renders when absent
   windowComponent: ToolView;         // prop-less components remain assignable
+  // Per-instance taps SEEDED into the tab's chrome-held context when the
+  // tab is created and unregistered when the tab record leaves the desktop
+  // document. This is where per-tab state lives (selection atoms, form
+  // drafts, stateful engines): it survives unmount/remount — a window's
+  // context lifetime equals the TAB's lifetime, not the React mount's.
+  tabTaps?: (tabId: string) => Tap[];
 }
 
 // The plugin object a plugin publishes under its grip. Window-instantiable

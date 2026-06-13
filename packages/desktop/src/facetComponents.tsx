@@ -32,8 +32,17 @@ export function ChatFacet() {
   return <div className="facet-pad">Chat — first real facet, to be built.</div>;
 }
 
-export function TerminalFacet() {
-  return <div className="facet-pad">Terminal — waiting on flow-type design.</div>;
+export function TerminalFacet({ params }: { params?: Record<string, unknown> }) {
+  // a link may attach this terminal to a machine (the VM manager's shell
+  // action) — shown until the real PTY provider exists
+  const machine = typeof params?.machine === 'string' ? params.machine : '';
+  return (
+    <div className="facet-pad">
+      {machine
+        ? <>Terminal — attached to <strong>{machine}</strong> (mock PTY).</>
+        : 'Terminal — waiting on flow-type design.'}
+    </div>
+  );
 }
 
 export function ExplorerFacet({ params }: { params?: Record<string, unknown> }) {

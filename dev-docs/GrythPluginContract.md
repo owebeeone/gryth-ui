@@ -121,6 +121,7 @@ interface GrythPlugin {
     menuTitle?: GripComponentFactory;       // mounts in the DESKTOP context
     tabTitle?: GripComponentFactory;        // mounts in the TAB context
     windowComponent: GripComponentFactory;  // mounts in the TAB context
+    tabTaps?: (tabId: string) => Tap[];     // seeded into the tab context
   }>;
 }
 
@@ -136,6 +137,18 @@ resolve against the tab's seeded context. Strings remain data: the
 canonical title is the `Tab.Title` STRING grip (the ticker solver measures
 it; sidebars, ghosts, tooltips, and headless agents read it); `tabTitle`
 is presentation clipped to the solved width.
+
+**DECIDED — tab contexts are CHROME-HELD.** The desktop owns one context
+per tab, STRONGLY, for the lifetime of the TAB RECORD: a reaper mirrors
+the desktop document and retires contexts (unregistering their taps) when
+the tab leaves it. Unmounts are presentation events (desktop switch,
+minimize, overview) and do NOT destroy instance state. `tabTaps` is the
+seeding slot: per-tab atoms (selections, form drafts) and stateful taps
+(the workspace graph sim) register at tab creation — ownership reads
+`state ← tap ← context ← desktop document`. The chrome mounts
+`windowComponent` inside a nested provider on that context, so tools use
+plain `useGrip` with no context plumbing of their own; this also removes
+the unmount/remount context churn the keyed-id GC race rode on.
 
 Manifests advertise a *role*, not an area name — foundations own their area
 vocabulary (`designate`).
