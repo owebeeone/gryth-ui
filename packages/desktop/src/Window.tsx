@@ -10,7 +10,7 @@ import { closeTab, minimizeWindow, raiseWindow, type OverviewPlacement, type Rec
 import TickerStrip from './TickerStrip';
 import { canvasOrigin } from './tickerDom';
 import { resolveTool } from './facets';
-import { tabContextFor } from './tabContexts';
+import { tabContextFor, wireTabSource, unwireTab } from './tabContexts';
 
 // Overview presentation handed down by the desktop: a placement transform
 // for members of the grid, dimming for non-members (App Exposé), and the
@@ -48,7 +48,19 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
   const Facet = activeDef.windowComponent;
   // the tab's CHROME-HELD context: lifetime = the tab record's, so
   // instance state survives unmount/remount (desktop switch, minimize)
-  const tabCtx = tabContextFor(grok, active.id, activeDef);
+  const tabCtx = tabContextFor(grok, active.id, activeDef, active.params);
+  // WIRE: a sink tab makes its source's context a parent, so it resolves
+  // what the source publishes (the explorer→viewer live link). Idempotent.
+  // No source (e.g. after pinning) → drop any stale wire.
+  if (active.source) {
+    const srcTab = windows.flatMap((w) => w.tabs).find((t) => t.id === active.source);
+    if (srcTab) {
+      const srcCtx = tabContextFor(grok, srcTab.id, resolveTool(defs, srcTab.facet), srcTab.params);
+      wireTabSource(active.id, active.source, srcCtx);
+    }
+  } else {
+    unwireTab(active.id);
+  }
   const docked = !!win.dock;
 
   // The ticker strip fills the titlebar minus the chrome reserve; its

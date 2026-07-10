@@ -13,6 +13,9 @@ import { DESKTOP_WINDOWS, type WindowRecord } from './grips.desktop';
 interface TabEntry {
   ctx: MatchingContext;
   taps: Tap[];
+  // the source tab this sink is currently wired to (a parent edge on its
+  // home context), so re-wiring is idempotent and rewires cleanly
+  wiredTo?: string;
 }
 
 const entries = new Map<string, TabEntry>();
@@ -46,16 +49,49 @@ export function hasTabContext(tabId: string): boolean {
   return entries.has(tabId);
 }
 
-export function tabContextFor(grok: Grok, tabId: string, def: ToolDef): MatchingContext {
+export function tabContextFor(
+  grok: Grok,
+  tabId: string,
+  def: ToolDef,
+  params?: Record<string, unknown>,
+): MatchingContext {
   startReaper(grok);
   let entry = entries.get(tabId);
   if (!entry) {
     const ctx = grok.mainPresentationContext.getOrCreateMatchingContext(`tab:${tabId}`);
-    const taps = def.tabTaps?.(tabId) ?? [];
+    // params is the opening link — seeds may rehydrate from it (created once)
+    const taps = def.tabTaps?.(tabId, params) ?? [];
     const home = ctx.getGripHomeContext();
     for (const tap of taps) home.registerTap(tap);
     entry = { ctx, taps };
     entries.set(tabId, entry);
   }
   return entry.ctx;
+}
+
+// WIRE a sink tab to its source: add the source's home as a (nearest,
+// priority -1) parent of the sink's home, so the sink resolves whatever the
+// source publishes (the live multi-parent path). Idempotent; rewires
+// cleanly if the source changes. Both contexts must already exist
+// (tabContextFor called for each).
+export function wireTabSource(tabId: string, sourceTabId: string, sourceCtx: MatchingContext): void {
+  const entry = entries.get(tabId);
+  if (!entry || entry.wiredTo === sourceTabId) return;
+  const home = entry.ctx.getGripHomeContext();
+  if (entry.wiredTo) {
+    const prev = entries.get(entry.wiredTo);
+    if (prev) home.unlinkParent(prev.ctx.getGripHomeContext());
+  }
+  home.addParent(sourceCtx.getGripHomeContext(), -1);
+  entry.wiredTo = sourceTabId;
+}
+
+// UNWIRE a sink (e.g. when it is pinned/frozen): drop the source parent edge
+// so it stops resolving the source's grips. Idempotent — a no-op if unwired.
+export function unwireTab(tabId: string): void {
+  const entry = entries.get(tabId);
+  if (!entry?.wiredTo) return;
+  const prev = entries.get(entry.wiredTo);
+  if (prev) entry.ctx.getGripHomeContext().unlinkParent(prev.ctx.getGripHomeContext());
+  entry.wiredTo = undefined;
 }

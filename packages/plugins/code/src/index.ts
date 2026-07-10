@@ -1,7 +1,11 @@
+import { createAtomValueTap } from '@owebeeone/grip-react';
 import { addEntry, defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
 import { FileViewer } from './FileViewer';
 import { Explorer } from './Explorer';
 import { Diff } from './Diff';
+import {
+  WTA, WTA_TAP, SOURCE_ACCENT, sourceHue, wtaFromParams,
+} from './grips';
 import './code.css';
 
 // @grythjs/plugin-code — explorer/viewer/diff share the file/VCS provider
@@ -23,6 +27,14 @@ addEntry(CODE_PLUGIN, {
       defaultSize: { w: 280, h: 480 },
       role: 'explorer',
       windowComponent: Explorer,
+      // an explorer is a WTA SOURCE: its selection (the WTA) and its
+      // identity hue live per-tab, published for any wired sink to inherit.
+      // The WTA seeds from the opening link, so an explorer can open AT a
+      // file (the workspace-graph pair).
+      tabTaps: (tabId, params) => [
+        createAtomValueTap(WTA, { initial: wtaFromParams(params), handleGrip: WTA_TAP }),
+        createAtomValueTap(SOURCE_ACCENT, { initial: sourceHue(tabId) }),
+      ],
     },
     diff: {
       label: 'Diff',

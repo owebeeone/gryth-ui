@@ -65,6 +65,36 @@ export const DESKTOP_TAB_LINKS = defineGrip<TabLinkInfo[]>('Desktop.TabLinks', [
 export type RetargetTab = (tabId: string, params: Record<string, unknown>) => void;
 export const DESKTOP_RETARGET_TAB = defineGrip<RetargetTab>('Desktop.RetargetTab');
 
+// Shell-provided intent: open (or focus) a SINK tab WIRED to a source tab.
+// The shell makes the source's grip context a parent of the sink's, so the
+// sink reads whatever the source publishes (e.g. the explorer's current
+// WTA) live, through the context graph — no params copied. One sink per
+// (source, toolId): a second call focuses the existing wire instead of
+// spawning, which is the IDE "current editor" reuse falling out of the
+// graph. This is the patchbay's connect primitive.
+export type OpenWired = (sourceTabId: string, link: ToolLink) => void;
+export const DESKTOP_OPEN_WIRED = defineGrip<OpenWired>('Desktop.OpenWired');
+
+// Shell-provided intent: open a SOURCE seeded from `params` plus a SINK
+// WIRED to it, in one shot — the patchbay's "drop a connected pair" (e.g. a
+// workspace-graph file click opens an explorer AT the file and a viewer
+// following it). The source's tab id is resolved internally so the sink can
+// name it.
+export type OpenWiredPair = (
+  sourceToolId: ToolId,
+  sinkToolId: ToolId,
+  params?: Record<string, unknown>,
+) => void;
+export const DESKTOP_OPEN_WIRED_PAIR = defineGrip<OpenWiredPair>('Desktop.OpenWiredPair');
+
+// Shell-provided intent: PIN (freeze) a tab — snapshot `params` onto it and
+// cut its wire, so it stops following its source and becomes a permanent
+// view. The live "current editor" reused one sink; pinning sheds a frozen
+// copy so the next selection opens a fresh live one (the IDE preview-vs-
+// pinned split, which is snapshot-vs-live made a gesture).
+export type PinTab = (tabId: string, params: Record<string, unknown>) => void;
+export const DESKTOP_PIN_TAB = defineGrip<PinTab>('Desktop.PinTab');
+
 export interface ToolDef {
   label: string;                     // canonical text: measurement, a11y, agents
   defaultSize: { w: number; h: number };
@@ -77,7 +107,9 @@ export interface ToolDef {
   // document. This is where per-tab state lives (selection atoms, form
   // drafts, stateful engines): it survives unmount/remount — a window's
   // context lifetime equals the TAB's lifetime, not the React mount's.
-  tabTaps?: (tabId: string) => Tap[];
+  // `params` is the tab's opening LINK, so a seed can rehydrate from it
+  // (e.g. an explorer opened AT a file seeds its WTA from the link).
+  tabTaps?: (tabId: string, params?: Record<string, unknown>) => Tap[];
 }
 
 // The plugin object a plugin publishes under its grip. Window-instantiable

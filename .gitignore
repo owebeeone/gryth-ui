@@ -1,6 +1,9 @@
 # Logs
 logs
 *.log
+
+# demo runner runtime (start-demo.sh / stop-demo.sh)
+.demo/
 npm-debug.log*
 
 node_modules

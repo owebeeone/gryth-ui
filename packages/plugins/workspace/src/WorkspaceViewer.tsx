@@ -1,5 +1,5 @@
 import { useGrip } from '@owebeeone/grip-react';
-import { DESKTOP_OPEN_TOOL, type ToolViewProps } from '@grythjs/plugin-api';
+import { DESKTOP_OPEN_WIRED_PAIR, type ToolViewProps } from '@grythjs/plugin-api';
 import {
   GRAPH_ENGINE, VIEWER_WORKSPACE, VIEWER_WORKSPACE_TAP, WORKSPACE_LIST,
 } from './grips';
@@ -21,22 +21,18 @@ export function WorkspaceViewer({ tabId }: ToolViewProps) {
   const selTap = useGrip(VIEWER_WORKSPACE_TAP);
   const chosen = useGrip(VIEWER_WORKSPACE);
   const engine = useGrip(GRAPH_ENGINE);
-  const openTool = useGrip(DESKTOP_OPEN_TOOL);
+  const openPair = useGrip(DESKTOP_OPEN_WIRED_PAIR);
 
   const selected = chosen && list.some((w) => w.id === chosen) ? chosen : list[0]?.id ?? '';
   const record = list.find((w) => w.id === selected);
   // idempotent: the engine rebuilds only when the input key changes
   engine?.setInput(record?.repos ?? [], record?.deps ?? [], `${tabId}:${selected}`);
 
-  // Clicking a changed file fires TWO links through the desktop's open
-  // intent: the explorer revealed at the file, and the viewer on the file
-  // anchored to its ref (v1 policy: each link opens a new window).
+  // One click drops a WIRED pair: an explorer seeded AT the file (the WTA
+  // source) and a viewer following it. Navigate in the explorer and the
+  // viewer follows — they cooperate instead of being two stranded windows.
   const openFile = (node: GraphRenderNode, path: string) => {
-    openTool?.({ toolId: 'explorer', params: { reveal: `${node.name}::${path}` } });
-    openTool?.({
-      toolId: 'viewer',
-      params: { repo: node.name, path, branch: node.branch, head: node.head, view: 'working' },
-    });
+    openPair?.('explorer', 'viewer', { workspace: node.name, path, ref: node.branch });
   };
 
   return (

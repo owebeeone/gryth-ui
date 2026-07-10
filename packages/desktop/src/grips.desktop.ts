@@ -50,6 +50,11 @@ export interface TabRecord {
   // repo, path, ref, …). Seeded into the tool's per-tab context; rides
   // along through merge/detach; rehydrates the view after reload.
   params?: Record<string, unknown>;
+  // WIRE: the tab id of this sink's SOURCE. The chrome makes the source's
+  // grip context a parent of this tab's, so the sink reads what the source
+  // publishes (the explorer→viewer "current editor" link). Declarative in
+  // the document; the chrome realizes it as a context edge.
+  source?: string;
 }
 
 export interface WindowRecord {

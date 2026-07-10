@@ -55,3 +55,56 @@
 .indent-1 { padding-left: 0.9rem; }
 .indent-2 { padding-left: 1.8rem; }
 .indent-3 { padding-left: 2.7rem; }
+
+/* Explorer as a WTA SOURCE — the patchbay's source colour rides --src. */
+.explorer-src { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.explorer-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-top: 3px solid var(--src, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.explorer-head select,
+.src-ref {
+  background: var(--win, Canvas);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 5px;
+  padding: 0.1rem 0.3rem;
+}
+.src-ref { width: 6rem; min-width: 0; }
+.src-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--src, currentColor);
+}
+.explorer-src .explorer-tree { flex: 1; overflow: auto; padding: 0.4rem 0.6rem; }
+.explorer-src .explorer-file { white-space: nowrap; cursor: pointer; }
+.explorer-file.selected { color: var(--src); font-weight: 600; }
+
+/* Viewer wired to a source explorer wears the same hue; pinned = frozen. */
+.code-viewer.wired { border-left: 3px solid var(--src); }
+.code-chip.live {
+  background: color-mix(in srgb, var(--src, var(--accent)) 24%, transparent);
+  border-color: color-mix(in srgb, var(--src, var(--accent)) 50%, transparent);
+}
+.code-chip.pinned { opacity: 0.7; }
+.code-head-spacer { flex: 1; }
+.pin-btn {
+  flex: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95em;
+  line-height: 1;
+  padding: 0.1rem 0.2rem;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+.pin-btn:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }

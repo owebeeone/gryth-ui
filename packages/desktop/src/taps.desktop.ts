@@ -1,8 +1,9 @@
 import { BaseTap, createAtomValueTap, type Grip, type GripContext, type Grok } from '@owebeeone/grip-react';
 import {
   addEntry, allTools, PluginRegistryTap,
-  DESKTOP_OPEN_TOOL, DESKTOP_RETARGET_TAB, DESKTOP_TAB_LINKS,
-  type TabLinkInfo, type ToolLink,
+  DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_OPEN_WIRED_PAIR, DESKTOP_PIN_TAB,
+  DESKTOP_RETARGET_TAB, DESKTOP_TAB_LINKS,
+  type TabLinkInfo, type ToolId, type ToolLink,
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool } from './facets';
 import { DESKTOP_BUILTINS_PLUGIN } from './grips.desktop';
@@ -22,7 +23,7 @@ import {
   TICKER_HOVER, TICKER_HOVER_TAP,
   TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
-import { openToolWindow, openWindow, setTabParams } from './ops';
+import { findWiredTab, freezeTab, nextTabId, openToolWindow, openWindow, setTabParams } from './ops';
 
 // Shell chrome taps — the desktop document (environ scope) plus the
 // instance-scope gesture state. These are the desktop itself, NOT plugins
@@ -120,6 +121,53 @@ export const RetargetTabTap = createAtomValueTap(DESKTOP_RETARGET_TAB, {
   },
 });
 
+// Desktop.OpenWired intent: open (or focus) a SINK wired to a source tab.
+// First call spawns the sink with source set (the chrome then makes the
+// source's context a parent); later calls focus the existing wire — the
+// "current editor" reuse. The live grip link carries the data, so a focus
+// is all a repeat needs.
+const openWiredIntent = (sourceTabId: string, link: ToolLink) => {
+  const list = DesktopWindowsTap.get();
+  const existing = findWiredTab(list, sourceTabId, link.toolId);
+  // already wired and live: the WTA grip updates it in place — do NOT
+  // raise/refocus on every click (that was the jarring jump).
+  if (existing) return;
+  const def = resolveTool(allTools(PluginRegistryTap.get()), link.toolId);
+  const out = openToolWindow(
+    list, link.toolId, def.defaultSize, DesktopCurrentTap.get(), link.params, sourceTabId,
+  );
+  DesktopWindowsTap.set(out.list);
+  DesktopFocusedTap.set(out.focusId);
+};
+export const OpenWiredTap = createAtomValueTap(DESKTOP_OPEN_WIRED, {
+  initial: openWiredIntent,
+});
+
+// Desktop.OpenWiredPair intent: open a SOURCE seeded from params plus a SINK
+// wired to it. The source's tab id is the next id the list will assign, so
+// the sink can name it as its source before either window exists.
+const openWiredPairIntent = (sourceToolId: ToolId, sinkToolId: ToolId, params?: Record<string, unknown>) => {
+  const defs = allTools(PluginRegistryTap.get());
+  const desktop = DesktopCurrentTap.get();
+  const list = DesktopWindowsTap.get();
+  const srcTabId = nextTabId(list);
+  const a = openToolWindow(list, sourceToolId, resolveTool(defs, sourceToolId).defaultSize, desktop, params);
+  const b = openToolWindow(a.list, sinkToolId, resolveTool(defs, sinkToolId).defaultSize, desktop, params, srcTabId);
+  DesktopWindowsTap.set(b.list);
+  DesktopFocusedTap.set(b.focusId);
+};
+export const OpenWiredPairTap = createAtomValueTap(DESKTOP_OPEN_WIRED_PAIR, {
+  initial: openWiredPairIntent,
+});
+
+// Desktop.PinTab intent: freeze a tab on its current snapshot and cut its
+// wire (the chrome drops the context edge next render).
+export const PinTabTap = createAtomValueTap(DESKTOP_PIN_TAB, {
+  initial: (tabId: string, params: Record<string, unknown>) => {
+    DesktopWindowsTap.update((list) => freezeTab(list, tabId, params));
+  },
+});
+
 // Desktop.TabLinks: every tab's link (toolId + params) as serializable
 // data, derived from the desktop document — how plugins learn which views
 // are open (e.g. the session browser's attached/orphaned derivation)
@@ -166,5 +214,8 @@ export function registerDesktopTaps(grok: Grok) {
   grok.registerTap(TickerBleedTap);
   grok.registerTap(OpenToolTap);
   grok.registerTap(RetargetTabTap);
+  grok.registerTap(OpenWiredTap);
+  grok.registerTap(OpenWiredPairTap);
+  grok.registerTap(PinTabTap);
   grok.registerTap(DesktopTabLinksTap);
 }

@@ -38,13 +38,14 @@ export function openWindow(
   size: { w: number; h: number },
   desktop: number = 1,
   params?: Record<string, unknown>,
+  source?: string,
 ): { list: WindowRecord[]; id: string } {
   const id = nextWindowId(list);
   const tabId = nextTabId(list);
   const step = list.length % 8;
   const win: WindowRecord = {
     id,
-    tabs: [{ id: tabId, facet, params }],
+    tabs: [{ id: tabId, facet, params, source }],
     activeTab: tabId,
     x: ORIGIN + step * CASCADE,
     y: ORIGIN + step * CASCADE,
@@ -68,8 +69,9 @@ export function openToolWindow(
   size: { w: number; h: number },
   desktop: number,
   params?: Record<string, unknown>,
+  source?: string,
 ): { list: WindowRecord[]; id: string; focusId: string } {
-  const result = openWindow(list, facet, size, desktop, params);
+  const result = openWindow(list, facet, size, desktop, params, source);
   let next = result.list;
   let focusId = result.id;
   const f = foundationOn(next, desktop);
@@ -79,6 +81,20 @@ export function openToolWindow(
     focusId = dm.frameId;
   }
   return { list: next, id: result.id, focusId };
+}
+
+// Find an existing SINK wired to `source` showing `facet` — the "current
+// editor" lookup behind Desktop.OpenWired. Returns the frame id (to focus)
+// or null (spawn one).
+export function findWiredTab(
+  list: WindowRecord[],
+  source: string,
+  facet: FacetKind,
+): string | null {
+  for (const w of list) {
+    if (w.tabs.some((t) => t.source === source && t.facet === facet)) return w.id;
+  }
+  return null;
 }
 
 // Replace a tab's LINK params in place — the "send to an EXISTING window"
@@ -93,6 +109,21 @@ export function setTabParams(
   if (!frame) return list;
   return list.map((w) => (w === frame
     ? { ...w, tabs: w.tabs.map((t) => (t.id === tabId ? { ...t, params } : t)) }
+    : w));
+}
+
+// PIN/FREEZE a tab: snapshot params onto it and CUT its wire (clear source),
+// so it stops following and becomes a standalone view. The chrome drops the
+// context edge on the next render (source gone). Same list when unknown.
+export function freezeTab(
+  list: WindowRecord[],
+  tabId: string,
+  params: Record<string, unknown>,
+): WindowRecord[] {
+  const frame = list.find((w) => w.tabs.some((t) => t.id === tabId));
+  if (!frame) return list;
+  return list.map((w) => (w === frame
+    ? { ...w, tabs: w.tabs.map((t) => (t.id === tabId ? { ...t, params, source: undefined } : t)) }
     : w));
 }
 
