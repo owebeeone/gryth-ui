@@ -1,10 +1,34 @@
-/* Chat playground — @grythjs/plugin-chat. Theme-derived via currentColor. */
+/* Chat — @grythjs/plugin-chat (live glade group chat). Theme-derived. */
 .chat-view {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
 }
+.chat-groups {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  flex-wrap: wrap;
+}
+.chat-group {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+.chat-group.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  cursor: default;
+}
+.chat-groups .chat-who { margin-left: auto; }
 .chat-log {
   flex: 1;
   min-height: 0;

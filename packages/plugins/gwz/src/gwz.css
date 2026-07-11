@@ -1,0 +1,88 @@
+/* Gwz — @grythjs/plugin-gwz (live glade-gwz command surface). Theme-derived. */
+.gwz-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-size: 0.85em;
+}
+.gwz-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.gwz-verbs { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.gwz-verb {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+.gwz-verb.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  cursor: default;
+}
+.gwz-who { margin-left: auto; opacity: 0.6; font-size: 0.85em; }
+.gwz-run {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+  flex-wrap: wrap;
+}
+.gwz-run input {
+  flex: 1;
+  min-width: 6rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 6px;
+  background: var(--win, Canvas);
+  color: inherit;
+  font: inherit;
+}
+.gwz-run button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.gwz-result {
+  margin: 0 0.6rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+.gwz-result.err { background: color-mix(in srgb, crimson 16%, transparent); }
+.gwz-out {
+  margin: 0.4rem 0.6rem 0;
+  padding: 0.4rem 0.55rem;
+  max-height: 30%;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-radius: 6px;
+}
+.gwz-out.err { background: color-mix(in srgb, crimson 12%, transparent); }
+.gwz-stream {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-family: ui-monospace, monospace;
+}
+.gwz-empty { opacity: 0.55; font-style: italic; }
+.gwz-seq { opacity: 0.5; }

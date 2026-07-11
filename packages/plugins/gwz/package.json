@@ -1,5 +1,5 @@
 {
-  "name": "@grythjs/plugin-chat",
+  "name": "@grythjs/plugin-gwz",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,8 +9,7 @@
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",
     "@grythjs/glade": "workspace:*",
-    "@owebeeone/glial-runtime": "file:../../../../../glade-wz/glial",
-    "@owebeeone/glade-chat": "file:../../../../../glade-wz/glade-chat"
+    "@owebeeone/glial-runtime": "file:../../../../../glade-wz/glial"
   },
   "peerDependencies": {
     "@owebeeone/grip-react": "*",

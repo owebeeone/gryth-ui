@@ -1,9 +1,16 @@
 packages:
   - packages/*
   - packages/plugins/*
+  # gwz sibling members (outside the pnpm root) — declared as workspace
+  # packages so `workspace:*` resolves the grip singleton from ANY depth. A
+  # relative `file:` override resolves relative to the DEPENDENT package, so it
+  # broke once nested packages (via glial-runtime's grip-core peer) needed it.
+  - ../grip-core
+  - ../grip-react
 
 # grip must be a singleton — force every resolution (including auto-installed
-# peers) onto the sibling checkouts instead of the published registry builds.
+# peers, e.g. glial-runtime's grip-core peer) onto the sibling gwz checkouts
+# instead of the published registry builds.
 overrides:
-  "@owebeeone/grip-core": "file:../grip-core"
-  "@owebeeone/grip-react": "file:../grip-react"
+  "@owebeeone/grip-core": "workspace:*"
+  "@owebeeone/grip-react": "workspace:*"

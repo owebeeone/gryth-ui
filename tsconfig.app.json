@@ -10,6 +10,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
@@ -17,11 +18,17 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
+    // noUnusedLocals / noUnusedParameters / erasableSyntaxOnly were relaxed for
+    // GLP-0006 P1.S4: the app now consumes the glade-wz TS SOURCE packages
+    // (glial-runtime / glade-chat / client-ts) across the INTERIM cross-workspace
+    // seam, and tsc deep-checks their (leniently-configured) source with these
+    // strict flags. There is no declaration boundary short of a composite-
+    // references restructure, so these three are off program-wide. gryth-ui's
+    // OWN code stays covered: eslint's @typescript-eslint/no-unused-vars gates
+    // unused locals/params, and enums remain banned by AGENTS.md. Restore when
+    // the glade packages ship built .d.ts (publish-or-member call).
   },
   "include": ["src", "packages"]
 }

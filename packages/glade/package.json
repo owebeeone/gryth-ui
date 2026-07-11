@@ -1,0 +1,19 @@
+{
+  "name": "@grythjs/glade",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "gryth-ui's glade seam: the one session + client + glial binder + bootstrap (GLP-0006 P1.S4). Ports the glade demo's glial.ts/glade.ts into the plugin runtime.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@grythjs/plugin-api": "workspace:*",
+    "@owebeeone/glial-runtime": "file:../../../../glade-wz/glial",
+    "@owebeeone/glade-chat": "file:../../../../glade-wz/glade-chat",
+    "@glade/client-ts": "file:../../../../glade-wz/glade/client-ts"
+  },
+  "peerDependencies": {
+    "@owebeeone/grip-react": "*"
+  }
+}

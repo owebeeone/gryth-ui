@@ -19,8 +19,10 @@
     "@grythjs/plugin-vm": "workspace:*",
     "@grythjs/plugin-settings": "workspace:*",
     "@grythjs/plugin-chat": "workspace:*",
-    "@owebeeone/grip-core": "file:../grip-core",
-    "@owebeeone/grip-react": "file:../grip-react",
+    "@grythjs/plugin-gwz": "workspace:*",
+    "@grythjs/glade": "workspace:*",
+    "@owebeeone/grip-core": "workspace:*",
+    "@owebeeone/grip-react": "workspace:*",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

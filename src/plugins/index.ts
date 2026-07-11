@@ -14,3 +14,4 @@ import '@grythjs/plugin-vm';
 import '@grythjs/plugin-terminals';
 import '@grythjs/plugin-settings';
 import '@grythjs/plugin-chat';
+import '@grythjs/plugin-gwz';
