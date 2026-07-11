@@ -11,14 +11,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@grythjs/plugin-api": "*",
-    "@grythjs/desktop": "*",
-    "@grythjs/plugin-workspace": "*",
-    "@grythjs/plugin-code": "*",
-    "@grythjs/plugin-terminals": "*",
-    "@grythjs/plugin-vm": "*",
-    "@grythjs/plugin-settings": "*",
-    "@grythjs/plugin-chat": "*",
+    "@grythjs/plugin-api": "workspace:*",
+    "@grythjs/desktop": "workspace:*",
+    "@grythjs/plugin-workspace": "workspace:*",
+    "@grythjs/plugin-code": "workspace:*",
+    "@grythjs/plugin-terminals": "workspace:*",
+    "@grythjs/plugin-vm": "workspace:*",
+    "@grythjs/plugin-settings": "workspace:*",
+    "@grythjs/plugin-chat": "workspace:*",
     "@owebeeone/grip-core": "file:../grip-core",
     "@owebeeone/grip-react": "file:../grip-react",
     "react": "^19.1.1",
@@ -37,9 +37,5 @@
     "typescript-eslint": "^8.39.0",
     "vite": "^7.1.0",
     "vitest": "^3.2.4"
-  },
-  "workspaces": [
-    "packages/*",
-    "packages/plugins/*"
-  ]
+  }
 }

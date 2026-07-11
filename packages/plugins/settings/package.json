@@ -7,8 +7,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@grythjs/plugin-api": "*",
-    "@grythjs/desktop": "*"
+    "@grythjs/plugin-api": "workspace:*",
+    "@grythjs/desktop": "workspace:*"
   },
   "peerDependencies": {
     "@owebeeone/grip-react": "*",

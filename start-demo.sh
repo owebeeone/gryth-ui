@@ -12,7 +12,7 @@ PIDFILE="$RUN_DIR/run.pid"
 LOG="$RUN_DIR/run.log"
 PORT="${GRYTH_UI_PORT:-5173}"
 mkdir -p "$RUN_DIR"
-cd "$HERE"   # npm must run from the gryth-ui dir, not the caller's cwd
+cd "$HERE"   # pnpm must run from the gryth-ui dir, not the caller's cwd
 
 if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
   echo "gryth-ui already running (pid $(cat "$PIDFILE")). Run ./stop-demo.sh first." >&2
@@ -20,7 +20,7 @@ if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; the
 fi
 
 echo "Starting gryth-ui — vite :$PORT…"
-nohup npm run dev -- --port "$PORT" --strictPort >"$LOG" 2>&1 &
+nohup pnpm run dev --port "$PORT" --strictPort >"$LOG" 2>&1 &
 echo $! >"$PIDFILE"
 
 for _ in $(seq 1 60); do

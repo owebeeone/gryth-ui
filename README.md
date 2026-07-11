@@ -21,12 +21,12 @@ test enforced). Working instructions: [AGENTS.md](AGENTS.md).
 ## Setup
 
 Requires sibling checkouts `../grip-core` and `../grip-react` with `dist/`
-built (`npm run build` in each). In `gryth-dev` these are symlinks into
-`glial-dev`.
+built (`pnpm build` in each). In the `gryth-wz` workspace these are real
+checkouts managed by gwz.
 
 ```sh
-npm install
-npm test        # headless seam tests (vitest)
-npm run dev     # vite dev server
-npm run build   # tsc + vite build
+pnpm install
+pnpm test        # headless seam tests (vitest)
+pnpm dev         # vite dev server
+pnpm build       # tsc + vite build
 ```

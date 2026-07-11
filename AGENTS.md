@@ -97,7 +97,7 @@ Adopted from grip-lab's AGENTS.md.
 
 ## Verification commands
 
-- Dev server: `npm run dev`
-- Type-check + build: `npm run build`
-- Lint (includes the no-React-state ban): `npm run lint`
-- Tests (no-React-state scan + vitest): `npm test`
+- Dev server: `pnpm dev`
+- Type-check + build: `pnpm build`
+- Lint (includes the no-React-state ban): `pnpm lint`
+- Tests (no-React-state scan + vitest): `pnpm test`

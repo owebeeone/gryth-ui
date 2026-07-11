@@ -1,0 +1,9 @@
+packages:
+  - packages/*
+  - packages/plugins/*
+
+# grip must be a singleton — force every resolution (including auto-installed
+# peers) onto the sibling checkouts instead of the published registry builds.
+overrides:
+  "@owebeeone/grip-core": "file:../grip-core"
+  "@owebeeone/grip-react": "file:../grip-react"
