@@ -244,9 +244,10 @@ function NewStreamForm({ parents }: { parents: string[] }) {
         ))}
       </ul>
       <p className="gyld-note">
-        This stage submits nothing. The command below is what makes the stream;
-        run it from the Gyld repository into a new output directory, and the
-        window picks the bundle up on its next read.
+        This stage submits nothing. The command below is what makes the stream:
+        run it from the Gyld repository and it writes the new stream&apos;s
+        overlay module beside the others. Rebuild the bundle after it, and this
+        window picks the new stream up on its next read.
       </p>
       <textarea
         className="gyld-stream-command"

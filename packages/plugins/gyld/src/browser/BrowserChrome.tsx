@@ -11,12 +11,12 @@ import {
 } from '../grips';
 import { NOTHING_DIMMED, type GyldDimmed } from '../lens/camera';
 import { NODE_FACETS } from '../lens/facets';
-import { GYLD_DECIDE_NOW_TOOL, GYLD_DETAIL_TOOL } from '../tools';
+import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
 import { neighbourhoodLink } from './links';
 import type { GyldSearchMatch } from './search';
 
 // The browser's chrome: the stream switcher, the perspective picker, the
-// search box, the node dim toggles and the three links a browser writes.
+// search box, the node dim toggles and the four links a browser writes.
 //
 // Nothing here is derived. The stream list is the census, the perspective list
 // is the stream's own lens manifest (or, for a stream that emits no manifest,
@@ -172,6 +172,15 @@ export function BrowserChrome({ tabId, lens, search }: {
           onClick={() => openWired?.(tabId, { toolId: GYLD_DECIDE_NOW_TOOL })}
         >
           Decide now
+        </button>
+        <button
+          type="button"
+          className="gyld-open-decide"
+          disabled={openWired === undefined}
+          title="answer a question of this stream, or ask a new one, wired to this browser"
+          onClick={() => openWired?.(tabId, { toolId: GYLD_DECIDE_TOOL })}
+        >
+          Decide
         </button>
         <button type="button" disabled={reload === undefined} onClick={() => reload?.()}>
           Reload

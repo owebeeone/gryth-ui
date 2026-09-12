@@ -33,6 +33,23 @@ describe('gyld.browser', () => {
     expect(markup).toContain('data-slot="glade_decisions:GladeDecisions.scope_model"');
   });
 
+  it('offers the four windows a browser opens, each wired or linked', async () => {
+    const window = mount('lens-links', 'base', 'decisions');
+    await expect.poll(() => window.lens()?.status).toBe('ok');
+    const markup = window.render();
+    // the three WIRED sinks follow this browser's own destination, and the
+    // drill-in opens a new window on the focused record instead
+    for (const held of [
+      'gyld-open-detail', 'gyld-open-decidenow', 'gyld-open-decide', 'gyld-open-hood',
+    ]) {
+      expect(markup).toContain(`class="${held}"`);
+    }
+    // and each is refused while no desktop can open a window, rather than
+    // doing nothing when pressed
+    expect(markup.match(/<button[^>]*class="gyld-open-[a-z]+"[^>]*disabled/g))
+      .toHaveLength(4);
+  });
+
   it('shows the destination and the store status when there is no lens', async () => {
     const window = mount('lens-unset', 'base', '');
     await expect.poll(() => window.lens()?.status).toBe('unset');

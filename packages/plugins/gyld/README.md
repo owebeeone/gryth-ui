@@ -16,9 +16,9 @@ perspective picker, a search box over emitted labels and qualified slots, one
 dim toggle per value each drawn dimension carries, and the emitted picture
 itself with pan, zoom, fit and selection. Under the picture it states what the
 lens omitted and, in the provenance footer, which lineage, revision, snapshot
-digest, relations and layout engine the file was built from. It writes three
-links: a detail window wired to it, a decide-now window wired to it, and a
-neighbourhood window on the focused record. With no bundle root on the desk it
+digest, relations and layout engine the file was built from. It writes four
+links: a detail window wired to it, a decide-now window wired to it, a decide
+window wired to it, and a neighbourhood window on the focused record. With no bundle root on the desk it
 shows the set picker instead of a picture, because the plugin will not invent a
 place to read Gyld output from.
 
@@ -37,7 +37,10 @@ status, the tier, the preference recorded for it and the slots that block or
 gate it. Like the detail window it is wired when opened from a browser and
 standalone when opened with a stream of its own.
 
-`gyld.decide` answers a question or asks a new one. The answer form lists the
+`gyld.decide` answers a question or asks a new one. Opened from a browser
+through the Decide button it is wired to that browser, so it answers on the
+stream that browser is on and opens on the record it has focused; opened from
+the launcher with a stream and a question in the link it stands alone. The answer form lists the
 stream's emitted decide-now rows, draws the picked question's own offered
 alternatives with the recorded lean marked, and takes a principal, a stamp,
 sources and the ruling text. The ask form takes a class, a member, a docstring,

@@ -767,7 +767,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  min-height: 320px;
+  /* The pictures are the point of this window, and a lens view spends its
+     height on a legend, an omission strip and a provenance footer before the
+     stage sees any: measured against the emitted decisions lens, a 320px pane
+     left the stage 23 pixels and the graph was a smudge. */
+  min-height: 480px;
 }
 
 .gyld-diff-pane {
@@ -832,4 +836,14 @@
 
 .gyld-diff-list li {
   overflow-wrap: anywhere;
+}
+
+/* Two lens views side by side have two omission strips and two legends, and
+   between them they can starve the pictures. Both scroll inside a bounded
+   box here; neither is hidden, because a window that hides an omission is
+   the one thing section 6.7 forbids outright. */
+.gyld-diff-pane .gyld-omissions,
+.gyld-diff-pane .gyld-legend {
+  max-height: 4.5em;
+  overflow: auto;
 }
