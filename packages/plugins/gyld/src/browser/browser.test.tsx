@@ -96,7 +96,7 @@ describe('the pickers list what the bundle emitted, and nothing else', () => {
       (value) => value?.status === 'ready',
     );
     const ids = census.status === 'ready' ? census.streams.map((entry) => entry.id) : [];
-    expect(ids).toEqual(['base', 'architecture']);
+    expect(ids).toEqual(['base', 'stream-a', 'stream-b', 'architecture']);
     expect(optionsOf(tab.render(<GyldBrowser tabId="census" />), 'gyld-pick-stream')).toEqual(ids);
   });
 });

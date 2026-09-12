@@ -1,0 +1,1535 @@
+{
+  "format": "gyld.lens.v1",
+  "perspective": "decisions",
+  "snapshot": {
+    "lineage": "glade-decision-graph",
+    "revision": "stream-a@1",
+    "digest": "b6fcbfdafc66826fb8a110138605201b85d7814753cabc6a924be415221e4332"
+  },
+  "stream": "stream-a",
+  "title": "Glade | Buy/build decision graph (dependencies, not a schedule)",
+  "relations": [
+    "Requires",
+    "Implies",
+    "GatedBy"
+  ],
+  "text_relations": [
+    "Offers"
+  ],
+  "omissions": [
+    "matrix rows",
+    "requirement text",
+    "evidence and costs",
+    "Offers drawn as text, not edges"
+  ],
+  "legend": {
+    "edges": [
+      {
+        "relation": "Requires",
+        "definition": "f0526b9c5fe4700a0cfb0d78a92f14cd2f0458e83a5f142f7ee34b6a9dec106c",
+        "color": "#1f4e79",
+        "style": "solid",
+        "label": null
+      },
+      {
+        "relation": "Implies",
+        "definition": "85cfbd80f0dc70dc43f100eb3104452bd5261460a65581292592833cfaac3d5b",
+        "color": "#b45309",
+        "style": "dashed",
+        "label": null
+      },
+      {
+        "relation": "GatedBy",
+        "definition": "11d7a7f78eda2f4bf2884f3e3a1dd933c413bb29f4c416c1f9035fbf116d558a",
+        "color": "#6b7280",
+        "style": "dotted",
+        "label": "gate"
+      }
+    ],
+    "nodes": [
+      {
+        "kind": "Question",
+        "status": "Decided",
+        "classification": null,
+        "shape": "box",
+        "fill": "#e2e8f0",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Lean",
+        "classification": null,
+        "shape": "box",
+        "fill": "#dcfce7",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Open",
+        "classification": null,
+        "shape": "box",
+        "fill": "#fef3c7",
+        "glyph": null
+      },
+      {
+        "kind": "Trigger",
+        "status": null,
+        "classification": null,
+        "shape": "folder",
+        "fill": "#f8fafc",
+        "glyph": null
+      }
+    ]
+  },
+  "engine": {
+    "name": "dot",
+    "version": "14.1.4",
+    "pinned": true
+  },
+  "bb": [
+    0.0,
+    0.0,
+    2242.8,
+    657.08
+  ],
+  "groups": [
+    {
+      "id": "grp:decided-anchors-ratified",
+      "label": "Decided anchors (ratified)",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+        "occ:5cb3001a653be4d9dee6be2a0021d365a2eca455e32deeb4ac4a974223caa600",
+        "occ:5e91d3bd8460ab2f2eb6c59c9132b769fe54a56c055d82f6c71cc947f8365fb6",
+        "occ:620536da9a96622ba9e1c9959e420ab446f4b0fbf3a68f181fc8d6d030e6a19e",
+        "occ:71704e77426121abb77d96fec9bd586cdd6e654bdfef932069a7c66340b295dd",
+        "occ:a6d902eae4f003bd5c21f76cc7f4bceb99822d510399e94bd1828ecbc3e7d859",
+        "occ:b3536ad34600624112202b4d8c518c162e8d05ccbb092ea0789e33ab5ce3d970",
+        "occ:f822287849724534a650a3bdf2fbe56e399c280aaa82017876559f5164f77938"
+      ],
+      "bb": [
+        801.81,
+        310.54,
+        1544.8,
+        578.08
+      ]
+    },
+    {
+      "id": "grp:needs-and-events-that-gate-questions",
+      "label": "Needs and events that gate questions",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:58fb6015c134cbfcab9e618f1919b50b2c8b8fdb51d7972041a866631c0a2018",
+        "occ:713d896b53f26538c89e48355892a9d71747c57dc459a15dd6367f40dc4f2c9c",
+        "occ:a0383bc6d5d484c4ccb44b0cf40c88ca553a05c3bd5d78b13c9437461f2fd687",
+        "occ:b17f9ff9e8841fa5f5d2548058c656a45b9982e9898ad384582e58bc5e04a1c6",
+        "occ:e44cb170f127f3722c0703f8b26462d4728e5e9a40dde2b1e57ee4aa8231f396"
+      ],
+      "bb": [
+        1829.8,
+        163.03,
+        2074.8,
+        554.32
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "label": "transport_key_binding",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "transport_key_binding [Q3]",
+        "TransportKeyBinding",
+        "  - binding_record *",
+        "  - one_key_both_roles"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        567.81,
+        348.3
+      ],
+      "size": [
+        2.0717,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:24845d580fe4a8c5a32ccb4ffe84c29b738b41b6789a2d8daa62e12553cd5c1f",
+      "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+      "label": "bulk_transfer",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "bulk_transfer [Q5]",
+        "BulkTransfer",
+        "  - defer_bulk",
+        "  - iroh_blobs_port *",
+        "  - own_chunked_streams"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1453.8,
+        189.03
+      ],
+      "size": [
+        1.9988,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:2f94da7bd2c221f0d699874d112ca857a7ec9a2c55efa41ec59eef4b0d4bcbc1",
+      "slot": "glade_decisions:GladeDecisions.text_engine",
+      "label": "text_engine",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "text_engine [Q9]",
+        "TextEngine",
+        "  - automerge",
+        "  - loro",
+        "  - own_text_profile *",
+        "  - yrs"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1612.8,
+        348.3
+      ],
+      "size": [
+        1.655,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:5009b1de6b4caae7f02ce987bdd33e36fa9c024a731f02ab7039c12c0fb92edd",
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "label": "metadata_exposure",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "metadata_exposure [R8]",
+        "MetadataExposure"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        431.81,
+        35.76
+      ],
+      "size": [
+        1.9258,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "label": "version_pin",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "version_pin [Q2]",
+        "VersionPin",
+        "  - bump_to_current (selected)",
+        "  - stay_on_lock"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1015.8,
+        348.3
+      ],
+      "size": [
+        2.2904,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:5c9f303f95ce90271ea507183e458a8230df0995723a7c45b31b0f714a679b73",
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "label": "key_custody",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "key_custody [Q11]",
+        "KeyCustody",
+        "  - owner_held_only",
+        "  - recovery_keys",
+        "  - social_recovery"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        328.81,
+        507.57
+      ],
+      "size": [
+        1.5925,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:5cb3001a653be4d9dee6be2a0021d365a2eca455e32deeb4ac4a974223caa600",
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "label": "lifecycle_composition",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "lifecycle_composition [Q10]",
+        "LifecycleComposition",
+        "  - dag_runner",
+        "  - graceful_shutdown_crate",
+        "  - sdax_rs (selected)",
+        "  - tokio_primitives"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1231.8,
+        507.57
+      ],
+      "size": [
+        2.1342,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:5e91d3bd8460ab2f2eb6c59c9132b769fe54a56c055d82f6c71cc947f8365fb6",
+      "slot": "glade_decisions:GladeDecisions.shaku_injector",
+      "label": "shaku_injector",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "shaku_injector",
+        "ShakuInjector"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1085.8,
+        507.57
+      ],
+      "size": [
+        1.2383,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:620536da9a96622ba9e1c9959e420ab446f4b0fbf3a68f181fc8d6d030e6a19e",
+      "slot": "glade_decisions:GladeDecisions.iroh_transport",
+      "label": "iroh_transport",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "iroh_transport",
+        "IrohTransport"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        972.81,
+        507.57
+      ],
+      "size": [
+        1.2071,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "slot": "glade_decisions:GladeDecisions.registry_growth",
+      "label": "registry_growth",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "registry_growth [Q12]",
+        "RegistryGrowth",
+        "  - delegated_referrals",
+        "  - ordered_reconfiguration",
+        "  - trusted_mapping_only *"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1841.8,
+        35.76
+      ],
+      "size": [
+        2.0508,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:71704e77426121abb77d96fec9bd586cdd6e654bdfef932069a7c66340b295dd",
+      "slot": "glade_decisions:GladeDecisions.grants_as_data",
+      "label": "grants_as_data",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "grants_as_data",
+        "GrantsAsData"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        856.81,
+        507.57
+      ],
+      "size": [
+        1.3113,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:741f29b3626c1540b4f6c3a90d9a48e72a208377114ca5bfc0c404db766cfca1",
+      "slot": "glade_decisions:GladeDecisions.async_witness",
+      "label": "async_witness",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "async_witness [R27]",
+        "AsyncWitness",
+        "  - selection_reopened",
+        "  - shaku_confirmed"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        730.81,
+        348.3
+      ],
+      "size": [
+        1.7592,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:7cb3c679dd507d91b370a0f37f49d57680dabce8dfe2dc56f4dd0d3238a3cbf3",
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "label": "blind_relay_tier",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "blind_relay_tier [R14]",
+        "BlindRelayTier"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        547.81,
+        189.03
+      ],
+      "size": [
+        1.6967,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "label": "scope_model",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "scope_model [I-2]",
+        "ScopeModel",
+        "  - cryptography",
+        "  - node_trust *",
+        "  - topology"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        415.81,
+        348.3
+      ],
+      "size": [
+        1.4675,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:8da7e8952b3ee5c1321517574683861eed9be1d4b4c3c94c8840bdce3300439f",
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+      "label": "pin_audit",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "pin_audit [Q2a]",
+        "PinAudit",
+        "  - audit_at_slice",
+        "  - audit_on_bump"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1015.8,
+        189.03
+      ],
+      "size": [
+        1.4883,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:a6d902eae4f003bd5c21f76cc7f4bceb99822d510399e94bd1828ecbc3e7d859",
+      "slot": "glade_decisions:GladeDecisions.store_seam",
+      "label": "store_seam",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "store_seam",
+        "StoreSeam"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1498.8,
+        507.57
+      ],
+      "size": [
+        1.0613,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:af70d3278b9f2b346431038051f3daec9dde381fc4a17c04b92b4b3f6adfede0",
+      "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+      "label": "simulator_tooling",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "simulator_tooling [Q13]",
+        "SimulatorTooling",
+        "  - dependency_policy_tools",
+        "  - deterministic_runtime_sim",
+        "  - own_sim_only *"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        2019.8,
+        35.76
+      ],
+      "size": [
+        2.1862,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:b3536ad34600624112202b4d8c518c162e8d05ccbb092ea0789e33ab5ce3d970",
+      "slot": "glade_decisions:GladeDecisions.discovery_fold",
+      "label": "discovery_fold",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "discovery_fold",
+        "DiscoveryFold"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        863.81,
+        348.3
+      ],
+      "size": [
+        1.2279,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:b59cd4b11cf8204c767c6441aea651791bed17d85c7067dd7f1081a1cfbd0b2a",
+      "slot": "glade_decisions:GladeDecisions.store_engine",
+      "label": "store_engine",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "store_engine [Q8]",
+        "StoreEngine",
+        "  - redb_engine",
+        "  - sqlite_engine",
+        "  - whole_state_blob *"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1759.8,
+        348.3
+      ],
+      "size": [
+        1.7279,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:c9b1f96492a87d98726f86a12c8ac5bb5d9cbbda5bbe902eeb91df6a59690ec7",
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "label": "traffic_budget_numbers",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "traffic_budget_numbers [R5]",
+        "TrafficBudgetNumbers"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        647.81,
+        35.76
+      ],
+      "size": [
+        2.1758,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:d1d764506dfd6c89c55c895d9be467d353222ba10cf77aeec85d6e66b8b4f718",
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "label": "proof_family",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "proof_family [Q6]",
+        "ProofFamily",
+        "  - biscuit",
+        "  - macaroons",
+        "  - taut_grants *",
+        "  - ucan"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        286.81,
+        348.3
+      ],
+      "size": [
+        1.4154,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:dfa6581a06ed9bd13712d6de9035e9e7508604e4c3169236230a06dd0ea92fdf",
+      "slot": "glade_decisions:GladeDecisions.identity_adapters",
+      "label": "identity_adapters",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "identity_adapters [Q7]",
+        "IdentityAdapters",
+        "  - kerberos_ldap",
+        "  - none_in_v1 *",
+        "  - oidc",
+        "  - spiffe"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        206.81,
+        189.03
+      ],
+      "size": [
+        1.7383,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:e716cec56df8367deb768588b6a52f1a742a596e811582a8575a57e4337adab0",
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "label": "relay_posture",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "relay_posture [Q1]",
+        "RelayPosture",
+        "  - community_dev_only",
+        "  - iroh_services_pro",
+        "  - self_hosted *"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        700.81,
+        189.03
+      ],
+      "size": [
+        1.8529,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:f822287849724534a650a3bdf2fbe56e399c280aaa82017876559f5164f77938",
+      "slot": "glade_decisions:GladeDecisions.shape_catalogue",
+      "label": "shape_catalogue",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided-anchors-ratified",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "shape_catalogue",
+        "ShapeCatalogue"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        1384.8,
+        507.57
+      ],
+      "size": [
+        1.4154,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "label": "dissemination",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "dissemination [Q4]",
+        "Dissemination",
+        "  - gossip_overlay",
+        "  - sync_round_only *"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        852.81,
+        189.03
+      ],
+      "size": [
+        1.6863,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:58fb6015c134cbfcab9e618f1919b50b2c8b8fdb51d7972041a866631c0a2018",
+      "slot": "glade_decisions:GladeDecisions.failure_model",
+      "label": "failure_model",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": "grp:needs-and-events-that-gate-questions",
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "failure_model"
+      ],
+      "fontsize": 11,
+      "justify": "center",
+      "pos": [
+        1879.8,
+        189.03
+      ],
+      "size": [
+        1.1758,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:713d896b53f26538c89e48355892a9d71747c57dc459a15dd6367f40dc4f2c9c",
+      "slot": "glade_decisions:GladeDecisions.first_real_route_slice",
+      "label": "first_real_route_slice",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": "grp:needs-and-events-that-gate-questions",
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "first_real_route_slice"
+      ],
+      "fontsize": 11,
+      "justify": "center",
+      "pos": [
+        2006.8,
+        189.03
+      ],
+      "size": [
+        1.655,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:a0383bc6d5d484c4ccb44b0cf40c88ca553a05c3bd5d78b13c9437461f2fd687",
+      "slot": "glade_decisions:GladeDecisions.editing_need",
+      "label": "editing_need",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": "grp:needs-and-events-that-gate-questions",
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "editing_need"
+      ],
+      "fontsize": 11,
+      "justify": "center",
+      "pos": [
+        1878.8,
+        507.57
+      ],
+      "size": [
+        1.1342,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:b17f9ff9e8841fa5f5d2548058c656a45b9982e9898ad384582e58bc5e04a1c6",
+      "slot": "glade_decisions:GladeDecisions.store_pressure",
+      "label": "store_pressure",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": "grp:needs-and-events-that-gate-questions",
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "store_pressure"
+      ],
+      "fontsize": 11,
+      "justify": "center",
+      "pos": [
+        1990.8,
+        507.57
+      ],
+      "size": [
+        1.28,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:e44cb170f127f3722c0703f8b26462d4728e5e9a40dde2b1e57ee4aa8231f396",
+      "slot": "glade_decisions:GladeDecisions.first_bulk_supplier",
+      "label": "first_bulk_supplier",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": "grp:needs-and-events-that-gate-questions",
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "first_bulk_supplier"
+      ],
+      "fontsize": 11,
+      "justify": "center",
+      "pos": [
+        1899.8,
+        348.3
+      ],
+      "size": [
+        1.4779,
+        0.5
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "asn:30b70eed3f2b8f66f16971956e8849212bb70056778835b42377338f252d5245#0",
+      "slot": "glade_decisions:AsyncWitness.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:741f29b3626c1540b4f6c3a90d9a48e72a208377114ca5bfc0c404db766cfca1",
+      "tail": "occ:5cb3001a653be4d9dee6be2a0021d365a2eca455e32deeb4ac4a974223caa600",
+      "head": "occ:741f29b3626c1540b4f6c3a90d9a48e72a208377114ca5bfc0c404db766cfca1",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,774.06,378.43 1154.5,470.01 1150.6,468.51 1146.7,467.1 1142.8,465.81 993.93,416.01 943.52,448.48 797.81,390.06 792.46,387.92 787.05,385.37 781.74,382.6",
+      "label_pos": null
+    },
+    {
+      "id": "asn:30b70eed3f2b8f66f16971956e8849212bb70056778835b42377338f252d5245#1",
+      "slot": "glade_decisions:AsyncWitness.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:741f29b3626c1540b4f6c3a90d9a48e72a208377114ca5bfc0c404db766cfca1",
+      "tail": "occ:5e91d3bd8460ab2f2eb6c59c9132b769fe54a56c055d82f6c71cc947f8365fb6",
+      "head": "occ:741f29b3626c1540b4f6c3a90d9a48e72a208377114ca5bfc0c404db766cfca1",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,776.83,378.44 1065.6,489.26 1055.2,481.12 1042,471.88 1028.8,465.81 973.92,440.44 954.09,452.19 896.81,432.81 851.41,417.45 840.39,412.07 797.81,390.06 793.5,387.83 789.1,385.44 784.7,382.96",
+      "label_pos": null
+    },
+    {
+      "id": "asn:0975cd040b249c9cc7784b7c880e9d2e1f9905fc598c369df2d9a55ae26a1e99",
+      "slot": "glade_decisions:BulkTransfer.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:24845d580fe4a8c5a32ccb4ffe84c29b738b41b6789a2d8daa62e12553cd5c1f",
+      "tail": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "head": "occ:24845d580fe4a8c5a32ccb4ffe84c29b738b41b6789a2d8daa62e12553cd5c1f",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1381.6,215.96 1097.2,318.09 1175.9,289.8 1294.7,247.17 1373.2,218.98",
+      "label_pos": null
+    },
+    {
+      "id": "asn:442c5a995fcae6bc897999bde2aad1ec5677cd28f8f6e19eed6561dc250b9c75#3",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 3,
+      "owner": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "tail": "occ:b3536ad34600624112202b4d8c518c162e8d05ccbb092ea0789e33ab5ce3d970",
+      "head": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,854.84,219.01 862.59,329.87 860.88,305.38 857.72,260.16 855.45,227.77",
+      "label_pos": null
+    },
+    {
+      "id": "asn:442c5a995fcae6bc897999bde2aad1ec5677cd28f8f6e19eed6561dc250b9c75#2",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 2,
+      "owner": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "tail": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "head": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,804.57,219.2 469,312.1 472.93,310.08 476.89,308.2 480.81,306.54 537.71,282.49 555.93,288.66 615.81,273.54 688.84,255.1 709.92,258.88 779.81,230.79 785.33,228.57 790.96,226.02 796.51,223.3",
+      "label_pos": null
+    },
+    {
+      "id": "asn:442c5a995fcae6bc897999bde2aad1ec5677cd28f8f6e19eed6561dc250b9c75#0",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "tail": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "head": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,800.6,219.24 621.01,318.19 663.92,294.68 725.81,260.71 779.81,230.79 784.02,228.46 788.36,226.05 792.73,223.62",
+      "label_pos": null
+    },
+    {
+      "id": "asn:442c5a995fcae6bc897999bde2aad1ec5677cd28f8f6e19eed6561dc250b9c75#1",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "tail": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "head": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,882.93,219.09 985.54,318.09 958.32,291.83 918.28,253.2 889.3,225.24",
+      "label_pos": null
+    },
+    {
+      "id": "asn:586f559605e90bddc54052e39104e9669a4952699a7b0224b96ea4bba09b1e82",
+      "slot": "glade_decisions:IdentityAdapters.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:dfa6581a06ed9bd13712d6de9035e9e7508604e4c3169236230a06dd0ea92fdf",
+      "tail": "occ:d1d764506dfd6c89c55c895d9be467d353222ba10cf77aeec85d6e66b8b4f718",
+      "head": "occ:dfa6581a06ed9bd13712d6de9035e9e7508604e4c3169236230a06dd0ea92fdf",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,227.8,231.28 266,306.39 255.58,285.89 242.87,260.91 231.9,239.36",
+      "label_pos": null
+    },
+    {
+      "id": "asn:f6651ba3e626a1b6d647c250c9a7bbf315e27175c2e77502166c0da369002c9b",
+      "slot": "glade_decisions_stream_a:PinAudit.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:8da7e8952b3ee5c1321517574683861eed9be1d4b4c3c94c8840bdce3300439f",
+      "tail": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "head": "occ:8da7e8952b3ee5c1321517574683861eed9be1d4b4c3c94c8840bdce3300439f",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1015.8,219.09 1015.8,318.09 1015.8,292.71 1015.8,255.78 1015.8,228.09",
+      "label_pos": null
+    },
+    {
+      "id": "asn:ccddaf15319bad2c940ff550fdad21e32b619d04c0eb54fa306ef82cba137891#1",
+      "slot": "glade_decisions:ProofFamily.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:d1d764506dfd6c89c55c895d9be467d353222ba10cf77aeec85d6e66b8b4f718",
+      "tail": "occ:71704e77426121abb77d96fec9bd586cdd6e654bdfef932069a7c66340b295dd",
+      "head": "occ:d1d764506dfd6c89c55c895d9be467d353222ba10cf77aeec85d6e66b8b4f718",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,338.04,384 809.12,501.09 717.39,489.37 511.28,457.28 350.81,390.06 349.22,389.39 347.62,388.69 346.02,387.95",
+      "label_pos": null
+    },
+    {
+      "id": "asn:ccddaf15319bad2c940ff550fdad21e32b619d04c0eb54fa306ef82cba137891#0",
+      "slot": "glade_decisions:ProofFamily.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:d1d764506dfd6c89c55c895d9be467d353222ba10cf77aeec85d6e66b8b4f718",
+      "tail": "occ:5c9f303f95ce90271ea507183e458a8230df0995723a7c45b31b0f714a679b73",
+      "head": "occ:d1d764506dfd6c89c55c895d9be467d353222ba10cf77aeec85d6e66b8b4f718",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,297.82,390.51 319.49,471.67 313.79,450.31 306.4,422.64 300.09,399.02",
+      "label_pos": null
+    },
+    {
+      "id": "asn:f598547c2a2b3603ac6a1df5319ead13fc4b1c497199f1756c3b703375b698fa",
+      "slot": "glade_decisions:RegistryGrowth.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "tail": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "head": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1767.7,39.094 913.76,159.44 925.52,154.78 937.9,150.45 949.81,147.27 1240.6,69.75 1599.5,46.311 1758.8,39.465",
+      "label_pos": null
+    },
+    {
+      "id": "asn:ce426f98e409facffbfff61bc206ce9e118d92e7efccb9b04198482319de3c6f#0",
+      "slot": "glade_decisions:RelayPosture.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:e716cec56df8367deb768588b6a52f1a742a596e811582a8575a57e4337adab0",
+      "tail": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "head": "occ:e716cec56df8367deb768588b6a52f1a742a596e811582a8575a57e4337adab0",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,686.59,225.26 610.43,318.16 626.61,305.7 644.35,290.19 657.81,273.54 667.58,261.45 676.04,246.8 682.8,233.15",
+      "label_pos": null
+    },
+    {
+      "id": "asn:ce426f98e409facffbfff61bc206ce9e118d92e7efccb9b04198482319de3c6f#1",
+      "slot": "glade_decisions:RelayPosture.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:e716cec56df8367deb768588b6a52f1a742a596e811582a8575a57e4337adab0",
+      "tail": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "head": "occ:e716cec56df8367deb768588b6a52f1a742a596e811582a8575a57e4337adab0",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,768,224.8 956.02,318.14 908.22,294.75 839.57,260.95 779.81,230.79 778.49,230.12 777.15,229.44 775.8,228.76",
+      "label_pos": null
+    },
+    {
+      "id": "asn:a6fc346048a0cccc7a5c64978212893f56128f20f435135f0044ee980dee4dbb#1",
+      "slot": "glade_decisions:ScopeModel.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "tail": "occ:71704e77426121abb77d96fec9bd586cdd6e654bdfef932069a7c66340b295dd",
+      "head": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,469.11,383.33 809.36,497.61 751.34,485.93 650.65,463.36 567.81,432.81 527.39,417.9 518.45,411.03 480.81,390.06 479.49,389.32 478.16,388.57 476.82,387.81",
+      "label_pos": null
+    },
+    {
+      "id": "asn:a6fc346048a0cccc7a5c64978212893f56128f20f435135f0044ee980dee4dbb#0",
+      "slot": "glade_decisions:ScopeModel.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "tail": "occ:620536da9a96622ba9e1c9959e420ab446f4b0fbf3a68f181fc8d6d030e6a19e",
+      "head": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,468.14,384.44 953.7,489.25 943.45,480.9 930.21,471.48 916.81,465.81 826.26,427.46 572.64,425.26 480.81,390.06 479.23,389.45 477.64,388.8 476.05,388.12",
+      "label_pos": null
+    },
+    {
+      "id": "asn:e828af8e7a5203070290318479f4b41327e6f07bd1ddafbc9b8cf3c312e41e57",
+      "slot": "glade_decisions:StoreEngine.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:b59cd4b11cf8204c767c6441aea651791bed17d85c7067dd7f1081a1cfbd0b2a",
+      "tail": "occ:a6d902eae4f003bd5c21f76cc7f4bceb99822d510399e94bd1828ecbc3e7d859",
+      "head": "occ:b59cd4b11cf8204c767c6441aea651791bed17d85c7067dd7f1081a1cfbd0b2a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1701.5,384.44 1527.7,489.14 1567.5,465.17 1640.3,421.33 1693.7,389.11",
+      "label_pos": null
+    },
+    {
+      "id": "asn:bb60f65af6e5df2f3348358d9787f8ba25edb458d8c39fd4ec94f62c6f163ac7",
+      "slot": "glade_decisions:TextEngine.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:2f94da7bd2c221f0d699874d112ca857a7ec9a2c55efa41ec59eef4b0d4bcbc1",
+      "tail": "occ:f822287849724534a650a3bdf2fbe56e399c280aaa82017876559f5164f77938",
+      "head": "occ:2f94da7bd2c221f0d699874d112ca857a7ec9a2c55efa41ec59eef4b0d4bcbc1",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1553.3,390.33 1410.1,489.14 1442.6,466.71 1500.3,426.91 1545.8,395.49",
+      "label_pos": null
+    },
+    {
+      "id": "asn:8162ac3919a206bc6dd2beef50f8300b6c62d2c9ddbf2c7ba5c5ca4e865db7fe#1",
+      "slot": "glade_decisions:TransportKeyBinding.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "tail": "occ:620536da9a96622ba9e1c9959e420ab446f4b0fbf3a68f181fc8d6d030e6a19e",
+      "head": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,626.72,378.41 952.65,489.25 942.45,481.2 929.56,472.05 916.81,465.81 807.95,412.51 768.26,432.74 654.81,390.06 648.34,387.62 641.67,384.91 635.06,382.06",
+      "label_pos": null
+    },
+    {
+      "id": "asn:8162ac3919a206bc6dd2beef50f8300b6c62d2c9ddbf2c7ba5c5ca4e865db7fe#0",
+      "slot": "glade_decisions:TransportKeyBinding.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "tail": "occ:5c9f303f95ce90271ea507183e458a8230df0995723a7c45b31b0f714a679b73",
+      "head": "occ:13fd281ebbc170a4993898eead6fa60ba07344fa61e5a8e27c474a8a6607a5e4",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,523.45,378.49 382.15,471.47 422.17,445.14 476.65,409.29 516.23,383.24",
+      "label_pos": null
+    },
+    {
+      "id": "asn:b3e52938a3a92c093352f78947d9d25dba9054b31f26a6cee2d00c0235ef8474",
+      "slot": "glade_decisions:VersionPin.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "tail": "occ:620536da9a96622ba9e1c9959e420ab446f4b0fbf3a68f181fc8d6d030e6a19e",
+      "head": "occ:51a11b0bbd8c1eb08d9271bd9c58dd973e3b8437f61dbc62a760408110acab85",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1007.9,378.28 977.58,489.14 984.27,464.65 996.64,419.43 1005.5,387.04",
+      "label_pos": null
+    },
+    {
+      "id": "asn:7b7813284e28bb11a994d34a6ec644c033dffa3e876e413c3df5f0cafd1d89cb",
+      "slot": "glade_decisions:Cryptography.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:a285a72b42c32b0098b2299c5405585c035440b874863522edcbc0efcc371608",
+      "tail": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "head": "occ:7cb3c679dd507d91b370a0f37f49d57680dabce8dfe2dc56f4dd0d3238a3cbf3",
+      "label": "if cryptography",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,533.26,207.37 445.11,312.4 470.31,282.36 506,239.85 527.98,213.66",
+      "label_pos": [
+        515.77,
+        268.66
+      ]
+    },
+    {
+      "id": "asn:c13d68cc6354a4325672b879bb1cb71e8cbaae66e0003383af14acddbd9b4cb4#0",
+      "slot": "glade_decisions:GossipOverlay.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:c544fba00fe58196558db1dcb4c938489a676f54e11a8132bfb14fca09235e21",
+      "tail": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "head": "occ:5009b1de6b4caae7f02ce987bdd33e36fa9c024a731f02ab7039c12c0fb92edd",
+      "label": "if gossip_overlay",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,483.93,54.254 804.07,158.89 796.11,154.69 787.84,150.65 779.81,147.27 732.39,127.27 717.94,129.6 668.81,114.27 608.33,95.394 539.55,72.768 491.72,56.849",
+      "label_pos": [
+        703.31,
+        109.39
+      ]
+    },
+    {
+      "id": "asn:c13d68cc6354a4325672b879bb1cb71e8cbaae66e0003383af14acddbd9b4cb4#1",
+      "slot": "glade_decisions:GossipOverlay.implies",
+      "relation": "Implies",
+      "ref_index": 1,
+      "owner": "occ:c544fba00fe58196558db1dcb4c938489a676f54e11a8132bfb14fca09235e21",
+      "tail": "occ:fe007e0ad0da5215f0c1350e2e7000ba05662c724c29224721eba241f7698d67",
+      "head": "occ:c9b1f96492a87d98726f86a12c8ac5bb5d9cbbda5bbe902eeb91df6a59690ec7",
+      "label": "if gossip_overlay",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,671.25,54.057 813.29,158.86 773.8,129.73 713.96,85.569 678.09,59.105",
+      "label_pos": [
+        784.81,
+        109.39
+      ]
+    },
+    {
+      "id": "asn:d95c550ca8c51b82e09452a91daf1fbc5d74526f7a1ee1db361d96c08de157a0",
+      "slot": "glade_decisions:NodeTrust.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:dba90f416d033b51499f63748038a63fa247e15f12eff512ccf7689a865cf731",
+      "tail": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "head": "occ:5009b1de6b4caae7f02ce987bdd33e36fa9c024a731f02ab7039c12c0fb92edd",
+      "label": "if node_trust",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,410.23,53.977 384.51,312.11 367.29,290.34 347.63,260.88 338.56,230.79 327.85,195.25 325.82,182.13 338.56,147.27 351.56,111.71 381.61,79.693 404.11,59.387",
+      "label_pos": [
+        363.69,
+        189.03
+      ]
+    },
+    {
+      "id": "asn:b1a3eb888e3abe43039fc89cd8297daaaffde21fdda56fa183d9574a6accf46c#1",
+      "slot": "glade_decisions:Topology.implies",
+      "relation": "Implies",
+      "ref_index": 1,
+      "owner": "occ:3946973c380189eb8c33246f43cee8056914fd48ab79becaa39c38350db67115",
+      "tail": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "head": "occ:e716cec56df8367deb768588b6a52f1a742a596e811582a8575a57e4337adab0",
+      "label": "if topology",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,640.48,225.21 469.06,313.17 473,310.87 476.95,308.64 480.81,306.54 511.39,289.93 520.84,289.39 551.81,273.54 578.72,259.77 607.83,243.73 633.11,229.4",
+      "label_pos": [
+        589.25,
+        268.66
+      ]
+    },
+    {
+      "id": "asn:b1a3eb888e3abe43039fc89cd8297daaaffde21fdda56fa183d9574a6accf46c#0",
+      "slot": "glade_decisions:Topology.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:3946973c380189eb8c33246f43cee8056914fd48ab79becaa39c38350db67115",
+      "tail": "occ:8158b85241d3a9b9518748aae0d3174e8d4819b884b7159cfbfe038f4f53b7dc",
+      "head": "occ:c9b1f96492a87d98726f86a12c8ac5bb5d9cbbda5bbe902eeb91df6a59690ec7",
+      "label": "if topology",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,574.6,54.23 408.99,312.17 402.7,269.42 398.72,196.81 431.81,147.27 462.73,100.98 519.28,73.035 566.76,56.828",
+      "label_pos": [
+        452.81,
+        189.03
+      ]
+    },
+    {
+      "id": "asn:3d0250456098affeda5c75eed03009479bfe1519e47ad4faa0e33d39e7b46c25",
+      "slot": "glade_decisions:BulkTransfer.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:24845d580fe4a8c5a32ccb4ffe84c29b738b41b6789a2d8daa62e12553cd5c1f",
+      "tail": "occ:e44cb170f127f3722c0703f8b26462d4728e5e9a40dde2b1e57ee4aa8231f396",
+      "head": "occ:24845d580fe4a8c5a32ccb4ffe84c29b738b41b6789a2d8daa62e12553cd5c1f",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1526.1,206.1 1875.4,329.82 1863.5,321.93 1848.9,312.96 1834.8,306.54 1735.1,260.98 1612.7,227.16 1534,208.02",
+      "label_pos": [
+        1752.7,
+        268.66
+      ]
+    },
+    {
+      "id": "asn:64a9fb53b2bb11901d4d5e4739c90e769972352f3df5eafdeb2f4fef94928db5#0",
+      "slot": "glade_decisions:RegistryGrowth.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "tail": "occ:58fb6015c134cbfcab9e618f1919b50b2c8b8fdb51d7972041a866631c0a2018",
+      "head": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1850.6,71.913 1875.5,170.68 1869.9,148.76 1860.3,110.27 1852.7,80.162",
+      "label_pos": [
+        1869.8,
+        109.39
+      ]
+    },
+    {
+      "id": "asn:64a9fb53b2bb11901d4d5e4739c90e769972352f3df5eafdeb2f4fef94928db5#1",
+      "slot": "glade_decisions:RegistryGrowth.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 1,
+      "owner": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "tail": "occ:713d896b53f26538c89e48355892a9d71747c57dc459a15dd6367f40dc4f2c9c",
+      "head": "occ:6d3685ba83542e4032167b69ca56181057583eb7a8cb65fb1dff58aed697e300",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1880.2,71.913 1987.9,170.68 1963.3,148.1 1919.5,107.95 1886.2,77.483",
+      "label_pos": [
+        1933.3,
+        109.39
+      ]
+    },
+    {
+      "id": "asn:f217320de10a17b1ec7536fbd8d522097123d6914b2ae769cf3a064c629855fc",
+      "slot": "glade_decisions:SimulatorTooling.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:af70d3278b9f2b346431038051f3daec9dde381fc4a17c04b92b4b3f6adfede0",
+      "tail": "occ:713d896b53f26538c89e48355892a9d71747c57dc459a15dd6367f40dc4f2c9c",
+      "head": "occ:af70d3278b9f2b346431038051f3daec9dde381fc4a17c04b92b4b3f6adfede0",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,2016.8,71.913 2008.3,170.68 2010.2,148.76 2013.5,110.27 2016.1,80.162",
+      "label_pos": [
+        2022.7,
+        109.39
+      ]
+    },
+    {
+      "id": "asn:5cc4bb5d4e855c328984d41cb7922ab4727de9416a155d7fb01a1e6ad80657d3",
+      "slot": "glade_decisions:StoreEngine.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:b59cd4b11cf8204c767c6441aea651791bed17d85c7067dd7f1081a1cfbd0b2a",
+      "tail": "occ:b17f9ff9e8841fa5f5d2548058c656a45b9982e9898ad384582e58bc5e04a1c6",
+      "head": "occ:b59cd4b11cf8204c767c6441aea651791bed17d85c7067dd7f1081a1cfbd0b2a",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1811.8,384.36 1965.9,489.26 1955.4,482 1943,473.47 1931.8,465.81 1894.3,440.14 1852,411.51 1818.8,389.05",
+      "label_pos": [
+        1888.9,
+        427.93
+      ]
+    },
+    {
+      "id": "asn:036c5c4de6572766e74a2f59a499455ca1c093348ba9136867d93c5c87e524c2",
+      "slot": "glade_decisions:TextEngine.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:2f94da7bd2c221f0d699874d112ca857a7ec9a2c55efa41ec59eef4b0d4bcbc1",
+      "tail": "occ:a0383bc6d5d484c4ccb44b0cf40c88ca553a05c3bd5d78b13c9437461f2fd687",
+      "head": "occ:2f94da7bd2c221f0d699874d112ca857a7ec9a2c55efa41ec59eef4b0d4bcbc1",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1672.8,384.75 1849.3,489.14 1808.7,465.14 1734.5,421.25 1680,389.02",
+      "label_pos": [
+        1762.8,
+        427.93
+      ]
+    }
+  ],
+  "counts": {
+    "nodes": 30,
+    "edges": 33,
+    "groups": 2,
+    "omitted_occurrences": 51,
+    "omitted_assertions": 21
+  }
+}

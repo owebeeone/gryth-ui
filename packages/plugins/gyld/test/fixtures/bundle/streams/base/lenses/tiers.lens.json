@@ -200,6 +200,8 @@
         "simulator_tooling",
         "SimulatorTooling"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         107.0,
         337.0
@@ -224,6 +226,8 @@
         "transport_key_binding",
         "TransportKeyBinding"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1077.0,
         236.0
@@ -248,6 +252,8 @@
         "registry_growth",
         "RegistryGrowth"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         151.0,
         34.0
@@ -272,6 +278,8 @@
         "identity_adapters",
         "IdentityAdapters"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         953.0,
         135.0
@@ -296,6 +304,8 @@
         "shaku_injector",
         "ShakuInjector"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         496.0,
         337.0
@@ -320,6 +330,8 @@
         "text_engine",
         "TextEngine"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         54.0,
         236.0
@@ -344,6 +356,8 @@
         "traffic_budget_numbers",
         "TrafficBudgetNumbers"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1481.0,
         337.0
@@ -368,6 +382,8 @@
         "blind_relay_tier",
         "BlindRelayTier"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1619.0,
         337.0
@@ -392,6 +408,8 @@
         "dissemination",
         "Dissemination"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1073.0,
         135.0
@@ -416,6 +434,8 @@
         "store_engine",
         "StoreEngine"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         158.0,
         236.0
@@ -440,6 +460,8 @@
         "lifecycle_composition",
         "LifecycleComposition"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1225.0,
         337.0
@@ -464,6 +486,8 @@
         "proof_family",
         "ProofFamily"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         950.0,
         236.0
@@ -488,6 +512,8 @@
         "relay_posture",
         "RelayPosture"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1457.0,
         135.0
@@ -512,6 +538,8 @@
         "shape_catalogue",
         "ShapeCatalogue"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         274.0,
         337.0
@@ -536,6 +564,8 @@
         "metadata_exposure",
         "MetadataExposure"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1748.0,
         337.0
@@ -560,6 +590,8 @@
         "grants_as_data",
         "GrantsAsData"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         613.0,
         337.0
@@ -584,6 +616,8 @@
         "async_witness",
         "AsyncWitness"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         841.0,
         236.0
@@ -608,6 +642,8 @@
         "version_pin",
         "VersionPin"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1311.0,
         236.0
@@ -632,6 +668,8 @@
         "key_custody",
         "KeyCustody"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1350.0,
         337.0
@@ -656,6 +694,8 @@
         "iroh_transport",
         "IrohTransport"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         729.0,
         337.0
@@ -680,6 +720,8 @@
         "store_seam",
         "StoreSeam"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         388.0,
         337.0
@@ -704,6 +746,8 @@
         "scope_model",
         "ScopeModel"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1207.0,
         236.0
@@ -728,6 +772,8 @@
         "discovery_fold",
         "DiscoveryFold"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         727.0,
         236.0
@@ -752,6 +798,8 @@
         "bulk_transfer",
         "BulkTransfer"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         158.0,
         135.0

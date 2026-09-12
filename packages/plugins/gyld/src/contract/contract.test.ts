@@ -12,6 +12,8 @@ import statusLensFixture from '../../test/fixtures/bundle/streams/base/lenses/st
 import lifecycleLensFixture from '../../test/fixtures/bundle/streams/architecture/lenses/lifecycle.lens.json';
 import allocationLensFixture from '../../test/fixtures/bundle/streams/architecture/lenses/allocation.lens.json';
 import decideNowFixture from '../../test/fixtures/bundle/streams/base/decide-now.json';
+import streamADecideNowFixture from '../../test/fixtures/bundle/streams/stream-a/decide-now.json';
+import streamBDecideNowFixture from '../../test/fixtures/bundle/streams/stream-b/decide-now.json';
 import validationFixture from '../../test/fixtures/bundle/streams/base/validation.json';
 import invalidValidationFixture from '../../test/fixtures/provisional/validation-invalid.json';
 import diffFixture from '../../test/fixtures/provisional/diff.json';
@@ -69,7 +71,9 @@ describe('gyld.streams.v1 and gyld.stream.v1', () => {
     const index = readStreamsIndex(streamsFixture);
     expect(index.lineage).toBe('glade-decision-graph');
     expect(index.lineages).toEqual(['glade-decision-graph', 'glade-architecture-candidate-1']);
-    expect(index.streams.map((s) => s.id)).toEqual(['base', 'architecture']);
+    expect(index.streams.map((s) => s.id)).toEqual([
+      'base', 'stream-a', 'stream-b', 'architecture',
+    ]);
     const base = index.streams[0];
     expect(base.kind).toBe('fork');
     expect(base.chain).toEqual(['base']);
@@ -77,16 +81,44 @@ describe('gyld.streams.v1 and gyld.stream.v1', () => {
     expect(base.overlay?.root).toBe('GladeDecisions');
     expect(base.status).toBe('ok');
     expect(base.principal).toBe('gianni');
-    // `kind` is deliberately an open string: the second stream is neither a
+    // `kind` is deliberately an open string: the last stream is neither a
     // fork nor a link, and the reader takes the host's word for it.
-    const architecture = index.streams[1];
+    const architecture = index.streams[3];
     expect(architecture.kind).toBe('declaration');
     expect(architecture.lineage).toBe('glade-architecture-candidate-1');
     expect('overlay' in architecture).toBe(false);
   });
 
+  it('reads the chain each linked stream records, and what it was built against', () => {
+    const index = readStreamsIndex(streamsFixture);
+    const base = index.streams[0];
+    const a = index.streams[1];
+    const b = index.streams[2];
+    // section 4.4: a link names its parent, carries the parent's chain and
+    // pins the parent snapshot it was built against.
+    expect([a.kind, b.kind]).toEqual(['link', 'link']);
+    expect([a.parent, b.parent]).toEqual(['base', 'stream-a']);
+    expect(a.chain).toEqual(['base', 'stream-a']);
+    expect(b.chain).toEqual(['base', 'stream-a', 'stream-b']);
+    expect(a.parent_snapshot).toEqual(base.snapshot);
+    expect(b.parent_snapshot).toEqual(a.snapshot);
+    expect(a.overlay?.module).toBe('glade_decisions_stream_a');
+    expect(b.overlay?.root).toBe('GladeDecisionsStreamB');
+    // the question stream A adds is in its own module, and keeps its own slot
+    expect(a.questions?.map((q) => q.slot)).toContain(
+      'glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit',
+    );
+    // R1: an answer is an added assertion, so the RULED question keeps its
+    // declared status in the record and states its effective one beside it
+    const ruled = a.questions?.find(
+      (q) => q.slot === 'glade_decisions:GladeDecisions.version_pin',
+    );
+    expect(ruled?.declared_status).toBe('Lean');
+    expect(ruled?.effective_status).toBe('Decided');
+  });
+
   it('reads the lens manifest a stream record carries, not-emitted entries and all', () => {
-    const architecture = readStreamsIndex(streamsFixture).streams[1];
+    const architecture = readStreamsIndex(streamsFixture).streams[3];
     const manifest = architecture.lenses;
     expect(manifest).toBeDefined();
     const emitted = (manifest ?? []).filter((lens) => lens.emitted);
@@ -450,6 +482,54 @@ describe('gyld.decide-now.v1', () => {
     rejects(
       () => readDecideNow(mutate(decideNowFixture, 'questions.0.slot', '')),
       GyldContractViolation.EmptyIdentifier, 'gyld.decide-now.v1.questions[0].slot',
+    );
+  });
+
+  // The v2 capture host emits a ruling with more than the four fields section
+  // 7.4 sketches, and with three of them legitimately null: a record that only
+  // marks a trigger as occurred decides nothing and selects nothing. The
+  // reader reads what is there and leaves a null absent; it does not reject a
+  // ruling for being the shape the host actually writes.
+  it('reads a chain of rulings, the occurrence record and all', () => {
+    const now = readDecideNow(streamADecideNowFixture);
+    expect(now.stream).toBe('stream-a');
+    expect(now.rulings).toHaveLength(3);
+    const occurred = now.rulings.find((r) => r.label === 'bulk_supplier_arrived');
+    expect(occurred).toBeDefined();
+    // decides, selects and reopens are null on this record and stay absent
+    expect(occurred !== undefined && 'decides' in occurred).toBe(false);
+    expect(occurred !== undefined && 'selects' in occurred).toBe(false);
+    expect(occurred !== undefined && 'reopens' in occurred).toBe(false);
+    expect(occurred?.occurred).toEqual(['glade_decisions:GladeDecisions.first_bulk_supplier']);
+    expect(occurred?.live).toBe(true);
+    expect(occurred?.principal).toBe('gianni');
+    expect(occurred?.stamp).toBe('2026-09-13T01:10:00Z');
+    expect(occurred?.sources).toEqual(['GQ-9']);
+    expect(occurred?.stream).toBe('stream-a');
+    const pin = now.rulings.find((r) => r.label === 'version_pin_ruling');
+    expect(pin?.decides).toBe('glade_decisions:GladeDecisions.version_pin');
+    expect(pin?.selects).toBe('glade_decisions:GladeDecisions.bump_to_current');
+    expect(pin?.occurred).toEqual([]);
+  });
+
+  it('reads a retired ruling as the chain recorded it, rather than dropping it', () => {
+    const now = readDecideNow(streamBDecideNowFixture);
+    expect(now.rulings).toHaveLength(4);
+    // stream B reopens the lifecycle answer: A's ruling is emitted with
+    // `live: false` because that is what the chain says happened
+    const retired = now.rulings.find((r) => r.label === 'lifecycle_composition_ruling');
+    expect(retired?.live).toBe(false);
+    expect(retired?.stream).toBe('stream-a');
+    const reopened = now.rulings.find((r) => r.label === 'lifecycle_reopened');
+    expect(reopened?.live).toBe(true);
+    expect(reopened?.reopens).toBe('glade_decisions:GladeDecisions.lifecycle_composition');
+    expect(reopened?.selects).toBe('glade_decisions:GladeDecisions.tokio_primitives');
+  });
+
+  it('rejects a ruling with no live flag rather than assuming it is live', () => {
+    rejects(
+      () => readDecideNow(drop(streamADecideNowFixture, 'rulings.0.live')),
+      GyldContractViolation.MissingField, 'gyld.decide-now.v1.rulings[0].live',
     );
   });
 });

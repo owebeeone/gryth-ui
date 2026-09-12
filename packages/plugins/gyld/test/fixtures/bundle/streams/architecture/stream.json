@@ -15,9 +15,9 @@
   "chain": [
     "architecture"
   ],
-  "built": "2026-09-12T16:51:24Z",
+  "built": "2026-09-12T18:08:24Z",
   "principal": "gianni",
-  "note": "base stream plus the architecture lineage; no ruling",
+  "note": "base, stream A and the linked stream B, with the architecture lineage",
   "status": "ok",
   "questions": [],
   "roots": [],

@@ -29,13 +29,39 @@ export interface DecideNowQuestion {
   ruling?: QualifiedSlot;
 }
 
+/**
+ * One ruling of the chain, as the v2 capture host emits it.
+ *
+ * Section 7.4 sketches four fields; the host writes nine, and three of them
+ * are legitimately null. A record that only marks a trigger as `Occurred`
+ * decides nothing and selects nothing, and a ruling an ancestor made that a
+ * child reopened is emitted with `live: false` rather than dropped, because
+ * that is what the chain says happened. Nothing here is folded: which rulings
+ * stand is `live` as Gyld wrote it (spec section 6.7).
+ */
 export interface DecideNowRuling {
   slot: QualifiedSlot;
-  decides: QualifiedSlot;
-  selects: QualifiedSlot;
+  /** The record's own name, which is what a reader recognises it by. */
+  label: string;
+  /** The stream of the chain whose overlay declared it. */
+  stream: string;
+  /** Whether this ruling still stands in this stream's chain. */
+  live: boolean;
   text: string;
   sources: string[];
-  stream: string;
+  /** The question this ruling decides. Absent on a record that only marks a
+   *  trigger as occurred. */
+  decides?: QualifiedSlot;
+  /** The alternative it selects. Absent when it decides nothing. */
+  selects?: QualifiedSlot;
+  /** The question it reopens, retiring an earlier ruling of the chain. */
+  reopens?: QualifiedSlot;
+  /** The triggers this record marks as having occurred (owner ruling O3), so
+   *  a gate is data. Empty on an ordinary ruling. */
+  occurred: QualifiedSlot[];
+  /** The stage-one principal stub, recorded as data (owner ruling O6). */
+  principal?: string;
+  stamp?: string;
 }
 
 export interface GyldDecideNow {
@@ -76,16 +102,40 @@ function readQuestion(value: unknown, path: string): DecideNowQuestion {
 
 function readRuling(value: unknown, path: string): DecideNowRuling {
   const raw = readObject(value, path);
-  return {
+  const ruling: DecideNowRuling = {
     slot: readIdentifier(raw.slot, atPath(path, 'slot')),
-    decides: readIdentifier(raw.decides, atPath(path, 'decides')),
-    selects: readIdentifier(raw.selects, atPath(path, 'selects')),
+    label: readIdentifier(raw.label, atPath(path, 'label')),
+    stream: readIdentifier(raw.stream, atPath(path, 'stream')),
+    // Which rulings still stand is the host's answer, not a fold over the
+    // chain, so a missing flag is a violation rather than a cheerful `true`.
+    live: readBoolean(raw.live, atPath(path, 'live')),
     // The ruling's prose. A ruling may be recorded before its text is written,
     // so an empty string is accepted as data rather than rejected.
     text: readText(raw.text, atPath(path, 'text')),
     sources: readIdentifiers(raw.sources, atPath(path, 'sources')),
-    stream: readIdentifier(raw.stream, atPath(path, 'stream')),
+    occurred: readIdentifiers(raw.occurred, atPath(path, 'occurred')),
   };
+  const decides = readOptionalIdentifier(raw.decides, atPath(path, 'decides'));
+  if (decides !== undefined) {
+    ruling.decides = decides;
+  }
+  const selects = readOptionalIdentifier(raw.selects, atPath(path, 'selects'));
+  if (selects !== undefined) {
+    ruling.selects = selects;
+  }
+  const reopens = readOptionalIdentifier(raw.reopens, atPath(path, 'reopens'));
+  if (reopens !== undefined) {
+    ruling.reopens = reopens;
+  }
+  const principal = readOptionalIdentifier(raw.principal, atPath(path, 'principal'));
+  if (principal !== undefined) {
+    ruling.principal = principal;
+  }
+  const stamp = readOptionalIdentifier(raw.stamp, atPath(path, 'stamp'));
+  if (stamp !== undefined) {
+    ruling.stamp = stamp;
+  }
+  return ruling;
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "format": "gyld.validation.v1",
-  "stream": "base",
+  "stream": "stream-a",
   "built": "2026-09-12T18:08:24Z",
   "ok": true,
   "findings": []

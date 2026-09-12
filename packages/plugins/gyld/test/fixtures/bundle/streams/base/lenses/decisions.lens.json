@@ -160,6 +160,8 @@
         "  - deterministic_runtime_sim",
         "  - own_sim_only *"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         265.23,
         35.76
@@ -186,6 +188,8 @@
         "  - binding_record *",
         "  - one_key_both_roles"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1253.2,
         348.3
@@ -213,6 +217,8 @@
         "  - ordered_reconfiguration",
         "  - trusted_mapping_only *"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         443.23,
         35.76
@@ -241,6 +247,8 @@
         "  - oidc",
         "  - spiffe"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         595.23,
         189.03
@@ -265,6 +273,8 @@
         "shaku_injector",
         "ShakuInjector"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1764.2,
         507.57
@@ -293,6 +303,8 @@
         "  - own_text_profile *",
         "  - yrs"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         535.23,
         348.3
@@ -317,6 +329,8 @@
         "traffic_budget_numbers [R5]",
         "TrafficBudgetNumbers"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1088.2,
         35.76
@@ -341,6 +355,8 @@
         "blind_relay_tier [R14]",
         "BlindRelayTier"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1105.2,
         189.03
@@ -367,6 +383,8 @@
         "  - gossip_overlay",
         "  - sync_round_only *"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1410.2,
         189.03
@@ -394,6 +412,8 @@
         "  - sqlite_engine",
         "  - whole_state_blob *"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         682.23,
         348.3
@@ -422,6 +442,8 @@
         "  - sdax_rs *",
         "  - tokio_primitives"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         833.23,
         507.57
@@ -450,6 +472,8 @@
         "  - taut_grants *",
         "  - ucan"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         972.23,
         348.3
@@ -477,6 +501,8 @@
         "  - iroh_services_pro",
         "  - self_hosted *"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1258.2,
         189.03
@@ -501,6 +527,8 @@
         "shape_catalogue",
         "ShapeCatalogue"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1542.2,
         507.57
@@ -525,6 +553,8 @@
         "metadata_exposure [R8]",
         "MetadataExposure"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         811.23,
         35.76
@@ -549,6 +579,8 @@
         "grants_as_data",
         "GrantsAsData"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1881.2,
         507.57
@@ -575,6 +607,8 @@
         "  - selection_reopened",
         "  - shaku_confirmed"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         833.23,
         348.3
@@ -601,6 +635,8 @@
         "  - bump_to_current *",
         "  - stay_on_lock"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1414.2,
         348.3
@@ -628,6 +664,8 @@
         "  - recovery_keys",
         "  - social_recovery"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         997.23,
         507.57
@@ -652,6 +690,8 @@
         "iroh_transport",
         "IrohTransport"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1997.2,
         507.57
@@ -676,6 +716,8 @@
         "store_seam",
         "StoreSeam"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1656.2,
         507.57
@@ -703,6 +745,8 @@
         "  - node_trust *",
         "  - topology"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1101.2,
         348.3
@@ -727,6 +771,8 @@
         "discovery_fold",
         "DiscoveryFold"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         1544.2,
         348.3
@@ -754,6 +800,8 @@
         "  - iroh_blobs_port *",
         "  - own_chunked_streams"
       ],
+      "fontsize": 11,
+      "justify": "left",
       "pos": [
         947.23,
         189.03
@@ -777,6 +825,8 @@
       "text": [
         "first_real_route_slice"
       ],
+      "fontsize": 11,
+      "justify": "center",
       "pos": [
         290.23,
         189.03
@@ -800,6 +850,8 @@
       "text": [
         "store_pressure"
       ],
+      "fontsize": 11,
+      "justify": "center",
       "pos": [
         413.23,
         507.57
@@ -823,6 +875,8 @@
       "text": [
         "editing_need"
       ],
+      "fontsize": 11,
+      "justify": "center",
       "pos": [
         301.23,
         507.57
@@ -846,6 +900,8 @@
       "text": [
         "failure_model"
       ],
+      "fontsize": 11,
+      "justify": "center",
       "pos": [
         417.23,
         189.03
@@ -869,6 +925,8 @@
       "text": [
         "first_bulk_supplier"
       ],
+      "fontsize": 11,
+      "justify": "center",
       "pos": [
         397.23,
         348.3

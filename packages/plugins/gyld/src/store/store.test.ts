@@ -192,9 +192,11 @@ describe('GyldStoreTap census and status', () => {
     const census = readHome(GYLD_STREAMS);
     await expect.poll(() => (census.get() as GyldStreamsCensus).status).toBe('ready');
     const ready = census.get() as GyldStreamsCensus & { status: 'ready' };
-    expect(ready.streams.map((s) => s.id)).toEqual(['base', 'architecture']);
+    expect(ready.streams.map((s) => s.id)).toEqual([
+      'base', 'stream-a', 'stream-b', 'architecture',
+    ]);
     expect(ready.streams[0].record.lineage).toBe('glade-decision-graph');
-    expect(ready.streams[1].record.lineage).toBe('glade-architecture-candidate-1');
+    expect(ready.streams[3].record.lineage).toBe('glade-architecture-candidate-1');
     // the base record carries no manifest, so the store is asked what is there
     expect(ready.streams[0].perspectives).toEqual(['branch', 'decisions', 'status', 'tiers']);
     expect('notEmitted' in ready.streams[0]).toBe(false);
@@ -207,7 +209,7 @@ describe('GyldStoreTap census and status', () => {
     const census = readHome(GYLD_STREAMS);
     await expect.poll(() => (census.get() as GyldStreamsCensus).status).toBe('ready');
     const ready = census.get() as GyldStreamsCensus & { status: 'ready' };
-    const architecture = ready.streams[1];
+    const architecture = ready.streams[3];
     // nine perspectives are named in the manifest; only two are in this
     // fixture's lenses directory, so a listing could not have produced them
     expect(architecture.perspectives).toHaveLength(9);
@@ -245,7 +247,7 @@ describe('GyldStoreTap census and status', () => {
     await expect.poll(() => (census.get() as GyldStreamsCensus).status).toBe('ready');
     const status = readHome(GYLD_STORE_STATUS).get() as GyldRootStatus[];
     expect(status[0].status).toBe('ready');
-    expect(status[0].streams).toEqual(['base', 'architecture']);
+    expect(status[0].streams).toEqual(['base', 'stream-a', 'stream-b', 'architecture']);
   });
 
   it('says loudly that a directory root has no handle rather than reading nothing', async () => {

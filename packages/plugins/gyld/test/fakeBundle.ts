@@ -11,6 +11,14 @@ import decisionsLens from './fixtures/bundle/streams/base/lenses/decisions.lens.
 import tiersLens from './fixtures/bundle/streams/base/lenses/tiers.lens.json';
 import statusLens from './fixtures/bundle/streams/base/lenses/status.lens.json';
 import branchLens from './fixtures/bundle/streams/base/lenses/branch.lens.json';
+import streamARecord from './fixtures/bundle/streams/stream-a/stream.json';
+import streamADecideNow from './fixtures/bundle/streams/stream-a/decide-now.json';
+import streamAValidation from './fixtures/bundle/streams/stream-a/validation.json';
+import streamADecisionsLens from './fixtures/bundle/streams/stream-a/lenses/decisions.lens.json';
+import streamBRecord from './fixtures/bundle/streams/stream-b/stream.json';
+import streamBDecideNow from './fixtures/bundle/streams/stream-b/decide-now.json';
+import streamBValidation from './fixtures/bundle/streams/stream-b/validation.json';
+import streamBDecisionsLens from './fixtures/bundle/streams/stream-b/lenses/decisions.lens.json';
 import type {
   FetchResponse, GyldDirectoryEntry, GyldDirectoryHandle, GyldFile, GyldFileHandle,
 } from '../src/store/stores';
@@ -29,6 +37,18 @@ export const BUNDLE_FILES: Record<string, unknown> = {
   'streams/base/lenses/tiers.lens.json': tiersLens,
   'streams/base/lenses/status.lens.json': statusLens,
   'streams/base/lenses/branch.lens.json': branchLens,
+  // The chain over the base: stream A links the base and rules two of its
+  // questions, stream B links A and reopens one of them. Neither carries a
+  // projection here (test/fixtures/README.md says which files were left
+  // behind and why), so both read as bundles whose projection is absent.
+  'streams/stream-a/stream.json': streamARecord,
+  'streams/stream-a/decide-now.json': streamADecideNow,
+  'streams/stream-a/validation.json': streamAValidation,
+  'streams/stream-a/lenses/decisions.lens.json': streamADecisionsLens,
+  'streams/stream-b/stream.json': streamBRecord,
+  'streams/stream-b/decide-now.json': streamBDecideNow,
+  'streams/stream-b/validation.json': streamBValidation,
+  'streams/stream-b/lenses/decisions.lens.json': streamBDecisionsLens,
   // The second lineage of the same bundle: an architecture stream whose
   // record carries a LENS MANIFEST, and which emits no decide-now list.
   'streams/architecture/stream.json': architectureRecord,

@@ -316,6 +316,8 @@
         "admission",
         "Admission"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         705.0
@@ -340,6 +342,8 @@
         "application",
         "ApplicationSupplier"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         222.0
@@ -363,6 +367,8 @@
       "text": [
         "assemble_consumer"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         884.0
@@ -386,6 +392,8 @@
       "text": [
         "attach_suppliers"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         604.0
@@ -409,6 +417,8 @@
       "text": [
         "author_declarations"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         150.0
@@ -433,6 +443,8 @@
         "binding",
         "Binding"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         493.0
@@ -456,6 +468,8 @@
       "text": [
         "bootstrap"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1454.0
@@ -479,6 +493,8 @@
       "text": [
         "canonicalize_scope"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         290.0
@@ -502,6 +518,8 @@
       "text": [
         "client_sessions"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1396.0
@@ -525,6 +543,8 @@
       "text": [
         "compose_runtime"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1256.0
@@ -549,6 +569,8 @@
         "conformance",
         "ConformanceHarness"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         45.0
@@ -573,6 +595,8 @@
         "declaration_toolchain",
         "DeclarationToolchain"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         163.0
@@ -596,6 +620,8 @@
       "text": [
         "deliver_interest"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1000.0
@@ -620,6 +646,8 @@
         "delivery_engine",
         "Delivery"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         1000.0
@@ -644,6 +672,8 @@
         "directory",
         "Directory"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         882.0
@@ -667,6 +697,8 @@
       "text": [
         "enforce_policy"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         348.0
@@ -690,6 +722,8 @@
       "text": [
         "expose_management"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         92.0
@@ -713,6 +747,8 @@
       "text": [
         "fence_source"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         232.0
@@ -737,6 +773,8 @@
         "glial",
         "ClientAssembly"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         281.0
@@ -761,6 +799,8 @@
         "invocation_engine",
         "Invocation"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         764.0
@@ -784,6 +824,8 @@
       "text": [
         "invoke_source"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         546.0
@@ -808,6 +850,8 @@
         "iroh",
         "IrohAdapter"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         1512.0
@@ -831,6 +875,8 @@
       "text": [
         "locate_providers"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         744.0
@@ -855,6 +901,8 @@
         "node",
         "NodeAssembly"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         1342.0
@@ -878,6 +926,8 @@
       "text": [
         "own_lifecycle"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1198.0
@@ -901,6 +951,8 @@
       "text": [
         "peer_connectivity"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1512.0
@@ -924,6 +976,8 @@
       "text": [
         "reconcile_metadata"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         802.0
@@ -948,6 +1002,8 @@
         "records",
         "Records"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         941.0
@@ -971,6 +1027,8 @@
       "text": [
         "repair_publication"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         488.0
@@ -994,6 +1052,8 @@
       "text": [
         "resolve_definitions"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         686.0
@@ -1017,6 +1077,8 @@
       "text": [
         "resume_data"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1058.0
@@ -1040,6 +1102,8 @@
       "text": [
         "retain_replica"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         942.0
@@ -1064,6 +1128,8 @@
         "runtime_services",
         "Runtime"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         1059.0
@@ -1087,6 +1153,8 @@
       "text": [
         "schedule_traffic"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1338.0
@@ -1111,6 +1179,8 @@
         "sessions",
         "Sessions"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         1118.0
@@ -1135,6 +1205,8 @@
         "supplier_host",
         "SupplierHost"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         823.0
@@ -1159,6 +1231,8 @@
         "system_suppliers",
         "SystemSuppliers"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         667.14,
         104.0
@@ -1182,6 +1256,8 @@
       "text": [
         "validate_ingress"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         1140.0
@@ -1205,6 +1281,8 @@
       "text": [
         "verify_identity"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         406.0
@@ -1228,6 +1306,8 @@
       "text": [
         "verify_integration"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         347.37,
         34.0

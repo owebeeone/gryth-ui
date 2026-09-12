@@ -1,0 +1,531 @@
+{
+  "format": "gyld.decide-now.v1",
+  "snapshot": {
+    "lineage": "glade-decision-graph",
+    "revision": "stream-b@1",
+    "digest": "fee82354de30e43ffb92e4212edc0d4b8a321f3730a173105c53b26eba1d9765"
+  },
+  "stream": "stream-b",
+  "questions": [
+    {
+      "slot": "glade_decisions:GladeDecisions.async_witness",
+      "label": "async_witness",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "roots",
+      "answerable_now": true,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.selection_reopened",
+        "glade_decisions:GladeDecisions.shaku_confirmed"
+      ],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "label": "blind_relay_tier",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "branch-induced",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [
+        "glade_decisions:GladeDecisions.cryptography"
+      ],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+      "label": "bulk_transfer",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "roots",
+      "answerable_now": true,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.defer_bulk",
+        "glade_decisions:GladeDecisions.iroh_blobs_port",
+        "glade_decisions:GladeDecisions.own_chunked_streams"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.iroh_blobs_port",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.discovery_fold",
+      "label": "discovery_fold",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "label": "dissemination",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "third",
+      "answerable_now": false,
+      "blocked_by": [
+        "glade_decisions:GladeDecisions.scope_model",
+        "glade_decisions:GladeDecisions.transport_key_binding"
+      ],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.gossip_overlay",
+        "glade_decisions:GladeDecisions.sync_round_only"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.sync_round_only",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.grants_as_data",
+      "label": "grants_as_data",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.identity_adapters",
+      "label": "identity_adapters",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "third",
+      "answerable_now": false,
+      "blocked_by": [
+        "glade_decisions:GladeDecisions.proof_family"
+      ],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.kerberos_ldap",
+        "glade_decisions:GladeDecisions.none_in_v1",
+        "glade_decisions:GladeDecisions.oidc",
+        "glade_decisions:GladeDecisions.spiffe"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.none_in_v1",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.iroh_transport",
+      "label": "iroh_transport",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "label": "key_custody",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "roots",
+      "answerable_now": true,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.owner_held_only",
+        "glade_decisions:GladeDecisions.recovery_keys",
+        "glade_decisions:GladeDecisions.social_recovery"
+      ],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "label": "lifecycle_composition",
+      "declared_status": "Directed",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.dag_runner",
+        "glade_decisions:GladeDecisions.graceful_shutdown_crate",
+        "glade_decisions:GladeDecisions.sdax_rs",
+        "glade_decisions:GladeDecisions.tokio_primitives"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.sdax_rs",
+      "ruling": "glade_decisions_stream_b:GladeDecisionsStreamB.lifecycle_reopened"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "label": "metadata_exposure",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "branch-induced",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [
+        "glade_decisions:GladeDecisions.gossip_overlay",
+        "glade_decisions:GladeDecisions.node_trust"
+      ],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+      "label": "pin_audit",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "roots",
+      "answerable_now": true,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions_stream_a:GladeDecisionsStreamA.audit_at_slice",
+        "glade_decisions_stream_a:GladeDecisionsStreamA.audit_on_bump"
+      ],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "label": "proof_family",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "second",
+      "answerable_now": false,
+      "blocked_by": [
+        "glade_decisions:GladeDecisions.key_custody"
+      ],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.biscuit",
+        "glade_decisions:GladeDecisions.macaroons",
+        "glade_decisions:GladeDecisions.taut_grants",
+        "glade_decisions:GladeDecisions.ucan"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.taut_grants",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.registry_growth",
+      "label": "registry_growth",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "answerable_now": false,
+      "blocked_by": [
+        "glade_decisions:GladeDecisions.dissemination"
+      ],
+      "gated_by": [
+        "glade_decisions:GladeDecisions.failure_model",
+        "glade_decisions:GladeDecisions.first_real_route_slice"
+      ],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.delegated_referrals",
+        "glade_decisions:GladeDecisions.ordered_reconfiguration",
+        "glade_decisions:GladeDecisions.trusted_mapping_only"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.trusted_mapping_only",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "label": "relay_posture",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "branch-induced",
+      "answerable_now": false,
+      "blocked_by": [
+        "glade_decisions:GladeDecisions.transport_key_binding"
+      ],
+      "gated_by": [],
+      "induced_by": [
+        "glade_decisions:GladeDecisions.topology"
+      ],
+      "offers": [
+        "glade_decisions:GladeDecisions.community_dev_only",
+        "glade_decisions:GladeDecisions.iroh_services_pro",
+        "glade_decisions:GladeDecisions.self_hosted"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.self_hosted",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "label": "scope_model",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "roots",
+      "answerable_now": true,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.cryptography",
+        "glade_decisions:GladeDecisions.node_trust",
+        "glade_decisions:GladeDecisions.topology"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.node_trust",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.shaku_injector",
+      "label": "shaku_injector",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.shape_catalogue",
+      "label": "shape_catalogue",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+      "label": "simulator_tooling",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [
+        "glade_decisions:GladeDecisions.first_real_route_slice"
+      ],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.dependency_policy_tools",
+        "glade_decisions:GladeDecisions.deterministic_runtime_sim",
+        "glade_decisions:GladeDecisions.own_sim_only"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.own_sim_only",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.store_engine",
+      "label": "store_engine",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [
+        "glade_decisions:GladeDecisions.store_pressure"
+      ],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.redb_engine",
+        "glade_decisions:GladeDecisions.sqlite_engine",
+        "glade_decisions:GladeDecisions.whole_state_blob"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.whole_state_blob",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.store_seam",
+      "label": "store_seam",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.text_engine",
+      "label": "text_engine",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [
+        "glade_decisions:GladeDecisions.editing_need"
+      ],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.automerge",
+        "glade_decisions:GladeDecisions.loro",
+        "glade_decisions:GladeDecisions.own_text_profile",
+        "glade_decisions:GladeDecisions.yrs"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.own_text_profile",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "label": "traffic_budget_numbers",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "branch-induced",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [
+        "glade_decisions:GladeDecisions.gossip_overlay",
+        "glade_decisions:GladeDecisions.topology"
+      ],
+      "offers": [],
+      "preferred": null,
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "label": "transport_key_binding",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "second",
+      "answerable_now": false,
+      "blocked_by": [
+        "glade_decisions:GladeDecisions.key_custody"
+      ],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.binding_record",
+        "glade_decisions:GladeDecisions.one_key_both_roles"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.binding_record",
+      "ruling": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "label": "version_pin",
+      "declared_status": "Lean",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "answerable_now": false,
+      "blocked_by": [],
+      "gated_by": [],
+      "induced_by": [],
+      "offers": [
+        "glade_decisions:GladeDecisions.bump_to_current",
+        "glade_decisions:GladeDecisions.stay_on_lock"
+      ],
+      "preferred": "glade_decisions:GladeDecisions.bump_to_current",
+      "ruling": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling"
+    }
+  ],
+  "rulings": [
+    {
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
+      "label": "bulk_supplier_arrived",
+      "stream": "stream-a",
+      "decides": null,
+      "selects": null,
+      "reopens": null,
+      "occurred": [
+        "glade_decisions:GladeDecisions.first_bulk_supplier"
+      ],
+      "live": true,
+      "text": "2026-09-13, owner: a supplier declared a bulk profile, so the bulk gate is met.",
+      "principal": "gianni",
+      "stamp": "2026-09-13T01:10:00Z",
+      "sources": [
+        "GQ-9"
+      ]
+    },
+    {
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+      "label": "lifecycle_composition_ruling",
+      "stream": "stream-a",
+      "decides": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "selects": "glade_decisions:GladeDecisions.sdax_rs",
+      "reopens": null,
+      "occurred": [],
+      "live": false,
+      "text": "2026-09-13, owner: confirm the recorded direction; sdax-rs at the runtime host.",
+      "principal": "gianni",
+      "stamp": "2026-09-13T01:05:00Z",
+      "sources": [
+        "GDL-049",
+        "R28"
+      ]
+    },
+    {
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
+      "label": "version_pin_ruling",
+      "stream": "stream-a",
+      "decides": "glade_decisions:GladeDecisions.version_pin",
+      "selects": "glade_decisions:GladeDecisions.bump_to_current",
+      "reopens": null,
+      "occurred": [],
+      "live": true,
+      "text": "2026-09-13, owner: take iroh 1.2.0 now; the 1.1.0 fixes cover untrusted input.",
+      "principal": "gianni",
+      "stamp": "2026-09-13T01:00:00Z",
+      "sources": [
+        "IrohReview \u00a71",
+        "IrohReview \u00a711"
+      ]
+    },
+    {
+      "slot": "glade_decisions_stream_b:GladeDecisionsStreamB.lifecycle_reopened",
+      "label": "lifecycle_reopened",
+      "stream": "stream-b",
+      "decides": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "selects": "glade_decisions:GladeDecisions.tokio_primitives",
+      "reopens": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "occurred": [],
+      "live": true,
+      "text": "2026-09-13, owner: reopen the lifecycle answer and take the in-house fallback.",
+      "principal": "gianni",
+      "stamp": "2026-09-13T02:00:00Z",
+      "sources": [
+        "GDL-049",
+        "AR-08"
+      ]
+    }
+  ],
+  "limits": [
+    "dependencies, alternatives and the rulings this stream recorded",
+    "a ruling answers one question; it is not a schedule"
+  ]
+}

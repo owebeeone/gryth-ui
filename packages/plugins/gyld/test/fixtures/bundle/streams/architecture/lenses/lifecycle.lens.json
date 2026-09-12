@@ -115,6 +115,8 @@
         "iroh",
         "IrohAdapter"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         475.25,
         94.0
@@ -139,6 +141,8 @@
         "records",
         "Records"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         235.71,
         295.0
@@ -163,6 +167,8 @@
         "runtime_services",
         "Runtime"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         742.16,
         236.0
@@ -187,6 +193,8 @@
         "sessions",
         "Sessions"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         235.71,
         236.0
@@ -211,6 +219,8 @@
         "storage",
         "StorageAdapter"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         475.25,
         153.0
@@ -235,6 +245,8 @@
         "websocket",
         "WebSocketAdapter"
       ],
+      "fontsize": 12,
+      "justify": "center",
       "pos": [
         475.25,
         35.0
