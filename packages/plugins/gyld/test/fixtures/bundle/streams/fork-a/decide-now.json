@@ -2,10 +2,10 @@
   "format": "gyld.decide-now.v1",
   "snapshot": {
     "lineage": "glade-decision-graph",
-    "revision": "stream-b@1",
-    "digest": "1a5afad5dd3179a4bf88bd3a9e20065a759a02d3275d5a92061eaad090c32680"
+    "revision": "fork-a@1",
+    "digest": "b68b322d7fe1fb47b3297efceb7a1b4927a5f807317fe8701f63bd3a2f9ed760"
   },
-  "stream": "stream-b",
+  "stream": "fork-a",
   "questions": [
     {
       "slot": "glade_decisions:GladeDecisions.async_witness",
@@ -176,7 +176,7 @@
         "glade_decisions:GladeDecisions.tokio_primitives"
       ],
       "preferred": "glade_decisions:GladeDecisions.sdax_rs",
-      "ruling": "glade_decisions_stream_b:GladeDecisionsStreamB.lifecycle_reopened"
+      "ruling": "glade_decisions_fork_a:GladeDecisionsForkA.lifecycle_composition_ruling"
     },
     {
       "slot": "glade_decisions:GladeDecisions.metadata_exposure",
@@ -196,7 +196,7 @@
       "ruling": null
     },
     {
-      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
       "label": "pin_audit",
       "declared_status": "Open",
       "effective_status": "Open",
@@ -206,8 +206,8 @@
       "gated_by": [],
       "induced_by": [],
       "offers": [
-        "glade_decisions_stream_a:GladeDecisionsStreamA.audit_at_slice",
-        "glade_decisions_stream_a:GladeDecisionsStreamA.audit_on_bump"
+        "glade_decisions_fork_a:GladeDecisionsForkA.audit_at_slice",
+        "glade_decisions_fork_a:GladeDecisionsForkA.audit_on_bump"
       ],
       "preferred": null,
       "ruling": null
@@ -450,14 +450,14 @@
         "glade_decisions:GladeDecisions.stay_on_lock"
       ],
       "preferred": "glade_decisions:GladeDecisions.bump_to_current",
-      "ruling": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling"
+      "ruling": "glade_decisions_fork_a:GladeDecisionsForkA.version_pin_ruling"
     }
   ],
   "rulings": [
     {
-      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.bulk_supplier_arrived",
       "label": "bulk_supplier_arrived",
-      "stream": "stream-a",
+      "stream": "fork-a",
       "decides": null,
       "selects": null,
       "reopens": null,
@@ -473,14 +473,14 @@
       ]
     },
     {
-      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.lifecycle_composition_ruling",
       "label": "lifecycle_composition_ruling",
-      "stream": "stream-a",
+      "stream": "fork-a",
       "decides": "glade_decisions:GladeDecisions.lifecycle_composition",
       "selects": "glade_decisions:GladeDecisions.sdax_rs",
       "reopens": null,
       "occurred": [],
-      "live": false,
+      "live": true,
       "text": "2026-09-13, owner: confirm the recorded direction; sdax-rs at the runtime host.",
       "principal": "gianni",
       "stamp": "2026-09-13T01:05:00Z",
@@ -490,9 +490,9 @@
       ]
     },
     {
-      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.version_pin_ruling",
       "label": "version_pin_ruling",
-      "stream": "stream-a",
+      "stream": "fork-a",
       "decides": "glade_decisions:GladeDecisions.version_pin",
       "selects": "glade_decisions:GladeDecisions.bump_to_current",
       "reopens": null,
@@ -504,23 +504,6 @@
       "sources": [
         "IrohReview \u00a71",
         "IrohReview \u00a711"
-      ]
-    },
-    {
-      "slot": "glade_decisions_stream_b:GladeDecisionsStreamB.lifecycle_reopened",
-      "label": "lifecycle_reopened",
-      "stream": "stream-b",
-      "decides": "glade_decisions:GladeDecisions.lifecycle_composition",
-      "selects": "glade_decisions:GladeDecisions.tokio_primitives",
-      "reopens": "glade_decisions:GladeDecisions.lifecycle_composition",
-      "occurred": [],
-      "live": true,
-      "text": "2026-09-13, owner: reopen the lifecycle answer and take the in-house fallback.",
-      "principal": "gianni",
-      "stamp": "2026-09-13T02:00:00Z",
-      "sources": [
-        "GDL-049",
-        "AR-08"
       ]
     }
   ],

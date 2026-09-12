@@ -61,6 +61,22 @@ export interface StreamOverlay {
 }
 
 /**
+ * What a REBUILD recorded about this stream, present only on a record a
+ * rebuild wrote (`gyld/examples/README.md`, "Fork, link, rebuild and diff": "a
+ * fresh build does not carry it"). `parent_moved` is the host's own answer to
+ * the section 4.3 comparison, so a window that has it reports it rather than
+ * comparing two digests itself.
+ */
+export interface StreamRebuild {
+  bundle: string;
+  built: string;
+  snapshot: SnapshotRef;
+  changed: boolean;
+  parent_moved: boolean;
+  parent_snapshot?: SnapshotRef;
+}
+
+/**
  * One stream record. `kind` is deliberately an open string: spec 4.4 names
  * `fork` and `link` and 7.1 carries the base stream in the same index, so
  * pinning the set here would reject valid Gyld output the day a third kind
@@ -76,7 +92,13 @@ export interface GyldStream {
   built: string;
   status: StreamStatus;
   parent?: string;
+  /** The stream whose overlay module this one IMPORTS, which is what the
+   *  declaration chain walks. A link follows its parent; a fork follows the
+   *  base and keeps its parent as provenance only. Absent on a record that
+   *  does not carry it, and never guessed from `parent`. */
+  follows?: string;
   parent_snapshot?: SnapshotRef;
+  rebuilt_from?: StreamRebuild;
   overlay?: StreamOverlay;
   principal?: string;
   note?: string;
@@ -148,6 +170,26 @@ export interface GyldStreamsIndex {
   lineages?: string[];
 }
 
+function readRebuild(value: unknown, path: string): StreamRebuild | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  const raw = readObject(value, path);
+  const rebuild: StreamRebuild = {
+    bundle: readIdentifier(raw.bundle, atPath(path, 'bundle')),
+    built: readIdentifier(raw.built, atPath(path, 'built')),
+    snapshot: readSnapshotRef(raw.snapshot, atPath(path, 'snapshot')),
+    changed: readBoolean(raw.changed, atPath(path, 'changed')),
+    parent_moved: readBoolean(raw.parent_moved, atPath(path, 'parent_moved')),
+  };
+  if (raw.parent_snapshot !== null && raw.parent_snapshot !== undefined) {
+    rebuild.parent_snapshot = readSnapshotRef(
+      raw.parent_snapshot, atPath(path, 'parent_snapshot'),
+    );
+  }
+  return rebuild;
+}
+
 function readOverlay(value: unknown, path: string): StreamOverlay | undefined {
   if (value === null || value === undefined) {
     return undefined;
@@ -180,6 +222,14 @@ export function readStreamRecord(value: unknown, path: string): GyldStream {
   const parent = readOptionalIdentifier(raw.parent, atPath(path, 'parent'));
   if (parent !== undefined) {
     stream.parent = parent;
+  }
+  const follows = readOptionalIdentifier(raw.follows, atPath(path, 'follows'));
+  if (follows !== undefined) {
+    stream.follows = follows;
+  }
+  const rebuilt = readRebuild(raw.rebuilt_from, atPath(path, 'rebuilt_from'));
+  if (rebuilt !== undefined) {
+    stream.rebuilt_from = rebuilt;
   }
   if (raw.parent_snapshot !== null && raw.parent_snapshot !== undefined) {
     stream.parent_snapshot = readSnapshotRef(raw.parent_snapshot, atPath(path, 'parent_snapshot'));

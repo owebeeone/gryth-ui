@@ -20,6 +20,14 @@ import streamBRecord from './fixtures/bundle/streams/stream-b/stream.json';
 import streamBDecideNow from './fixtures/bundle/streams/stream-b/decide-now.json';
 import streamBValidation from './fixtures/bundle/streams/stream-b/validation.json';
 import streamBDecisionsLens from './fixtures/bundle/streams/stream-b/lenses/decisions.lens.json';
+import forkARecord from './fixtures/bundle/streams/fork-a/stream.json';
+import forkADecideNow from './fixtures/bundle/streams/fork-a/decide-now.json';
+import forkAValidation from './fixtures/bundle/streams/fork-a/validation.json';
+import forkADecisionsLens from './fixtures/bundle/streams/fork-a/lenses/decisions.lens.json';
+import neighbourhoodLens from './fixtures/bundle/streams/base/lenses/neighbourhood-key_custody.lens.json';
+import baseToStreamA from './fixtures/bundle/diffs/base..stream-a.json';
+import streamAToStreamB from './fixtures/bundle/diffs/stream-a..stream-b.json';
+import streamAToForkA from './fixtures/bundle/diffs/stream-a..fork-a.json';
 import type {
   FetchResponse, GyldDirectoryEntry, GyldDirectoryHandle, GyldFile, GyldFileHandle,
 } from '../src/store/stores';
@@ -38,6 +46,9 @@ export const BUNDLE_FILES: Record<string, unknown> = {
   'streams/base/lenses/tiers.lens.json': tiersLens,
   'streams/base/lenses/status.lens.json': statusLens,
   'streams/base/lenses/branch.lens.json': branchLens,
+  // One member of the parameterised `neighbourhood` family: the manifest names
+  // it beside the family itself, which it marks not emitted with the reason.
+  'streams/base/lenses/neighbourhood-key_custody.lens.json': neighbourhoodLens,
   // The chain over the base: stream A links the base and rules two of its
   // questions, stream B links A and reopens one of them. Stream A carries a
   // projection because the decide window needs the declared CLASS of a record
@@ -53,6 +64,16 @@ export const BUNDLE_FILES: Record<string, unknown> = {
   'streams/stream-b/decide-now.json': streamBDecideNow,
   'streams/stream-b/validation.json': streamBValidation,
   'streams/stream-b/lenses/decisions.lens.json': streamBDecisionsLens,
+  // A FORK of stream A: its parent is stream A and its chain is base, fork-a,
+  // because a fork follows the base and keeps its parent as provenance.
+  'streams/fork-a/stream.json': forkARecord,
+  'streams/fork-a/decide-now.json': forkADecideNow,
+  'streams/fork-a/validation.json': forkAValidation,
+  'streams/fork-a/lenses/decisions.lens.json': forkADecisionsLens,
+  // The three emitted diffs of the same run.
+  'diffs/base..stream-a.json': baseToStreamA,
+  'diffs/stream-a..stream-b.json': streamAToStreamB,
+  'diffs/stream-a..fork-a.json': streamAToForkA,
   // The second lineage of the same bundle: an architecture stream whose
   // record carries a LENS MANIFEST, and which emits no decide-now list.
   'streams/architecture/stream.json': architectureRecord,

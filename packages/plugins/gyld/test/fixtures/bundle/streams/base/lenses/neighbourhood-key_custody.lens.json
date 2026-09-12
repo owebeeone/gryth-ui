@@ -1,0 +1,239 @@
+{
+  "format": "gyld.lens.v1",
+  "perspective": "neighbourhood-key_custody",
+  "family": "neighbourhood",
+  "parameter": {
+    "question": "glade_decisions:GladeDecisions.key_custody"
+  },
+  "snapshot": {
+    "lineage": "glade-decision-graph",
+    "revision": "v1",
+    "digest": "94552adafc38d2c6586193d55808901069cc53d72fdd018ebbd6da180682d52c"
+  },
+  "stream": "base",
+  "title": "Glade | Neighbourhood of key_custody",
+  "relations": [
+    "Requires",
+    "Implies",
+    "GatedBy"
+  ],
+  "text_relations": [
+    "Offers"
+  ],
+  "omissions": [
+    "matrix rows",
+    "requirement text",
+    "evidence and costs",
+    "Offers drawn as text, not edges",
+    "every record outside the neighbourhood of key_custody"
+  ],
+  "legend": {
+    "edges": [
+      {
+        "relation": "Requires",
+        "definition": "f0526b9c5fe4700a0cfb0d78a92f14cd2f0458e83a5f142f7ee34b6a9dec106c",
+        "color": "#1f4e79",
+        "style": "solid",
+        "label": null
+      },
+      {
+        "relation": "Implies",
+        "definition": "85cfbd80f0dc70dc43f100eb3104452bd5261460a65581292592833cfaac3d5b",
+        "color": "#b45309",
+        "style": "dashed",
+        "label": null
+      },
+      {
+        "relation": "GatedBy",
+        "definition": "11d7a7f78eda2f4bf2884f3e3a1dd933c413bb29f4c416c1f9035fbf116d558a",
+        "color": "#6b7280",
+        "style": "dotted",
+        "label": "gate"
+      }
+    ],
+    "nodes": [
+      {
+        "kind": "Question",
+        "status": "Decided",
+        "classification": null,
+        "shape": "box",
+        "fill": "#e2e8f0",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Directed",
+        "classification": null,
+        "shape": "box",
+        "fill": "#dbeafe",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Lean",
+        "classification": null,
+        "shape": "box",
+        "fill": "#dcfce7",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Open",
+        "classification": null,
+        "shape": "box",
+        "fill": "#fef3c7",
+        "glyph": null
+      },
+      {
+        "kind": "Trigger",
+        "status": null,
+        "classification": null,
+        "shape": "folder",
+        "fill": "#f8fafc",
+        "glyph": null
+      }
+    ]
+  },
+  "engine": {
+    "name": "dot",
+    "version": "14.1.4",
+    "pinned": true
+  },
+  "bb": [
+    0.0,
+    0.0,
+    1720.0,
+    291.04
+  ],
+  "groups": [],
+  "nodes": [
+    {
+      "id": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "label": "transport_key_binding",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "transport_key_binding [Q3]",
+        "TransportKeyBinding",
+        "  - binding_record *",
+        "  - one_key_both_roles"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        796.31,
+        41.76
+      ],
+      "size": [
+        2.0717,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "label": "proof_family",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "proof_family [Q6]",
+        "ProofFamily",
+        "  - biscuit",
+        "  - macaroons",
+        "  - taut_grants *",
+        "  - ucan"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        947.31,
+        41.76
+      ],
+      "size": [
+        1.4154,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9",
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "label": "key_custody",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "key_custody [Q11]",
+        "KeyCustody",
+        "  - owner_held_only",
+        "  - recovery_keys",
+        "  - social_recovery"
+      ],
+      "fontsize": 11,
+      "justify": "left",
+      "pos": [
+        871.31,
+        184.28
+      ],
+      "size": [
+        1.5925,
+        0.99333
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "asn:d31b97a0b1ea757c9dfe2ad59d3ea3821312515ff6fdb003b1519e417df3e40e#1",
+      "slot": "glade_decisions:ProofFamily.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "tail": "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9",
+      "head": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,925.07,83.888 890.29,148.18 899.53,131.11 910.78,110.31 920.84,91.708",
+      "label_pos": null
+    },
+    {
+      "id": "asn:236afe015635e5835b92642c55c83df2ab61983df089ba4562fb7c45970d19ef#0",
+      "slot": "glade_decisions:TransportKeyBinding.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "tail": "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9",
+      "head": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,811.78,71.736 852.58,148.18 841.42,127.28 827.28,100.78 815.96,79.579",
+      "label_pos": null
+    }
+  ],
+  "counts": {
+    "nodes": 3,
+    "edges": 2,
+    "groups": 0,
+    "omitted_occurrences": 72,
+    "omitted_assertions": 34
+  }
+}

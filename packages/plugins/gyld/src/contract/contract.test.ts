@@ -16,13 +16,13 @@ import streamADecideNowFixture from '../../test/fixtures/bundle/streams/stream-a
 import streamBDecideNowFixture from '../../test/fixtures/bundle/streams/stream-b/decide-now.json';
 import validationFixture from '../../test/fixtures/bundle/streams/base/validation.json';
 import invalidValidationFixture from '../../test/fixtures/provisional/validation-invalid.json';
-import diffFixture from '../../test/fixtures/provisional/diff.json';
+import diffFixture from '../../test/fixtures/bundle/diffs/base..stream-a.json';
+import reopenDiffFixture from '../../test/fixtures/bundle/diffs/stream-a..stream-b.json';
 
-// Every fixture under `bundle/` and `architecture/` is REAL Gyld output copied
-// verbatim (test/fixtures/README.md). The two files under `provisional/` are
-// still hand written from spec section 7 because no host emits them yet: the
-// diff needs a second stream, and the base capture validates so there is no
-// rejected bundle to copy.
+// Every fixture under `bundle/` is REAL Gyld output copied verbatim
+// (test/fixtures/README.md). The one file under `provisional/` is still hand
+// written from spec section 7 because no host emits it yet: every stream of
+// the run validates, so there is no rejected bundle to copy.
 
 type Json = Record<string, unknown>;
 
@@ -72,7 +72,7 @@ describe('gyld.streams.v1 and gyld.stream.v1', () => {
     expect(index.lineage).toBe('glade-decision-graph');
     expect(index.lineages).toEqual(['glade-decision-graph', 'glade-architecture-candidate-1']);
     expect(index.streams.map((s) => s.id)).toEqual([
-      'base', 'stream-a', 'stream-b', 'architecture',
+      'base', 'stream-a', 'stream-b', 'fork-a', 'architecture',
     ]);
     const base = index.streams[0];
     expect(base.kind).toBe('fork');
@@ -83,7 +83,7 @@ describe('gyld.streams.v1 and gyld.stream.v1', () => {
     expect(base.principal).toBe('gianni');
     // `kind` is deliberately an open string: the last stream is neither a
     // fork nor a link, and the reader takes the host's word for it.
-    const architecture = index.streams[3];
+    const architecture = index.streams[4];
     expect(architecture.kind).toBe('declaration');
     expect(architecture.lineage).toBe('glade-architecture-candidate-1');
     expect('overlay' in architecture).toBe(false);
@@ -118,7 +118,7 @@ describe('gyld.streams.v1 and gyld.stream.v1', () => {
   });
 
   it('reads the lens manifest a stream record carries, not-emitted entries and all', () => {
-    const architecture = readStreamsIndex(streamsFixture).streams[3];
+    const architecture = readStreamsIndex(streamsFixture).streams[4];
     const manifest = architecture.lenses;
     expect(manifest).toBeDefined();
     const emitted = (manifest ?? []).filter((lens) => lens.emitted);
@@ -134,8 +134,15 @@ describe('gyld.streams.v1 and gyld.stream.v1', () => {
     expect(withheld.map((lens) => lens.perspective)).toEqual(['full']);
     expect(withheld[0].reason).toContain('mints no record ids');
     expect('file' in withheld[0]).toBe(false);
-    // the base stream carries no manifest, and none is invented for it
-    expect('lenses' in readStreamsIndex(streamsFixture).streams[0]).toBe(false);
+    // the decision streams carry one too, and theirs names a parameterised
+    // family: one member emitted, the family itself marked not emitted with
+    // the reason, which the picker shows disabled rather than hiding
+    const base = readStreamsIndex(streamsFixture).streams[0];
+    expect((base.lenses ?? []).filter((lens) => lens.emitted).map((lens) => lens.perspective))
+      .toEqual(['decisions', 'tiers', 'status', 'branch', 'neighbourhood-key_custody']);
+    const family = (base.lenses ?? []).find((lens) => lens.perspective === 'neighbourhood');
+    expect(family?.emitted).toBe(false);
+    expect(family?.reason).toContain('parameterised by question');
   });
 
   it('reads a standalone stream record behind its own envelope', () => {
@@ -596,19 +603,85 @@ describe('gyld.validation.v1', () => {
 });
 
 describe('gyld.stream-diff.v1', () => {
-  it('reads the fixture whole', () => {
+  it('reads the emitted diff whole', () => {
     const diff = readStreamDiff(diffFixture);
     expect(diff.left.stream).toBe('base');
-    expect(diff.right.stream).toBe('keys-2026-09-13');
+    expect(diff.right.stream).toBe('stream-a');
     expect(diff.correspondence).toBe('qualified_slot');
-    expect(diff.occurrences.added).toHaveLength(2);
-    expect(diff.occurrences.unchanged).toBe(75);
-    expect(diff.assertions.added[0].relation).toBe('Decides');
-    expect(diff.effective_status[0]).toEqual({
-      slot: 'glade_decisions:GladeDecisions.key_custody',
-      left: 'Open', right: 'Decided',
-      ruling: 'glade_decisions_stream:Stream.r_key_custody',
+    expect(diff.occurrences.added).toEqual(diffFixture.occurrences.added);
+    expect(diff.occurrences.unchanged).toBe(diffFixture.occurrences.unchanged);
+    expect(diff.assertions.added).toHaveLength(diffFixture.assertions.added.length);
+    // a relation is a qualified slot here, not the bare label the picture uses
+    expect(diff.assertions.added[0].relation).toContain(':');
+    expect(diff.effective_status).toEqual([
+      {
+        slot: 'glade_decisions:GladeDecisions.lifecycle_composition',
+        left: 'Directed',
+        right: 'Decided',
+        ruling: 'glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling',
+      },
+      {
+        slot: 'glade_decisions:GladeDecisions.version_pin',
+        left: 'Lean',
+        right: 'Decided',
+        ruling: 'glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling',
+      },
+    ]);
+    expect(diff.omissions).toEqual(diffFixture.omissions);
+  });
+
+  it('reads the five sections section 7.6 does not name', () => {
+    const diff = readStreamDiff(diffFixture);
+    // a selection that only one side made leaves the other side absent
+    const selection = diff.selections
+      ?.find((entry) => entry.slot === 'glade_decisions:GladeDecisions.version_pin');
+    expect(selection?.right).toBe('glade_decisions:GladeDecisions.bump_to_current');
+    expect(selection !== undefined && 'left' in selection).toBe(false);
+    expect(diff.questions?.added)
+      .toEqual(['glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit']);
+    expect(diff.occurred?.added)
+      .toEqual(['glade_decisions:GladeDecisions.first_bulk_supplier']);
+    expect(diff.rulings?.added.map((entry) => entry.slot)).toEqual(
+      diffFixture.rulings.added.map((entry) => entry.slot),
+    );
+    const occurredRuling = diff.rulings?.added
+      .find((entry) => entry.occurred.length > 0);
+    // the record that only marks a trigger as occurred decides nothing
+    expect(occurredRuling !== undefined && 'decides' in occurredRuling).toBe(false);
+    expect(occurredRuling?.live).toBe(true);
+    // the lens section is keyed by perspective, with slots and not ids
+    expect(diff.lenses?.decisions.nodes.added)
+      .toEqual(['glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit']);
+    expect(diff.lenses?.decisions.edges.added[0]).toEqual({
+      slot: 'glade_decisions_stream_a:PinAudit.requires',
+      relation: 'Requires',
+      tail: 'glade_decisions:GladeDecisions.version_pin',
+      head: 'glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit',
     });
+  });
+
+  it('reads a reopen as a retired ruling, not a removed one', () => {
+    const diff = readStreamDiff(reopenDiffFixture);
+    expect(diff.rulings?.removed).toEqual([]);
+    expect(diff.rulings?.retired)
+      .toEqual(['glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling']);
+    expect(diff.rulings?.added[0].reopens)
+      .toBe('glade_decisions:GladeDecisions.lifecycle_composition');
+    // and the selection changed on both sides, which is a change, not an add
+    expect(diff.selections).toEqual([{
+      slot: 'glade_decisions:GladeDecisions.lifecycle_composition',
+      left: 'glade_decisions:GladeDecisions.sdax_rs',
+      right: 'glade_decisions:GladeDecisions.tokio_primitives',
+    }]);
+  });
+
+  it('leaves the five absent when a host writes none of them', () => {
+    const bare = drop(drop(drop(drop(drop(
+      diffFixture, 'selections'), 'questions'), 'rulings'), 'occurred'), 'lenses');
+    const diff = readStreamDiff(bare);
+    for (const key of ['selections', 'questions', 'rulings', 'occurred', 'lenses'] as const) {
+      expect(key in diff).toBe(false);
+    }
   });
 
   it('rejects a wrong format string', () => {
@@ -627,7 +700,7 @@ describe('gyld.stream-diff.v1', () => {
 
   it('rejects a non-integral unchanged count', () => {
     rejects(
-      () => readStreamDiff(mutate(diffFixture, 'occurrences.unchanged', 75.5)),
+      () => readStreamDiff(mutate(diffFixture, 'occurrences.unchanged', 74.5)),
       GyldContractViolation.WrongType, 'gyld.stream-diff.v1.occurrences.unchanged',
     );
   });

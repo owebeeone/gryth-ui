@@ -26,9 +26,9 @@
       "chain": [
         "base"
       ],
-      "built": "2026-09-12T18:08:24Z",
+      "built": "2026-09-12T18:47:13Z",
       "principal": "gianni",
-      "note": "base, stream A and the linked stream B, with the architecture lineage",
+      "note": "base, the linked streams A and B, the fork of stream A, and the architecture lineage",
       "status": "ok",
       "questions": [
         {
@@ -267,7 +267,108 @@
           "glade_decisions:GladeDecisions.relay_posture",
           "glade_decisions:GladeDecisions.traffic_budget_numbers"
         ]
-      }
+      },
+      "lenses": [
+        {
+          "perspective": "decisions",
+          "emitted": true,
+          "file": "streams/base/lenses/decisions.lens.json",
+          "stream": "base",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "tiers",
+          "emitted": true,
+          "file": "streams/base/lenses/tiers.lens.json",
+          "stream": "base",
+          "relations": [
+            "Requires"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "status",
+          "emitted": true,
+          "file": "streams/base/lenses/status.lens.json",
+          "stream": "base",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "branch",
+          "emitted": true,
+          "file": "streams/base/lenses/branch.lens.json",
+          "stream": "base",
+          "relations": [
+            "Offers",
+            "Implies"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood-key_custody",
+          "emitted": true,
+          "file": "streams/base/lenses/neighbourhood-key_custody.lens.json",
+          "stream": "base",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": "neighbourhood",
+          "parameter": {
+            "question": "glade_decisions:GladeDecisions.key_custody"
+          },
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood",
+          "emitted": false,
+          "file": null,
+          "stream": "base",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the family is parameterised by question; this stream emits the one member named beside this entry, and another question is another build or a browser preview"
+        },
+        {
+          "perspective": "diff",
+          "emitted": false,
+          "file": null,
+          "stream": "base",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "a diff is between two streams and not inside one; scripts/manage_decision_streams.py writes it as diffs/<left>..<right>.json"
+        },
+        {
+          "perspective": "full",
+          "emitted": false,
+          "file": null,
+          "stream": "base",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
+        }
+      ]
     },
     {
       "id": "stream-a",
@@ -283,7 +384,7 @@
       "snapshot": {
         "lineage": "glade-decision-graph",
         "revision": "stream-a@1",
-        "digest": "b6fcbfdafc66826fb8a110138605201b85d7814753cabc6a924be415221e4332"
+        "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
       },
       "overlay": {
         "module": "glade_decisions_stream_a",
@@ -294,7 +395,7 @@
         "base",
         "stream-a"
       ],
-      "built": "2026-09-12T18:08:24Z",
+      "built": "2026-09-12T18:47:13Z",
       "principal": "gianni",
       "note": "version pin and lifecycle ruled, the bulk gate met, one question added",
       "status": "ok",
@@ -545,7 +646,108 @@
           "glade_decisions:GladeDecisions.relay_posture",
           "glade_decisions:GladeDecisions.traffic_budget_numbers"
         ]
-      }
+      },
+      "lenses": [
+        {
+          "perspective": "decisions",
+          "emitted": true,
+          "file": "streams/stream-a/lenses/decisions.lens.json",
+          "stream": "stream-a",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "tiers",
+          "emitted": true,
+          "file": "streams/stream-a/lenses/tiers.lens.json",
+          "stream": "stream-a",
+          "relations": [
+            "Requires"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "status",
+          "emitted": true,
+          "file": "streams/stream-a/lenses/status.lens.json",
+          "stream": "stream-a",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "branch",
+          "emitted": true,
+          "file": "streams/stream-a/lenses/branch.lens.json",
+          "stream": "stream-a",
+          "relations": [
+            "Offers",
+            "Implies"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood-async_witness",
+          "emitted": true,
+          "file": "streams/stream-a/lenses/neighbourhood-async_witness.lens.json",
+          "stream": "stream-a",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": "neighbourhood",
+          "parameter": {
+            "question": "glade_decisions:GladeDecisions.async_witness"
+          },
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood",
+          "emitted": false,
+          "file": null,
+          "stream": "stream-a",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the family is parameterised by question; this stream emits the one member named beside this entry, and another question is another build or a browser preview"
+        },
+        {
+          "perspective": "diff",
+          "emitted": false,
+          "file": null,
+          "stream": "stream-a",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "a diff is between two streams and not inside one; scripts/manage_decision_streams.py writes it as diffs/<left>..<right>.json"
+        },
+        {
+          "perspective": "full",
+          "emitted": false,
+          "file": null,
+          "stream": "stream-a",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
+        }
+      ]
     },
     {
       "id": "stream-b",
@@ -554,14 +756,14 @@
       "parent_snapshot": {
         "lineage": "glade-decision-graph",
         "revision": "stream-a@1",
-        "digest": "b6fcbfdafc66826fb8a110138605201b85d7814753cabc6a924be415221e4332"
+        "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
       },
       "lineage": "glade-decision-graph",
       "revision": "stream-b@1",
       "snapshot": {
         "lineage": "glade-decision-graph",
         "revision": "stream-b@1",
-        "digest": "fee82354de30e43ffb92e4212edc0d4b8a321f3730a173105c53b26eba1d9765"
+        "digest": "1a5afad5dd3179a4bf88bd3a9e20065a759a02d3275d5a92061eaad090c32680"
       },
       "overlay": {
         "module": "glade_decisions_stream_b",
@@ -573,7 +775,7 @@
         "stream-a",
         "stream-b"
       ],
-      "built": "2026-09-12T18:08:24Z",
+      "built": "2026-09-12T18:47:13Z",
       "principal": "gianni",
       "note": "the lifecycle answer reopened and taken to the in-house fallback",
       "status": "ok",
@@ -824,7 +1026,487 @@
           "glade_decisions:GladeDecisions.relay_posture",
           "glade_decisions:GladeDecisions.traffic_budget_numbers"
         ]
-      }
+      },
+      "lenses": [
+        {
+          "perspective": "decisions",
+          "emitted": true,
+          "file": "streams/stream-b/lenses/decisions.lens.json",
+          "stream": "stream-b",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "tiers",
+          "emitted": true,
+          "file": "streams/stream-b/lenses/tiers.lens.json",
+          "stream": "stream-b",
+          "relations": [
+            "Requires"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "status",
+          "emitted": true,
+          "file": "streams/stream-b/lenses/status.lens.json",
+          "stream": "stream-b",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "branch",
+          "emitted": true,
+          "file": "streams/stream-b/lenses/branch.lens.json",
+          "stream": "stream-b",
+          "relations": [
+            "Offers",
+            "Implies"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood-async_witness",
+          "emitted": true,
+          "file": "streams/stream-b/lenses/neighbourhood-async_witness.lens.json",
+          "stream": "stream-b",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": "neighbourhood",
+          "parameter": {
+            "question": "glade_decisions:GladeDecisions.async_witness"
+          },
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood",
+          "emitted": false,
+          "file": null,
+          "stream": "stream-b",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the family is parameterised by question; this stream emits the one member named beside this entry, and another question is another build or a browser preview"
+        },
+        {
+          "perspective": "diff",
+          "emitted": false,
+          "file": null,
+          "stream": "stream-b",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "a diff is between two streams and not inside one; scripts/manage_decision_streams.py writes it as diffs/<left>..<right>.json"
+        },
+        {
+          "perspective": "full",
+          "emitted": false,
+          "file": null,
+          "stream": "stream-b",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
+        }
+      ]
+    },
+    {
+      "id": "fork-a",
+      "kind": "fork",
+      "parent": "stream-a",
+      "parent_snapshot": {
+        "lineage": "glade-decision-graph",
+        "revision": "stream-a@1",
+        "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
+      },
+      "lineage": "glade-decision-graph",
+      "revision": "fork-a@1",
+      "snapshot": {
+        "lineage": "glade-decision-graph",
+        "revision": "fork-a@1",
+        "digest": "b68b322d7fe1fb47b3297efceb7a1b4927a5f807317fe8701f63bd3a2f9ed760"
+      },
+      "overlay": {
+        "module": "glade_decisions_fork_a",
+        "root": "GladeDecisionsForkA",
+        "text_fingerprint": "3cb5b1c9f7c86401d40561fe788a63311f4bbd422a25f2e593db721253f079f5"
+      },
+      "chain": [
+        "base",
+        "fork-a"
+      ],
+      "built": "2026-09-12T18:47:13Z",
+      "principal": "gianni",
+      "note": "stream A flattened over the base; it no longer follows stream A",
+      "status": "ok",
+      "questions": [
+        {
+          "slot": "glade_decisions:GladeDecisions.async_witness",
+          "label": "async_witness",
+          "declared_status": "Open",
+          "effective_status": "Open",
+          "tier": "roots",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+          "label": "blind_relay_tier",
+          "declared_status": "Open",
+          "effective_status": "Open",
+          "tier": "branch-induced",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+          "label": "bulk_transfer",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "roots",
+          "preferred": "glade_decisions:GladeDecisions.iroh_blobs_port"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.discovery_fold",
+          "label": "discovery_fold",
+          "declared_status": "Decided",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.dissemination",
+          "label": "dissemination",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "third",
+          "preferred": "glade_decisions:GladeDecisions.sync_round_only"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.grants_as_data",
+          "label": "grants_as_data",
+          "declared_status": "Decided",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.identity_adapters",
+          "label": "identity_adapters",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "third",
+          "preferred": "glade_decisions:GladeDecisions.none_in_v1"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.iroh_transport",
+          "label": "iroh_transport",
+          "declared_status": "Decided",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.key_custody",
+          "label": "key_custody",
+          "declared_status": "Open",
+          "effective_status": "Open",
+          "tier": "roots",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+          "label": "lifecycle_composition",
+          "declared_status": "Directed",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": "glade_decisions:GladeDecisions.sdax_rs"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+          "label": "metadata_exposure",
+          "declared_status": "Open",
+          "effective_status": "Open",
+          "tier": "branch-induced",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
+          "label": "pin_audit",
+          "declared_status": "Open",
+          "effective_status": "Open",
+          "tier": "roots",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.proof_family",
+          "label": "proof_family",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "second",
+          "preferred": "glade_decisions:GladeDecisions.taut_grants"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.registry_growth",
+          "label": "registry_growth",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "gated",
+          "preferred": "glade_decisions:GladeDecisions.trusted_mapping_only"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.relay_posture",
+          "label": "relay_posture",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "branch-induced",
+          "preferred": "glade_decisions:GladeDecisions.self_hosted"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.scope_model",
+          "label": "scope_model",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "roots",
+          "preferred": "glade_decisions:GladeDecisions.node_trust"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.shaku_injector",
+          "label": "shaku_injector",
+          "declared_status": "Decided",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.shape_catalogue",
+          "label": "shape_catalogue",
+          "declared_status": "Decided",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+          "label": "simulator_tooling",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "gated",
+          "preferred": "glade_decisions:GladeDecisions.own_sim_only"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.store_engine",
+          "label": "store_engine",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "gated",
+          "preferred": "glade_decisions:GladeDecisions.whole_state_blob"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.store_seam",
+          "label": "store_seam",
+          "declared_status": "Decided",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.text_engine",
+          "label": "text_engine",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "gated",
+          "preferred": "glade_decisions:GladeDecisions.own_text_profile"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+          "label": "traffic_budget_numbers",
+          "declared_status": "Open",
+          "effective_status": "Open",
+          "tier": "branch-induced",
+          "preferred": null
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+          "label": "transport_key_binding",
+          "declared_status": "Lean",
+          "effective_status": "Lean",
+          "tier": "second",
+          "preferred": "glade_decisions:GladeDecisions.binding_record"
+        },
+        {
+          "slot": "glade_decisions:GladeDecisions.version_pin",
+          "label": "version_pin",
+          "declared_status": "Lean",
+          "effective_status": "Decided",
+          "tier": "anchors",
+          "preferred": "glade_decisions:GladeDecisions.bump_to_current"
+        }
+      ],
+      "roots": [
+        "glade_decisions:GladeDecisions.async_witness",
+        "glade_decisions:GladeDecisions.bulk_transfer",
+        "glade_decisions:GladeDecisions.key_custody",
+        "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
+        "glade_decisions:GladeDecisions.scope_model"
+      ],
+      "tiers": {
+        "anchors": [
+          "glade_decisions:GladeDecisions.discovery_fold",
+          "glade_decisions:GladeDecisions.grants_as_data",
+          "glade_decisions:GladeDecisions.iroh_transport",
+          "glade_decisions:GladeDecisions.lifecycle_composition",
+          "glade_decisions:GladeDecisions.shaku_injector",
+          "glade_decisions:GladeDecisions.shape_catalogue",
+          "glade_decisions:GladeDecisions.store_seam",
+          "glade_decisions:GladeDecisions.version_pin"
+        ],
+        "roots": [
+          "glade_decisions:GladeDecisions.async_witness",
+          "glade_decisions:GladeDecisions.bulk_transfer",
+          "glade_decisions:GladeDecisions.key_custody",
+          "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
+          "glade_decisions:GladeDecisions.scope_model"
+        ],
+        "second": [
+          "glade_decisions:GladeDecisions.proof_family",
+          "glade_decisions:GladeDecisions.transport_key_binding"
+        ],
+        "third": [
+          "glade_decisions:GladeDecisions.dissemination",
+          "glade_decisions:GladeDecisions.identity_adapters"
+        ],
+        "gated": [
+          "glade_decisions:GladeDecisions.registry_growth",
+          "glade_decisions:GladeDecisions.simulator_tooling",
+          "glade_decisions:GladeDecisions.store_engine",
+          "glade_decisions:GladeDecisions.text_engine"
+        ],
+        "branch-induced": [
+          "glade_decisions:GladeDecisions.blind_relay_tier",
+          "glade_decisions:GladeDecisions.metadata_exposure",
+          "glade_decisions:GladeDecisions.relay_posture",
+          "glade_decisions:GladeDecisions.traffic_budget_numbers"
+        ]
+      },
+      "lenses": [
+        {
+          "perspective": "decisions",
+          "emitted": true,
+          "file": "streams/fork-a/lenses/decisions.lens.json",
+          "stream": "fork-a",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "tiers",
+          "emitted": true,
+          "file": "streams/fork-a/lenses/tiers.lens.json",
+          "stream": "fork-a",
+          "relations": [
+            "Requires"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "status",
+          "emitted": true,
+          "file": "streams/fork-a/lenses/status.lens.json",
+          "stream": "fork-a",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "branch",
+          "emitted": true,
+          "file": "streams/fork-a/lenses/branch.lens.json",
+          "stream": "fork-a",
+          "relations": [
+            "Offers",
+            "Implies"
+          ],
+          "family": null,
+          "parameter": null,
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood-async_witness",
+          "emitted": true,
+          "file": "streams/fork-a/lenses/neighbourhood-async_witness.lens.json",
+          "stream": "fork-a",
+          "relations": [
+            "Requires",
+            "Implies",
+            "GatedBy"
+          ],
+          "family": "neighbourhood",
+          "parameter": {
+            "question": "glade_decisions:GladeDecisions.async_witness"
+          },
+          "reason": null
+        },
+        {
+          "perspective": "neighbourhood",
+          "emitted": false,
+          "file": null,
+          "stream": "fork-a",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the family is parameterised by question; this stream emits the one member named beside this entry, and another question is another build or a browser preview"
+        },
+        {
+          "perspective": "diff",
+          "emitted": false,
+          "file": null,
+          "stream": "fork-a",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "a diff is between two streams and not inside one; scripts/manage_decision_streams.py writes it as diffs/<left>..<right>.json"
+        },
+        {
+          "perspective": "full",
+          "emitted": false,
+          "file": null,
+          "stream": "fork-a",
+          "relations": null,
+          "family": null,
+          "parameter": null,
+          "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
+        }
+      ]
     },
     {
       "id": "architecture",
@@ -842,9 +1524,9 @@
       "chain": [
         "architecture"
       ],
-      "built": "2026-09-12T18:08:24Z",
+      "built": "2026-09-12T18:47:13Z",
       "principal": "gianni",
-      "note": "base, stream A and the linked stream B, with the architecture lineage",
+      "note": "base, the linked streams A and B, the fork of stream A, and the architecture lineage",
       "status": "ok",
       "questions": [],
       "roots": [],
@@ -860,6 +1542,8 @@
             "MayUse",
             "ReuseCandidate"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -870,6 +1554,8 @@
           "relations": [
             "CooperatesWith"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -881,6 +1567,8 @@
             "Owns",
             "UsesScope"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -893,6 +1581,8 @@
             "ConfiguredBy",
             "Provides"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -907,6 +1597,8 @@
             "ForConsumers",
             "SharedWithin"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -918,6 +1610,8 @@
             "CleanupOwnedBy",
             "DrainsBefore"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -928,6 +1622,8 @@
           "relations": [
             "allocation"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -938,6 +1634,8 @@
           "relations": [
             "journey_relevance"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -948,6 +1646,8 @@
           "relations": [
             "must_meet"
           ],
+          "family": null,
+          "parameter": null,
           "reason": null
         },
         {
@@ -956,10 +1656,12 @@
           "file": null,
           "stream": null,
           "relations": null,
+          "family": null,
+          "parameter": null,
           "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
         }
       ]
     }
   ],
-  "written": "2026-09-12T18:08:24Z"
+  "written": "2026-09-12T18:47:13Z"
 }

@@ -17,6 +17,7 @@ import { neighbourhoodLink, pickOutcome } from './links';
 import type { GyldBundle, GyldLensState, GyldStreamsCensus } from '../store/state';
 import type { GyldRecordView } from '../records/records';
 import { EMPTY_ROOTS, mountDesk, optionsOf, wireSink } from '../../test/mount';
+import { FakeBundle } from '../../test/fakeBundle';
 import decisionsFixture from '../../test/fixtures/bundle/streams/base/lenses/decisions.lens.json';
 import architectureRecord from '../../test/fixtures/bundle/streams/architecture/stream.json';
 
@@ -74,7 +75,23 @@ describe('the pickers list what the bundle emitted, and nothing else', () => {
   });
 
   it('falls back to the store listing for a stream with no manifest', async () => {
-    const desk = mountDesk();
+    // Every record of the emitted run carries a manifest now, so the fallback
+    // is exercised against a record with its `lenses` key taken off: a bundle
+    // from a host that writes none, which is the case the fallback is for.
+    const image = new FakeBundle();
+    const record = JSON.parse(image.read('streams/base/stream.json')) as Record<string, unknown>;
+    delete record.lenses;
+    image.write('streams/base/stream.json', record);
+    const index = JSON.parse(image.read('streams.json')) as {
+      streams: Record<string, unknown>[];
+    };
+    for (const entry of index.streams) {
+      if (entry.id === 'base') {
+        delete entry.lenses;
+      }
+    }
+    image.write('streams.json', index);
+    const desk = mountDesk(undefined, image);
     const tab = desk.tab('base-pick', browserTabTaps('base-pick', {
       stream: 'base', perspective: 'decisions',
     }));
@@ -83,7 +100,7 @@ describe('the pickers list what the bundle emitted, and nothing else', () => {
       (state) => state?.status === 'ok',
     );
     expect(optionsOf(tab.render(<GyldBrowser tabId="base-pick" />), 'gyld-pick-perspective'))
-      .toEqual(['branch', 'decisions', 'status', 'tiers']);
+      .toEqual(['branch', 'decisions', 'neighbourhood-key_custody', 'status', 'tiers']);
   });
 
   it('lists exactly the streams the census found', async () => {
@@ -96,7 +113,7 @@ describe('the pickers list what the bundle emitted, and nothing else', () => {
       (value) => value?.status === 'ready',
     );
     const ids = census.status === 'ready' ? census.streams.map((entry) => entry.id) : [];
-    expect(ids).toEqual(['base', 'stream-a', 'stream-b', 'architecture']);
+    expect(ids).toEqual(['base', 'stream-a', 'stream-b', 'fork-a', 'architecture']);
     expect(optionsOf(tab.render(<GyldBrowser tabId="census" />), 'gyld-pick-stream')).toEqual(ids);
   });
 });
@@ -216,7 +233,7 @@ describe('what a pick writes, and where a link goes', () => {
   it('otherwise keeps the perspective and carries the focus, so the window dims to it', () => {
     const link = neighbourhoodLink({
       stream: 'base', perspective: 'decisions', focus: SCOPE_MODEL,
-      perspectives: ['branch', 'decisions', 'status', 'tiers'],
+      perspectives: ['branch', 'decisions', 'neighbourhood-key_custody', 'status', 'tiers'],
     });
     expect(link.params).toEqual({
       stream: 'base', perspective: 'decisions', focus: SCOPE_MODEL,

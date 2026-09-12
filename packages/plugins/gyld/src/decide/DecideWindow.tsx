@@ -514,7 +514,7 @@ export function DecideWindow() {
             this one record; merge it into the stream&apos;s own overlay module,
             then rebuild with
             {' '}
-            <code className="gyld-decide-command">{rebuildCommand(target.stream)}</code>
+            <code className="gyld-decide-command">{rebuildCommand()}</code>
             . Gyld captures and validates it, and what comes back is the
             validation shown here.
           </p>

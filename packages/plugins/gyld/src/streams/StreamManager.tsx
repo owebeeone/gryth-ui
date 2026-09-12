@@ -102,11 +102,14 @@ function StreamRowView({ row, target }: { row: StreamRow; target: StreamTarget }
           <span className="gyld-chip gyld-chip-wired">shown</span>
         )}
         {row.parentMoved && (
-          <span className="gyld-chip gyld-stream-moved" title={
-            'this stream was built against a parent snapshot that is not the '
-            + 'one the parent carries now; Gyld rebuilds it, this window does not'
-          }>
-            parent moved since build
+          <span className="gyld-chip gyld-stream-moved" title={row.parentMovedFromRecord
+            ? 'the rebuild that wrote this record said so; Gyld rebuilds it again, '
+              + 'this window does not'
+            : 'this stream was built against a parent snapshot that is not the '
+              + 'one the parent carries now; Gyld rebuilds it, this window does not'}>
+            {row.parentMovedFromRecord
+              ? 'parent moved since build (the record says so)'
+              : 'parent moved since build'}
           </span>
         )}
         {row.parentMissing && (
@@ -135,6 +138,8 @@ function StreamRowView({ row, target }: { row: StreamRow; target: StreamTarget }
         </dd>
         <dt>chain</dt>
         <dd>{record.chain.join(' → ')}</dd>
+        <dt>follows</dt>
+        <dd>{record.follows ?? 'not emitted'}</dd>
         <dt>built</dt>
         <dd>{record.built}</dd>
         <dt>overlay</dt>

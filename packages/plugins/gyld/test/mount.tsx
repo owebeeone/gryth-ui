@@ -42,12 +42,27 @@ export interface MountedDesk extends MountedContext {
 
 let desks = 0;
 
+/**
+ * Every context and drip a test mounts, held for the life of the test FILE.
+ *
+ * The graph holds contexts and drips by WeakRef (`grip-core/src/core/graph.ts`,
+ * `contextRef` and `consumers`), so a context nothing in the test holds may be
+ * collected between two polls, and a store tap whose destination context has
+ * gone publishes nothing to it. That is right for an application, where the
+ * desktop holds each tab context for the life of its tab record, and it is a
+ * race in a test that keeps only the wrapper it reads through. So the harness
+ * is the holder: what a test mounts stays mounted.
+ */
+const mounted: unknown[] = [];
+
 function wrap(ctx: MatchingContext): MountedContext {
+  mounted.push(ctx);
   return {
     ctx,
     read<T>(grip: Grip<T>): Drip<T> {
       const drip = ctx.getGripConsumerContext().getOrCreateConsumer(grip);
       drip.subscribe(() => {});
+      mounted.push(drip);
       return drip;
     },
     render(node: ReactElement): string {
@@ -68,6 +83,7 @@ export function mountDesk(
   home.registerTap(createAtomValueTap(GYLD_FOCUS, { initial: NO_FOCUS, handleGrip: GYLD_FOCUS_TAP }));
   const store = new GyldStoreTap({ watch: false, fetch: fakeFetch(bundle) });
   home.registerTap(store);
+  mounted.push(ctx, home);
   home.registerTap(new GyldIndexTap());
   home.registerTap(new GyldRecordTap());
   return {

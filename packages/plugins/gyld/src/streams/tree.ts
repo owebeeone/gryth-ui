@@ -18,12 +18,20 @@ export interface StreamRow {
   depth: number;
   entry: CensusStream;
   /**
-   * True when this stream pins a parent snapshot and the parent's current
-   * snapshot is a different one. Section 4.3: "when the parent's current
-   * digest differs, the stream manager shows parent moved since build and
-   * offers a rebuild". It is reported, never repaired.
+   * True when this stream was built against a parent snapshot that is not the
+   * one the parent carries now. Section 4.3: "when the parent's current digest
+   * differs, the stream manager shows parent moved since build and offers a
+   * rebuild". It is reported, never repaired.
+   *
+   * A record a REBUILD wrote answers this itself, in `rebuilt_from`, and that
+   * answer wins: the host compared what it had in front of it, and a window
+   * that recomputed it from a census could disagree with the record it is
+   * drawing. A record without one is compared as section 4.3 defines.
    */
   parentMoved: boolean;
+  /** Whether `parentMoved` is the HOST's answer or this window's comparison,
+   *  so the row can say which it is showing. */
+  parentMovedFromRecord: boolean;
   /** True when the record names a parent the census does not carry, so this
    *  stream is drawn at the top with its parent named as missing rather than
    *  quietly rehomed. */
@@ -71,6 +79,7 @@ export function streamRows(census: GyldStreamsCensus | undefined): StreamRow[] {
       depth,
       entry,
       parentMoved: parentMoved(entry, byId),
+      parentMovedFromRecord: entry.record.rebuilt_from !== undefined,
       parentMissing: entry.record.parent !== undefined && !byId.has(entry.record.parent),
     });
     for (const child of children.get(entry.id) ?? []) {
@@ -83,10 +92,15 @@ export function streamRows(census: GyldStreamsCensus | undefined): StreamRow[] {
   return rows;
 }
 
-/** The section 4.3 comparison: what this stream was built against, against
- *  what its parent is now. Absent on either side means there is nothing to
- *  compare, which is not a move. */
+/** The host's own answer when a rebuild wrote one, else the section 4.3
+ *  comparison: what this stream was built against, against what its parent is
+ *  now. Absent on either side means there is nothing to compare, which is not
+ *  a move. */
 function parentMoved(entry: CensusStream, byId: Map<string, CensusStream>): boolean {
+  const rebuilt = entry.record.rebuilt_from;
+  if (rebuilt !== undefined) {
+    return rebuilt.parent_moved;
+  }
   const pinned = entry.record.parent_snapshot;
   const parent = entry.record.parent === undefined ? undefined : byId.get(entry.record.parent);
   if (pinned === undefined || parent === undefined) {

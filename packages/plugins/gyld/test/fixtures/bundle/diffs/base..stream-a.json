@@ -1,0 +1,258 @@
+{
+  "format": "gyld.stream-diff.v1",
+  "left": {
+    "stream": "base",
+    "snapshot": {
+      "lineage": "glade-decision-graph",
+      "revision": "v1",
+      "digest": "94552adafc38d2c6586193d55808901069cc53d72fdd018ebbd6da180682d52c"
+    }
+  },
+  "right": {
+    "stream": "stream-a",
+    "snapshot": {
+      "lineage": "glade-decision-graph",
+      "revision": "stream-a@1",
+      "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
+    }
+  },
+  "correspondence": "qualified_slot",
+  "occurrences": {
+    "added": [
+      "glade_decisions_stream_a:GladeDecisionsStreamA",
+      "glade_decisions_stream_a:GladeDecisionsStreamA.audit_at_slice",
+      "glade_decisions_stream_a:GladeDecisionsStreamA.audit_on_bump",
+      "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
+      "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+      "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+      "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling"
+    ],
+    "removed": [
+      "glade_decisions:GladeDecisions"
+    ],
+    "changed_definition": [],
+    "unchanged": 74
+  },
+  "assertions": {
+    "added": [
+      {
+        "slot": "glade_decisions_stream_a:BulkSupplierArrived.occurred",
+        "relation": "decision_stream_concepts:Occurred",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
+        "refs": [
+          "glade_decisions:GladeDecisions.first_bulk_supplier"
+        ]
+      },
+      {
+        "slot": "glade_decisions_stream_a:LifecycleCompositionRuling.decides",
+        "relation": "decision_stream_concepts:Decides",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+        "refs": [
+          "glade_decisions:GladeDecisions.lifecycle_composition"
+        ]
+      },
+      {
+        "slot": "glade_decisions_stream_a:LifecycleCompositionRuling.selects",
+        "relation": "decision_stream_concepts:Selects",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+        "refs": [
+          "glade_decisions:GladeDecisions.sdax_rs"
+        ]
+      },
+      {
+        "slot": "glade_decisions_stream_a:PinAudit.requires",
+        "relation": "glade_decision_concepts:Requires",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+        "refs": [
+          "glade_decisions:GladeDecisions.version_pin"
+        ]
+      },
+      {
+        "slot": "glade_decisions_stream_a:PinAudit.offers",
+        "relation": "glade_decision_concepts:Offers",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+        "refs": [
+          "glade_decisions_stream_a:GladeDecisionsStreamA.audit_at_slice",
+          "glade_decisions_stream_a:GladeDecisionsStreamA.audit_on_bump"
+        ]
+      },
+      {
+        "slot": "glade_decisions_stream_a:VersionPinRuling.selects",
+        "relation": "decision_stream_concepts:Selects",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
+        "refs": [
+          "glade_decisions:GladeDecisions.bump_to_current"
+        ]
+      },
+      {
+        "slot": "glade_decisions_stream_a:VersionPinRuling.decides",
+        "relation": "decision_stream_concepts:Decides",
+        "owner": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
+        "refs": [
+          "glade_decisions:GladeDecisions.version_pin"
+        ]
+      }
+    ],
+    "removed": [],
+    "unchanged": 36
+  },
+  "effective_status": [
+    {
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "left": "Directed",
+      "right": "Decided",
+      "ruling": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "left": "Lean",
+      "right": "Decided",
+      "ruling": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling"
+    }
+  ],
+  "selections": [
+    {
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "left": null,
+      "right": "glade_decisions:GladeDecisions.sdax_rs"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "left": null,
+      "right": "glade_decisions:GladeDecisions.bump_to_current"
+    }
+  ],
+  "questions": {
+    "added": [
+      "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+    ],
+    "removed": [],
+    "unchanged": 24
+  },
+  "rulings": {
+    "added": [
+      {
+        "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
+        "stream": "stream-a",
+        "decides": null,
+        "selects": null,
+        "reopens": null,
+        "occurred": [
+          "glade_decisions:GladeDecisions.first_bulk_supplier"
+        ],
+        "live": true
+      },
+      {
+        "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+        "stream": "stream-a",
+        "decides": "glade_decisions:GladeDecisions.lifecycle_composition",
+        "selects": "glade_decisions:GladeDecisions.sdax_rs",
+        "reopens": null,
+        "occurred": [],
+        "live": true
+      },
+      {
+        "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
+        "stream": "stream-a",
+        "decides": "glade_decisions:GladeDecisions.version_pin",
+        "selects": "glade_decisions:GladeDecisions.bump_to_current",
+        "reopens": null,
+        "occurred": [],
+        "live": true
+      }
+    ],
+    "removed": [],
+    "retired": [],
+    "restored": []
+  },
+  "occurred": {
+    "added": [
+      "glade_decisions:GladeDecisions.first_bulk_supplier"
+    ],
+    "removed": []
+  },
+  "lenses": {
+    "branch": {
+      "nodes": {
+        "added": [],
+        "removed": [],
+        "unchanged": 10
+      },
+      "edges": {
+        "added": [],
+        "removed": [],
+        "unchanged": 10
+      }
+    },
+    "decisions": {
+      "nodes": {
+        "added": [
+          "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+        ],
+        "removed": [],
+        "unchanged": 29
+      },
+      "edges": {
+        "added": [
+          {
+            "slot": "glade_decisions_stream_a:PinAudit.requires",
+            "relation": "Requires",
+            "tail": "glade_decisions:GladeDecisions.version_pin",
+            "head": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+          }
+        ],
+        "removed": [],
+        "unchanged": 32
+      }
+    },
+    "status": {
+      "nodes": {
+        "added": [
+          "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+        ],
+        "removed": [],
+        "unchanged": 29
+      },
+      "edges": {
+        "added": [
+          {
+            "slot": "glade_decisions_stream_a:PinAudit.requires",
+            "relation": "Requires",
+            "tail": "glade_decisions:GladeDecisions.version_pin",
+            "head": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+          }
+        ],
+        "removed": [],
+        "unchanged": 32
+      }
+    },
+    "tiers": {
+      "nodes": {
+        "added": [
+          "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+        ],
+        "removed": [],
+        "unchanged": 24
+      },
+      "edges": {
+        "added": [
+          {
+            "slot": "glade_decisions_stream_a:PinAudit.requires",
+            "relation": "Requires",
+            "tail": "glade_decisions:GladeDecisions.version_pin",
+            "head": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+          }
+        ],
+        "removed": [],
+        "unchanged": 20
+      }
+    }
+  },
+  "omissions": [
+    "positions are per stream",
+    "no cost or evidence comparison",
+    "record ids are per stream, so nothing is matched by id",
+    "the order of an assertion's references is not compared",
+    "perspectives only one side carries: neighbourhood-async_witness, neighbourhood-key_custody"
+  ]
+}

@@ -19,7 +19,7 @@ export {
   STREAMS_FORMAT, STREAM_FORMAT, STREAM_STATUSES,
   readStream, readStreamRecord, readStreamsIndex,
   type GyldStream, type GyldStreamsIndex, type StreamLens, type StreamOverlay,
-  type StreamQuestion, type StreamStatus, type StreamTiers,
+  type StreamQuestion, type StreamRebuild, type StreamStatus, type StreamTiers,
 } from './streams';
 
 export {
@@ -48,6 +48,8 @@ export {
 
 export {
   STREAM_DIFF_FORMAT, CORRESPONDENCE_BY_QUALIFIED_SLOT, readStreamDiff,
-  type AssertionDiff, type AssertionDiffEntry, type DiffSide,
-  type EffectiveStatusChange, type GyldStreamDiff, type OccurrenceDiff,
+  type AssertionDiff, type AssertionDiffEntry, type DiffSide, type LensDiff,
+  type LensEdgeRef, type EffectiveStatusChange, type GyldStreamDiff,
+  type OccurrenceDiff, type OccurredDiff, type QuestionDiff, type RulingDiff,
+  type RulingDiffEntry, type SelectionChange,
 } from './streamDiff';

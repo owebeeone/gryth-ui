@@ -11,8 +11,8 @@ import type { GyldStreamsCensus } from '../store/state';
 import { StreamManager } from './StreamManager';
 import { streamsTabTaps } from './streamsTabTaps';
 import {
-  DRAFT_EMPTY, HOST_COMMAND, StreamOperation, draftCommand, draftShapeFaults,
-  operationNamed,
+  DRAFT_EMPTY, HOST_COMMAND, StreamOperation, diffCommand, draftCommand,
+  draftShapeFaults, operationNamed, rebuildCommand,
 } from './operations';
 import { parentChoices, streamRows } from './tree';
 import { mountDesk, wireSink } from '../../test/mount';
@@ -77,10 +77,14 @@ describe('the stream tree is the census, and the census is the whole of it', () 
     expect(rows.map((row) => row.id).sort()).toEqual(index.streams.map((s) => s.id).sort());
     // the chain of the fixture: base, then its link, then the link over that,
     // and the architecture lineage as a root of its own
+    // stream A links the base, stream B links A, and fork-a was taken FROM
+    // stream A: the tree is provenance, so the fork hangs off its parent even
+    // though its declaration chain follows the base.
     expect(rows).toEqual([
       { id: 'base', depth: '0' },
       { id: 'stream-a', depth: '1' },
       { id: 'stream-b', depth: '2' },
+      { id: 'fork-a', depth: '2' },
       { id: 'architecture', depth: '0' },
     ]);
   });
@@ -93,8 +97,9 @@ describe('the stream tree is the census, and the census is the whole of it', () 
       loadedAt: 'now',
     };
     const rows = streamRows(census);
-    expect(rows.map((row) => row.id)).toEqual(['base', 'stream-a', 'stream-b', 'architecture']);
-    expect(rows.map((row) => row.depth)).toEqual([0, 1, 2, 0]);
+    expect(rows.map((row) => row.id))
+      .toEqual(['base', 'stream-a', 'stream-b', 'fork-a', 'architecture']);
+    expect(rows.map((row) => row.depth)).toEqual([0, 1, 2, 2, 0]);
     expect(parentChoices(census)).toEqual(index.streams.map((s) => s.id));
     // a census that is not ready is not a tree of nothing; it is no tree
     expect(streamRows({ status: 'loading' })).toEqual([]);
@@ -141,6 +146,36 @@ describe('parent moved since build', () => {
     const markup = manager.render();
     expect(markup).toContain('parent moved since build');
     expect(markup.match(/parent moved since build/g)).toHaveLength(1);
+  });
+
+  it('takes the record\'s own answer when a rebuild wrote one', () => {
+    // A record a rebuild wrote carries `rebuilt_from`, with the host's own
+    // comparison in it. That answer wins over this window's: the host compared
+    // what it had in front of it, and the digests in the census can say
+    // otherwise without either being wrong.
+    const rebuilt = structuredClone(streamsFixture) as typeof streamsFixture;
+    const record = rebuilt.streams.find((entry) => entry.id === 'stream-b')!;
+    (record as Record<string, unknown>).rebuilt_from = {
+      bundle: 'decision-streams-v5',
+      built: '2026-09-13T05:00:00Z',
+      snapshot: record.snapshot,
+      parent_snapshot: record.parent_snapshot,
+      changed: false,
+      parent_moved: true,
+    };
+    const rows = streamRows({
+      status: 'ready',
+      streams: readStreamsIndex(rebuilt).streams
+        .map((entry) => ({ id: entry.id, rootIndex: 0, record: entry })),
+      collisions: [],
+      loadedAt: 'now',
+    });
+    const b = rows.find((row) => row.id === 'stream-b')!;
+    expect(b.parentMoved).toBe(true);
+    expect(b.parentMovedFromRecord).toBe(true);
+    // every digest still agrees, so the comparison alone would have said no
+    expect(rows.filter((row) => row.parentMoved).map((row) => row.id)).toEqual(['stream-b']);
+    expect(rows.every((row) => row.id === 'stream-b' || !row.parentMovedFromRecord)).toBe(true);
   });
 
   it('claims no comparison when the parent is not in this set', () => {
@@ -213,7 +248,7 @@ describe('each row says what that stream\'s validation says', () => {
     expect(markup).toContain('2 findings');
     expect(markup).toContain('PREREQUISITE_OPEN, GATE_NOT_OCCURRED');
     // the other three streams are untouched: a finding belongs to its stream
-    expect(markup.match(/data-validation="ok"/g)).toHaveLength(3);
+    expect(markup.match(/data-validation="ok"/g)).toHaveLength(index.streams.length - 1);
   });
 
   it('says a stream has no validation file rather than passing it for valid', async () => {
@@ -233,13 +268,23 @@ describe('each row says what that stream\'s validation says', () => {
 
 describe('the fork and link forms export a command and submit nothing', () => {
   it('spells the command exactly as the host documents it', () => {
-    expect(StreamOperation.FORK.command('base', 'keys-2026-09-13')).toBe(
-      'PYTHONPATH=src:. python3 -B scripts/emit_decision_streams.py'
-      + ' fork base keys-2026-09-13 --output NEW_DIRECTORY',
+    expect(StreamOperation.FORK.command('stream-a', 'fork-b')).toBe(
+      'PYTHONPATH=src:. python3 -B scripts/manage_decision_streams.py'
+      + ' fork stream-a fork-b',
     );
-    expect(StreamOperation.LINK.command('stream-a', 'stream-c')).toBe(
-      'PYTHONPATH=src:. python3 -B scripts/emit_decision_streams.py'
-      + ' link stream-a stream-c --output NEW_DIRECTORY',
+    expect(StreamOperation.LINK.command('stream-b', 'link-b')).toBe(
+      'PYTHONPATH=src:. python3 -B scripts/manage_decision_streams.py'
+      + ' link stream-b link-b',
+    );
+    // the other two verbs of the same host, which the decide and diff windows
+    // offer: a rebuild takes a bundle and an output, a diff takes a pair
+    expect(rebuildCommand()).toBe(
+      'PYTHONPATH=src:. python3 -B scripts/manage_decision_streams.py'
+      + ' rebuild --bundle BUNDLE_DIRECTORY --output NEW_DIRECTORY',
+    );
+    expect(diffCommand('base', 'stream-a')).toBe(
+      'PYTHONPATH=src:. python3 -B scripts/manage_decision_streams.py'
+      + ' diff base stream-a --bundle BUNDLE_DIRECTORY',
     );
     expect(StreamOperation.FORK.command('base', 'x').startsWith(HOST_COMMAND)).toBe(true);
     expect(operationNamed('fork')).toBe(StreamOperation.FORK);

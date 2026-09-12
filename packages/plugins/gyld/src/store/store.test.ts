@@ -49,7 +49,7 @@ describe('StaticStore', () => {
 
   it('lists perspectives from an autoindex page, and only the lens files', async () => {
     const store = new StaticStore(BASE_URL, { fetch: fakeFetch(new FakeBundle()) });
-    expect(await store.listPerspectives('base')).toEqual(['branch', 'decisions', 'status', 'tiers']);
+    expect(await store.listPerspectives('base')).toEqual(['branch', 'decisions', 'neighbourhood-key_custody', 'status', 'tiers']);
   });
 
   it('reports NOT ENUMERABLE, not an empty list, when the host has no listing', async () => {
@@ -97,9 +97,7 @@ describe('DirectoryStore', () => {
 
   it('lists perspectives from the real directory listing', async () => {
     const store = new DirectoryStore(fakeDirectory(new FakeBundle()));
-    expect(await store.listPerspectives('base')).toEqual([
-      'branch', 'decisions', 'status', 'tiers',
-    ]);
+    expect(await store.listPerspectives('base')).toEqual(['branch', 'decisions', 'neighbourhood-key_custody', 'status', 'tiers']);
   });
 
   it('reports an empty list, not a failure, for a stream with no lenses', async () => {
@@ -193,13 +191,16 @@ describe('GyldStoreTap census and status', () => {
     await expect.poll(() => (census.get() as GyldStreamsCensus).status).toBe('ready');
     const ready = census.get() as GyldStreamsCensus & { status: 'ready' };
     expect(ready.streams.map((s) => s.id)).toEqual([
-      'base', 'stream-a', 'stream-b', 'architecture',
+      'base', 'stream-a', 'stream-b', 'fork-a', 'architecture',
     ]);
     expect(ready.streams[0].record.lineage).toBe('glade-decision-graph');
-    expect(ready.streams[3].record.lineage).toBe('glade-architecture-candidate-1');
-    // the base record carries no manifest, so the store is asked what is there
-    expect(ready.streams[0].perspectives).toEqual(['branch', 'decisions', 'status', 'tiers']);
-    expect('notEmitted' in ready.streams[0]).toBe(false);
+    expect(ready.streams[4].record.lineage).toBe('glade-architecture-candidate-1');
+    // every record of this run carries a manifest, so the perspectives are the
+    // manifest's own, in its order, and the entries it marks not emitted are
+    // carried beside them with the host's reason
+    expect(ready.streams[0].perspectives).toEqual(['decisions', 'tiers', 'status', 'branch', 'neighbourhood-key_custody']);
+    expect(ready.streams[0].notEmitted?.map((entry) => entry.perspective))
+      .toEqual(['neighbourhood', 'diff', 'full']);
     expect(ready.collisions).toEqual([]);
   });
 
@@ -209,7 +210,7 @@ describe('GyldStoreTap census and status', () => {
     const census = readHome(GYLD_STREAMS);
     await expect.poll(() => (census.get() as GyldStreamsCensus).status).toBe('ready');
     const ready = census.get() as GyldStreamsCensus & { status: 'ready' };
-    const architecture = ready.streams[3];
+    const architecture = ready.streams[4];
     // nine perspectives are named in the manifest; only two are in this
     // fixture's lenses directory, so a listing could not have produced them
     expect(architecture.perspectives).toHaveLength(9);
@@ -247,7 +248,8 @@ describe('GyldStoreTap census and status', () => {
     await expect.poll(() => (census.get() as GyldStreamsCensus).status).toBe('ready');
     const status = readHome(GYLD_STORE_STATUS).get() as GyldRootStatus[];
     expect(status[0].status).toBe('ready');
-    expect(status[0].streams).toEqual(['base', 'stream-a', 'stream-b', 'architecture']);
+    expect(status[0].streams)
+      .toEqual(['base', 'stream-a', 'stream-b', 'fork-a', 'architecture']);
   });
 
   it('says loudly that a directory root has no handle rather than reading nothing', async () => {
@@ -279,7 +281,7 @@ describe('GyldStoreTap per destination resolution', () => {
     expect(value.projection?.occurrences).toHaveLength(75);
     expect(value.decideNow?.questions).toHaveLength(24);
     expect(value.validation?.ok).toBe(true);
-    expect(value.perspectives).toEqual(['branch', 'decisions', 'status', 'tiers']);
+    expect(value.perspectives).toEqual(['decisions', 'tiers', 'status', 'branch', 'neighbourhood-key_custody']);
     expect('faults' in value).toBe(false);
   });
 
@@ -380,24 +382,28 @@ describe('GyldStoreTap watch loop', () => {
   });
 
   it('re-reads on a tick and publishes only when the bytes changed', async () => {
-    const clock = new FakeClock();
     const image = new FakeBundle();
-    const { tab } = harness({ set: STATIC_SET, clock, bundle: image });
+    const { tab, tap } = harness({ set: STATIC_SET, bundle: image });
     const view = tab('tick', 'base');
     const bundle = view.read(GYLD_BUNDLE);
     await expect.poll(() => (bundle.get() as GyldBundle).status).toBe('ok');
 
+    // AWAITED, not ticked. A tick is fire and forget, and the tap drops one
+    // that arrives while the previous is still in flight, which is right at
+    // runtime and a race in a test that then waits for a re-read that never
+    // ran. That the TIMER calls this is what the two tests either side of
+    // this one assert; what this one is about is what a pass does.
     const before = bundle.get() as GyldBundle;
     image.reads.length = 0;
-    clock.tick();
-    await expect.poll(() => image.reads.length > 0).toBe(true);
-    await expect.poll(() => (bundle.get() as GyldBundle).status).toBe('ok');
+    await tap.pollOnce();
+    expect(image.reads.length).toBeGreaterThan(0);
+    expect((bundle.get() as GyldBundle).status).toBe('ok');
     // unchanged bytes: the very same value object, so no consumer re-renders
     expect(bundle.get()).toBe(before);
 
     const rebuilt = JSON.parse(image.read('streams/base/validation.json')) as Record<string, unknown>;
     image.write('streams/base/validation.json', { ...rebuilt, built: '2026-09-14T00:00:00Z' });
-    clock.tick();
+    await tap.pollOnce();
     await expect.poll(
       () => (bundle.get() as GyldBundle).validation?.built,
     ).toBe('2026-09-14T00:00:00Z');

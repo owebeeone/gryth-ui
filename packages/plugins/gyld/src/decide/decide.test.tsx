@@ -371,7 +371,7 @@ describe('the window', () => {
     expect(markup).toContain('overlay glade_decisions_stream_a.GladeDecisionsStreamA over base');
     expect(markup).toContain(`value="${VERSION_PIN}"`);
     expect(markup).toContain('answerable now');
-    expect(markup).toContain(rebuildCommand('stream-a'));
+    expect(markup).toContain(rebuildCommand());
     expect(markup).toContain('This stage submits nothing');
     // no question chosen yet, so the export is refused and nothing is composed
     expect(/<button[^>]*class="gyld-answer-export"[^>]*disabled/.test(markup)).toBe(true);

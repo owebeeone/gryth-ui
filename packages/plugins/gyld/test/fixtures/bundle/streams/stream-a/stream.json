@@ -13,7 +13,7 @@
   "snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "stream-a@1",
-    "digest": "b6fcbfdafc66826fb8a110138605201b85d7814753cabc6a924be415221e4332"
+    "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
   },
   "overlay": {
     "module": "glade_decisions_stream_a",
@@ -24,7 +24,7 @@
     "base",
     "stream-a"
   ],
-  "built": "2026-09-12T18:08:24Z",
+  "built": "2026-09-12T18:47:13Z",
   "principal": "gianni",
   "note": "version pin and lifecycle ruled, the bulk gate met, one question added",
   "status": "ok",
@@ -275,5 +275,106 @@
       "glade_decisions:GladeDecisions.relay_posture",
       "glade_decisions:GladeDecisions.traffic_budget_numbers"
     ]
-  }
+  },
+  "lenses": [
+    {
+      "perspective": "decisions",
+      "emitted": true,
+      "file": "streams/stream-a/lenses/decisions.lens.json",
+      "stream": "stream-a",
+      "relations": [
+        "Requires",
+        "Implies",
+        "GatedBy"
+      ],
+      "family": null,
+      "parameter": null,
+      "reason": null
+    },
+    {
+      "perspective": "tiers",
+      "emitted": true,
+      "file": "streams/stream-a/lenses/tiers.lens.json",
+      "stream": "stream-a",
+      "relations": [
+        "Requires"
+      ],
+      "family": null,
+      "parameter": null,
+      "reason": null
+    },
+    {
+      "perspective": "status",
+      "emitted": true,
+      "file": "streams/stream-a/lenses/status.lens.json",
+      "stream": "stream-a",
+      "relations": [
+        "Requires",
+        "Implies",
+        "GatedBy"
+      ],
+      "family": null,
+      "parameter": null,
+      "reason": null
+    },
+    {
+      "perspective": "branch",
+      "emitted": true,
+      "file": "streams/stream-a/lenses/branch.lens.json",
+      "stream": "stream-a",
+      "relations": [
+        "Offers",
+        "Implies"
+      ],
+      "family": null,
+      "parameter": null,
+      "reason": null
+    },
+    {
+      "perspective": "neighbourhood-async_witness",
+      "emitted": true,
+      "file": "streams/stream-a/lenses/neighbourhood-async_witness.lens.json",
+      "stream": "stream-a",
+      "relations": [
+        "Requires",
+        "Implies",
+        "GatedBy"
+      ],
+      "family": "neighbourhood",
+      "parameter": {
+        "question": "glade_decisions:GladeDecisions.async_witness"
+      },
+      "reason": null
+    },
+    {
+      "perspective": "neighbourhood",
+      "emitted": false,
+      "file": null,
+      "stream": "stream-a",
+      "relations": null,
+      "family": null,
+      "parameter": null,
+      "reason": "the family is parameterised by question; this stream emits the one member named beside this entry, and another question is another build or a browser preview"
+    },
+    {
+      "perspective": "diff",
+      "emitted": false,
+      "file": null,
+      "stream": "stream-a",
+      "relations": null,
+      "family": null,
+      "parameter": null,
+      "reason": "a diff is between two streams and not inside one; scripts/manage_decision_streams.py writes it as diffs/<left>..<right>.json"
+    },
+    {
+      "perspective": "full",
+      "emitted": false,
+      "file": null,
+      "stream": "stream-a",
+      "relations": null,
+      "family": null,
+      "parameter": null,
+      "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
+    }
+  ]
 }

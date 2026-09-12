@@ -49,7 +49,9 @@ describe('gyld.browser', () => {
     expect(markup).toContain('no lens file for that stream and perspective');
     expect(markup).toContain('streams/base/lenses/neighbourhood.lens.json');
     // and it says what the stream DID emit, rather than drawing something else
-    expect(markup).toContain('emitted perspectives: branch, decisions, status, tiers');
+    expect(markup).toContain(
+      'emitted perspectives: decisions, tiers, status, branch, neighbourhood-key_custody',
+    );
     expect(markup).not.toContain('gyld-lens-svg');
   });
 

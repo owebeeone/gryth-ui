@@ -12,10 +12,11 @@ import react from '@vitejs/plugin-react'
 // `@grythjs/plugin-gyld`'s StaticStore reads a bundle over plain HTTP: one
 // GET per bundle-relative path, plus — for a stream whose record carries no
 // `lenses` manifest — a GET of the lenses DIRECTORY, whose autoindex anchors
-// it parses for the `*.lens.json` names. The emitted `base` stream has no
-// manifest, so a host that serves files and refuses listings would leave the
-// perspective picker empty. This middleware therefore does both, exactly as
-// `python3 -m http.server` over the bundle would.
+// it parses for the `*.lens.json` names. Every record of the current run does
+// carry a manifest, but a bundle from a host that writes none would leave the
+// perspective picker empty against a server that refuses listings. This
+// middleware therefore does both, exactly as `python3 -m http.server` over the
+// bundle would.
 //
 // The bundle itself is NOT in this repository: it is Gyld output, it is large,
 // and it lives in the gyld workspace. Nothing is copied in; the directory is
@@ -31,7 +32,7 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
 /** The sibling gwz workspace member that emits the bundle, relative to this
  *  repository's root. A documented default, so `pnpm dev` in the usual
  *  workspace layout needs no environment at all. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v3'
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v5'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.json': 'application/json; charset=utf-8',

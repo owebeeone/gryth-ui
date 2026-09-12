@@ -13,14 +13,21 @@
 // third kind of stream is one more instance rather than a third branch at
 // every call site.
 
-/** How the Gyld host is run: the documented invocation of the example host
- *  (`gyld/examples/README.md`, "The base stream bundle"). */
-export const HOST_COMMAND = 'PYTHONPATH=src:. python3 -B scripts/emit_decision_streams.py';
+/** How the Gyld stream manager host is run: the documented invocation of
+ *  `scripts/manage_decision_streams.py` (`gyld/examples/README.md`, "Fork,
+ *  link, rebuild and diff"). It is a sibling of the emit host rather than a
+ *  subcommand layer over it, and it owns the four verbs of sections 6.3, 6.4
+ *  and 7.6. */
+export const HOST_COMMAND =
+  'PYTHONPATH=src:. python3 -B scripts/manage_decision_streams.py';
 
 /** The output directory is the OWNER's to choose, and Gyld never overwrites
- *  one, so the command carries a placeholder rather than a path this window
- *  invented. */
+ *  one, so a command that takes one carries a placeholder rather than a path
+ *  this window invented. */
 export const OUTPUT_PLACEHOLDER = 'NEW_DIRECTORY';
+
+/** The same for the bundle a rebuild or a diff reads from. */
+export const BUNDLE_PLACEHOLDER = 'BUNDLE_DIRECTORY';
 
 export class StreamOperation {
   private constructor(
@@ -50,10 +57,12 @@ export class StreamOperation {
     + 'questions are inherited live and a rebuild re-captures the chain',
   );
 
-  /** The exact command line for this operation. `parent` and `name` are the
-   *  two operands the host's subcommand takes, in that order. */
+  /** The exact command line for this operation. `PARENT NEW` are the two
+   *  operands the verb takes, in that order, and it takes nothing else: fork
+   *  and link write an overlay module beside the others rather than a bundle,
+   *  so there is no output directory to name. */
   command(parent: string, name: string): string {
-    return `${HOST_COMMAND} ${this.verb} ${parent} ${name} --output ${OUTPUT_PLACEHOLDER}`;
+    return `${HOST_COMMAND} ${this.verb} ${parent} ${name}`;
   }
 }
 
@@ -62,16 +71,28 @@ export const STREAM_OPERATIONS: readonly StreamOperation[] = Object.freeze([
 ]);
 
 /**
- * The command that re-captures one stream after its overlay text changed, or
- * after its parent moved (spec section 6.4: "a stream whose parent moved, or
+ * The command that re-captures a bundle after an overlay text changed, or
+ * after a parent moved (spec section 6.4: "a stream whose parent moved, or
  * whose overlay text was edited outside the UI, is rebuilt with `rebuild`").
  *
- * It is not a StreamOperation: it takes one stream rather than a parent and a
- * new name, and it makes no stream. It is here because the host and the output
- * placeholder are named here once.
+ * It is not a StreamOperation: it takes a bundle rather than a parent and a
+ * new name, it re-captures every stream that bundle lists rather than one, and
+ * it makes no stream. It is here because the host and the two placeholders are
+ * named here once.
  */
-export function rebuildCommand(stream: string): string {
-  return `${HOST_COMMAND} rebuild ${stream} --output ${OUTPUT_PLACEHOLDER}`;
+export function rebuildCommand(): string {
+  return `${HOST_COMMAND} rebuild --bundle ${BUNDLE_PLACEHOLDER} `
+    + `--output ${OUTPUT_PLACEHOLDER}`;
+}
+
+/**
+ * The command that writes the diff between two streams into a bundle's own
+ * `diffs/` directory (`diff LEFT RIGHT --bundle DIR`). The diff window offers
+ * it for a pair the bundle does not carry: the UI never computes a diff (spec
+ * section 6.7), so what it can do about a missing one is say how to make it.
+ */
+export function diffCommand(left: string, right: string): string {
+  return `${HOST_COMMAND} diff ${left} ${right} --bundle ${BUNDLE_PLACEHOLDER}`;
 }
 
 /** The operation a picker's value names, or undefined when it names none. A

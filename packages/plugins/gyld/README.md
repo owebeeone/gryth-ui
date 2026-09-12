@@ -57,8 +57,9 @@ digest, the digest it was built against, its chain, its overlay module and what
 its own `validation.json` says, read through a child context per row. A stream
 whose pinned parent digest is not the digest its parent carries now is marked
 `parent moved since build`, which is the one comparison the specification
-defines across two records; the rebuild that would fix it is Gyld's, not this
-window's. Clicking a row shows that stream in the browser this window is wired
+defines across two records; a record a rebuild wrote answers that itself, in
+`rebuilt_from`, and then the record's answer is what the row shows and says so.
+The rebuild that would fix it is Gyld's, not this window's. Clicking a row shows that stream in the browser this window is wired
 to, or opens one when it is standalone. Under the tree, a form composes a fork
 or a link from a kind, a parent and a name, and the Export button writes the
 exact command line that makes it. Nothing is submitted in this stage: the owner
@@ -105,7 +106,7 @@ no bundle root. Add the root again after a reload.
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is
 copied into this repository: the files are about five megabytes and they belong
 to the Gyld workspace. By default the mount points at
-`../../gyld-wz/gyld/artifacts/decision-streams-v3` relative to this repository,
+`../../gyld-wz/gyld/artifacts/decision-streams-v5` relative to this repository,
 which is where the sibling gwz member emits them. Point it somewhere else with
 an environment variable:
 
@@ -121,13 +122,13 @@ to parsing a plain directory autoindex, exactly as it would against
 not there answers 404 rather than falling through to the application, so an
 absent bundle file reads as absent instead of arriving as `index.html`.
 
-The default names `decision-streams-v3` and not an earlier run for a reason:
+The default names `decision-streams-v5` and not an earlier run for a reason:
 from that run every lens node carries the point size and the justification the
 host drew it with, and this package reads both rather than guessing a font. An
 older bundle has no `fontsize` on its nodes, so its lens files report the
 missing field instead of drawing.
 
-The committed bundle holds four streams over two lineages:
+The committed bundle holds five streams over two lineages:
 
 - `base`, lineage `glade-decision-graph` revision v1. Twenty four questions,
   four roots, six tiers, a projection, a decide-now list and a validation
@@ -142,6 +143,9 @@ The committed bundle holds four streams over two lineages:
 - `stream-b`, a link over `stream-a` that reopens one of A's answers and takes
   the other alternative. Its decide-now list carries four rulings, one of them
   marked not live.
+- `fork-a`, a flattening fork of `stream-a`: its parent is stream A and its
+  chain runs straight to the base, because a fork restates what still stands
+  and follows the parent no further.
 - `architecture`, lineage `glade-architecture-candidate-1` revision v3. Its
   record does carry a `lenses` manifest, listing nine emitted perspectives and
   one, `full`, that the host declined to emit with its reason. The picker shows
@@ -198,11 +202,12 @@ The stream manager's new-stream form takes a kind, a parent and a name. Section
 `--note` is a flag on the run rather than an operand of the subcommand, and the
 window will not guess how the two are spelled together.
 
-The exported command names the host's `fork` and `link` subcommands, which are
-Gyld-side step 2.2 and are not in `emit_decision_streams.py` yet. The spelling
-here is the one the plan states, with the documented `PYTHONPATH=src:. python3
--B` prefix and a placeholder output directory, and it is asserted by a test so
-that a change to it is a deliberate edit.
+The exported commands are `scripts/manage_decision_streams.py`'s four verbs as
+that host documents them: `fork PARENT NEW`, `link PARENT NEW`, `rebuild
+--bundle DIR --output NEW` and `diff LEFT RIGHT --bundle DIR`. The bundle and
+output directories are placeholders, because they are the owner's to choose and
+Gyld never overwrites one. Each string is asserted by a test, so a change to
+one is a deliberate edit.
 
 `pnpm build` prints a chunk size advisory: the single application chunk is over
 Vite's 500 kB default warning threshold. It is an advisory about code splitting
