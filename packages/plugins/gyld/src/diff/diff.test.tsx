@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
+import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
 import { readLens, readStreamDiff } from '../contract';
-import { GYLD_DIFF, GYLD_LENS, GYLD_STREAMS } from '../grips';
+import { GYLD_DIFF, GYLD_DIFF_SLOT_TAP, GYLD_LENS, GYLD_STREAMS } from '../grips';
+import { recordParams } from '../browser/links';
 import type { GyldLensState, GyldStreamsCensus, GyldValue } from '../store/state';
 import { diffPath } from '../store/layout';
 import { diffCommand } from '../streams/operations';
@@ -224,5 +227,74 @@ describe('the lists are the emitted diff, read out', () => {
     const value = window.diff();
     expect(value?.status).toBe('unset');
     expect(window.render()).toContain('this window has no pair of streams yet');
+  });
+});
+
+describe('detail on either side', () => {
+  /** The Detail button of one pane, as rendered, or '' when there is none. */
+  const buttonIn = (markup: string, pane: DiffPane): string => {
+    const section = new RegExp(
+      `<section[^>]*data-pane="${pane.name}"[\\s\\S]*?</header>`,
+    ).exec(markup);
+    return /<button[^>]*class="gyld-open-detail"[^>]*>/.exec(section?.[0] ?? '')?.[0] ?? '';
+  };
+
+  it('refuses both buttons while no record is in hand', async () => {
+    const window = mount('df-detail-none', {
+      left: 'base', right: 'stream-a', perspective: 'decisions',
+    });
+    await settled(window.census, (value) => value?.status === 'ready');
+    const markup = window.render();
+    for (const pane of DIFF_PANES) {
+      expect(buttonIn(markup, pane)).toContain('disabled');
+      expect(buttonIn(markup, pane)).toContain('no record in hand');
+    }
+  });
+
+  it('opens the record in hand on each side, as that side\'s own stream', async () => {
+    const desk = mountDesk();
+    desk.ctx.getGripHomeContext().registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, {
+      initial: () => {},
+    }));
+    const params = { left: 'base', right: 'stream-a', perspective: 'decisions' };
+    const tab = desk.tab('df-detail', diffTabTaps('df-detail', params));
+    await settled(
+      () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
+      (value) => value?.status === 'ready',
+    );
+    (tab.read(GYLD_DIFF_SLOT_TAP).get() as AtomTapHandle<string>).set(VERSION_PIN);
+    const markup = tab.render(<DiffWindow tabId="df-detail" params={params} />);
+    // one button per side, each naming ITS pane's stream and the one slot: the
+    // slot is the only thing that means the same record in two streams
+    expect(buttonIn(markup, DiffPane.LEFT)).not.toContain('disabled');
+    expect(buttonIn(markup, DiffPane.LEFT)).toContain('data-stream="base"');
+    expect(buttonIn(markup, DiffPane.RIGHT)).toContain('data-stream="stream-a"');
+    for (const pane of DIFF_PANES) {
+      expect(buttonIn(markup, pane)).toContain(`data-slot="${VERSION_PIN}"`);
+    }
+    // and the link each one writes is the standalone detail link, no more
+    expect(recordParams('stream-a', VERSION_PIN))
+      .toEqual({ stream: 'stream-a', ref: VERSION_PIN });
+  });
+
+  it('offers the side that does not draw the record too, and says it does not', async () => {
+    const desk = mountDesk();
+    desk.ctx.getGripHomeContext().registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, {
+      initial: () => {},
+    }));
+    const params = { left: 'base', right: 'stream-a', perspective: 'decisions' };
+    const tab = desk.tab('df-detail-added', diffTabTaps('df-detail-added', params));
+    await settled(
+      () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
+      (value) => value?.status === 'ready',
+    );
+    // a question stream A added: the base has no such record at all
+    (tab.read(GYLD_DIFF_SLOT_TAP).get() as AtomTapHandle<string>).set(PIN_AUDIT);
+    const markup = tab.render(<DiffWindow tabId="df-detail-added" params={params} />);
+    expect(diff.occurrences.added).toContain(PIN_AUDIT);
+    expect(buttonIn(markup, DiffPane.LEFT)).toContain(`data-slot="${PIN_AUDIT}"`);
+    // the pane says the picture does not draw it; the detail window it opens
+    // will say the stream carries no such record, which is the same fact
+    expect(markup).toContain('does not draw it');
   });
 });

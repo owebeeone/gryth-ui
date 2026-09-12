@@ -1,5 +1,5 @@
 import { GripProvider, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
-import { grok, type ToolViewProps } from '@grythjs/plugin-api';
+import { DESKTOP_OPEN_TOOL, grok, type ToolViewProps } from '@grythjs/plugin-api';
 import type {
   AssertionDiffEntry, GyldStreamDiff, LensEdgeRef, RulingDiffEntry,
 } from '../contract';
@@ -8,9 +8,11 @@ import {
   GYLD_DIFF, GYLD_DIFF_SLOT, GYLD_DIFF_SLOT_TAP, GYLD_LENS, GYLD_SET, GYLD_STREAMS,
 } from '../grips';
 import { SetPicker } from '../browser/SetPicker';
+import { recordParams } from '../browser/links';
 import { useKeyedContext } from '../contexts';
 import { LensView } from '../lens/LensView';
 import { diffCommand } from '../streams/operations';
+import { GYLD_DETAIL_TOOL } from '../tools';
 import type { GyldValue } from '../store/state';
 import { paneTabTaps } from './diffTabTaps';
 import { DIFF_PANES, correspondenceHighlight, drawsSlot, type DiffPane } from './panes';
@@ -46,6 +48,44 @@ function Pane({ pane, tabId }: { pane: DiffPane; tabId: string }) {
   );
 }
 
+/**
+ * The record in hand, opened on THIS side's stream, in a window of its own.
+ *
+ * Standalone rather than wired, and the reason is the desktop's: it holds one
+ * sink per (source tab, tool), so a diff window cannot have two live detail
+ * windows following it, one per side. A snapshot per side is what is available
+ * and it is also what a comparison wants: two windows that stay on the record
+ * they were opened on while the hand moves on. A side whose picture does not
+ * draw the record still offers the button: the record can be in the other
+ * stream only, and the detail window says that itself.
+ */
+function PaneDetail({ pane, stream, slot }: {
+  pane: DiffPane;
+  stream: string;
+  slot: string;
+}) {
+  const openTool = useGrip(DESKTOP_OPEN_TOOL);
+  const why = slot === ''
+    ? 'no record in hand: pick one in either picture'
+    : `${slot} as ${pane.title.toLowerCase()} stream ${stream === '' ? 'none' : stream} `
+      + 'has it, in a window of its own';
+  return (
+    <button
+      type="button"
+      className="gyld-open-detail"
+      data-stream={stream}
+      data-slot={slot}
+      disabled={openTool === undefined || slot === '' || stream === ''}
+      title={why}
+      onClick={() => openTool?.({
+        toolId: GYLD_DETAIL_TOOL, params: recordParams(stream, slot),
+      })}
+    >
+      Detail
+    </button>
+  );
+}
+
 /** Inside the pane's own context: its lens, and the shared slot it lights up.
  *  The slot atom is the WINDOW's, resolved through the graph because the pane
  *  seeds none of its own, so both panes read and write the one value. */
@@ -65,6 +105,7 @@ function PaneFigure({ pane, tabId }: { pane: DiffPane; tabId: string }) {
             {drawsSlot(lens, slot) ? 'draws the record in hand' : 'does not draw it'}
           </span>
         )}
+        <PaneDetail pane={pane} stream={stream} slot={slot} />
       </header>
       <LensView
         scope={`${tabId}-${pane.name}`}

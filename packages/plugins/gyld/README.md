@@ -73,7 +73,12 @@ selections, rulings added, removed, retired and restored, triggers recorded as
 occurred, assertions, what this perspective's picture gained and lost, and the
 diff's own omissions. A pair the bundle has not compared reads as absent, with
 the command that would write it, because this window never compares two
-bundles itself.
+bundles itself. Each pane carries a Detail button that opens the record in hand
+on that pane's own stream, so the same slot can be read as the left stream has
+it beside the right. Those windows are standalone rather than wired: the
+desktop holds one sink per source tab and tool, so a diff window cannot have
+two detail windows following it live, and a window that stays on the record it
+was opened on is what a side by side reading wants anyway.
 
 `gyld.streams` is the stream manager. It draws the set's streams as the tree
 their `parent` fields make, each row with its kind, lineage, revision, snapshot
