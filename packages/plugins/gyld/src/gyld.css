@@ -1,0 +1,247 @@
+/* @grythjs/plugin-gyld: Phase 0 placeholder chrome only. The lens view,
+   legend, omission strip and provenance footer arrive in step 1.3. */
+
+.gyld-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 13px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-placeholder h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gyld-placeholder dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.gyld-placeholder dt {
+  opacity: 0.7;
+}
+
+.gyld-placeholder dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.gyld-unset {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.gyld-note {
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* The lens view (step 1.3). The picture is the EMITTED geometry; these rules
+   only say how a dimmed, selected or hovered piece of it looks, and never
+   move anything. */
+
+.gyld-lens {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  font: 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.gyld-lens-empty {
+  padding: 16px;
+  gap: 8px;
+}
+
+.gyld-lens-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.gyld-lens-title {
+  flex: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gyld-hide-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.8;
+}
+
+.gyld-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 6px 10px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.gyld-legend-edge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gyld-legend-off {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.gyld-legend-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.85;
+}
+
+.gyld-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.gyld-lens-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.gyld-lens-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.gyld-node rect {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.gyld-node-line {
+  font-family: Helvetica, ui-sans-serif, system-ui, sans-serif;
+  fill: currentColor;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.gyld-edge-label {
+  font-family: Helvetica, ui-sans-serif, system-ui, sans-serif;
+  pointer-events: none;
+}
+
+/* Dim and hide are the ONLY in-picture toggles (MDV-4): opacity changes, the
+   layout does not. */
+.gyld-edge-dim,
+.gyld-node-dim {
+  opacity: 0.16;
+}
+
+.gyld-node-selected rect,
+.gyld-node-hover rect {
+  stroke-width: 2.5;
+}
+
+.gyld-edge-selected path,
+.gyld-edge-hover path {
+  stroke-width: 3;
+}
+
+/* MDV-3: declared containment and a reading aid must not look alike. */
+.gyld-group rect {
+  fill: color-mix(in srgb, currentColor 4%, transparent);
+  vector-effect: non-scaling-stroke;
+}
+
+.gyld-group text {
+  fill: currentColor;
+  opacity: 0.75;
+}
+
+.gyld-group-aid rect {
+  stroke: color-mix(in srgb, currentColor 28%, transparent);
+  stroke-dasharray: 5 4;
+}
+
+.gyld-group-declared rect {
+  stroke: color-mix(in srgb, currentColor 45%, transparent);
+  stroke-width: 1.5;
+}
+
+.gyld-omissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 5px 10px;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  opacity: 0.75;
+  font-size: 11px;
+}
+
+.gyld-omissions li::before {
+  content: 'omits ';
+  opacity: 0.6;
+}
+
+.gyld-omission-window::before {
+  content: 'this window omits ';
+}
+
+.gyld-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 5px 10px;
+  border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.gyld-pan {
+  cursor: grabbing;
+}
+
+.gyld-fault {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.gyld-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 6px 10px;
+  font-size: 11px;
+  opacity: 0.75;
+}
