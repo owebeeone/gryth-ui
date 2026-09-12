@@ -21,6 +21,8 @@
     "@grythjs/plugin-chat": "workspace:*",
     "@grythjs/plugin-gwz": "workspace:*",
     "@grythjs/glade": "workspace:*",
+    "@wyredjs/plugin-wyred": "link:../../wyred-wz/wyred-ui/packages/plugin-wyred",
+    "@owebeeone/glial-runtime": "workspace:*",
     "@owebeeone/grip-core": "workspace:*",
     "@owebeeone/grip-react": "workspace:*",
     "react": "^19.1.1",

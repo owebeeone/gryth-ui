@@ -7,10 +7,23 @@ packages:
   # broke once nested packages (via glial-runtime's grip-core peer) needed it.
   - ../grip-core
   - ../grip-react
+  - ../glial
+  - ../glade-decl-ts
 
-# grip must be a singleton — force every resolution (including auto-installed
-# peers, e.g. glial-runtime's grip-core peer) onto the sibling gwz checkouts
-# instead of the published registry builds.
+# grip, glial and glade-decl must each be a singleton — force every resolution
+# (including auto-installed peers, e.g. glial-runtime's grip-core peer, and
+# transitive edges reached through the `file:` deps into glade-wz) onto the
+# sibling gwz checkouts instead of the published registry builds or a second
+# checkout of the same repo.
+#
+# glial in particular: before this, the root app resolved `link:../glial` (the
+# gryth-wz member) while every plugin resolved `file:../../glade-wz/glial` (a
+# DIFFERENT checkout of the SAME repo). Two copies of the client-side kernel
+# means two binder and instance registries and no shared state between the
+# shell's Glial surfaces and the plugins'. glade-decl forked the same way,
+# because glial reaches it through a relative `file:../glade-decl-ts`.
 overrides:
   "@owebeeone/grip-core": "workspace:*"
   "@owebeeone/grip-react": "workspace:*"
+  "@owebeeone/glial-runtime": "workspace:*"
+  "@owebeeone/glade-decl": "workspace:*"

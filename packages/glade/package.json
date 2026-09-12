@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",
-    "@owebeeone/glial-runtime": "file:../../../../glade-wz/glial",
+    "@owebeeone/glial-runtime": "workspace:*",
     "@owebeeone/glade-chat": "file:../../../../glade-wz/glade-chat",
     "@glade/client-ts": "file:../../../../glade-wz/glade/client-ts"
   },
