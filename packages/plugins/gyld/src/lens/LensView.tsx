@@ -1,18 +1,22 @@
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import type { GyldLensState } from '../store/state';
+import { effectiveSelection, pickOutcome } from '../browser/links';
+import type { GyldFocus } from '../focus';
 import {
+  GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_FOCUS_TAP,
   GYLD_LENS, GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_CAMERA_TAP, GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_HOVER,
   GYLD_TAB_HOVER_TAP, GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
 import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera, panBy,
-  toggleRelation, toggleSelected, wheelFactor, zoomAt,
+  toggleRelation, wheelFactor, zoomAt,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
 import { LABEL_FONT_SIZE, LABEL_LINE_HEIGHT, lensExtent } from './geometry';
 import {
-  buildScene, lensKeyOf, recordIdOf, type LensScene, type SceneEdge, type SceneNode,
+  buildScene, lensKeyOf, recordIdOf,
+  type LensScene, type SceneEdge, type SceneNode, type SceneSearch,
 } from './scene';
 
 // The lens view: a pure SVG redraw of `gyld.lens.v1`.
@@ -27,12 +31,16 @@ import {
 // render closure, because a drip notification is queued and a mouse can move
 // and release inside one cycle (CodingRules.md).
 
-function classOf(item: { dimmed: boolean; selected: boolean; hovered: boolean }, base: string) {
+function classOf(
+  item: { dimmed: boolean; selected: boolean; hovered: boolean; matched: boolean },
+  base: string,
+) {
   return [
     base,
     item.dimmed ? `${base}-dim` : '',
     item.selected ? `${base}-selected` : '',
     item.hovered ? `${base}-hover` : '',
+    item.matched ? `${base}-match` : '',
   ].filter((name) => name !== '').join(' ');
 }
 
@@ -245,26 +253,33 @@ function viewportOf(element: Element): { width: number; height: number; left: nu
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld' }: { scope?: string }) {
+export function LensView({ scope = 'gyld', search }: { scope?: string; search?: SceneSearch }) {
   const state = useGrip(GYLD_LENS);
   const camera = useGrip(GYLD_TAB_CAMERA) ?? CAMERA_UNFITTED;
   const drag = useGrip(GYLD_TAB_CAMERA_DRAG);
-  const selection = useGrip(GYLD_TAB_SELECTION) ?? NO_SELECTION;
+  const held = useGrip(GYLD_TAB_SELECTION) ?? NO_SELECTION;
   const hover = useGrip(GYLD_TAB_HOVER) ?? '';
   const dimmed = useGrip(GYLD_TAB_DIMMED) ?? NOTHING_DIMMED;
+  const stream = useGrip(GYLD_DEST_STREAM) ?? '';
+  const ref = useGrip(GYLD_DEST_REF) ?? '';
   const cameraTap = useGrip(GYLD_TAB_CAMERA_TAP) as AtomTapHandle<GyldCamera> | undefined;
   const dragTap = useGrip(GYLD_TAB_CAMERA_DRAG_TAP) as
     AtomTapHandle<GyldCameraDrag | undefined> | undefined;
   const selectionTap = useGrip(GYLD_TAB_SELECTION_TAP) as AtomTapHandle<GyldSelection> | undefined;
   const hoverTap = useGrip(GYLD_TAB_HOVER_TAP) as AtomTapHandle<string> | undefined;
   const dimmedTap = useGrip(GYLD_TAB_DIMMED_TAP) as AtomTapHandle<GyldDimmed> | undefined;
+  const refTap = useGrip(GYLD_DEST_REF_TAP) as AtomTapHandle<string> | undefined;
+  const focusTap = useGrip(GYLD_FOCUS_TAP) as AtomTapHandle<GyldFocus> | undefined;
 
   if (state?.status !== 'ok' || state.value === undefined) {
     return <LensAbsent state={state} />;
   }
   const lens = state.value;
   const key = lensKeyOf(lens);
-  const scene = buildScene(lens, { selection, hover, dimmed });
+  // A window opened on a focus record draws it selected without writing
+  // anything: the seeded ref IS the selection until the reader picks.
+  const selection = effectiveSelection(lens, held, ref);
+  const scene = buildScene(lens, { selection, hover, dimmed, search });
 
   const fitTo = (element: Element, force: boolean) => {
     const held = cameraTap?.get() ?? CAMERA_UNFITTED;
@@ -340,12 +355,21 @@ export function LensView({ scope = 'gyld' }: { scope?: string }) {
               hoverTap?.set(id);
             }
           }}
+          // One pick, three writes: this window's selection, the record this
+          // window is ON (what a wired sink resolves) and the shared focus
+          // every gyld window may follow (MDV-5). Each is read back through
+          // its handle, never through the render closure.
           onPick={(id, additive) => {
-            if (id === '') {
-              selectionTap?.set(NO_SELECTION);
-              return;
-            }
-            selectionTap?.set(toggleSelected(selectionTap.get() ?? NO_SELECTION, id, additive));
+            const outcome = pickOutcome(
+              lens,
+              effectiveSelection(lens, selectionTap?.get() ?? NO_SELECTION, refTap?.get() ?? ''),
+              stream,
+              id,
+              additive,
+            );
+            selectionTap?.set(outcome.selection);
+            refTap?.set(outcome.ref);
+            focusTap?.set(outcome.focus);
           }}
         />
       </div>

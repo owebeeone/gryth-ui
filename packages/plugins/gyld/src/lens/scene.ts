@@ -1,5 +1,6 @@
 import type { GyldLens, LensEdge, LensLegendEdge, LensLegendNode, LensNode } from '../contract';
-import type { GyldDimmed, GyldSelection } from './camera';
+import { NOTHING_DIMMED, type GyldDimmed, type GyldSelection } from './camera';
+import { NODE_FACETS, facetDims } from './facets';
 import {
   cornerRadius, decodeSpline, edgeStyle, groupBox, labelOrigin, lensExtent, nodeBox,
   type Box, type Point,
@@ -23,6 +24,8 @@ export interface SceneNode {
   dimmed: boolean;
   selected: boolean;
   hovered: boolean;
+  /** True when a search is running and this record matched it. */
+  matched: boolean;
 }
 
 export interface SceneEdge {
@@ -40,6 +43,7 @@ export interface SceneEdge {
   dimmed: boolean;
   selected: boolean;
   hovered: boolean;
+  matched: boolean;
 }
 
 export interface SceneGroup {
@@ -83,10 +87,26 @@ export interface LensScene {
   counts: GyldLens['counts'];
 }
 
+/**
+ * What a running search selected, as the scene needs it: the lens ids that
+ * matched. The matching itself is a projection over the emitted records and
+ * lives in `browser/search.ts`, so the scene depends on the ANSWER and not on
+ * the index it was computed from.
+ */
+export interface SceneSearch {
+  active: boolean;
+  ids: ReadonlySet<string>;
+  /** What was searched for, so the omission strip can say it. */
+  query: string;
+}
+
+const EMPTY_MATCH: ReadonlySet<string> = new Set<string>();
+
 export interface SceneInputs {
   selection?: GyldSelection;
   hover?: string;
   dimmed?: GyldDimmed;
+  search?: SceneSearch;
 }
 
 /** The ids adjacent to the selection, following the EMITTED edges only. */
@@ -119,10 +139,13 @@ function nodeFill(lens: GyldLens, node: LensNode): string | undefined {
 export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene {
   const selected = new Set(inputs.selection?.ids ?? []);
   const hover = inputs.hover ?? '';
-  const off = new Set(inputs.dimmed?.relations ?? []);
-  const hideOff = inputs.dimmed?.hide ?? false;
+  const dimmed = inputs.dimmed ?? NOTHING_DIMMED;
+  const off = new Set(dimmed.relations);
+  const hideOff = dimmed.hide;
   const near = neighbourhood(lens, selected);
   const faded = selected.size > 0;
+  const searching = inputs.search?.active ?? false;
+  const matches = inputs.search?.ids ?? EMPTY_MATCH;
 
   const edges: SceneEdge[] = [];
   for (const edge of lens.edges) {
@@ -134,14 +157,18 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
     }
     const relationOff = off.has(edge.relation);
     const style = edgeStyle(lens, edge);
+    const matched = searching && matches.has(edge.id);
     const scene: SceneEdge = {
       id: edge.id,
       relation: edge.relation,
       path: spline.path,
       hidden: relationOff && hideOff,
-      dimmed: (relationOff && !hideOff) || (faded && !near.has(edge.id)),
+      dimmed: (relationOff && !hideOff)
+        || (faded && !near.has(edge.id))
+        || (searching && !matched),
       selected: selected.has(edge.id),
       hovered: hover === edge.id,
+      matched,
     };
     if (spline.head !== undefined) {
       scene.head = spline.head;
@@ -170,6 +197,10 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
 
   const nodes: SceneNode[] = lens.nodes.map((node) => {
     const box = nodeBox(lens, node);
+    // A facet this window turned off, exactly as a relation toggle does for an
+    // edge: the box stays in the scene at the emitted position either way.
+    const facetOff = facetDims(dimmed, node);
+    const matched = searching && matches.has(node.id);
     const scene: SceneNode = {
       id: node.id,
       slot: node.slot,
@@ -177,10 +208,13 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
       radius: cornerRadius(node),
       lines: node.text,
       labelAt: labelOrigin(box, node.text.length),
-      hidden: false,
-      dimmed: faded && !near.has(node.id),
+      hidden: facetOff && hideOff,
+      dimmed: (facetOff && !hideOff)
+        || (faded && !near.has(node.id))
+        || (searching && !matched),
       selected: selected.has(node.id),
       hovered: hover === node.id,
+      matched,
     };
     const fill = nodeFill(lens, node);
     if (fill !== undefined) {
@@ -218,6 +252,22 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
   for (const relation of off) {
     omissions.push({
       text: `${relation} ${hideOff ? 'hidden' : 'dimmed'} in this window`,
+      fromWindow: true,
+    });
+  }
+  for (const facet of NODE_FACETS) {
+    for (const value of facet.omitted(dimmed)) {
+      omissions.push({
+        text: `${facet.name} ${value} ${hideOff ? 'hidden' : 'dimmed'} in this window`,
+        fromWindow: true,
+      });
+    }
+  }
+  if (searching) {
+    const found = nodes.filter((node) => node.matched).length;
+    omissions.push({
+      text: `${nodes.length - found} of ${nodes.length} boxes dimmed by the search `
+        + `for "${inputs.search?.query ?? ''}"`,
       fromWindow: true,
     });
   }

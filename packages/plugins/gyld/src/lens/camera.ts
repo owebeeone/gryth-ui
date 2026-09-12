@@ -106,25 +106,34 @@ export interface GyldSelection {
 export const NO_SELECTION: GyldSelection = Object.freeze({ ids: [] });
 
 /**
- * Which relations are turned off in this window, and whether they are dimmed
- * or hidden. Toggling one never re-lays out the picture (MDV-4): the geometry
- * is the emitted geometry either way, and the omission strip grows to say what
- * the reader is no longer seeing.
+ * What is turned off in this window, and whether it is dimmed or hidden.
+ * Toggling one never re-lays out the picture (MDV-4): the geometry is the
+ * emitted geometry either way, and the omission strip grows to say what the
+ * reader is no longer seeing.
+ *
+ * `relations` are the legend's edge entries; the other three lists are the
+ * node dimensions of MDV-2, read and written through the NodeFacet objects in
+ * `facets.ts` rather than by naming a field here.
  */
 export interface GyldDimmed {
   relations: string[];
+  kinds: string[];
+  statuses: string[];
+  classifications: string[];
   hide: boolean;
 }
 
-export const NOTHING_DIMMED: GyldDimmed = Object.freeze({ relations: [], hide: false });
+export const NOTHING_DIMMED: GyldDimmed = Object.freeze({
+  relations: [], kinds: [], statuses: [], classifications: [], hide: false,
+});
 
 export function toggleRelation(dimmed: GyldDimmed, relation: string): GyldDimmed {
   const held = dimmed.relations.includes(relation);
   return {
+    ...dimmed,
     relations: held
       ? dimmed.relations.filter((name) => name !== relation)
       : [...dimmed.relations, relation],
-    hide: dimmed.hide,
   };
 }
 

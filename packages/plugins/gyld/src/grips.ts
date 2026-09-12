@@ -13,6 +13,7 @@ import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './lens/camera';
+import { NO_FOCUS, type GyldFocus } from './focus';
 
 // @grythjs/plugin-gyld grips. Scope and class follow CodingRules.md and the
 // grip inventory in gyld-wz/dev-docs/ui/GyldGrythPlugins.md section 3.3.
@@ -61,9 +62,20 @@ export function perspectiveFromParams(params?: Record<string, unknown>): string 
   return typeof value === 'string' ? value : '';
 }
 
+/**
+ * The record a window opens ON. Spec section 2 names it `ref` in a
+ * `gyld.detail` link and `focus` in a `gyld.browser` link; both are the same
+ * qualified slot seeded into the same grip, so both spellings are read here
+ * and nothing is duplicated downstream. A link that carries neither leaves the
+ * window with no record, which is a rendered state, not a default.
+ */
 export function refFromParams(params?: Record<string, unknown>): string {
-  const value = params?.ref;
-  return typeof value === 'string' ? value : '';
+  const ref = params?.ref;
+  if (typeof ref === 'string') {
+    return ref;
+  }
+  const focus = params?.focus;
+  return typeof focus === 'string' ? focus : '';
 }
 
 // ---------------------------------------------------------------------------
@@ -149,3 +161,39 @@ export const GYLD_TAB_HOVER_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ho
 
 export const GYLD_TAB_DIMMED = defineGrip<GyldDimmed>('Gyld.Tab.Dimmed', NOTHING_DIMMED);
 export const GYLD_TAB_DIMMED_TAP = defineGrip<AtomTapHandle<GyldDimmed>>('Gyld.Tab.Dimmed.Tap');
+
+// ---------------------------------------------------------------------------
+// Step 1.4: the browser window's own state and the shared focus.
+// ---------------------------------------------------------------------------
+
+// Class 1 atom; ENVIRON intent, share-promotable (spec section 3.2): the one
+// cross-window "what are you looking at", written by a click in any gyld
+// window and readable by every other. It lives at the PLUGIN ROOT, not in a
+// tab, because MDV-5 correlates dimensions across windows rather than inside
+// one picture.
+export const GYLD_FOCUS = defineGrip<GyldFocus>('Gyld.Focus', NO_FOCUS);
+export const GYLD_FOCUS_TAP = defineGrip<AtomTapHandle<GyldFocus>>('Gyld.Focus.Tap');
+
+// Class 1 atoms; INSTANCE scope, per tab. The search box's text, and the set
+// picker's two drafts. All three are view state: typing in the search box
+// changes what is highlighted and dimmed over a FIXED layout, never the
+// layout, and never a Gyld fact.
+export const GYLD_TAB_SEARCH = defineGrip<string>('Gyld.Tab.Search', '');
+export const GYLD_TAB_SEARCH_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Search.Tap');
+
+export const GYLD_PICKER_URL = defineGrip<string>('Gyld.Tab.Picker.Url', '');
+export const GYLD_PICKER_URL_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Url.Tap');
+
+export const GYLD_PICKER_ERROR = defineGrip<string>('Gyld.Tab.Picker.Error', '');
+export const GYLD_PICKER_ERROR_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Error.Tap');
+
+// The tab id of the window that OWNS this context, seeded by the browser's
+// tabTaps. A sink wired to a browser inherits it through the graph and so
+// knows which tab to retarget, which is GrythPluginContract.md's open question
+// 2 (cross-context addressing) answered with data rather than with a registry:
+// the source publishes its own address, the sink reads it like any other grip.
+// A sink never seeds this, so an unwired window reads the empty default and
+// opens a new window instead of retargeting one.
+export const GYLD_TAB_ID = defineGrip<string>('Gyld.Tab.Id', '');

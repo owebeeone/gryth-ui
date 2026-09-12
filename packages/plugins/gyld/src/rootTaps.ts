@@ -1,5 +1,6 @@
 import { createAtomValueTap } from '@owebeeone/grip-react';
-import { GYLD_SET, GYLD_SET_TAP } from './grips';
+import { GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_SET, GYLD_SET_TAP } from './grips';
+import { NO_FOCUS } from './focus';
 import { EMPTY_SET } from './store/state';
 import { GyldStoreTap } from './store/GyldStoreTap';
 import { GyldIndexTap, GyldRecordTap } from './records/taps';
@@ -14,6 +15,14 @@ import { GyldIndexTap, GyldRecordTap } from './records/taps';
 export const GyldSetTap = createAtomValueTap(GYLD_SET, {
   initial: EMPTY_SET,
   handleGrip: GYLD_SET_TAP,
+});
+
+/** The cross-window focus (spec section 3.2). Plugin root, not per tab: it is
+ *  what several windows share to correlate dimensions (MDV-5), and it starts
+ *  at nothing rather than at some record the user never picked. */
+export const GyldFocusTap = createAtomValueTap(GYLD_FOCUS, {
+  initial: NO_FOCUS,
+  handleGrip: GYLD_FOCUS_TAP,
 });
 
 /** The one store tap for this plugin (spec section 3.4: registered once at the

@@ -245,3 +245,142 @@
   font-size: 11px;
   opacity: 0.75;
 }
+
+/* The browser chrome (step 1.4): pickers, search, dim toggles and the links a
+   browser writes. None of it moves the picture; the toggles change flags on
+   the emitted geometry and the omission strip says so. */
+
+.gyld-browser {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gyld-browser .gyld-lens {
+  flex: 1;
+  min-height: 0;
+}
+
+.gyld-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  font: 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-chrome-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.gyld-chrome-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.85;
+}
+
+.gyld-chrome-search {
+  flex: 1;
+  min-width: 140px;
+}
+
+.gyld-search {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+}
+
+.gyld-focus-line {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.gyld-facet {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gyld-facet-off {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* A search match is drawn brighter, not moved (MDV-4). */
+.gyld-node-match rect {
+  stroke-width: 2.5;
+}
+
+.gyld-node-match .gyld-node-line {
+  font-weight: 600;
+}
+
+.gyld-edge-match path {
+  stroke-width: 2.4;
+}
+
+/* The set picker: the empty state of a desk with no bundle root. */
+
+.gyld-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 13px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-picker h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gyld-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.gyld-picker-url {
+  flex: 1;
+  min-width: 180px;
+  font: inherit;
+}
+
+.gyld-badge-local {
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.gyld-picker-roots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-picker-roots li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readLens } from '../contract';
 import {
-  CAMERA_UNFITTED, MAX_SCALE, MIN_SCALE, clampScale, fitCamera, panBy, toggleRelation,
-  toggleSelected, wheelFactor, zoomAt,
+  CAMERA_UNFITTED, MAX_SCALE, MIN_SCALE, NOTHING_DIMMED, clampScale, fitCamera, panBy,
+  toggleRelation, toggleSelected, wheelFactor, zoomAt,
 } from './camera';
 import {
   POINTS_PER_INCH, cornerRadius, decodeSpline, edgeStyle, groupBox, lensExtent, nodeBox, toSvg,
@@ -127,8 +127,8 @@ describe('the camera', () => {
   });
 
   it('toggles a relation and a selection without touching anything else', () => {
-    const one = toggleRelation({ relations: [], hide: false }, 'Requires');
-    expect(one).toEqual({ relations: ['Requires'], hide: false });
+    const one = toggleRelation(NOTHING_DIMMED, 'Requires');
+    expect(one).toEqual({ ...NOTHING_DIMMED, relations: ['Requires'] });
     expect(toggleRelation(one, 'Requires').relations).toEqual([]);
     expect(toggleSelected({ ids: [] }, 'occ:a', false).ids).toEqual(['occ:a']);
     expect(toggleSelected({ ids: ['occ:a'] }, 'occ:a', false).ids).toEqual([]);
@@ -155,7 +155,7 @@ describe('the scene', () => {
     expect(scene.omissions.some((o) => o.text.includes('46 occurrences'))).toBe(true);
     expect(scene.omissions.some((o) => o.text.includes('15 assertions'))).toBe(true);
     expect(scene.omissions.every((o) => !o.fromWindow)).toBe(true);
-    const dimmedScene = buildScene(lens, { dimmed: { relations: ['Requires'], hide: false } });
+    const dimmedScene = buildScene(lens, { dimmed: { ...NOTHING_DIMMED, relations: ['Requires'], hide: false } });
     const own = dimmedScene.omissions.filter((o) => o.fromWindow);
     expect(own.map((o) => o.text)).toEqual(['Requires dimmed in this window']);
   });
@@ -179,8 +179,8 @@ describe('the scene', () => {
 
   it('dims or hides a relation over the SAME geometry, never a new layout', () => {
     const plain = buildScene(lens);
-    const dim = buildScene(lens, { dimmed: { relations: ['Implies'], hide: false } });
-    const hide = buildScene(lens, { dimmed: { relations: ['Implies'], hide: true } });
+    const dim = buildScene(lens, { dimmed: { ...NOTHING_DIMMED, relations: ['Implies'], hide: false } });
+    const hide = buildScene(lens, { dimmed: { ...NOTHING_DIMMED, relations: ['Implies'], hide: true } });
     for (const [index, edge] of plain.edges.entries()) {
       expect(dim.edges[index].path).toBe(edge.path);
       expect(hide.edges[index].path).toBe(edge.path);
@@ -293,7 +293,7 @@ describe('rendering the lens', () => {
   });
 
   it('hides a relation by leaving it out and dims it by class alone', () => {
-    const hidden = buildScene(lens, { dimmed: { relations: ['GatedBy'], hide: true } });
+    const hidden = buildScene(lens, { dimmed: { ...NOTHING_DIMMED, relations: ['GatedBy'], hide: true } });
     const gated = lens.edges.filter((e) => e.relation === 'GatedBy');
     const hiddenMarkup = renderToStaticMarkup(
       <LensFigure scene={hidden} camera={CAMERA_UNFITTED} scope="test" />,
@@ -303,7 +303,7 @@ describe('rendering the lens', () => {
     }
     const dimmed = renderToStaticMarkup(
       <LensFigure
-        scene={buildScene(lens, { dimmed: { relations: ['GatedBy'], hide: false } })}
+        scene={buildScene(lens, { dimmed: { ...NOTHING_DIMMED, relations: ['GatedBy'], hide: false } })}
         camera={CAMERA_UNFITTED}
         scope="test"
       />,
@@ -316,7 +316,7 @@ describe('rendering the lens', () => {
 
   it('renders the emitted legend, the omission strip and the provenance footer', () => {
     const legend = renderToStaticMarkup(
-      <LensLegend scene={scene} dimmed={{ relations: ['Implies'], hide: false }} />,
+      <LensLegend scene={scene} dimmed={{ ...NOTHING_DIMMED, relations: ['Implies'], hide: false }} />,
     );
     for (const entry of lens.legend.edges) {
       expect(legend).toContain(entry.relation);

@@ -1,16 +1,33 @@
 import { useGrip } from '@owebeeone/grip-react';
+import type { ToolViewProps } from '@grythjs/plugin-api';
 import {
-  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_STREAM, GYLD_LENS, GYLD_STORE_STATUS,
+  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_STREAM, GYLD_LENS, GYLD_RECORDS,
+  GYLD_SET, GYLD_TAB_SEARCH,
 } from './grips';
+import { BrowserChrome } from './browser/BrowserChrome';
+import { SetPicker } from './browser/SetPicker';
+import { NO_SEARCH, searchLens } from './browser/search';
 import { LensView } from './lens/LensView';
 
-// The gyld.browser window. Phase 1 step 1.3 mounts the LENS VIEW in it; the
-// full browser chrome (the perspective picker, the search box, the set picker
-// and the wired detail links) is step 1.4.
+// The gyld.browser window (step 1.4): one lens of one stream, with the pickers
+// that change the destination, the search that highlights records, the dim
+// toggles that turn dimensions off over a FIXED layout, and the links to a
+// wired detail window and to a drill-in window.
 //
-// There is no local state and no derived Gyld fact here: the window reads its
-// destination, the store tap's answer for that destination, and renders it.
-// An unset or absent destination is shown as what it is, never substituted.
+// There is no local state and no derived Gyld fact here. The window reads its
+// destination, what the store tap made of it, and the index over it; the one
+// thing it computes is which records a search matched, which is a projection
+// over emitted labels and qualified slots (spec section 3.5).
+
+/** Why there is no picture, said in one place: the window's destination, what
+ *  the store tap made of it, every root's status and the perspectives the
+ *  stream actually emitted. A diagnosis, never a substitute for a lens. */
+const LENS_STATE: Record<string, string> = {
+  unset: 'no stream and perspective on this window yet',
+  loading: 'reading the lens file',
+  absent: 'no lens file for that stream and perspective',
+  invalid: 'the lens file did not read',
+};
 
 function Value({ text }: { text: string }) {
   if (text === '') {
@@ -19,26 +36,13 @@ function Value({ text }: { text: string }) {
   return <dd>{text}</dd>;
 }
 
-// Why there is no picture, said in one place: the window's destination, what
-// the store tap made of it, every root's status and the perspectives the
-// stream actually emitted. Nothing here is a substitute for a lens; it is the
-// diagnosis of its absence.
-const LENS_STATE: Record<string, string> = {
-  unset: 'no stream and perspective on this window yet',
-  loading: 'reading the lens file',
-  absent: 'no lens file for that stream and perspective',
-  invalid: 'the lens file did not read',
-};
-
 function NoLens() {
   const stream = useGrip(GYLD_DEST_STREAM) ?? '';
   const perspective = useGrip(GYLD_DEST_PERSPECTIVE) ?? '';
   const bundle = useGrip(GYLD_BUNDLE);
   const lens = useGrip(GYLD_LENS);
-  const roots = useGrip(GYLD_STORE_STATUS) ?? [];
   return (
     <div className="gyld-placeholder">
-      <h3>Gyld browser</h3>
       <dl>
         <dt>stream</dt>
         <Value text={stream} />
@@ -52,19 +56,6 @@ function NoLens() {
       {lens?.fault !== undefined && (
         <p className="gyld-fault">{lens.fault.path}: {lens.fault.message}</p>
       )}
-      {roots.length === 0 && (
-        <p className="gyld-note">
-          No bundle root on this desk yet. The set picker is step 1.4; until
-          then a root is added by writing Gyld.Set through its tap handle.
-        </p>
-      )}
-      {roots.map((root) => (
-        <p key={root.describe} className="gyld-note">
-          {root.describe}: {root.status}
-          {root.error === undefined ? '' : ` (${root.error})`}
-          {root.watchLive ? ' · watching' : ''}
-        </p>
-      ))}
       {(bundle?.faults ?? []).map((fault) => (
         <p key={fault.path} className="gyld-fault">{fault.path}: {fault.message}</p>
       ))}
@@ -83,10 +74,28 @@ function NoLens() {
   );
 }
 
-export function GyldBrowser() {
-  const lens = useGrip(GYLD_LENS);
-  if (lens?.status === 'ok') {
-    return <LensView scope={`${lens.stream}-${lens.perspective}`} />;
+export function GyldBrowser({ tabId }: ToolViewProps) {
+  // The SET, not the store's statuses: a desk that has a root the store has
+  // not reached yet is a desk with a root, and must not flash the picker at
+  // the reader while the first census is in flight.
+  const set = useGrip(GYLD_SET);
+  const state = useGrip(GYLD_LENS);
+  const records = useGrip(GYLD_RECORDS);
+  const query = useGrip(GYLD_TAB_SEARCH) ?? '';
+
+  // A desk with no root gets the picker, not an empty picture: this plugin
+  // never invents a place to read Gyld output from.
+  if ((set?.roots.length ?? 0) === 0) {
+    return <SetPicker />;
   }
-  return <NoLens />;
+  const lens = state?.status === 'ok' ? state.value : undefined;
+  const search = lens === undefined ? NO_SEARCH : searchLens(lens, records, query);
+  return (
+    <div className="gyld-browser">
+      <BrowserChrome tabId={tabId} lens={lens} search={search} />
+      {lens === undefined
+        ? <NoLens />
+        : <LensView scope={`${tabId}-${lens.perspective}`} search={search} />}
+    </div>
+  );
 }
