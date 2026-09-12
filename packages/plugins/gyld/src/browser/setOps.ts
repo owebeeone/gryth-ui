@@ -1,4 +1,4 @@
-import type { GyldSet } from '../store/state';
+import type { GyldRootRef, GyldSet } from '../store/state';
 
 // Adding a root to the set, as PURE functions over the set value. They live
 // beside the picker rather than inside it so the component file exports a
@@ -19,6 +19,28 @@ export function addStaticRoot(set: GyldSet, baseUrl: string): { set: GyldSet; er
     return { set, error: `${url} is already a root of this set` };
   }
   return { set: { roots: [...set.roots, { kind: 'static', baseUrl: url }] } };
+}
+
+/**
+ * The glade node's published shares as a root, refused when the set already
+ * has it. There is only ever one: the desktop holds one glade session, so a
+ * second copy of this root would be the same mounts read twice.
+ */
+export function addShareRoot(set: GyldSet): { set: GyldSet; error?: string } {
+  if (set.roots.some((root) => root.kind === 'share')) {
+    return { set, error: 'the glade node is already a root of this set' };
+  }
+  return { set: { roots: [...set.roots, { kind: 'share' }] } };
+}
+
+/** What a root is CALLED in a list, from the ref alone. The store's own status
+ *  line says what it turned out to be; this is what the reader typed or
+ *  picked, which is all a ref carries. */
+export function describeRoot(root: GyldRootRef): string {
+  if (root.kind === 'static') {
+    return root.baseUrl;
+  }
+  return root.kind === 'directory' ? root.name : 'glade node';
 }
 
 /** A directory root under a name no other root of the set has taken. The name

@@ -5,7 +5,7 @@ import {
 } from '../grips';
 import { gyldStoreTap } from '../rootTaps';
 import { directoryPicker, isPickerCancel, type PickedDirectoryHandle } from './fsAccess';
-import { addDirectoryRoot, addStaticRoot } from './setOps';
+import { addDirectoryRoot, addShareRoot, addStaticRoot, describeRoot } from './setOps';
 
 // The set picker: the browser window's EMPTY STATE and its "add a root"
 // affordance. A desk with no root gets this instead of a picture, because the
@@ -78,6 +78,24 @@ export function SetPicker() {
     setTap?.update((held) => ({ roots: held.roots.filter((_, at) => at !== index) }));
   };
 
+  // The third kind of root: the bundle the glade-gyld supplier publishes onto
+  // the gyld value shares after each build. It takes no address, because the
+  // desktop has exactly one glade session and this root reads that session's
+  // mounts. A composition with no glade shows the root as an error rather than
+  // as a bundle with nothing in it.
+  const addShare = () => {
+    if (!setTap) {
+      return;
+    }
+    let failure: string | undefined;
+    setTap.update((held) => {
+      const out = addShareRoot(held);
+      failure = out.error;
+      return out.set;
+    });
+    errorTap?.set(failure ?? '');
+  };
+
   return (
     <div className="gyld-picker">
       <h3>Gyld browser</h3>
@@ -116,13 +134,28 @@ export function SetPicker() {
           </span>
         )}
       </div>
+      <div className="gyld-picker-row">
+        <button
+          type="button"
+          className="gyld-add-share"
+          onClick={addShare}
+          disabled={!setTap}
+        >
+          Add glade node
+        </button>
+        <span className="gyld-note">
+          the bundle the glade-gyld supplier publishes onto the gyld shares
+          after each build; the same windows read it, and submitting from them
+          needs it
+        </span>
+      </div>
       {error !== '' && <p className="gyld-fault">{error}</p>}
       <ul className="gyld-picker-roots">
         {(set?.roots ?? []).map((root, index) => {
           const status = roots[index];
           return (
-            <li key={`${root.kind}:${root.kind === 'static' ? root.baseUrl : root.name}`}>
-              <code>{root.kind === 'static' ? root.baseUrl : root.name}</code>
+            <li key={`${root.kind}:${describeRoot(root)}`}>
+              <code>{describeRoot(root)}</code>
               <span className="gyld-note">
                 {status === undefined ? 'idle' : status.status}
                 {status?.error === undefined ? '' : ` (${status.error})`}

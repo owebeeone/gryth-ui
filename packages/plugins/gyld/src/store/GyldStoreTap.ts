@@ -18,6 +18,7 @@ import {
   DirectoryStore, StaticStore, errorMessage,
   type GyldDirectoryHandle, type GyldStore,
 } from './stores';
+import { ShareStore, type GyldShareProvider } from './shareStore';
 import {
   BUNDLE_UNSET, CENSUS_EMPTY, CENSUS_LOADING, LENS_UNSET, VALUE_LOADING, VALUE_UNSET,
   type CensusStream, type GyldBundle, type GyldFault, type GyldLensState,
@@ -167,6 +168,11 @@ export class GyldStoreTap extends BaseTap {
   private readonly settled = new Map<string, unknown>();
   private readonly lensStates = new WeakMap<GyldValue<unknown>, Map<string, GyldLensState>>();
   private readonly handles = new Map<string, GyldDirectoryHandle>();
+  // The glade node's published shares, registered by the live module when
+  // there is one. Runtime-only state exactly as a directory handle is: a
+  // provider is a live mount set, not something a set can carry.
+  private shareProvider: GyldShareProvider | undefined;
+  private unfollowShares: (() => void) | undefined;
   // The evaluator RUN stores, one per run URL, opened on demand and never
   // censused: a run has no `streams.json` and no streams, so it is not a root
   // of the set and does not appear in `Gyld.Store.Status`.
@@ -257,6 +263,8 @@ export class GyldStoreTap extends BaseTap {
 
   onDetach(): void {
     this.stopWatch();
+    this.unfollowShares?.();
+    this.unfollowShares = undefined;
     this.epoch += 1;
     this.files.clear();
     this.inFlight.clear();
@@ -297,6 +305,84 @@ export class GyldStoreTap extends BaseTap {
     }
     this.bundles.clear();
     void this.refreshCensus(epoch, { bust: false, quiet: false });
+  }
+
+  /**
+   * Register (or retire) the glade node's published shares. The live module
+   * calls this once; a composition with no glade never calls it, and a
+   * `{ kind: 'share' }` root then reads as a loud error rather than as a
+   * bundle with nothing in it.
+   *
+   * A provider is runtime-only state, exactly as a directory handle is: it is
+   * a set of live mounts, not something `Gyld.Set` could carry across a
+   * reload.
+   */
+  setShareProvider(provider: GyldShareProvider | undefined): void {
+    if (provider === this.shareProvider) {
+      return;
+    }
+    this.unfollowShares?.();
+    this.unfollowShares = undefined;
+    this.shareProvider = provider;
+    if (provider !== undefined) {
+      this.unfollowShares = provider.onChange(() => {
+        this.refreshShares();
+      });
+    }
+    const rebuilt = new Set<number>();
+    this.roots = this.roots.map((root) => {
+      if (root.ref.kind !== 'share') {
+        return root;
+      }
+      rebuilt.add(root.index);
+      return this.makeRoot(root.ref, root.index);
+    });
+    if (rebuilt.size === 0) {
+      this.publishShared();
+      return;
+    }
+    this.epoch += 1;
+    const epoch = this.epoch;
+    this.inFlight.clear();
+    for (const key of [...this.files.keys()]) {
+      if (rebuilt.has(Number(key.slice(0, key.indexOf(KEY_SEP))))) {
+        this.files.delete(key);
+      }
+    }
+    this.bundles.clear();
+    void this.refreshCensus(epoch, { bust: false, quiet: false });
+  }
+
+  /**
+   * A published value changed, so read the shares again. Only the share roots:
+   * a desk holding a static root beside a glade node must not re-fetch that
+   * host every time a build lands.
+   */
+  refreshShares(): void {
+    const indexes = new Set(
+      this.roots.filter((root) => root.ref.kind === 'share').map((root) => root.index),
+    );
+    if (indexes.size === 0) {
+      return;
+    }
+    const stale = [...this.files.keys()].filter(
+      (key) => indexes.has(Number(key.slice(0, key.indexOf(KEY_SEP)))),
+    );
+    for (const key of stale) {
+      this.files.delete(key);
+    }
+    this.bundles.clear();
+    const epoch = this.epoch;
+    void this.refreshCensus(epoch, { bust: false, quiet: true }).then(() => {
+      if (epoch !== this.epoch) {
+        return;
+      }
+      for (const key of stale) {
+        const separator = key.indexOf(KEY_SEP);
+        this.ensureLoad(Number(key.slice(0, separator)), key.slice(separator + 1), false);
+      }
+      this.produce();
+    });
   }
 
   /** Drop every cached file and read the whole set again with cache busting. */
@@ -379,6 +465,30 @@ export class GyldStoreTap extends BaseTap {
         describe: ref.baseUrl,
         status: 'idle',
         streams: null,
+      };
+    }
+    if (ref.kind === 'share') {
+      const provider = this.shareProvider;
+      if (!provider) {
+        return {
+          index,
+          ref,
+          store: null,
+          bustStore: null,
+          describe: 'glade node',
+          status: 'error',
+          error:
+            'no glade node in this composition: the gyld live module is not '
+            + 'registered, so nothing is mounted on the gyld shares',
+          streams: null,
+        };
+      }
+      // A share value is already in hand when it is in hand, so there is no
+      // cache to bust and one store serves both paths.
+      const store = new ShareStore(provider);
+      return {
+        index, ref, store, bustStore: store, describe: provider.describe,
+        status: 'idle', streams: null,
       };
     }
     const handle = this.handles.get(ref.name);
@@ -497,6 +607,12 @@ export class GyldStoreTap extends BaseTap {
         return;
       }
       const index = readStreamsIndex(JSON.parse(raw));
+      if (root.ref.kind === 'share') {
+        // The listing is the authority for which streams exist, so it is also
+        // the authority for which keyed surfaces to ask the node to replay.
+        // Nothing is subscribed before a build said the stream is there.
+        this.shareProvider?.follow(index.streams.map((record) => record.id));
+      }
       const entries: CensusStream[] = [];
       for (const record of index.streams) {
         const entry: CensusStream = { id: record.id, rootIndex: root.index, record };

@@ -12,7 +12,16 @@ import type {
  *  handle, and a reloaded desktop asks for the directory again. */
 export type GyldRootRef =
   | { kind: 'static'; baseUrl: string }
-  | { kind: 'directory'; name: string };
+  | { kind: 'directory'; name: string }
+  /**
+   * A glade node: the bundle arrives on the value shares the `glade-gyld`
+   * supplier publishes onto after each build (step 4.3). It carries no address
+   * because there is nothing to address — the desktop has exactly one glade
+   * session, and this root reads what that session's mounts hold. A desk with
+   * no glade in its composition shows this root as a loud error rather than an
+   * empty bundle.
+   */
+  | { kind: 'share' };
 
 export interface GyldSet {
   roots: GyldRootRef[];

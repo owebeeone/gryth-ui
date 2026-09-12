@@ -235,6 +235,57 @@ dev server.
 The desk is not persisted yet, so a page reload comes back with no windows and
 no bundle root. Add the root again after a reload.
 
+## The glade node as a root
+
+There is a third kind of root beside a served URL and a picked directory: the
+glade node itself. `Add glade node` in the set picker adds it, and the bundle
+then arrives on the value shares the `glade-gyld` supplier publishes onto after
+each build (`glade-wz/glade-gyld/README.md`, "Results"):
+
+| surface | key | what the root reads from it |
+|---|---|---|
+| `gyld.streams` | none | `streams.json`, the census |
+| `gyld.stream` | stream id | that stream's `stream.json` |
+| `gyld.decisions` | stream id | that stream's `decide-now.json` |
+| `gyld.lens` | `<stream>/<perspective>` | a `{path, digest, bytes}` pointer |
+
+A lens file is the large one, so it travels as a pointer and the file itself is
+fetched over HTTP from grazel's static path, which is what the pointer's `path`
+names. The pointer is never trusted: the bytes are counted and digested, and a
+file whose sha256 is not the one the pointer promised is refused, so the window
+shows a lens that did not read rather than a picture nobody vouched for. The
+digest is taken with the platform's own `crypto.subtle`, which a page served
+over plain http from something other than localhost does not have; that case is
+a refusal too, with the reason.
+
+Nothing is subscribed speculatively. The stream listing is the authority for
+which streams exist, so it is also the authority for which keyed surfaces to
+ask the node for; and each stream record's own `lenses` manifest names the
+perspectives whose pointers are followed. A stream whose record carries NO
+manifest therefore lists no perspectives on this root: over a static host the
+store falls back to a directory autoindex, and a share has no directory to
+list.
+
+Two files of a bundle are **not** on any share, because the supplier does not
+publish them: `projection.json` and `validation.json`, and neither is an
+emitted `diffs/<left>..<right>.json`. On a glade root they read as absent,
+which is true, and the windows show absence. They are real files of the build
+the last answer named, on the static path, so the way to see them is to point a
+static root at that build: grazel serves the bundle root at `/gyld/`, so a
+build directory `builds/build-1789247615547` is at
+`http://localhost:PORT/gyld/builds/build-1789247615547`. The decide window's
+Submit does this for you (below).
+
+The root reads as a loud error when there is no glade in the composition at
+all, rather than as a bundle with nothing in it. `@grythjs/glade` is reached
+from exactly one file of this package, `src/live.ts`, because that module
+computes the per-tab principal from `location.search` and a `sessionStorage`
+origin at import and owns the one session; every window, the store, the
+contract readers and the whole test suite run with no DOM and no socket. For
+the same reason `registerGyldLive()` is called by the APPLICATION
+(`gryth-ui/src/plugins/index.ts`) rather than by this package's `index.ts`,
+which is what the package's own registration test imports.
+
 ## The bundle the dev server serves
 
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is

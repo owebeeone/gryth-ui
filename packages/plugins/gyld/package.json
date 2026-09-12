@@ -5,10 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract/index.ts"
+    "./contract": "./src/contract/index.ts",
+    "./live": "./src/live.ts"
   },
   "dependencies": {
+    "@grythjs/glade": "workspace:*",
     "@grythjs/plugin-api": "workspace:*",
+    "@owebeeone/glial-runtime": "workspace:*",
     "@viz-js/viz": "3.30.0"
   },
   "peerDependencies": {

@@ -16,6 +16,7 @@ import {
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './lens/camera';
 import { NO_FOCUS, type GyldFocus } from './focus';
+import type { GyldOps, GyldOpsResult, GyldOutputRecord } from './ops/ops';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
 
@@ -361,6 +362,47 @@ export const GYLD_ANSWER_EXPORT_TAP =
 export const GYLD_ASK_EXPORT = defineGrip<string>('Gyld.Tab.Export.Ask', '');
 export const GYLD_ASK_EXPORT_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Export.Ask.Tap');
+
+// ---------------------------------------------------------------------------
+// Step 4.3: the write path's grips (spec section 4.7).
+//
+// `Gyld.Ops` is the OPERATIONS HANDLE, produced only by the live module
+// (src/live.ts), which is the only file in this package that imports
+// `@grythjs/glade`. A composition with no glade node registers no producer for
+// it, so it reads as UNRESOLVED, and every submit is disabled with that as its
+// reason. That is the whole of the read-only stage's fallback: the export path
+// beside each submit stays exactly as it was.
+// ---------------------------------------------------------------------------
+
+export const GYLD_OPS = defineGrip<GyldOps>('Gyld.Ops');
+
+// Class 1 atoms; INSTANCE scope, shared by every gyld window of the desk (one
+// supplier, one run at a time). The last answer, the run whose output the log
+// mount follows, and the records that mount has folded.
+export const GYLD_OPS_RESULT =
+  defineGrip<GyldOpsResult | null>('Gyld.Ops.Result', null);
+export const GYLD_OPS_RESULT_TAP =
+  defineGrip<AtomTapHandle<GyldOpsResult | null>>('Gyld.Ops.Result.Tap');
+
+/** The streaming run id. It is the `gyld.output` mount's FILL KEY, so writing
+ *  it remounts the fold: a distinct run is a distinct instance. */
+export const GYLD_OPS_RUN_ID = defineGrip<string>('Gyld.Ops.RunId', '');
+export const GYLD_OPS_RUN_ID_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Ops.RunId.Tap');
+
+/** The run's stdout and stderr lines as they arrive, in the order the log
+ *  folded them. Absent records are absent lines, never blank ones. */
+export const GYLD_OPS_STREAM = defineGrip<GyldOutputRecord[]>('Gyld.Ops.Stream', []);
+
+/**
+ * The glade connection's own state, mirrored into this package's vocabulary by
+ * the live module. Empty means "no glade in this composition at all", which is
+ * a different fact from `offline` and is rendered as one.
+ *
+ * It is mirrored rather than read from `@grythjs/glade` directly because that
+ * module reads the DOM at import: this package's windows and its whole test
+ * suite must stay able to run without one (owner ruling O6's boundary).
+ */
+export const GYLD_OPS_STATUS = defineGrip<string>('Gyld.Ops.Status', '');
 
 // The tab id of the window that OWNS this context, seeded by the browser's
 // tabTaps. A sink wired to a browser inherits it through the graph and so
