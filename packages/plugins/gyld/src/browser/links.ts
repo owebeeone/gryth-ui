@@ -57,6 +57,26 @@ export function streamParams(stream: string): Record<string, unknown> {
 }
 
 /**
+ * The params a `gyld.decide` window opens standalone on. Spec section 2 spells
+ * the record `question` there, where `gyld.detail` spells it `ref` and the
+ * browser spells it `focus`; `decideTabTaps` reads all three into the one
+ * destination grip, and this helper writes the spelling that section names.
+ */
+export function questionParams(stream: string, question: string): Record<string, unknown> {
+  return { stream, question };
+}
+
+/** What a Decide button will do, said before it is pressed: a window wired to a
+ *  browser answers in the decide window wired to that same browser, and a
+ *  standalone one opens a decide window of its own on this stream and this
+ *  question. Here rather than in a view because both views say it. */
+export function decideTitle(wiredTo: string): string {
+  return wiredTo === ''
+    ? 'answer this question in a decide window of its own'
+    : `answer this question in the decide window wired to ${wiredTo}`;
+}
+
+/**
  * What one click on the picture changes. Three writes, one rule: the selection
  * is the window's own, the ref is the record this window is ON (what a wired
  * detail sink resolves), and the focus is the same record for every gyld

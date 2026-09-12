@@ -4,6 +4,7 @@ import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_STREAM,
   GYLD_RECORD, GYLD_RECORDS,
 } from '../grips';
+import { decideTitle } from '../browser/links';
 import { useBrowserFocus } from '../browser/useBrowserFocus';
 import type { GyldRecordView, GyldRecords } from '../records/records';
 import type { GyldBundle } from '../store/state';
@@ -156,6 +157,20 @@ export function RecordDetail() {
         {browser.wiredTo !== '' && (
           <span className="gyld-chip gyld-chip-wired">{`wired to ${browser.wiredTo}`}</span>
         )}
+        <button
+          type="button"
+          className="gyld-open-decide"
+          // A record the stream lists no decide-now row for is not a question
+          // to answer, and this window will not open a decide window on one.
+          // That is the emitted list's own answer, not a judgement made here.
+          disabled={!browser.decideReady || question === undefined}
+          title={question === undefined
+            ? 'this stream lists no decide-now row for this record'
+            : decideTitle(browser.wiredTo)}
+          onClick={() => browser.decide(source?.qualified_slot ?? view.ref)}
+        >
+          Decide
+        </button>
       </header>
 
       <dl className="gyld-detail-facts">

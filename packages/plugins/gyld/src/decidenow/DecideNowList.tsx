@@ -3,7 +3,8 @@ import type { DecideNowQuestion, GyldDecideNow, GyldValidation } from '../contra
 import {
   GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_STREAM, GYLD_STORE_STATUS, GYLD_VALIDATION,
 } from '../grips';
-import { useBrowserFocus } from '../browser/useBrowserFocus';
+import { decideTitle } from '../browser/links';
+import { useBrowserFocus, type BrowserFocus } from '../browser/useBrowserFocus';
 import { groupQuestions } from './groups';
 import type { GyldBundle, GyldValue } from '../store/state';
 
@@ -38,9 +39,9 @@ function validationLine(validation: GyldValue<GyldValidation> | undefined): stri
     : `validation invalid: ${value.code ?? 'no code'} ${value.message ?? ''}`.trim();
 }
 
-function Question({ question, onOpen }: {
+function Question({ question, browser }: {
   question: DecideNowQuestion;
-  onOpen: (slot: string) => void;
+  browser: BrowserFocus;
 }) {
   return (
     <li className="gyld-question" data-slot={question.slot}>
@@ -48,9 +49,18 @@ function Question({ question, onOpen }: {
         type="button"
         className="gyld-question-open"
         title={question.slot}
-        onClick={() => onOpen(question.slot)}
+        onClick={() => browser.focus(question.slot)}
       >
         {`${question.label} · ${question.tier}`}
+      </button>
+      <button
+        type="button"
+        className="gyld-open-decide"
+        disabled={!browser.decideReady}
+        title={decideTitle(browser.wiredTo)}
+        onClick={() => browser.decide(question.slot)}
+      >
+        Decide
       </button>
       <span className="gyld-note">
         {`declared ${question.declared_status}, effective ${question.effective_status}`}
@@ -149,7 +159,7 @@ export function DecideNowList() {
           <h4>{`${group.title} (${group.questions.length})`}</h4>
           <ul className="gyld-questions">
             {group.questions.map((question) => (
-              <Question key={question.slot} question={question} onOpen={browser.focus} />
+              <Question key={question.slot} question={question} browser={browser} />
             ))}
           </ul>
         </section>

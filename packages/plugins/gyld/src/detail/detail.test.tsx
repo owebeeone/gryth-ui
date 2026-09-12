@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { AtomTapHandle } from '@owebeeone/grip-react';
+import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
+import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
 import { GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_RECORD } from '../grips';
 import { browserTabTaps } from '../browser/browserTabTaps';
 import { RecordDetail } from './RecordDetail';
@@ -137,5 +138,51 @@ describe('gyld.detail as a wired sink', () => {
     inherited.set('glade_decisions:GladeDecisions.node_trust');
     await expect.poll(() => browser.read(GYLD_DEST_REF).get())
       .toBe('glade_decisions:GladeDecisions.node_trust');
+  });
+});
+
+describe('gyld.detail opens the decide window on the record it shows', () => {
+  it('refuses the button when no desktop can open a window', async () => {
+    const detail = standalone('detail-nodesk', SCOPE_MODEL);
+    await settled(detail.view, (view) => view?.status === 'ok');
+    const markup = detail.render();
+    expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(true);
+  });
+
+  it('offers the button for a record this stream lists a decide-now row for', async () => {
+    const desk = mountDesk();
+    desk.ctx.getGripHomeContext().registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, {
+      initial: () => {},
+    }));
+    const tab = desk.tab('detail-decide', detailTabTaps('detail-decide', {
+      stream: 'base', ref: SCOPE_MODEL,
+    }));
+    await settled(
+      () => tab.read(GYLD_RECORD).get() as GyldRecordView,
+      (view) => view?.status === 'ok',
+    );
+    const markup = tab.render(<RecordDetail />);
+    expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(false);
+    expect(markup).toContain('answer this question in a decide window of its own');
+  });
+
+  it('refuses the button for a record no decide-now row names', async () => {
+    const desk = mountDesk();
+    desk.ctx.getGripHomeContext().registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, {
+      initial: () => {},
+    }));
+    // an alternative, not a question: the emitted decide-now list has no row
+    // for it, so there is nothing to answer and the window says so
+    const alternative = 'glade_decisions:ScopeModel.offers';
+    const tab = desk.tab('detail-noquestion', detailTabTaps('detail-noquestion', {
+      stream: 'base', ref: alternative,
+    }));
+    await settled(
+      () => tab.read(GYLD_RECORD).get() as GyldRecordView,
+      (view) => view?.status === 'ok',
+    );
+    const markup = tab.render(<RecordDetail />);
+    expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(true);
+    expect(markup).toContain('this stream lists no decide-now row for this record');
   });
 });

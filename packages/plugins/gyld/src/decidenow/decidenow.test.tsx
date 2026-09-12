@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import { createAtomValueTap } from '@owebeeone/grip-react';
+import { DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED } from '@grythjs/plugin-api';
 import { GYLD_BUNDLE, GYLD_DECIDE_NOW } from '../grips';
+import { browserTabTaps } from '../browser/browserTabTaps';
+import { questionParams } from '../browser/links';
 import { DecideNowList } from './DecideNowList';
 import { decideNowTabTaps } from './decideNowTabTaps';
 import type { GyldDecideNow } from '../contract';
 import type { GyldBundle, GyldValue } from '../store/state';
-import { mountDesk } from '../../test/mount';
+import { mountDesk, wireSink } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import decideNow from '../../test/fixtures/bundle/streams/base/decide-now.json';
 import streamRecord from '../../test/fixtures/bundle/streams/base/stream.json';
@@ -143,5 +147,52 @@ describe('gyld.decidenow when there is nothing to list', () => {
     const markup = list.render();
     expect(markup).toContain('the decide-now file did not read');
     expect(markup).toContain('not valid JSON');
+  });
+});
+
+describe('a row opens the decide window on that question', () => {
+  it('refuses the row button when no desktop can open a window', async () => {
+    const list = mount('dn-nodesk', 'base');
+    await settled(list.value, (value) => value?.status === 'ok');
+    const markup = list.render();
+    expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(true);
+  });
+
+  it('offers a decide button per row when this window is standalone', async () => {
+    const desk = mountDesk();
+    desk.ctx.getGripHomeContext().registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, {
+      initial: () => {},
+    }));
+    const tab = desk.tab('dn-decide', decideNowTabTaps('dn-decide', { stream: 'base' }));
+    await settled(
+      () => tab.read(GYLD_DECIDE_NOW).get() as GyldValue<GyldDecideNow>,
+      (value) => value?.status === 'ok',
+    );
+    const markup = tab.render(<DecideNowList />);
+    expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(false);
+    // one per emitted row, and no row invented
+    expect(markup.match(/class="gyld-open-decide"/g)?.length)
+      .toBe(decideNow.questions.length);
+    expect(markup).toContain('answer this question in a decide window of its own');
+    // the link a row writes is the spec's own `{ stream, question }`
+    expect(questionParams('base', decideNow.questions[0].slot))
+      .toEqual({ stream: 'base', question: decideNow.questions[0].slot });
+  });
+
+  it('says it will open the decide window wired to the browser it follows', async () => {
+    const desk = mountDesk();
+    desk.ctx.getGripHomeContext().registerTap(createAtomValueTap(DESKTOP_OPEN_WIRED, {
+      initial: () => {},
+    }));
+    const browser = desk.tab('dn-source', browserTabTaps('dn-source', { stream: 'base' }));
+    const sink = wireSink(browser, 'tab:dn-sink', decideNowTabTaps('dn-sink'));
+    await settled(
+      () => sink.read(GYLD_DECIDE_NOW).get() as GyldValue<GyldDecideNow>,
+      (value) => value?.status === 'ok',
+    );
+    const markup = sink.render(<DecideNowList />);
+    expect(markup).toContain('wired to dn-source');
+    expect(markup).toContain('answer this question in the decide window wired to dn-source');
+    expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(false);
   });
 });

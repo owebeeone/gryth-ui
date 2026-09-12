@@ -28,14 +28,19 @@ it is answerable now, the lean recorded for it, any ruling, the relations the
 record itself carries and its definition closure. Opened from a browser through
 the Details button it is wired to that browser and follows its selection live,
 with no parameter copied. Opened from the launcher with a stream and a record
-in the link it stands alone on that record.
+in the link it stands alone on that record. Its Decide button opens the decide
+window on this record, wired to the browser this window follows when it follows
+one and standalone on `{ stream, question }` when it does not; a record the
+stream lists no decide-now row for is not a question to answer, so the button
+is refused with that as its reason.
 
 `gyld.decidenow` lists the stream's emitted decide-now rows grouped by what the
 host said about them: answerable now, blocked by an open prerequisite, gated,
 induced, and already settled. Each row carries the declared and effective
-status, the tier, the preference recorded for it and the slots that block or
-gate it. Like the detail window it is wired when opened from a browser and
-standalone when opened with a stream of its own.
+status, the tier, the preference recorded for it, the slots that block or gate
+it, and a Decide button that opens the decide window on that row the same way
+the detail window's does. Like the detail window it is wired when opened from a
+browser and standalone when opened with a stream of its own.
 
 `gyld.decide` answers a question or asks a new one. Opened from a browser
 through the Decide button it is wired to that browser, so it answers on the
