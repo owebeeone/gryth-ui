@@ -1,0 +1,62 @@
+name: Taut shape consumer
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gryth-glial-value:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: workspace/gryth-ui
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/grip-core
+          path: workspace/grip-core
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/grip-react
+          path: workspace/grip-react
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/glade-decl-ts
+          path: workspace/glade-decl-ts
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/glial-runtime
+          path: workspace/glial
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/glade-chat
+          path: glade-wz/glade-chat
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/glade
+          path: glade-wz/glade
+      - uses: actions/checkout@v4
+        with:
+          repository: owebeeone/wyred-ui
+          path: wyred-wz/wyred-ui
+      - name: Complete the existing Glade workspace layout
+        run: |
+          ln -s "$GITHUB_WORKSPACE/workspace/glial" "$GITHUB_WORKSPACE/glade-wz/glial"
+          ln -s "$GITHUB_WORKSPACE/workspace/glade-decl-ts" "$GITHUB_WORKSPACE/glade-wz/glade-decl-ts"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify the unchanged Grip consumer contract
+        working-directory: workspace/gryth-ui
+        run: |
+          npm install --global pnpm@10.24.0
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm run build
+          pnpm run lint
