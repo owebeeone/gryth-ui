@@ -2,7 +2,7 @@ import type { GyldLens, LensEdge, LensLegendEdge, LensLegendNode, LensNode } fro
 import { NOTHING_DIMMED, type GyldDimmed, type GyldSelection } from './camera';
 import { NODE_FACETS, facetDims } from './facets';
 import {
-  cornerRadius, decodeSpline, edgeStyle, groupBox, labelOrigin, lensExtent, nodeBox,
+  cornerRadius, decodeSpline, edgeStyle, groupBox, labelLayout, lensExtent, nodeBox,
   type Box, type Point,
 } from './geometry';
 
@@ -19,6 +19,12 @@ export interface SceneNode {
   fill?: string;
   lines: string[];
   labelAt: Point;
+  /** The typography the host drew this node with: the point size and the
+   *  anchor its justification asks for, both out of the lens file, plus the
+   *  line spacing that follows from the size. */
+  fontSize: number;
+  lineHeight: number;
+  anchor: 'start' | 'middle';
   group?: string;
   hidden: boolean;
   dimmed: boolean;
@@ -201,13 +207,17 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
     // edge: the box stays in the scene at the emitted position either way.
     const facetOff = facetDims(dimmed, node);
     const matched = searching && matches.has(node.id);
+    const label = labelLayout(box, node);
     const scene: SceneNode = {
       id: node.id,
       slot: node.slot,
       box,
       radius: cornerRadius(node),
       lines: node.text,
-      labelAt: labelOrigin(box, node.text.length),
+      labelAt: label.origin,
+      fontSize: label.fontSize,
+      lineHeight: label.lineHeight,
+      anchor: label.anchor,
       hidden: facetOff && hideOff,
       dimmed: (facetOff && !hideOff)
         || (faded && !near.has(node.id))

@@ -77,7 +77,7 @@ no bundle root. Add the root again after a reload.
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is
 copied into this repository: the files are about five megabytes and they belong
 to the Gyld workspace. By default the mount points at
-`../../gyld-wz/gyld/artifacts/decision-streams-v2` relative to this repository,
+`../../gyld-wz/gyld/artifacts/decision-streams-v3` relative to this repository,
 which is where the sibling gwz member emits them. Point it somewhere else with
 an environment variable:
 
@@ -93,7 +93,13 @@ to parsing a plain directory autoindex, exactly as it would against
 not there answers 404 rather than falling through to the application, so an
 absent bundle file reads as absent instead of arriving as `index.html`.
 
-The committed bundle holds two streams over two lineages:
+The default names `decision-streams-v3` and not an earlier run for a reason:
+from that run every lens node carries the point size and the justification the
+host drew it with, and this package reads both rather than guessing a font. An
+older bundle has no `fontsize` on its nodes, so its lens files report the
+missing field instead of drawing.
+
+The committed bundle holds four streams over two lineages:
 
 - `base`, lineage `glade-decision-graph` revision v1. Twenty four questions,
   four roots, six tiers, a projection, a decide-now list and a validation
@@ -101,6 +107,13 @@ The committed bundle holds two streams over two lineages:
   so its four perspectives (`branch`, `decisions`, `status` and `tiers`) come
   from the directory listing. The `decisions` lens draws twenty nine nodes,
   thirty two edges and two groups.
+- `stream-a`, a link over `base`: it rules two of the base's questions, records
+  one trigger as occurred and adds a question of its own. Its record carries a
+  `parent`, the chain `base, stream-a` and the parent snapshot it was built
+  against.
+- `stream-b`, a link over `stream-a` that reopens one of A's answers and takes
+  the other alternative. Its decide-now list carries four rulings, one of them
+  marked not live.
 - `architecture`, lineage `glade-architecture-candidate-1` revision v3. Its
   record does carry a `lenses` manifest, listing nine emitted perspectives and
   one, `full`, that the host declined to emit with its reason. The picker shows

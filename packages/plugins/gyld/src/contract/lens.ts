@@ -1,6 +1,6 @@
 import {
   atPath, readArray, readBoolean, readBoundingBox, readCount, readEnvelope,
-  readIdentifier, readIdentifiers, readObject, readOptionalCount,
+  readFinite, readIdentifier, readIdentifiers, readObject, readOptionalCount,
   readOptionalFinite, readOptionalIdentifier, readOptionalPoint,
   readOptionalTexts, readPoint, readSnapshotRef, readTexts,
   requireCount, requireKnown, requirePrefix, type SnapshotRef,
@@ -77,6 +77,14 @@ export interface LensNode {
   pos: [number, number];
   size: [number, number];
   text: string[];
+  /** The point size the host drew this node's text at. The two lineages do
+   *  not agree (11 for the decision lenses, 12 for the architecture ones), so
+   *  it is emitted per node and read, never chosen by the view. */
+  fontsize: number;
+  /** `left` or `center`, as the host justified this node's text block. A node
+   *  with one line is centred whatever its lens does, so this is per node too.
+   *  Read as an open string: it is Graphviz's vocabulary, not this package's. */
+  justify: string;
   /** A status applies to a Question; other kinds carry none. Every emitted
    *  node carries both `status` and `classification` with one of them null,
    *  so one node shape serves the decision and architecture graphs. */
@@ -212,6 +220,11 @@ function readNode(value: unknown, path: string): LensNode {
     pos: readPoint(raw.pos, atPath(path, 'pos')),
     size: readPoint(raw.size, atPath(path, 'size')),
     text: readTexts(raw.text, atPath(path, 'text')),
+    // Required, not optional: a font size the view picks for itself is a
+    // picture the emitter did not draw, and the whole point of reading the
+    // lens file is that the picture is the emitted one.
+    fontsize: readFinite(raw.fontsize, atPath(path, 'fontsize')),
+    justify: readIdentifier(raw.justify, atPath(path, 'justify')),
   };
   // A status applies to a Question; other record kinds legitimately have none,
   // so absence is absence rather than a substituted value. The same holds for

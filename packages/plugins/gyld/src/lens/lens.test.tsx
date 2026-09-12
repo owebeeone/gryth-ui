@@ -6,7 +6,8 @@ import {
   panBy, panningAt, pressAt, toggleRelation, toggleSelected, wheelFactor, zoomAt,
 } from './camera';
 import {
-  POINTS_PER_INCH, cornerRadius, decodeSpline, edgeStyle, groupBox, lensExtent, nodeBox, toSvg,
+  LABEL_INSET, LINE_SPACING, POINTS_PER_INCH, cornerRadius, decodeSpline, edgeStyle,
+  groupBox, lensExtent, nodeBox, toSvg,
 } from './geometry';
 import { buildScene, lensKeyOf, recordIdOf, slotOf } from './scene';
 import { LensFigure, LensLegend, LensOmissions, LensProvenance } from './LensView';
@@ -279,6 +280,46 @@ describe('rendering the lens', () => {
     }
     const ids = markup.match(/ id="occ:[0-9a-f]{64}"/g) ?? [];
     expect(ids).toHaveLength(lens.nodes.length);
+  });
+
+  it('draws each node at the font size and justification the host emitted', () => {
+    // The two lineages are drawn differently: the decision lenses are 11pt and
+    // left aligned, the architecture lenses 12pt and centred, and a node with
+    // one line is centred whatever its lens does. None of that is the view's
+    // choice any more; all three numbers come out of the lens file.
+    const sizes = new Set(lens.nodes.map((node) => node.fontsize));
+    expect(sizes).toEqual(new Set([11]));
+    expect(new Set(allocation.nodes.map((node) => node.fontsize))).toEqual(new Set([12]));
+    // every drawn label line of this lens is at the emitted 11, and there are
+    // exactly as many of them as the file has lines
+    const lines = markup.match(/<text[^>]*font-size="11"[^>]*class="gyld-node-line"/g) ?? [];
+    expect(lines).toHaveLength(lens.nodes.flatMap((node) => node.text).length);
+    expect(markup).not.toMatch(/<text[^>]*font-size="12"[^>]*class="gyld-node-line"/);
+
+    const left = lens.nodes.find((node) => node.justify === 'left');
+    const centred = lens.nodes.find((node) => node.justify === 'center');
+    expect(left).toBeDefined();
+    expect(centred).toBeDefined();
+    // a left justified block starts at the inset; a centred one is anchored
+    // at the middle of the emitted box, so the box's own width places it
+    const leftScene = scene.nodes.find((node) => node.id === left!.id)!;
+    const centredScene = scene.nodes.find((node) => node.id === centred!.id)!;
+    expect(leftScene.anchor).toBe('start');
+    expect(leftScene.labelAt.x).toBeCloseTo(leftScene.box.x + LABEL_INSET, 6);
+    expect(centredScene.anchor).toBe('middle');
+    expect(centredScene.labelAt.x).toBeCloseTo(
+      centredScene.box.x + centredScene.box.width / 2, 6,
+    );
+    expect(markup).toContain('text-anchor="middle"');
+  });
+
+  it('spaces the label lines by the emitted font size', () => {
+    const node = lens.nodes.find((entry) => entry.text.length > 2)!;
+    const drawn = scene.nodes.find((entry) => entry.id === node.id)!;
+    expect(drawn.fontSize).toBe(node.fontsize);
+    expect(drawn.lineHeight).toBeCloseTo(node.fontsize * LINE_SPACING, 6);
+    const twelve = buildScene(allocation).nodes[0];
+    expect(twelve.lineHeight).toBeCloseTo(12 * LINE_SPACING, 6);
   });
 
   it('draws every emitted label line of every node, verbatim', () => {

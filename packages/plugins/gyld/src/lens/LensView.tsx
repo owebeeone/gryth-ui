@@ -13,7 +13,7 @@ import {
   panBy, panningAt, pressAt, toggleRelation, wheelFactor, zoomAt,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
-import { LABEL_FONT_SIZE, LABEL_LINE_HEIGHT, lensExtent } from './geometry';
+import { EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent } from './geometry';
 import {
   buildScene, lensKeyOf, recordIdOf,
   type LensScene, type SceneEdge, type SceneNode, type SceneSearch,
@@ -64,7 +64,7 @@ function EdgeShape({ edge, marker }: { edge: SceneEdge; marker: string }) {
           x={edge.labelAt.x}
           y={edge.labelAt.y}
           className="gyld-edge-label"
-          fontSize={LABEL_FONT_SIZE - 1}
+          fontSize={EDGE_LABEL_FONT_SIZE}
           fill={edge.color ?? 'currentColor'}
         >
           {edge.label}
@@ -93,8 +93,9 @@ function NodeShape({ node }: { node: SceneNode }) {
         <text
           key={`${node.id}-line-${index}`}
           x={node.labelAt.x}
-          y={node.labelAt.y + index * LABEL_LINE_HEIGHT}
-          fontSize={LABEL_FONT_SIZE}
+          y={node.labelAt.y + index * node.lineHeight}
+          fontSize={node.fontSize}
+          textAnchor={node.anchor}
           className="gyld-node-line"
         >
           {line}
@@ -126,7 +127,7 @@ function Figure({ scene, camera, markerFor }: {
       {scene.groups.map((group) => (
         <g key={group.id} id={group.id} className={`gyld-group ${group.declared ? 'gyld-group-declared' : 'gyld-group-aid'}`}>
           <rect x={group.box.x} y={group.box.y} width={group.box.width} height={group.box.height} rx={8} />
-          <text x={group.box.x + 8} y={group.box.y + 14} fontSize={LABEL_FONT_SIZE + 1}>
+          <text x={group.box.x + 8} y={group.box.y + 14} fontSize={GROUP_LABEL_FONT_SIZE}>
             {group.label}
             {group.declared ? '' : ' (reading aid)'}
           </text>

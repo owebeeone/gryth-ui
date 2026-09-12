@@ -14,14 +14,23 @@ import type { GyldLens, LensEdge, LensGroup, LensNode } from '../contract';
 
 export const POINTS_PER_INCH = 72;
 
-/** Node label typography. The lens file emits the text LINES but not the font
- *  or the justification Graphviz used, which differs between the decision
- *  lenses (left aligned, 11pt) and the architecture lenses (centred, 12pt).
- *  The view therefore redraws with one documented rule; the GEOMETRY is exact,
- *  the typography is a faithful approximation. */
-export const LABEL_FONT_SIZE = 11;
-export const LABEL_LINE_HEIGHT = 12;
+/** How far a left justified text block sits inside its box. */
 export const LABEL_INSET = 8;
+
+/** Line spacing as a multiple of the point size, which is Graphviz's own
+ *  default for a multi-line label. It is the one typographic number the lens
+ *  file does not carry: the host emits the size and the justification per
+ *  node, and the spacing follows from the size. */
+export const LINE_SPACING = 1.2;
+
+/** Edge label and cluster label point sizes. These two the lens file does NOT
+ *  emit: `gyld/scripts/lens_geometry.py` writes them into the DOT once, as
+ *  `edge [fontsize=9]` and `fontsize=12` inside each cluster, and they never
+ *  reach the lens document. They are therefore the view's own constants, set
+ *  to what that host asks Graphviz for, and they are the only typography here
+ *  the emitter did not hand over. */
+export const EDGE_LABEL_FONT_SIZE = 9;
+export const GROUP_LABEL_FONT_SIZE = 12;
 
 export interface Point {
   x: number;
@@ -61,13 +70,37 @@ export function groupBox(lens: GyldLens, group: LensGroup): Box {
   return { x: topLeft.x, y: topLeft.y, width: x1 - x0, height: y1 - y0 };
 }
 
-/** Where a node's text block starts, so the lines sit inside the box. */
-export function labelOrigin(box: Box, lines: number): Point {
-  const block = lines * LABEL_LINE_HEIGHT;
+/** How a node's text block is drawn: the anchor its justification asks for,
+ *  the size the host drew it at, and the spacing that follows from the size. */
+export interface LabelLayout {
+  origin: Point;
+  /** The SVG `text-anchor` the emitted justification means. */
+  anchor: 'start' | 'middle';
+  fontSize: number;
+  lineHeight: number;
+}
+
+/**
+ * Where a node's text block starts, so the lines sit inside the box the same
+ * way the host drew them. Both inputs come out of the lens file: `fontsize`
+ * and `justify` are per node, because the decision lenses are 11pt left
+ * aligned, the architecture lenses 12pt centred, and a single-line node is
+ * centred whatever its lens does.
+ */
+export function labelLayout(box: Box, node: LensNode): LabelLayout {
+  const fontSize = node.fontsize;
+  const lineHeight = fontSize * LINE_SPACING;
+  const block = node.text.length * lineHeight;
+  const centred = node.justify !== 'left';
   return {
-    x: box.x + LABEL_INSET,
-    // the first baseline sits one line below the top of the centred block
-    y: box.y + (box.height - block) / 2 + LABEL_FONT_SIZE,
+    origin: {
+      x: centred ? box.x + box.width / 2 : box.x + LABEL_INSET,
+      // the first baseline sits one line below the top of the centred block
+      y: box.y + (box.height - block) / 2 + fontSize,
+    },
+    anchor: centred ? 'middle' : 'start',
+    fontSize,
+    lineHeight,
   };
 }
 

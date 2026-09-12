@@ -31,7 +31,7 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
 /** The sibling gwz workspace member that emits the bundle, relative to this
  *  repository's root. A documented default, so `pnpm dev` in the usual
  *  workspace layout needs no environment at all. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v2'
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v3'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.json': 'application/json; charset=utf-8',
