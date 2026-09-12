@@ -1,6 +1,6 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
 import { defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
-import type { GyldDecideNow, GyldValidation } from './contract';
+import type { GyldDecideNow, GyldStreamDiff, GyldValidation } from './contract';
 import {
   BUNDLE_UNSET, CENSUS_EMPTY, EMPTY_SET, LENS_UNSET, VALUE_UNSET,
   type GyldBundle, type GyldLensState, type GyldRootStatus, type GyldSet,
@@ -116,6 +116,30 @@ export const GYLD_VALIDATION =
 
 // Class 2 source, per destination from Gyld.Dest.Stream AND .Perspective.
 export const GYLD_LENS = defineGrip<GyldLensState>('Gyld.Lens', LENS_UNSET);
+
+// ---------------------------------------------------------------------------
+// Step 2.5: the diff window's destination. A diff is between TWO streams, so
+// its destination is a PAIR, and the pair is ordered: `diffs/<left>..<right>`
+// is not `diffs/<right>..<left>` and this package never reverses one.
+// ---------------------------------------------------------------------------
+
+export const GYLD_DEST_LEFT = defineGrip<string>('Gyld.Dest.Left', '');
+export const GYLD_DEST_LEFT_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Dest.Left.Tap');
+
+export const GYLD_DEST_RIGHT = defineGrip<string>('Gyld.Dest.Right', '');
+export const GYLD_DEST_RIGHT_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Dest.Right.Tap');
+
+// Class 2 source, per destination from Gyld.Dest.Left AND .Right.
+export const GYLD_DIFF =
+  defineGrip<GyldValue<GyldStreamDiff>>('Gyld.Diff', VALUE_UNSET);
+
+// Class 1 atom; INSTANCE scope, one per diff window. The record in hand, as a
+// QUALIFIED SLOT, shared by the window's two panes: the slot is the only thing
+// that means "the same record" in two streams (R1), so one pane writes it and
+// the other lights it up. Empty means nothing in hand, and is drawn as such.
+export const GYLD_DIFF_SLOT = defineGrip<string>('Gyld.Tab.Diff.Slot', '');
+export const GYLD_DIFF_SLOT_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Diff.Slot.Tap');
 
 // ---------------------------------------------------------------------------
 // Step 1.2: the two conversion grips. Both are PER DESTINATION, produced by

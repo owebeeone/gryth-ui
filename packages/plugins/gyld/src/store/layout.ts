@@ -24,6 +24,16 @@ export const STREAM_FILE_NAMES = Object.keys(STREAM_FILES) as StreamFile[];
  *  and `.lens.json` in the same directory; only the last is the UI's input. */
 export const LENS_SUFFIX = '.lens.json';
 
+/** The directory of emitted diffs, at the root of a bundle beside `streams/`. */
+export const DIFFS_DIRECTORY = 'diffs';
+
+/** `diffs/<left>..<right>.json` (spec section 7.6). The pair is ORDERED: the
+ *  diff of (a, b) is not the diff of (b, a), and this package never reverses
+ *  one to answer for the other. */
+export function diffPath(left: string, right: string): string {
+  return `${DIFFS_DIRECTORY}/${left}..${right}.json`;
+}
+
 export function streamDirectory(stream: string): string {
   return `streams/${stream}`;
 }

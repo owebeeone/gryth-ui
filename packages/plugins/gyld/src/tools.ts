@@ -10,6 +10,7 @@ export const GYLD_DETAIL_TOOL: ToolId = 'gyld.detail';
 export const GYLD_DECIDE_NOW_TOOL: ToolId = 'gyld.decidenow';
 export const GYLD_STREAMS_TOOL: ToolId = 'gyld.streams';
 export const GYLD_DECIDE_TOOL: ToolId = 'gyld.decide';
+export const GYLD_DIFF_TOOL: ToolId = 'gyld.diff';
 
 /**
  * The `role` each tool advertises, per the table in spec section 2.
@@ -24,3 +25,4 @@ export const DETAIL_ROLE = 'stage';
 export const DECIDE_NOW_ROLE = 'crew';
 export const STREAMS_ROLE = 'crew';
 export const DECIDE_ROLE = 'stage';
+export const DIFF_ROLE = 'stage';

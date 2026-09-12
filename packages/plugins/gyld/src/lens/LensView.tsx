@@ -15,7 +15,7 @@ import {
 } from './camera';
 import { EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent } from './geometry';
 import {
-  buildScene, lensKeyOf, recordIdOf,
+  buildScene, lensKeyOf, recordIdOf, slotOf,
   type LensScene, type SceneEdge, type SceneNode, type SceneSearch,
 } from './scene';
 
@@ -254,7 +254,21 @@ function viewportOf(element: Element): { width: number; height: number; left: nu
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld', search }: { scope?: string; search?: SceneSearch }) {
+export function LensView({ scope = 'gyld', search, onSlot }: {
+  scope?: string;
+  search?: SceneSearch;
+  /**
+   * Told the QUALIFIED SLOT the reader just picked or hovered, when a window
+   * around this one wants to know. The diff window is the one that does: the
+   * slot is the only thing that means "the same record" in two pictures (R1),
+   * so one pane tells the window and the other lights it up.
+   *
+   * A window that passes none is unchanged, and a pick that resolves no slot
+   * reports the empty string rather than an occurrence id, which would not
+   * survive a restream and so could not correspond to anything.
+   */
+  onSlot?: (slot: string) => void;
+}) {
   const state = useGrip(GYLD_LENS);
   const camera = useGrip(GYLD_TAB_CAMERA) ?? CAMERA_UNFITTED;
   const drag = useGrip(GYLD_TAB_CAMERA_DRAG);
@@ -388,6 +402,7 @@ export function LensView({ scope = 'gyld', search }: { scope?: string; search?: 
           onHover={(id) => {
             if ((hoverTap?.get() ?? '') !== id) {
               hoverTap?.set(id);
+              onSlot?.(id === '' ? '' : (slotOf(lens, id) ?? ''));
             }
           }}
           // One pick, three writes: this window's selection, the record this
@@ -405,6 +420,7 @@ export function LensView({ scope = 'gyld', search }: { scope?: string; search?: 
             selectionTap?.set(outcome.selection);
             refTap?.set(outcome.ref);
             focusTap?.set(outcome.focus);
+            onSlot?.(outcome.ref);
           }}
         />
       </div>

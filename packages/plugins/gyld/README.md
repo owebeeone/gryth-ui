@@ -51,6 +51,22 @@ the window prints the stream's `validation.json` by code, with the details Gyld
 wrote. Nothing is submitted: the owner merges the text into the stream's
 overlay module and rebuilds.
 
+`gyld.diff` puts one perspective of two streams side by side. Each pane is a
+lens view in its own child context, with its own camera, selection and dim set,
+resolving its own stream; the perspective picker offers only what both streams
+emitted, because a picture one side does not have is not two pictures to
+compare. Picking or hovering a record in either pane puts its qualified slot in
+the window's hand, and both panes light up the record with that slot: the slot
+is the only thing that means the same record in two streams, because ids are
+minted per stream, and a pane that does not draw it says so rather than
+lighting up a neighbour. Under the pictures the window reads out the emitted
+`diffs/<left>..<right>.json` whole: records, questions, effective statuses,
+selections, rulings added, removed, retired and restored, triggers recorded as
+occurred, assertions, what this perspective's picture gained and lost, and the
+diff's own omissions. A pair the bundle has not compared reads as absent, with
+the command that would write it, because this window never compares two
+bundles itself.
+
 `gyld.streams` is the stream manager. It draws the set's streams as the tree
 their `parent` fields make, each row with its kind, lineage, revision, snapshot
 digest, the digest it was built against, its chain, its overlay module and what
@@ -177,9 +193,14 @@ shared focus, and the browser chrome prints it, but no window changes what it
 shows because another window's focus moved. The cross window correlation that
 grip is there to carry is still only half wired.
 
-There is no diff or compare window yet. The specification names `gyld.diff`
-and `gyld.compare`; neither is declared here, because neither has a window that
-can render it yet.
+There is no compare window yet. The specification names `gyld.compare`; it is
+not declared here, because it has no window that can render it yet.
+
+The diff window highlights a corresponding record with the same mechanism the
+search box uses, which dims the rest of both pictures while a record is in
+hand. That is a strong highlight for a hover, and `Clear` puts it back. A
+quieter highlight would be a second mode in the scene builder, and it is not
+one this step needed.
 
 The decide window's principal is a per-tab field, not the glade principal stub.
 `@grythjs/glade` computes that stub from `location.search` at import and owns

@@ -747,3 +747,89 @@
   gap: 6px;
   flex-basis: 100%;
 }
+
+/* The diff window (step 2.5). Two panes of equal width, the emitted
+   comparison under them. The highlight the panes use is the lens view's own,
+   so a corresponding record looks the same as a searched one. */
+
+.gyld-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 12px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-diff-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 320px;
+}
+
+.gyld-diff-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gyld-diff-pane-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.gyld-diff-slot,
+.gyld-diff-command {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gyld-diff-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gyld-diff-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-diff-section h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.gyld-diff-list h5 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.gyld-diff-list ul {
+  margin: 0;
+  padding-left: 16px;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gyld-diff-list li {
+  overflow-wrap: anywhere;
+}

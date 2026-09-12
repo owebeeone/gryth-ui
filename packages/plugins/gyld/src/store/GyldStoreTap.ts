@@ -1,13 +1,16 @@
 import { BaseTap, type Grip, type GripContext } from '@owebeeone/grip-react';
 import {
-  attempt, readDecideNow, readLens, readProjection, readStream, readStreamsIndex,
-  readValidation, type ContractResult, type GyldContractError,
+  attempt, readDecideNow, readLens, readProjection, readStream, readStreamDiff,
+  readStreamsIndex, readValidation, type ContractResult, type GyldContractError,
 } from '../contract';
 import {
-  GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_STREAM, GYLD_LENS,
-  GYLD_SET, GYLD_STORE_RELOAD, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_VALIDATION,
+  GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_LEFT, GYLD_DEST_PERSPECTIVE, GYLD_DEST_RIGHT,
+  GYLD_DEST_STREAM, GYLD_DIFF, GYLD_LENS, GYLD_SET, GYLD_STORE_RELOAD, GYLD_STORE_STATUS,
+  GYLD_STREAMS, GYLD_VALIDATION,
 } from '../grips';
-import { STREAMS_INDEX_PATH, lensPath, streamFilePath, type StreamFile } from './layout';
+import {
+  STREAMS_INDEX_PATH, diffPath, lensPath, streamFilePath, type StreamFile,
+} from './layout';
 import {
   DirectoryStore, StaticStore, errorMessage,
   type GyldDirectoryHandle, type GyldStore,
@@ -176,9 +179,11 @@ export class GyldStoreTap extends BaseTap {
     super({
       provides: [
         GYLD_STREAMS, GYLD_STORE_STATUS, GYLD_STORE_RELOAD,
-        GYLD_BUNDLE, GYLD_LENS, GYLD_DECIDE_NOW, GYLD_VALIDATION,
+        GYLD_BUNDLE, GYLD_LENS, GYLD_DECIDE_NOW, GYLD_VALIDATION, GYLD_DIFF,
       ],
-      destinationParamGrips: [GYLD_DEST_STREAM, GYLD_DEST_PERSPECTIVE],
+      destinationParamGrips: [
+        GYLD_DEST_STREAM, GYLD_DEST_PERSPECTIVE, GYLD_DEST_LEFT, GYLD_DEST_RIGHT,
+      ],
       homeParamGrips: [GYLD_SET],
     });
     this.pollMs = options.pollMs ?? DEFAULT_POLL_MS;
@@ -579,6 +584,9 @@ export class GyldStoreTap extends BaseTap {
     if (grip === (GYLD_VALIDATION as unknown as Grip<unknown>)) {
       return this.fileFor(dest, 'validation');
     }
+    if (grip === (GYLD_DIFF as unknown as Grip<unknown>)) {
+      return this.diffFor(dest);
+    }
     return undefined;
   }
 
@@ -698,6 +706,41 @@ export class GyldStoreTap extends BaseTap {
     return this.load(entry.rootIndex, streamFilePath(stream, file), FILE_READERS[file]);
   }
 
+  /**
+   * `Gyld.Diff` for the destination's PAIR. The diff is Gyld's own comparison,
+   * read from the file the host wrote and nothing else: a pair with no emitted
+   * diff publishes as `absent`, and this tap never compares two bundles to
+   * make one (spec section 6.7).
+   *
+   * The file lives at the root of a bundle, so it is read from the root that
+   * carries the LEFT stream. A pair whose two streams are in different roots
+   * of a set has no one bundle to hold their diff, and reads as absent there
+   * too.
+   */
+  private diffFor(dest: StoreDestination): GyldValue<unknown> {
+    const left = this.pairParam(dest, GYLD_DEST_LEFT);
+    const right = this.pairParam(dest, GYLD_DEST_RIGHT);
+    if (left === '' || right === '') {
+      return VALUE_UNSET;
+    }
+    if (this.census.status === 'loading') {
+      return VALUE_LOADING;
+    }
+    if (this.census.status !== 'ready') {
+      return this.once('value-absent', () => ({ status: 'absent' as GyldLoadStatus }));
+    }
+    const entry = this.census.streams.find((held) => held.id === left);
+    if (entry === undefined) {
+      return this.once('value-absent', () => ({ status: 'absent' as GyldLoadStatus }));
+    }
+    return this.load(entry.rootIndex, diffPath(left, right), readStreamDiff);
+  }
+
+  private pairParam(dest: StoreDestination, grip: typeof GYLD_DEST_LEFT): string {
+    const value = dest.getDestinationParamValue(grip);
+    return typeof value === 'string' ? value : '';
+  }
+
   private lensFor(dest: StoreDestination): GyldLensState {
     const stream = this.streamParam(dest);
     const rawPerspective = dest.getDestinationParamValue(GYLD_DEST_PERSPECTIVE);
@@ -791,8 +834,12 @@ export class GyldStoreTap extends BaseTap {
     })();
   }
 
-  /** A file changed, so the bundle memo that folds it is no longer current. */
+  /** A file changed, so the bundle memo that folds it is no longer current. A
+   *  diff is not folded into a bundle, so it invalidates nothing. */
   private invalidate(rootIndex: number, path: string): void {
+    if (path.startsWith('diffs/')) {
+      return;
+    }
     const stream = path.startsWith('streams/') ? path.split('/')[1] : undefined;
     if (stream === undefined) {
       this.bundles.clear();

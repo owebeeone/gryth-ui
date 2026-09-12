@@ -10,11 +10,13 @@ import { StreamManager } from './streams/StreamManager';
 import { streamsTabTaps } from './streams/streamsTabTaps';
 import { DecideWindow } from './decide/DecideWindow';
 import { decideTabTaps } from './decide/decideTabTaps';
+import { DiffWindow } from './diff/DiffWindow';
+import { diffTabTaps } from './diff/diffTabTaps';
 import { GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap } from './rootTaps';
 import {
-  BROWSER_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, STREAMS_ROLE,
+  BROWSER_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE, STREAMS_ROLE,
   GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL,
-  GYLD_STREAMS_TOOL,
+  GYLD_DIFF_TOOL, GYLD_STREAMS_TOOL,
 } from './tools';
 import './gyld.css';
 
@@ -24,9 +26,9 @@ import './gyld.css';
 // lands in the plugin registry under GYLD_PLUGIN.
 //
 // Phase 1 advertised the browser, the record detail and the decide-now list;
-// Phase 2 adds the stream manager and the decide window. The remaining tools
-// of section 2 (gyld.diff and later gyld.compare) are added as their views
-// land; none is declared here ahead of a window that can render it.
+// Phase 2 adds the stream manager, the decide window and the diff. The one
+// remaining tool of section 2, gyld.compare, arrives with its view in Phase 3;
+// none is declared here ahead of a window that can render it.
 
 // The plugin-root taps: the set atom, the shared focus atom, the one store tap
 // and the two conversion taps. All are registered at the app's root context,
@@ -88,6 +90,15 @@ addEntry(GYLD_PLUGIN, {
       // question that browser is on.
       tabTaps: decideTabTaps,
     },
+    [GYLD_DIFF_TOOL]: {
+      label: 'Gyld diff',
+      defaultSize: { w: 1100, h: 760 },
+      role: DIFF_ROLE,
+      windowComponent: DiffWindow,
+      // A PAIR and a perspective, plus the record in hand the two panes share.
+      // Each pane's own state is seeded on its own child context instead.
+      tabTaps: diffTabTaps,
+    },
   },
 });
 
@@ -103,6 +114,8 @@ export {
   GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP, GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP,
   GYLD_ANSWER_DRAFT, GYLD_ANSWER_DRAFT_TAP, GYLD_ANSWER_EXPORT, GYLD_ANSWER_EXPORT_TAP,
   GYLD_ASK_DRAFT, GYLD_ASK_DRAFT_TAP, GYLD_ASK_EXPORT, GYLD_ASK_EXPORT_TAP,
+  GYLD_DEST_LEFT, GYLD_DEST_LEFT_TAP, GYLD_DEST_RIGHT, GYLD_DEST_RIGHT_TAP,
+  GYLD_DIFF, GYLD_DIFF_SLOT, GYLD_DIFF_SLOT_TAP,
 } from './grips';
 export * from './focus';
 export * from './tools';
@@ -132,6 +145,9 @@ export { browserTabTaps } from './browser/browserTabTaps';
 export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
 export { RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
+export { DiffWindow } from './diff/DiffWindow';
+export { diffTabTaps, paneTabTaps } from './diff/diffTabTaps';
+export * from './diff/panes';
 export { DecideWindow } from './decide/DecideWindow';
 export { decideTabTaps } from './decide/decideTabTaps';
 export * from './decide/drafts';
