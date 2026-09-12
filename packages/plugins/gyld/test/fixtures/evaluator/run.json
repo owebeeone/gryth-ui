@@ -1,0 +1,154 @@
+{
+  "format": "gyld.evaluator-run.v1",
+  "run": "iroh-integration-v2",
+  "evaluator_version": "gyld.evaluation.v3",
+  "lineage": "glade-iroh-integration",
+  "revision": "v1",
+  "review": "glade-wz/glade/dev-docs/IrohReview.md (verified 2026-09-12)",
+  "base": {
+    "lineage": "glade-iroh-integration",
+    "revision": "v1",
+    "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+  },
+  "lens": {
+    "format": "gyld.lens.v1",
+    "perspective": "allocation",
+    "stream": null,
+    "baseline": "the evaluation base, shared by every proposal",
+    "candidate": "that base with the proposal's saved operations applied",
+    "omissions": [
+      "gates and their evidence",
+      "costs, futures and relaxation notes",
+      "retained obligations",
+      "the saved operations that produced the candidate"
+    ]
+  },
+  "reports": {
+    "emitted": false,
+    "run": "artifacts/iroh-integration-v1",
+    "note": "The inspector report is the same document for the same evaluation inputs, so a run that skips it names the run that holds it."
+  },
+  "proposals": [
+    {
+      "id": "carrier",
+      "frame": "iroh-carrier-frame",
+      "baseline": {
+        "lineage": "glade-iroh-integration",
+        "revision": "v1",
+        "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+      },
+      "candidate": {
+        "lineage": "glade-iroh-integration",
+        "revision": "v1",
+        "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+      },
+      "candidate_equals_base": true,
+      "introduced": null,
+      "moved": [],
+      "files": {
+        "comparison": "carrier/comparison.json",
+        "applications": "carrier/applications.json",
+        "receipt": "carrier/receipt.json",
+        "workspace": "carrier/workspace.sqlite",
+        "candidate_svg": "carrier/candidate.svg",
+        "candidate_full_dot": "carrier/candidate-full.dot",
+        "report_html": null,
+        "baseline_lens": "carrier/baseline.lens.json",
+        "candidate_lens": "carrier/candidate.lens.json"
+      }
+    },
+    {
+      "id": "gossip",
+      "frame": "iroh-gossip-frame",
+      "baseline": {
+        "lineage": "glade-iroh-integration",
+        "revision": "v1",
+        "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+      },
+      "candidate": {
+        "lineage": "glade-iroh-integration",
+        "revision": "b63a2487e4b695c27b026cc0beaa3caed79102563ad2094d1a3734c11cd610c9",
+        "digest": "d4c7f55ce868552e718b036fed6e2023e0e64540f5c8bd5b9b2f431f961368fc"
+      },
+      "candidate_equals_base": false,
+      "introduced": "proposal:iroh-gossip-overlay",
+      "moved": [],
+      "files": {
+        "comparison": "gossip/comparison.json",
+        "applications": "gossip/applications.json",
+        "receipt": "gossip/receipt.json",
+        "workspace": "gossip/workspace.sqlite",
+        "candidate_svg": "gossip/candidate.svg",
+        "candidate_full_dot": "gossip/candidate-full.dot",
+        "report_html": null,
+        "baseline_lens": "gossip/baseline.lens.json",
+        "candidate_lens": "gossip/candidate.lens.json"
+      }
+    },
+    {
+      "id": "blobs",
+      "frame": "iroh-blobs-frame",
+      "baseline": {
+        "lineage": "glade-iroh-integration",
+        "revision": "v1",
+        "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+      },
+      "candidate": {
+        "lineage": "glade-iroh-integration",
+        "revision": "7a81729c2fcc007f99090107a697c90a2e9ecdffcc047a6c06a2c76de949e08e",
+        "digest": "260a6b7eaeb9f01efb49a3280e3c8ca2354632489ac96d2bf2a1b3ff57a690f5"
+      },
+      "candidate_equals_base": false,
+      "introduced": "proposal:iroh-blobs-bulk-port",
+      "moved": [],
+      "files": {
+        "comparison": "blobs/comparison.json",
+        "applications": "blobs/applications.json",
+        "receipt": "blobs/receipt.json",
+        "workspace": "blobs/workspace.sqlite",
+        "candidate_svg": "blobs/candidate.svg",
+        "candidate_full_dot": "blobs/candidate-full.dot",
+        "report_html": null,
+        "baseline_lens": "blobs/baseline.lens.json",
+        "candidate_lens": "blobs/candidate.lens.json"
+      }
+    },
+    {
+      "id": "docs",
+      "frame": "iroh-docs-frame",
+      "baseline": {
+        "lineage": "glade-iroh-integration",
+        "revision": "v1",
+        "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+      },
+      "candidate": {
+        "lineage": "glade-iroh-integration",
+        "revision": "3ab9c1a1cef8b9edd89eada5aeaa5af571c66ba289e0dc2ead1857a6205f2ab2",
+        "digest": "7be2128b5bdf1f465cdf7fca79687c6e47a158cdc45f4152aa358bf7ae80836d"
+      },
+      "candidate_equals_base": false,
+      "introduced": "proposal:iroh-docs-record-substrate",
+      "moved": [
+        "retain_replica",
+        "reconcile_metadata"
+      ],
+      "files": {
+        "comparison": "docs/comparison.json",
+        "applications": "docs/applications.json",
+        "receipt": "docs/receipt.json",
+        "workspace": "docs/workspace.sqlite",
+        "candidate_svg": "docs/candidate.svg",
+        "candidate_full_dot": "docs/candidate-full.dot",
+        "report_html": null,
+        "baseline_lens": "docs/baseline.lens.json",
+        "candidate_lens": "docs/candidate.lens.json"
+      }
+    }
+  ],
+  "limits": [
+    "documentary gates only; no runtime behaviour is proved",
+    "no proposal is eligible and there is no winner",
+    "the lens draws explicit allocation assertions and nothing else",
+    "a lens document is a pure function of its snapshot; the side and the proposal are named here and by the file name, never by the picture"
+  ]
+}

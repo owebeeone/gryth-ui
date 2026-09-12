@@ -84,6 +84,41 @@ is copied (`decisions`), which is the one the diff window draws side by side.
 Those streams and the architecture stream therefore read here as bundles whose
 projection is absent, which is a state the store must render and does.
 
+## `evaluator/`: one emitted evaluator run, two of its four proposals
+
+REAL output of `gyld/scripts/evaluate_iroh_integration.py`, copied verbatim
+from `gyld/artifacts/iroh-integration-v2/` on 2026-09-13. The layout is the run
+layout of specification section 7.8, so the store addresses these files by the
+paths `run.json` itself names.
+
+| Path | Format |
+|---|---|
+| `run.json` | `gyld.evaluator-run.v1`, four proposals over one base, with the file of every artefact of each |
+| `carrier/comparison.json` | the comparison record: one frame, four hard gates, eighteen obligations a side, two futures, and a conditional subtotal of 19 usd_per_month in one of them |
+| `carrier/baseline.lens.json` | `gyld.lens.v1`, the allocation picture of the evaluation base: 40 nodes, 24 edges, 12 groups |
+| `carrier/candidate.lens.json` | `gyld.lens.v1`, the same picture for the candidate, which for this proposal is the base again |
+| `gossip/comparison.json` | a proposal that introduces a record and relaxes a policy gate: the one fixture with a relaxation note and a non-empty structural impact |
+
+`carrier` is here because it is the whole of a proposal in 170 kB: it is the
+only one whose `operation_history` is empty, and it carries the conditional
+subtotal and the unknown costs beside it. `gossip` is here for the two shapes
+`carrier` has not got, a `relaxation_notes` entry and a `structural_impact`
+that added something, and only its `comparison.json` was copied.
+
+Not copied, because no reader in this package reads them or because they are
+large: `report.html` (4.5 MB and served, not parsed), `workspace.sqlite`,
+`candidate.svg`, `candidate-full.dot`, `applications.json`, `receipt.json`,
+`base.json`, `authoring-inputs.json`, and the `blobs` and `docs` proposals
+whole. `run.json` still names every one of those files for every proposal,
+which is right: the index is what the run emitted, and a file this package does
+not read is not a file the index should stop naming. The two proposals with no
+`comparison.json` here therefore read as absent, which is a state the window
+renders.
+
+`report.html` is the one artefact this run did not write at all: its
+`reports.emitted` is false and its `reports.run` names `artifacts/
+iroh-integration-v1`, the earlier run that holds the byte-identical document.
+
 ## `provisional/`: still hand written, no emitted counterpart
 
 | File | Format | Why it is still provisional |

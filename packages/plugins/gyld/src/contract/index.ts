@@ -16,6 +16,22 @@ export {
 export { snapshotRefMatches, type QualifiedSlot, type SnapshotRef } from './common';
 
 export {
+  EVALUATION_VERSION, readComparison,
+  type ComparisonSummary, type CostMultiplicity, type CostQuantity, type CostRecord,
+  type CostReport, type CostSubject, type CostSubtotal, type EvalContext, type EvalFrame,
+  type EvaluationDiagnostic, type EvaluationFuture, type EvaluationSide,
+  type EvidencePremises, type EvidenceProvenance, type EvidenceRecord,
+  type FutureProbability, type GateStatus, type GyldComparison, type HardGate,
+  type ObligationStatus, type RelaxationNote, type StructuralImpact,
+} from './comparison';
+
+export {
+  EVALUATOR_RUN_FORMAT, readEvaluatorRun,
+  type GyldEvaluatorRun, type ProposalFiles, type RunLens, type RunProposal,
+  type RunReports,
+} from './evaluatorRun';
+
+export {
   STREAMS_FORMAT, STREAM_FORMAT, STREAM_STATUSES,
   readStream, readStreamRecord, readStreamsIndex,
   type GyldStream, type GyldStreamsIndex, type StreamLens, type StreamOverlay,

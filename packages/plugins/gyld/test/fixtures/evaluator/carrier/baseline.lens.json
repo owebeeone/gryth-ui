@@ -1,0 +1,1694 @@
+{
+  "format": "gyld.lens.v1",
+  "perspective": "allocation",
+  "snapshot": {
+    "lineage": "glade-iroh-integration",
+    "revision": "v1",
+    "digest": "64430dfc0528c856953f5a33fbe8cff995b619bebc24a1d847ceba49b9e797cf"
+  },
+  "stream": null,
+  "title": "Glade | Responsibility allocation (candidate 1, revision 3)",
+  "relations": [
+    "allocation"
+  ],
+  "text_relations": [],
+  "omissions": [
+    "requirements",
+    "contracts",
+    "dependencies",
+    "runtime evidence",
+    "gates and their evidence",
+    "costs, futures and relaxation notes",
+    "retained obligations",
+    "the saved operations that produced the candidate"
+  ],
+  "legend": {
+    "edges": [
+      {
+        "relation": "allocation",
+        "definition": "47d0ac4f86e177f2f8a7d2f0d981aeb4ac304c757953b5f2aef3687537417bff",
+        "color": "#1f4e79",
+        "style": "solid",
+        "label": null
+      }
+    ],
+    "nodes": [
+      {
+        "kind": "function",
+        "status": null,
+        "classification": null,
+        "shape": "box",
+        "fill": "#dbeafe",
+        "glyph": null
+      },
+      {
+        "kind": "library",
+        "status": null,
+        "classification": null,
+        "shape": "box",
+        "fill": "#f3f4f6",
+        "glyph": null
+      },
+      {
+        "kind": "library",
+        "status": null,
+        "classification": "Composition",
+        "shape": "box",
+        "fill": "#fde68a",
+        "glyph": null
+      },
+      {
+        "kind": "library",
+        "status": null,
+        "classification": "IOAdapter",
+        "shape": "box",
+        "fill": "#fed7aa",
+        "glyph": null
+      },
+      {
+        "kind": "library",
+        "status": null,
+        "classification": "Integration",
+        "shape": "box",
+        "fill": "#dbeafe",
+        "glyph": null
+      },
+      {
+        "kind": "library",
+        "status": null,
+        "classification": "PureRules",
+        "shape": "box",
+        "fill": "#dcfce7",
+        "glyph": null
+      }
+    ]
+  },
+  "engine": {
+    "name": "dot",
+    "version": "14.1.4",
+    "pinned": true
+  },
+  "bb": [
+    0.0,
+    0.0,
+    1345.0,
+    1660.0
+  ],
+  "groups": [
+    {
+      "id": "grp:composition-root",
+      "label": "Composition root",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:47b175bd6fcd7e49573a7327778b0ef2f4c10eeb43b96a1ef18191e00753dd40"
+      ],
+      "bb": [
+        727.88,
+        1315.0,
+        848.66,
+        1390.0
+      ]
+    },
+    {
+      "id": "grp:integration-orchestration-over-injected-ports",
+      "label": "Integration: orchestration over injected ports",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:de93f53f90db6d57388e33a856520781f5a7b83060393a7280b5539ac63a5547",
+        "occ:9dddc52399db1e8de1caf3f89ba0ec10a04ae3675ffaabe09fb528c85412ec97",
+        "occ:34911b8d4e52da37aaf363bcdee76f913e66024cdd7e27cf91d79ead0839cc82",
+        "occ:23db635d5987c90bf3242f6b9d4471172284a6976499907cbaf938404be430e0",
+        "occ:3e068b240b76ef21fbe60f506a071da817eacdaaacf602b7adc778d67647a005",
+        "occ:5a7dbe4e9090b9eea9e9bf1ffd59af739f912fc1c1d681d16eb0fba2c5ff4131",
+        "occ:977bfc376b68ec504aab8d5f49fbaf6f984442434d46a40d28870be3cf9e60c2",
+        "occ:6653f222b1e2cb7b0f87a48ceb9c25a864bdd278b2d29f1593dd3e37f2fd1653"
+      ],
+      "bb": [
+        649.14,
+        678.0,
+        928.39,
+        1166.0
+      ]
+    },
+    {
+      "id": "grp:pure-rules-no-ambient-i-o-or-time",
+      "label": "Pure rules: no ambient I/O or time",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:ea9c7994758fe690cf2da018c70df15c490f6928006baf3de48d1c60dc752a37"
+      ],
+      "bb": [
+        680.64,
+        466.0,
+        896.89,
+        541.0
+      ]
+    },
+    {
+      "id": "grp:i-o-adapters",
+      "label": "I/O adapters",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:5927e9aa09a5c357dadb0ba002169ded0734e0d45d32f06eae355fd9d669dea1"
+      ],
+      "bb": [
+        737.62,
+        1485.0,
+        838.91,
+        1560.0
+      ]
+    },
+    {
+      "id": "grp:application-external-and-development-only-participants",
+      "label": "Application, external and development-only participants",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:af3d41097f4a913973336d54157a4fffa7fffe55af10eabaabb1306ad2c8a1ef",
+        "occ:1e167a8beadf8d7349ead0475f273906f7c0f836a9a344f8e24f7272a40e3d4f",
+        "occ:57b2a8788214fcc46f0f5e144a6258118d5585f047450a41a3438ff0cd91cbe0",
+        "occ:70188f95265cbc7130a2919a1c8dd5fd98855281fc356f35554d4c2d3c141db7",
+        "occ:20a54482879f337b5c3f29020e5b6d3cfe11cfabebe99b08ac90d9d5888c808e"
+      ],
+      "bb": [
+        615.77,
+        18.0,
+        961.77,
+        329.0
+      ]
+    },
+    {
+      "id": "grp:authority",
+      "label": "authority",
+      "kind": "declared",
+      "occurrence": "occ:f9e2a570ce59478138a87e29b03fe8a8c85a0ee7b7b17435c4dd495337850c89",
+      "members": [
+        "occ:2959c2241383e773403ff4441490109c556df22873cffa848c2b89c1bd746d54",
+        "occ:8fc617619337f54571fd5f8eaa5c31590f765dfd5a0c1ab5e7481881bf4c2c13",
+        "occ:090751e0620d0600b1421ecadb7a047e4ca055e351be511c06fb8b901e0faac9",
+        "occ:2843685a0da1be648be21114e943e16ca93ad45d976609ee9504aa7f9d126c35"
+      ],
+      "bb": [
+        395.73,
+        206.0,
+        541.27,
+        454.0
+      ]
+    },
+    {
+      "id": "grp:contact",
+      "label": "contact",
+      "kind": "declared",
+      "occurrence": "occ:4dbce17592fbf3960f81fdc470de8955f01ffafd52801d32f89234e4d3b5c1e3",
+      "members": [
+        "occ:de89387a1ca6efa383e4ac476f4f6f12f398aea2df3e4424d5c61588c0a7f5ae",
+        "occ:85a1478c5f415737e6d5b3f9be6b02c9caf1c4c7f90ac20e0ca87d9e0e70eb5c",
+        "occ:55eb32c898b568eaf6f26fc055feaff2506c48a7f097c1f905a08978a54cbf3a",
+        "occ:a3ddb745c27f4501b3355d2eaa99121e90d359412c525504b4d6acab78c8e3b7"
+      ],
+      "bb": [
+        402.1,
+        1312.0,
+        534.89,
+        1560.0
+      ]
+    },
+    {
+      "id": "grp:data",
+      "label": "data",
+      "kind": "declared",
+      "occurrence": "occ:66e2b68fd265a8856364379ac53cb1b848dc61a371a196b0f349d29610c01256",
+      "members": [
+        "occ:cefe5f57171b2bdcd10cd713db9eec43508bbcd90ad46bacca523740eafc546f",
+        "occ:21100c07dc4b0142ed85968f4fbca04832d4ca60ca748588f9359ca87bfb6fe9",
+        "occ:8a33e32d6701ccac9caa99069fd751de05b87257d4181024731818c47250e9e3",
+        "occ:0c5934bdda61c3408e2130072e0b84b39f92e31906f7c589ba43fa15c609df1d"
+      ],
+      "bb": [
+        393.48,
+        858.0,
+        543.52,
+        1106.0
+      ]
+    },
+    {
+      "id": "grp:effects",
+      "label": "effects",
+      "kind": "declared",
+      "occurrence": "occ:4a1f34ceda0ceb033abbed62fb8f735bcf4b085dcca79b263eb9859ce428d23d",
+      "members": [
+        "occ:9945dd7f33fb6dcd58db9508a794f2694447e6be4fbb5cc2ec2c88685e658ac7",
+        "occ:aaae224e73773daa300f96915115ecdb0dda8c45753043c999231cb42a038e41",
+        "occ:26ec9caba667177df7cb2fbf7cf59c33e94b67de6b615c49290af941a17fc912"
+      ],
+      "bb": [
+        400.98,
+        462.0,
+        536.02,
+        652.0
+      ]
+    },
+    {
+      "id": "grp:engineering",
+      "label": "engineering",
+      "kind": "declared",
+      "occurrence": "occ:5c780c0018c95d33d0e1da615448ae6589b48c77d1a72c508c61d0cb02f8cd51",
+      "members": [
+        "occ:68cd5fa49221d0221d2d296700e922325d4fc1a87511e22ee5ad21b304bcec24",
+        "occ:c05fbc6b282ad02dcdecf9306df532eb589fac75e11b96a43eff646d8edbb9e1",
+        "occ:1b06b922a18eacf686480b09b832cc86820e72578501dbcbeb94630de1e8e482"
+      ],
+      "bb": [
+        391.23,
+        8.0,
+        545.77,
+        198.0
+      ]
+    },
+    {
+      "id": "grp:knowledge",
+      "label": "knowledge",
+      "kind": "declared",
+      "occurrence": "occ:f1f2b9d32ade2b1301a5559a7b543f4fdbeb0b5c5e3a59589976b2ea653389b8",
+      "members": [
+        "occ:f71b6c55d9aa8d1c2ac35e30f7a74454ef446cb0ee95ab6f9538ec5aacd2c775",
+        "occ:1c56db3587aa62f8356e32ac24a2decd3d9bf417663bf2552b95c15feda0931c",
+        "occ:21c6db404b044d03793a9a7da0f897fd4fc2b0a07648940a4851d5fd32c18d5e"
+      ],
+      "bb": [
+        396.48,
+        660.0,
+        540.52,
+        850.0
+      ]
+    },
+    {
+      "id": "grp:runtime",
+      "label": "runtime",
+      "kind": "declared",
+      "occurrence": "occ:ee06113c313af87a4fd877af4f1aba8ffd4048f2927eb871ed3dae6eb046c3f5",
+      "members": [
+        "occ:dba84aa56b86f298a0662dacb767e3e934f294dd2ce2d9d265ec0cbd9127827a",
+        "occ:0ca9b60fb76127514e96ab654b4ecf352a8fa3819410d16800d20ac3ff236a64",
+        "occ:90f7a17b5af979e80c36ca49597e43c01cae14767276d1ea18524ab7d4f9d6c7"
+      ],
+      "bb": [
+        401.35,
+        1114.0,
+        535.64,
+        1304.0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "occ:de93f53f90db6d57388e33a856520781f5a7b83060393a7280b5539ac63a5547",
+      "slot": "glade_architecture:GladeArchitecture.admission",
+      "label": "admission",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "admission",
+        "Admission"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        705.0
+      ],
+      "size": [
+        1.1012,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:af3d41097f4a913973336d54157a4fffa7fffe55af10eabaabb1306ad2c8a1ef",
+      "slot": "glade_architecture:GladeArchitecture.application",
+      "label": "application",
+      "kind": "library",
+      "status": null,
+      "classification": null,
+      "group": "grp:application-external-and-development-only-participants",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#f3f4f6",
+      "text": [
+        "application",
+        "ApplicationSupplier"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        222.0
+      ],
+      "size": [
+        1.7783,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:cefe5f57171b2bdcd10cd713db9eec43508bbcd90ad46bacca523740eafc546f",
+      "slot": "glade_architecture:GladeArchitecture.assemble_consumer",
+      "label": "assemble_consumer",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:data",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "assemble_consumer"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        884.0
+      ],
+      "size": [
+        1.8617,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:9945dd7f33fb6dcd58db9508a794f2694447e6be4fbb5cc2ec2c88685e658ac7",
+      "slot": "glade_architecture:GladeArchitecture.attach_suppliers",
+      "label": "attach_suppliers",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:effects",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "attach_suppliers"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        604.0
+      ],
+      "size": [
+        1.5387,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:68cd5fa49221d0221d2d296700e922325d4fc1a87511e22ee5ad21b304bcec24",
+      "slot": "glade_architecture:GladeArchitecture.author_declarations",
+      "label": "author_declarations",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:engineering",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "author_declarations"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        150.0
+      ],
+      "size": [
+        1.7887,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:ea9c7994758fe690cf2da018c70df15c490f6928006baf3de48d1c60dc752a37",
+      "slot": "glade_architecture:GladeArchitecture.binding",
+      "label": "binding",
+      "kind": "library",
+      "status": null,
+      "classification": "PureRules",
+      "group": "grp:pure-rules-no-ambient-i-o-or-time",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "binding",
+        "Binding"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        493.0
+      ],
+      "size": [
+        0.89292,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:de89387a1ca6efa383e4ac476f4f6f12f398aea2df3e4424d5c61588c0a7f5ae",
+      "slot": "glade_architecture:GladeArchitecture.bootstrap",
+      "label": "bootstrap",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:contact",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "bootstrap"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1454.0
+      ],
+      "size": [
+        1.0075,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:2959c2241383e773403ff4441490109c556df22873cffa848c2b89c1bd746d54",
+      "slot": "glade_architecture:GladeArchitecture.canonicalize_scope",
+      "label": "canonicalize_scope",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:authority",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "canonicalize_scope"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        290.0
+      ],
+      "size": [
+        1.7992,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:85a1478c5f415737e6d5b3f9be6b02c9caf1c4c7f90ac20e0ca87d9e0e70eb5c",
+      "slot": "glade_architecture:GladeArchitecture.client_sessions",
+      "label": "client_sessions",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:contact",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "client_sessions"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1396.0
+      ],
+      "size": [
+        1.4658,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:dba84aa56b86f298a0662dacb767e3e934f294dd2ce2d9d265ec0cbd9127827a",
+      "slot": "glade_architecture:GladeArchitecture.compose_runtime",
+      "label": "compose_runtime",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:runtime",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "compose_runtime"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1256.0
+      ],
+      "size": [
+        1.6429,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:1e167a8beadf8d7349ead0475f273906f7c0f836a9a344f8e24f7272a40e3d4f",
+      "slot": "glade_architecture:GladeArchitecture.conformance",
+      "label": "conformance",
+      "kind": "library",
+      "status": null,
+      "classification": null,
+      "group": "grp:application-external-and-development-only-participants",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#f3f4f6",
+      "text": [
+        "conformance",
+        "ConformanceHarness"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        45.0
+      ],
+      "size": [
+        1.945,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:57b2a8788214fcc46f0f5e144a6258118d5585f047450a41a3438ff0cd91cbe0",
+      "slot": "glade_architecture:GladeArchitecture.declaration_toolchain",
+      "label": "declaration_toolchain",
+      "kind": "library",
+      "status": null,
+      "classification": null,
+      "group": "grp:application-external-and-development-only-participants",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#f3f4f6",
+      "text": [
+        "declaration_toolchain",
+        "DeclarationToolchain"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        163.0
+      ],
+      "size": [
+        1.9137,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:21100c07dc4b0142ed85968f4fbca04832d4ca60ca748588f9359ca87bfb6fe9",
+      "slot": "glade_architecture:GladeArchitecture.deliver_interest",
+      "label": "deliver_interest",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:data",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "deliver_interest"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1000.0
+      ],
+      "size": [
+        1.4554,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:9dddc52399db1e8de1caf3f89ba0ec10a04ae3675ffaabe09fb528c85412ec97",
+      "slot": "glade_architecture:GladeArchitecture.delivery_engine",
+      "label": "delivery_engine",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "delivery_engine",
+        "Delivery"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        1000.0
+      ],
+      "size": [
+        1.5075,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:34911b8d4e52da37aaf363bcdee76f913e66024cdd7e27cf91d79ead0839cc82",
+      "slot": "glade_architecture:GladeArchitecture.directory",
+      "label": "directory",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "directory",
+        "Directory"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        882.0
+      ],
+      "size": [
+        0.98667,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:8fc617619337f54571fd5f8eaa5c31590f765dfd5a0c1ab5e7481881bf4c2c13",
+      "slot": "glade_architecture:GladeArchitecture.enforce_policy",
+      "label": "enforce_policy",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:authority",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "enforce_policy"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        348.0
+      ],
+      "size": [
+        1.4033,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:c05fbc6b282ad02dcdecf9306df532eb589fac75e11b96a43eff646d8edbb9e1",
+      "slot": "glade_architecture:GladeArchitecture.expose_management",
+      "label": "expose_management",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:engineering",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "expose_management"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        92.0
+      ],
+      "size": [
+        1.9242,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:090751e0620d0600b1421ecadb7a047e4ca055e351be511c06fb8b901e0faac9",
+      "slot": "glade_architecture:GladeArchitecture.fence_source",
+      "label": "fence_source",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:authority",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "fence_source"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        232.0
+      ],
+      "size": [
+        1.32,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:70188f95265cbc7130a2919a1c8dd5fd98855281fc356f35554d4c2d3c141db7",
+      "slot": "glade_architecture:GladeArchitecture.glial",
+      "label": "glial",
+      "kind": "library",
+      "status": null,
+      "classification": null,
+      "group": "grp:application-external-and-development-only-participants",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#f3f4f6",
+      "text": [
+        "glial",
+        "ClientAssembly"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        281.0
+      ],
+      "size": [
+        1.4867,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:23db635d5987c90bf3242f6b9d4471172284a6976499907cbaf938404be430e0",
+      "slot": "glade_architecture:GladeArchitecture.invocation_engine",
+      "label": "invocation_engine",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "invocation_engine",
+        "Invocation"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        764.0
+      ],
+      "size": [
+        1.6846,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:aaae224e73773daa300f96915115ecdb0dda8c45753043c999231cb42a038e41",
+      "slot": "glade_architecture:GladeArchitecture.invoke_source",
+      "label": "invoke_source",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:effects",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "invoke_source"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        546.0
+      ],
+      "size": [
+        1.4033,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:5927e9aa09a5c357dadb0ba002169ded0734e0d45d32f06eae355fd9d669dea1",
+      "slot": "glade_architecture:GladeArchitecture.iroh",
+      "label": "iroh",
+      "kind": "library",
+      "status": null,
+      "classification": "IOAdapter",
+      "group": "grp:i-o-adapters",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fed7aa",
+      "text": [
+        "iroh",
+        "IrohAdapter"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        1512.0
+      ],
+      "size": [
+        1.1846,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:f71b6c55d9aa8d1c2ac35e30f7a74454ef446cb0ee95ab6f9538ec5aacd2c775",
+      "slot": "glade_architecture:GladeArchitecture.locate_providers",
+      "label": "locate_providers",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:knowledge",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "locate_providers"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        744.0
+      ],
+      "size": [
+        1.5492,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:47b175bd6fcd7e49573a7327778b0ef2f4c10eeb43b96a1ef18191e00753dd40",
+      "slot": "glade_architecture:GladeArchitecture.node",
+      "label": "node",
+      "kind": "library",
+      "status": null,
+      "classification": "Composition",
+      "group": "grp:composition-root",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fde68a",
+      "text": [
+        "node",
+        "NodeAssembly"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        1342.0
+      ],
+      "size": [
+        1.4554,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:0ca9b60fb76127514e96ab654b4ecf352a8fa3819410d16800d20ac3ff236a64",
+      "slot": "glade_architecture:GladeArchitecture.own_lifecycle",
+      "label": "own_lifecycle",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:runtime",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "own_lifecycle"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1198.0
+      ],
+      "size": [
+        1.3304,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:55eb32c898b568eaf6f26fc055feaff2506c48a7f097c1f905a08978a54cbf3a",
+      "slot": "glade_architecture:GladeArchitecture.peer_connectivity",
+      "label": "peer_connectivity",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:contact",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "peer_connectivity"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1512.0
+      ],
+      "size": [
+        1.6221,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:1c56db3587aa62f8356e32ac24a2decd3d9bf417663bf2552b95c15feda0931c",
+      "slot": "glade_architecture:GladeArchitecture.reconcile_metadata",
+      "label": "reconcile_metadata",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:knowledge",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "reconcile_metadata"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        802.0
+      ],
+      "size": [
+        1.7783,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:3e068b240b76ef21fbe60f506a071da817eacdaaacf602b7adc778d67647a005",
+      "slot": "glade_architecture:GladeArchitecture.records",
+      "label": "records",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "records",
+        "Records"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        941.0
+      ],
+      "size": [
+        0.945,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:26ec9caba667177df7cb2fbf7cf59c33e94b67de6b615c49290af941a17fc912",
+      "slot": "glade_architecture:GladeArchitecture.repair_publication",
+      "label": "repair_publication",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:effects",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "repair_publication"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        488.0
+      ],
+      "size": [
+        1.6533,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:21c6db404b044d03793a9a7da0f897fd4fc2b0a07648940a4851d5fd32c18d5e",
+      "slot": "glade_architecture:GladeArchitecture.resolve_definitions",
+      "label": "resolve_definitions",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:knowledge",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "resolve_definitions"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        686.0
+      ],
+      "size": [
+        1.7158,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:8a33e32d6701ccac9caa99069fd751de05b87257d4181024731818c47250e9e3",
+      "slot": "glade_architecture:GladeArchitecture.resume_data",
+      "label": "resume_data",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:data",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "resume_data"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1058.0
+      ],
+      "size": [
+        1.2887,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:0c5934bdda61c3408e2130072e0b84b39f92e31906f7c589ba43fa15c609df1d",
+      "slot": "glade_architecture:GladeArchitecture.retain_replica",
+      "label": "retain_replica",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:data",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "retain_replica"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        942.0
+      ],
+      "size": [
+        1.3304,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:5a7dbe4e9090b9eea9e9bf1ffd59af739f912fc1c1d681d16eb0fba2c5ff4131",
+      "slot": "glade_architecture:GladeArchitecture.runtime_services",
+      "label": "runtime_services",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "runtime_services",
+        "Runtime"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        1059.0
+      ],
+      "size": [
+        1.5804,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:a3ddb745c27f4501b3355d2eaa99121e90d359412c525504b4d6acab78c8e3b7",
+      "slot": "glade_architecture:GladeArchitecture.schedule_traffic",
+      "label": "schedule_traffic",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:contact",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "schedule_traffic"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1338.0
+      ],
+      "size": [
+        1.4867,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:977bfc376b68ec504aab8d5f49fbaf6f984442434d46a40d28870be3cf9e60c2",
+      "slot": "glade_architecture:GladeArchitecture.sessions",
+      "label": "sessions",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "sessions",
+        "Sessions"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        1118.0
+      ],
+      "size": [
+        1.0075,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:6653f222b1e2cb7b0f87a48ceb9c25a864bdd278b2d29f1593dd3e37f2fd1653",
+      "slot": "glade_architecture:GladeArchitecture.supplier_host",
+      "label": "supplier_host",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "supplier_host",
+        "SupplierHost"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        823.0
+      ],
+      "size": [
+        1.32,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:20a54482879f337b5c3f29020e5b6d3cfe11cfabebe99b08ac90d9d5888c808e",
+      "slot": "glade_architecture:GladeArchitecture.system_suppliers",
+      "label": "system_suppliers",
+      "kind": "library",
+      "status": null,
+      "classification": null,
+      "group": "grp:application-external-and-development-only-participants",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#f3f4f6",
+      "text": [
+        "system_suppliers",
+        "SystemSuppliers"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        788.27,
+        104.0
+      ],
+      "size": [
+        1.6117,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:90f7a17b5af979e80c36ca49597e43c01cae14767276d1ea18524ab7d4f9d6c7",
+      "slot": "glade_architecture:GladeArchitecture.validate_ingress",
+      "label": "validate_ingress",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:runtime",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "validate_ingress"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        1140.0
+      ],
+      "size": [
+        1.5387,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:2843685a0da1be648be21114e943e16ca93ad45d976609ee9504aa7f9d126c35",
+      "slot": "glade_architecture:GladeArchitecture.verify_identity",
+      "label": "verify_identity",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:authority",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "verify_identity"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        406.0
+      ],
+      "size": [
+        1.3408,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:1b06b922a18eacf686480b09b832cc86820e72578501dbcbeb94630de1e8e482",
+      "slot": "glade_architecture:GladeArchitecture.verify_integration",
+      "label": "verify_integration",
+      "kind": "function",
+      "status": null,
+      "classification": null,
+      "group": "grp:engineering",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "verify_integration"
+      ],
+      "fontsize": 12,
+      "justify": "center",
+      "pos": [
+        468.5,
+        34.0
+      ],
+      "size": [
+        1.5908,
+        0.5
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "asn:0842aab1c7ad83c6d7845ca004fb76c6ffbbe3e9677f14407a4b19170f4d406a",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:cefe5f57171b2bdcd10cd713db9eec43508bbcd90ad46bacca523740eafc546f",
+      "tail": "occ:cefe5f57171b2bdcd10cd713db9eec43508bbcd90ad46bacca523740eafc546f",
+      "head": "occ:70188f95265cbc7130a2919a1c8dd5fd98855281fc356f35554d4c2d3c141db7",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,761.46,299.86 534.11,865.51 538.46,862.51 542.43,859.04 545.77,855 659.21,718.02 535.46,619.69 615.77,461 649.3,394.74 715.22,336.24 754.85,305",
+      "label_pos": null
+    },
+    {
+      "id": "asn:8cbfcdc6f61969fbba932ae8b8ff5de6120bd7ac9efd7f30c82e95cc72cb80e0",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:9945dd7f33fb6dcd58db9508a794f2694447e6be4fbb5cc2ec2c88685e658ac7",
+      "tail": "occ:9945dd7f33fb6dcd58db9508a794f2694447e6be4fbb5cc2ec2c88685e658ac7",
+      "head": "occ:6653f222b1e2cb7b0f87a48ceb9c25a864bdd278b2d29f1593dd3e37f2fd1653",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,740.27,826.04 504.69,622.27 518.74,630.82 534.27,641.99 545.77,655 591.58,706.82 560.12,752.92 615.77,794 648.95,818.49 695.52,825.1 731.77,825.95",
+      "label_pos": null
+    },
+    {
+      "id": "asn:3459318ea55f42c8f4444ac79b1c54089991bc1fcaadffb18ae727517b217316",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:68cd5fa49221d0221d2d296700e922325d4fc1a87511e22ee5ad21b304bcec24",
+      "tail": "occ:68cd5fa49221d0221d2d296700e922325d4fc1a87511e22ee5ad21b304bcec24",
+      "head": "occ:57b2a8788214fcc46f0f5e144a6258118d5585f047450a41a3438ff0cd91cbe0",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,718.89,160.2 533.04,152.6 584.21,154.69 656.31,157.64 710.66,159.87",
+      "label_pos": null
+    },
+    {
+      "id": "asn:00b9a8e9d0862706f4c2cbdb206dae5c1a487a453e0a101fd4d98733d09a7505",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:de89387a1ca6efa383e4ac476f4f6f12f398aea2df3e4424d5c61588c0a7f5ae",
+      "tail": "occ:de89387a1ca6efa383e4ac476f4f6f12f398aea2df3e4424d5c61588c0a7f5ae",
+      "head": "occ:47b175bd6fcd7e49573a7327778b0ef2f4c10eeb43b96a1ef18191e00753dd40",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,735.45,1360.3 505.03,1441.5 558.95,1422.5 662.11,1386.1 727.65,1363",
+      "label_pos": null
+    },
+    {
+      "id": "asn:c2117bf0f420cb269675a172ef738f4a96717f841ec7563bea7a46e9f366e1df",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:2959c2241383e773403ff4441490109c556df22873cffa848c2b89c1bd746d54",
+      "tail": "occ:2959c2241383e773403ff4441490109c556df22873cffa848c2b89c1bd746d54",
+      "head": "occ:ea9c7994758fe690cf2da018c70df15c490f6928006baf3de48d1c60dc752a37",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,765.28,474.09 523.22,308.39 530.94,311.61 538.66,315.17 545.77,319 628.43,363.5 715.4,432.47 758.92,468.77",
+      "label_pos": null
+    },
+    {
+      "id": "asn:b5434b06a7f78a576f902a092c771bb66487829da6d7cb2cba06e46b18e90abc",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:85a1478c5f415737e6d5b3f9be6b02c9caf1c4c7f90ac20e0ca87d9e0e70eb5c",
+      "tail": "occ:85a1478c5f415737e6d5b3f9be6b02c9caf1c4c7f90ac20e0ca87d9e0e70eb5c",
+      "head": "occ:977bfc376b68ec504aab8d5f49fbaf6f984442434d46a40d28870be3cf9e60c2",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,770.83,1137 521.47,1379.8 529.91,1376.2 538.31,1371.9 545.77,1367 596.27,1333.8 716.09,1199.5 765.44,1143.1",
+      "label_pos": null
+    },
+    {
+      "id": "asn:dec17031edd5cb1026d6fcfcdba5f601713965c56b34afe886c042680384d2e1",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:dba84aa56b86f298a0662dacb767e3e934f294dd2ce2d9d265ec0cbd9127827a",
+      "tail": "occ:dba84aa56b86f298a0662dacb767e3e934f294dd2ce2d9d265ec0cbd9127827a",
+      "head": "occ:47b175bd6fcd7e49573a7327778b0ef2f4c10eeb43b96a1ef18191e00753dd40",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,735.41,1328 527.78,1271.8 584.51,1287.1 670.31,1310.3 727.53,1325.8",
+      "label_pos": null
+    },
+    {
+      "id": "asn:42ff4755ba05956841a50093cf70bdb446438894b0edaefd4179a0122f022252",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:21100c07dc4b0142ed85968f4fbca04832d4ca60ca748588f9359ca87bfb6fe9",
+      "tail": "occ:21100c07dc4b0142ed85968f4fbca04832d4ca60ca748588f9359ca87bfb6fe9",
+      "head": "occ:9dddc52399db1e8de1caf3f89ba0ec10a04ae3675ffaabe09fb528c85412ec97",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,733.67,1000 521.26,1000 577.11,1000 666.01,1000 725.48,1000",
+      "label_pos": null
+    },
+    {
+      "id": "asn:418146fb7a98284ffd4c7f63c0db2c597ad1cd11c2f0375e8d30005c9a1df188",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:8fc617619337f54571fd5f8eaa5c31590f765dfd5a0c1ab5e7481881bf4c2c13",
+      "tail": "occ:8fc617619337f54571fd5f8eaa5c31590f765dfd5a0c1ab5e7481881bf4c2c13",
+      "head": "occ:de93f53f90db6d57388e33a856520781f5a7b83060393a7280b5539ac63a5547",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,760.39,686 519.33,360.23 528.96,364.34 538.35,369.8 545.77,377 604.09,433.64 569.33,479.27 615.77,546 654.52,601.69 715.75,652.42 753.61,680.94",
+      "label_pos": null
+    },
+    {
+      "id": "asn:6acbc4d4daf1dac199b88d26245dff00343deb2ef63c4c884586ff8489f99be9",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:c05fbc6b282ad02dcdecf9306df532eb589fac75e11b96a43eff646d8edbb9e1",
+      "tail": "occ:c05fbc6b282ad02dcdecf9306df532eb589fac75e11b96a43eff646d8edbb9e1",
+      "head": "occ:20a54482879f337b5c3f29020e5b6d3cfe11cfabebe99b08ac90d9d5888c808e",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,729.99,101.84 538.06,94.589 592.44,96.643 667.96,99.495 721.58,101.52",
+      "label_pos": null
+    },
+    {
+      "id": "asn:d402be2e9bcb5720e4d5486b0a8f9d0efadd32887e6af1c92e2224387f7dcde9",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:090751e0620d0600b1421ecadb7a047e4ca055e351be511c06fb8b901e0faac9",
+      "tail": "occ:090751e0620d0600b1421ecadb7a047e4ca055e351be511c06fb8b901e0faac9",
+      "head": "occ:af3d41097f4a913973336d54157a4fffa7fffe55af10eabaabb1306ad2c8a1ef",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,724,223.99 516.39,230.52 568.9,228.87 654.64,226.17 715.58,224.26",
+      "label_pos": null
+    },
+    {
+      "id": "asn:78b577cdda91cd7588b794599ed2b98cedbb889998ab88f6c3a2eeddd4747148",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:aaae224e73773daa300f96915115ecdb0dda8c45753043c999231cb42a038e41",
+      "tail": "occ:aaae224e73773daa300f96915115ecdb0dda8c45753043c999231cb42a038e41",
+      "head": "occ:23db635d5987c90bf3242f6b9d4471172284a6976499907cbaf938404be430e0",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,727.24,767.43 519.22,558.34 528.86,562.45 538.28,567.87 545.77,575 601.98,628.52 554.59,687.23 615.77,735 644.75,757.62 684.95,765.29 719.14,767.11",
+      "label_pos": null
+    },
+    {
+      "id": "asn:cc988c246eb45173e7088bcc3698711bf42d343ba1cd21068de31a62671d85b2",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:f71b6c55d9aa8d1c2ac35e30f7a74454ef446cb0ee95ab6f9538ec5aacd2c775",
+      "tail": "occ:f71b6c55d9aa8d1c2ac35e30f7a74454ef446cb0ee95ab6f9538ec5aacd2c775",
+      "head": "occ:34911b8d4e52da37aaf363bcdee76f913e66024cdd7e27cf91d79ead0839cc82",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,752.49,882.8 524.49,761.15 531.94,764.54 539.26,768.47 545.77,773 584.56,799.97 574.53,829.95 615.77,853 655.42,875.17 707.7,881.3 744.06,882.58",
+      "label_pos": null
+    },
+    {
+      "id": "asn:7ee937cabda93cb05f94c2277aef5b4dc01606253322e90a70bd2e8a57c83bd7",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:0ca9b60fb76127514e96ab654b4ecf352a8fa3819410d16800d20ac3ff236a64",
+      "tail": "occ:0ca9b60fb76127514e96ab654b4ecf352a8fa3819410d16800d20ac3ff236a64",
+      "head": "occ:5a7dbe4e9090b9eea9e9bf1ffd59af739f912fc1c1d681d16eb0fba2c5ff4131",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,731.17,1059 516.51,1184.3 526.64,1180.2 536.95,1175.2 545.77,1169 584.75,1141.7 574.31,1111.3 615.77,1088 648.15,1069.8 689.04,1062.4 722.76,1059.6",
+      "label_pos": null
+    },
+    {
+      "id": "asn:072509731a85a369eda0ecd72b8e3374385c8e3e643ae9615ae4755b500b9dc7",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:55eb32c898b568eaf6f26fc055feaff2506c48a7f097c1f905a08978a54cbf3a",
+      "tail": "occ:55eb32c898b568eaf6f26fc055feaff2506c48a7f097c1f905a08978a54cbf3a",
+      "head": "occ:5927e9aa09a5c357dadb0ba002169ded0734e0d45d32f06eae355fd9d669dea1",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,745.36,1512 527.05,1512 586.93,1512 679.77,1512 736.86,1512",
+      "label_pos": null
+    },
+    {
+      "id": "asn:291bf6cc444c2667b88a7e67cc1dada11cf0f19ee87402a4c7c06c7d52b7e93a",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:1c56db3587aa62f8356e32ac24a2decd3d9bf417663bf2552b95c15feda0931c",
+      "tail": "occ:1c56db3587aa62f8356e32ac24a2decd3d9bf417663bf2552b95c15feda0931c",
+      "head": "occ:3e068b240b76ef21fbe60f506a071da817eacdaaacf602b7adc778d67647a005",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,753.82,940.51 498.63,820.4 513.08,829.78 530.62,841.61 545.77,853 578.29,877.46 578.85,894.89 615.77,912 657.24,931.22 709.63,937.85 745.52,940.06",
+      "label_pos": null
+    },
+    {
+      "id": "asn:93d8772b2370b3cea9d3cf7f985d71c4c1ff679be4ff5846b69ce0bfefadc364",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:26ec9caba667177df7cb2fbf7cf59c33e94b67de6b615c49290af941a17fc912",
+      "tail": "occ:26ec9caba667177df7cb2fbf7cf59c33e94b67de6b615c49290af941a17fc912",
+      "head": "occ:af3d41097f4a913973336d54157a4fffa7fffe55af10eabaabb1306ad2c8a1ef",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,723.98,217.66 528.26,472.01 534.72,468.49 540.76,464.21 545.77,459 613.39,388.71 541.6,314.35 615.77,251 642.97,227.77 681.72,219.83 715.51,218",
+      "label_pos": null
+    },
+    {
+      "id": "asn:73cbae8c39dffea9588f65dda0c1ae0204f9837779a5918a1a92f53d4bbddea3",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:21c6db404b044d03793a9a7da0f897fd4fc2b0a07648940a4851d5fd32c18d5e",
+      "tail": "occ:21c6db404b044d03793a9a7da0f897fd4fc2b0a07648940a4851d5fd32c18d5e",
+      "head": "occ:ea9c7994758fe690cf2da018c70df15c490f6928006baf3de48d1c60dc752a37",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,763.43,511.99 522.72,667.6 530.58,664.36 538.48,660.79 545.77,657 626.37,615.04 712.53,551.41 756.93,517.05",
+      "label_pos": null
+    },
+    {
+      "id": "asn:122879edd7d0065a9a38b267b064dd071a367118a2ec079837612e48afd1203b",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:8a33e32d6701ccac9caa99069fd751de05b87257d4181024731818c47250e9e3",
+      "tail": "occ:8a33e32d6701ccac9caa99069fd751de05b87257d4181024731818c47250e9e3",
+      "head": "occ:9dddc52399db1e8de1caf3f89ba0ec10a04ae3675ffaabe09fb528c85412ec97",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,733.52,1008.7 515.22,1048.6 544.03,1042.7 582.03,1035.2 615.77,1029 652.05,1022.3 692.75,1015.4 725.4,1010",
+      "label_pos": null
+    },
+    {
+      "id": "asn:0e1fe92dabb3d8fd47dab6c3ccf0c087d76ed0310f41cbd64ebf37cc2cca103f",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:0c5934bdda61c3408e2130072e0b84b39f92e31906f7c589ba43fa15c609df1d",
+      "tail": "occ:0c5934bdda61c3408e2130072e0b84b39f92e31906f7c589ba43fa15c609df1d",
+      "head": "occ:3e068b240b76ef21fbe60f506a071da817eacdaaacf602b7adc778d67647a005",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,753.91,941.1 516.73,941.85 578.69,941.66 686.46,941.32 745.55,941.13",
+      "label_pos": null
+    },
+    {
+      "id": "asn:8841b063001a2be36756f2907060efbba703f32dc98d998356a583a23241d1f0",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:a3ddb745c27f4501b3355d2eaa99121e90d359412c525504b4d6acab78c8e3b7",
+      "tail": "occ:a3ddb745c27f4501b3355d2eaa99121e90d359412c525504b4d6acab78c8e3b7",
+      "head": "occ:5a7dbe4e9090b9eea9e9bf1ffd59af739f912fc1c1d681d16eb0fba2c5ff4131",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,731.19,1054.4 522.17,1325.2 530.92,1321.2 539.25,1315.9 545.77,1309 616.53,1234.1 538.02,1155.6 615.77,1088 644.78,1062.8 687.34,1055.5 722.81,1054.5",
+      "label_pos": null
+    },
+    {
+      "id": "asn:3cbc3e8baa787da1c4608de02e3ee0ce73e8a9e609609d6677e9bedf85b79ca6",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:90f7a17b5af979e80c36ca49597e43c01cae14767276d1ea18524ab7d4f9d6c7",
+      "tail": "occ:90f7a17b5af979e80c36ca49597e43c01cae14767276d1ea18524ab7d4f9d6c7",
+      "head": "occ:de93f53f90db6d57388e33a856520781f5a7b83060393a7280b5539ac63a5547",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,748.26,699.93 524.05,1127.3 532.29,1123.3 539.96,1118 545.77,1111 654.97,980.17 494.3,853.53 615.77,734 647.99,702.3 701.16,697.75 739.77,699.45",
+      "label_pos": null
+    },
+    {
+      "id": "asn:0d1b56a950dbf9eb653b5bf2f4b8cd90ea29fc6c304d6b5df6ef9d913db52ded",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:2843685a0da1be648be21114e943e16ca93ad45d976609ee9504aa7f9d126c35",
+      "tail": "occ:2843685a0da1be648be21114e943e16ca93ad45d976609ee9504aa7f9d126c35",
+      "head": "occ:de93f53f90db6d57388e33a856520781f5a7b83060393a7280b5539ac63a5547",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,764.84,686.21 501.57,424.28 515.86,433.2 532.44,444.66 545.77,457 582.7,491.19 581.66,509 615.77,546 662.8,597 723.45,650.75 758.59,680.86",
+      "label_pos": null
+    },
+    {
+      "id": "asn:1b84147f2df3f134bafbab44075528a578810c56bbb5465456c593281fd900c4",
+      "slot": "examples.requirement_concepts:Function.allocation",
+      "relation": "allocation",
+      "ref_index": 0,
+      "owner": "occ:1b06b922a18eacf686480b09b832cc86820e72578501dbcbeb94630de1e8e482",
+      "tail": "occ:1b06b922a18eacf686480b09b832cc86820e72578501dbcbeb94630de1e8e482",
+      "head": "occ:1e167a8beadf8d7349ead0475f273906f7c0f836a9a344f8e24f7272a40e3d4f",
+      "label": null,
+      "style": {
+        "color": "#1f4e79"
+      },
+      "spline": "e,717.77,42.594 525.94,35.954 577.03,37.722 652.73,40.343 709.53,42.309",
+      "label_pos": null
+    }
+  ],
+  "counts": {
+    "nodes": 40,
+    "edges": 24,
+    "groups": 12,
+    "omitted_occurrences": 103,
+    "omitted_assertions": 203
+  }
+}

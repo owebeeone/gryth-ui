@@ -202,6 +202,28 @@ export function readOptionalParameter(
   return parameter;
 }
 
+/**
+ * A field that must be there and must be NULL.
+ *
+ * The evaluator writes `winner: null` and `architecture_superiority: null` on
+ * every comparison, with `winner_reason` saying why, and this package renders
+ * exactly that. A file that one day carries a winner is not a file this window
+ * may quietly show something else for, so a non-null here is a refusal rather
+ * than a value: ranking proposals is not the UI's to do (spec section 6.5,
+ * "The window never ranks proposals").
+ */
+export function readNull(value: unknown, path: string): null {
+  if (value === undefined) {
+    reject(GyldContractViolation.MissingField, { path });
+  }
+  if (value !== null) {
+    reject(GyldContractViolation.UnknownValue, {
+      path, expected: 'null', actual: describe(value),
+    });
+  }
+  return null;
+}
+
 /** A value drawn from the closed set the spec writes down in prose. */
 export function readOneOf<T extends string>(
   value: unknown,
