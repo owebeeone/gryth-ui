@@ -14,7 +14,12 @@ it.
 `gyld.browser` is the one that draws. It carries a stream switcher, a
 perspective picker, a search box over emitted labels and qualified slots, one
 dim toggle per value each drawn dimension carries, and the emitted picture
-itself with pan, zoom, fit and selection. Under the picture it states what the
+itself with pan, zoom, fit and selection. The picker reads the stream record's
+own lens manifest: a perspective the host declined to emit is shown disabled
+with the host's reason, and a member of a parameterised family is labelled with
+the family and the parameter that picked it, so `neighbourhood-key_custody`
+reads as the neighbourhood of question `...GladeDecisions.key_custody` while
+the `neighbourhood` family itself is the disabled entry beside it. Under the picture it states what the
 lens omitted and, in the provenance footer, which lineage, revision, snapshot
 digest, relations and layout engine the file was built from. It writes four
 links: a detail window wired to it, a decide-now window wired to it, a decide
@@ -180,6 +185,13 @@ The committed bundle holds five streams over two lineages:
   one, `full`, that the host declined to emit with its reason. The picker shows
   that entry disabled with the reason attached rather than hiding it. This
   stream emits no decide-now list, which the windows render as absent.
+
+Every record of the run carries a `lenses` manifest, and the decision streams
+carry one member of the parameterised `neighbourhood` family beside the family
+entry itself. The `family` and `parameter` fields are read from both the
+manifest entry and the lens file; a parameter value that is not text is
+refused, because there is no label in a value the picker would have to
+stringify.
 
 A smaller copy of the same output lives in `test/fixtures/bundle/` and is what
 the tests read. See the README beside it for what was copied and what was not.

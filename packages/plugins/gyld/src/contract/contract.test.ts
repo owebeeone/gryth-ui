@@ -6,6 +6,7 @@ import {
 import streamsFixture from '../../test/fixtures/bundle/streams.json';
 import streamFixture from '../../test/fixtures/bundle/streams/base/stream.json';
 import lensFixture from '../../test/fixtures/bundle/streams/base/lenses/decisions.lens.json';
+import neighbourhoodLensFixture from '../../test/fixtures/bundle/streams/base/lenses/neighbourhood-key_custody.lens.json';
 import branchLensFixture from '../../test/fixtures/bundle/streams/base/lenses/branch.lens.json';
 import tiersLensFixture from '../../test/fixtures/bundle/streams/base/lenses/tiers.lens.json';
 import statusLensFixture from '../../test/fixtures/bundle/streams/base/lenses/status.lens.json';
@@ -751,5 +752,55 @@ describe('reading as data, and the one match the spec defines', () => {
     rejects(() => readLens(null), GyldContractViolation.MissingField, 'gyld.lens.v1');
     rejects(() => readLens([]), GyldContractViolation.WrongType, 'gyld.lens.v1');
     rejects(() => readLens('gyld.lens.v1'), GyldContractViolation.WrongType, 'gyld.lens.v1');
+  });
+});
+
+describe('a parameterised lens family, as the manifest and the lens file carry it', () => {
+  it('reads the family and the parameter off a stream record manifest entry', () => {
+    const record = readStream(streamFixture);
+    const manifest = record.lenses!;
+    const member = manifest.find((entry) => entry.perspective === 'neighbourhood-key_custody')!;
+    expect(member.emitted).toBe(true);
+    expect(member.family).toBe('neighbourhood');
+    expect(member.parameter).toEqual({
+      question: 'glade_decisions:GladeDecisions.key_custody',
+    });
+    // the FAMILY itself is an entry of its own, not emitted, with the reason
+    const family = manifest.find((entry) => entry.perspective === 'neighbourhood')!;
+    expect(family.emitted).toBe(false);
+    expect(family.family).toBeUndefined();
+    expect(family.parameter).toBeUndefined();
+    expect(family.reason).toContain('parameterised by question');
+    // an ordinary lens carries neither, and the emitted null stays absent
+    const decisions = manifest.find((entry) => entry.perspective === 'decisions')!;
+    expect(decisions.family).toBeUndefined();
+    expect(decisions.parameter).toBeUndefined();
+  });
+
+  it('reads the same two fields off the member lens file', () => {
+    const lens = readLens(neighbourhoodLensFixture);
+    expect(lens.perspective).toBe('neighbourhood-key_custody');
+    expect(lens.family).toBe('neighbourhood');
+    expect(lens.parameter).toEqual({
+      question: 'glade_decisions:GladeDecisions.key_custody',
+    });
+    // and an ordinary lens file carries neither
+    expect(readLens(lensFixture).family).toBeUndefined();
+    expect(readLens(lensFixture).parameter).toBeUndefined();
+  });
+
+  it('refuses a parameter that is not a map of text, rather than rendering one', () => {
+    rejects(
+      () => readLens(mutate(neighbourhoodLensFixture, 'parameter', 'key_custody')),
+      GyldContractViolation.WrongType, 'gyld.lens.v1.parameter',
+    );
+    rejects(
+      () => readLens(mutate(neighbourhoodLensFixture, 'parameter', { question: 12 })),
+      GyldContractViolation.WrongType, 'gyld.lens.v1.parameter.question',
+    );
+    rejects(
+      () => readStream(mutate(streamFixture, 'lenses.4.family', 12)),
+      GyldContractViolation.WrongType, 'gyld.stream.v1.lenses[4].family',
+    );
   });
 });

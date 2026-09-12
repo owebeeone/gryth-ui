@@ -1,7 +1,8 @@
 import {
   atPath, readArray, readBoolean, readEnvelope, readIdentifier, readIdentifiers,
   readObject, readOneOf, readOptionalIdentifier, readOptionalIdentifiers,
-  readSnapshotRef, readText, requireKnown, type QualifiedSlot, type SnapshotRef,
+  readOptionalParameter, readSnapshotRef, readText, requireKnown,
+  type QualifiedSlot, type SnapshotRef,
 } from './common';
 
 // Spec sections 7.1 and 7.2 (shapes) and 4.3 and 4.4 (meaning).
@@ -50,6 +51,16 @@ export interface StreamLens {
   /** The stream that overlays the snapshot for this lens, when one does. */
   stream?: string;
   relations?: string[];
+  /**
+   * The parameterised FAMILY this entry is a member of, for example
+   * `neighbourhood`, whose members are one lens per question. The family
+   * itself is a separate entry of the manifest, marked not emitted with the
+   * host's reason, because a stream emits the members it was asked for and no
+   * others. Absent on an ordinary perspective, which belongs to no family.
+   */
+  family?: string;
+  /** What picked this member out of its family, as the host wrote it. */
+  parameter?: Record<string, string>;
   reason?: string;
 }
 
@@ -125,6 +136,14 @@ function readStreamLens(value: unknown, path: string): StreamLens {
   const relations = readOptionalIdentifiers(raw.relations, atPath(path, 'relations'));
   if (relations !== undefined) {
     lens.relations = relations;
+  }
+  const family = readOptionalIdentifier(raw.family, atPath(path, 'family'));
+  if (family !== undefined) {
+    lens.family = family;
+  }
+  const parameter = readOptionalParameter(raw.parameter, atPath(path, 'parameter'));
+  if (parameter !== undefined) {
+    lens.parameter = parameter;
   }
   if (raw.reason !== null && raw.reason !== undefined) {
     lens.reason = readText(raw.reason, atPath(path, 'reason'));

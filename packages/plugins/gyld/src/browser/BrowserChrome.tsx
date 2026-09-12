@@ -13,56 +13,16 @@ import { NOTHING_DIMMED, type GyldDimmed } from '../lens/camera';
 import { NODE_FACETS } from '../lens/facets';
 import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
 import { neighbourhoodLink } from './links';
+import { labelFor, perspectiveOptions } from './perspectives';
 import type { GyldSearchMatch } from './search';
 
 // The browser's chrome: the stream switcher, the perspective picker, the
 // search box, the node dim toggles and the four links a browser writes.
 //
 // Nothing here is derived. The stream list is the census, the perspective list
-// is the stream's own lens manifest (or, for a stream that emits no manifest,
-// what the store could list), the facet values are the values the drawn nodes
-// carry, and a perspective the host declined to emit is shown disabled with
-// the host's own reason rather than filtered away (spec section 3.5).
-
-/** One perspective option: what it is called, and why it cannot be chosen. */
-interface PerspectiveOption {
-  perspective: string;
-  emitted: boolean;
-  reason?: string;
-}
-
-function perspectiveOptions(
-  emitted: readonly string[] | undefined,
-  notEmitted: readonly { perspective: string; reason?: string }[] | undefined,
-  current: string,
-): PerspectiveOption[] {
-  const options: PerspectiveOption[] = (emitted ?? []).map(
-    (perspective) => ({ perspective, emitted: true }),
-  );
-  for (const entry of notEmitted ?? []) {
-    options.push({ perspective: entry.perspective, emitted: false, reason: entry.reason });
-  }
-  // A window opened on a perspective this stream never mentioned keeps its own
-  // entry, so the picker shows what the window IS on rather than silently
-  // moving it somewhere else.
-  if (current !== '' && !options.some((option) => option.perspective === current)) {
-    options.push({
-      perspective: current,
-      emitted: false,
-      reason: 'this stream does not list that perspective at all',
-    });
-  }
-  return options;
-}
-
-function labelFor(option: PerspectiveOption): string {
-  if (option.emitted) {
-    return option.perspective;
-  }
-  return option.reason === undefined
-    ? `${option.perspective} (not emitted)`
-    : `${option.perspective} (not emitted: ${option.reason})`;
-}
+// is the stream's own lens manifest read by ./perspectives (or, for a stream
+// that emits no manifest, what the store could list), and the facet values are
+// the values the drawn nodes carry.
 
 export function BrowserChrome({ tabId, lens, search }: {
   tabId: string;
@@ -89,7 +49,7 @@ export function BrowserChrome({ tabId, lens, search }: {
   const openWired = useGrip(DESKTOP_OPEN_WIRED);
 
   const streams = census?.status === 'ready' ? census.streams : [];
-  const options = perspectiveOptions(bundle?.perspectives, bundle?.notEmitted, perspective);
+  const options = perspectiveOptions(bundle, perspective);
 
   return (
     <div className="gyld-chrome">

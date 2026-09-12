@@ -1,5 +1,5 @@
 import type {
-  GyldDecideNow, GyldLens, GyldProjection, GyldStream, GyldValidation,
+  GyldDecideNow, GyldLens, GyldProjection, GyldStream, GyldValidation, StreamLens,
 } from '../contract';
 
 // The values the store tap publishes. Every one of them makes ABSENCE a
@@ -49,6 +49,12 @@ export interface CensusStream {
   /** The manifest entries the host marked NOT emitted, with its own reason.
    *  Shown as "not emitted", never filtered away (spec section 3.5). */
   notEmitted?: { perspective: string; reason?: string }[];
+  /** The record's `lenses` manifest, verbatim, when it carries one. The two
+   *  lists above are what a picker needs to offer; this is what each entry
+   *  SAID, which is where the family a member belongs to and the parameter
+   *  that picked it come from. Absent for a record with no manifest, whose
+   *  perspectives came from a directory listing that says nothing else. */
+  lenses?: StreamLens[];
 }
 
 export interface StreamCollision {
@@ -102,6 +108,8 @@ export interface GyldBundle {
   validation?: GyldValidation;
   perspectives?: string[];
   notEmitted?: { perspective: string; reason?: string }[];
+  /** The stream record's `lenses` manifest, verbatim, when it carries one. */
+  lenses?: StreamLens[];
   /** Every file of this bundle that failed, in bundle path order. */
   faults?: GyldFault[];
 }

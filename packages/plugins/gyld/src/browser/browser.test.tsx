@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AtomTapHandle } from '@owebeeone/grip-react';
-import { readLens } from '../contract';
+import { readLens, readStream } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM,
   GYLD_FOCUS, GYLD_LENS, GYLD_RECORD, GYLD_STREAMS, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
@@ -14,12 +14,14 @@ import { NOTHING_DIMMED } from '../lens/camera';
 import { browserTabTaps } from './browserTabTaps';
 import { searchLens } from './search';
 import { neighbourhoodLink, pickOutcome } from './links';
+import { labelFor, perspectiveOptions } from './perspectives';
 import type { GyldBundle, GyldLensState, GyldStreamsCensus } from '../store/state';
 import type { GyldRecordView } from '../records/records';
 import { EMPTY_ROOTS, mountDesk, optionsOf, wireSink } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import decisionsFixture from '../../test/fixtures/bundle/streams/base/lenses/decisions.lens.json';
 import architectureRecord from '../../test/fixtures/bundle/streams/architecture/stream.json';
+import baseRecord from '../../test/fixtures/bundle/streams/base/stream.json';
 
 // Step 1.4: the gyld.browser window. Every assertion below is against EMITTED
 // data: the picker lists the stream's own lens manifest, search matches
@@ -317,5 +319,64 @@ describe('the empty desk', () => {
     expect(markup).toContain('has no bundle root');
     expect(markup).toContain('File System Access');
     expect(markup).not.toContain('gyld-lens-svg');
+  });
+});
+
+describe('a parameterised family in the perspective picker', () => {
+  it('labels the emitted member with its parameter, family disabled beside it', async () => {
+    const desk = mountDesk();
+    const tab = desk.tab('family', browserTabTaps('family', {
+      stream: 'base', perspective: 'decisions',
+    }));
+    await settled(
+      () => tab.read(GYLD_BUNDLE).get() as GyldBundle,
+      (bundle) => bundle?.status === 'ok',
+    );
+    const markup = tab.render(<GyldBrowser tabId="family" />);
+    const emitted = baseRecord.lenses.filter((entry) => entry.emitted);
+    const withheld = baseRecord.lenses.filter((entry) => !entry.emitted);
+    // every emitted perspective is choosable, the member included
+    expect(optionsOf(markup, 'gyld-pick-perspective')).toEqual([
+      ...emitted.map((entry) => entry.perspective),
+      ...withheld.map((entry) => `${entry.perspective} (disabled)`),
+    ]);
+    // and the member is labelled by what picked it out of its family
+    expect(markup).toContain(
+      'neighbourhood-key_custody (neighbourhood of question '
+      + 'glade_decisions:GladeDecisions.key_custody)',
+    );
+    // the family itself is the disabled entry, carrying the host's own reason
+    const family = withheld.find((entry) => entry.perspective === 'neighbourhood')!;
+    expect(markup).toContain(`neighbourhood (not emitted: ${family.reason}`);
+  });
+
+  it('builds the label from the manifest alone, and none where there is none', () => {
+    // the options are the emitted list and the withheld list, each entry
+    // carrying whatever the manifest said about it and nothing more
+    const options = perspectiveOptions({
+      status: 'ok',
+      stream: 'base',
+      perspectives: ['decisions', 'neighbourhood-key_custody'],
+      notEmitted: [{ perspective: 'neighbourhood', reason: 'parameterised' }],
+      lenses: readStream(baseRecord).lenses,
+    }, 'decisions');
+    expect(options.map((option) => option.perspective))
+      .toEqual(['decisions', 'neighbourhood-key_custody', 'neighbourhood']);
+    expect(options[0].family).toBeUndefined();
+    expect(options[1].family).toBe('neighbourhood');
+    expect(options[1].parameter)
+      .toEqual({ question: 'glade_decisions:GladeDecisions.key_custody' });
+    const member = options[1];
+    expect(labelFor(member)).toBe(
+      'neighbourhood-key_custody (neighbourhood of question '
+      + 'glade_decisions:GladeDecisions.key_custody)',
+    );
+    expect(labelFor({ perspective: 'decisions', emitted: true })).toBe('decisions');
+    expect(labelFor({ perspective: 'full', emitted: false, reason: 'core change' }))
+      .toBe('full (not emitted: core change)');
+    expect(labelFor({ perspective: 'full', emitted: false })).toBe('full (not emitted)');
+    // a family with no parameter names the family and stops there
+    expect(labelFor({ perspective: 'neighbourhood-x', emitted: true, family: 'neighbourhood' }))
+      .toBe('neighbourhood-x (neighbourhood)');
   });
 });

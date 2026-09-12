@@ -1,7 +1,7 @@
 import {
   atPath, readArray, readBoolean, readBoundingBox, readCount, readEnvelope,
   readFinite, readIdentifier, readIdentifiers, readObject, readOptionalCount,
-  readOptionalFinite, readOptionalIdentifier, readOptionalPoint,
+  readOptionalFinite, readOptionalIdentifier, readOptionalParameter, readOptionalPoint,
   readOptionalTexts, readPoint, readSnapshotRef, readTexts,
   requireCount, requireKnown, requirePrefix, type SnapshotRef,
 } from './common';
@@ -157,6 +157,12 @@ export interface GyldLens {
   counts: LensCounts;
   text_relations?: string[];
   groups?: LensGroup[];
+  /** The parameterised FAMILY this lens is a member of, for example
+   *  `neighbourhood`. Absent on a lens that belongs to no family; the
+   *  `perspective` is the MEMBER's name either way. */
+  family?: string;
+  /** What picked this member out of its family, as the host wrote it. */
+  parameter?: Record<string, string>;
 }
 
 function readLegend(value: unknown, path: string): LensLegend {
@@ -406,6 +412,14 @@ export function readLens(value: unknown): GyldLens {
   const textRelations = readOptionalTexts(raw.text_relations, atPath(path, 'text_relations'));
   if (textRelations !== undefined) {
     lens.text_relations = textRelations;
+  }
+  const family = readOptionalIdentifier(raw.family, atPath(path, 'family'));
+  if (family !== undefined) {
+    lens.family = family;
+  }
+  const parameter = readOptionalParameter(raw.parameter, atPath(path, 'parameter'));
+  if (parameter !== undefined) {
+    lens.parameter = parameter;
   }
   if (raw.groups !== null && raw.groups !== undefined) {
     const groupsPath = atPath(path, 'groups');

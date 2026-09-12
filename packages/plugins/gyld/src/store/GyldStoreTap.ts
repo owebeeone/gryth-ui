@@ -460,6 +460,7 @@ export class GyldStoreTap extends BaseTap {
         // record without one falls back to asking the store what is there.
         const manifest = record.lenses;
         if (manifest !== undefined) {
+          entry.lenses = manifest;
           entry.perspectives = manifest
             .filter((lens) => lens.emitted)
             .map((lens) => lens.perspective);
@@ -679,6 +680,9 @@ export class GyldStoreTap extends BaseTap {
     }
     if (entry.notEmitted !== undefined) {
       bundle.notEmitted = entry.notEmitted;
+    }
+    if (entry.lenses !== undefined) {
+      bundle.lenses = entry.lenses;
     }
     if (faults.length > 0) {
       bundle.faults = faults;

@@ -177,6 +177,31 @@ export function readOptionalTexts(value: unknown, path: string): string[] | unde
   return value === null || value === undefined ? undefined : readTexts(value, path);
 }
 
+/**
+ * The parameter that picked one member of a parameterised lens family, for
+ * example `{ "question": "glade_decisions:GladeDecisions.key_custody" }`.
+ *
+ * Read as a map of TEXT, and a value that is not text is rejected rather than
+ * rendered: the parameter is what the picker labels the member with, and there
+ * is no label in a value the reader would have to stringify. The KEYS are the
+ * family's own vocabulary and are not checked against a set, because the
+ * families are Gyld's to name.
+ */
+export function readOptionalParameter(
+  value: unknown,
+  path: string,
+): Record<string, string> | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  const raw = readObject(value, path);
+  const parameter: Record<string, string> = {};
+  for (const key of Object.keys(raw)) {
+    parameter[key] = readText(raw[key], at(path, key));
+  }
+  return parameter;
+}
+
 /** A value drawn from the closed set the spec writes down in prose. */
 export function readOneOf<T extends string>(
   value: unknown,
