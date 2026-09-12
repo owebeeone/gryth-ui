@@ -20,6 +20,7 @@
     "@grythjs/plugin-settings": "workspace:*",
     "@grythjs/plugin-chat": "workspace:*",
     "@grythjs/plugin-gwz": "workspace:*",
+    "@grythjs/plugin-gyld": "workspace:*",
     "@grythjs/glade": "workspace:*",
     "@wyredjs/plugin-wyred": "link:../../wyred-wz/wyred-ui/packages/plugin-wyred",
     "@owebeeone/glial-runtime": "workspace:*",

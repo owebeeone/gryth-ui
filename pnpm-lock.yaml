@@ -32,6 +32,9 @@ importers:
       '@grythjs/plugin-gwz':
         specifier: workspace:*
         version: link:packages/plugins/gwz
+      '@grythjs/plugin-gyld':
+        specifier: workspace:*
+        version: link:packages/plugins/gyld
       '@grythjs/plugin-settings':
         specifier: workspace:*
         version: link:packages/plugins/settings
@@ -282,6 +285,18 @@ importers:
       '@owebeeone/glial-runtime':
         specifier: workspace:*
         version: link:../../../../glial
+      '@owebeeone/grip-react':
+        specifier: workspace:*
+        version: link:../../../../grip-react
+      react:
+        specifier: '*'
+        version: 19.2.7
+
+  packages/plugins/gyld:
+    dependencies:
+      '@grythjs/plugin-api':
+        specifier: workspace:*
+        version: link:../../plugin-api
       '@owebeeone/grip-react':
         specifier: workspace:*
         version: link:../../../../grip-react

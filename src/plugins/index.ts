@@ -15,3 +15,4 @@ import '@grythjs/plugin-terminals';
 import '@grythjs/plugin-settings';
 import '@grythjs/plugin-chat';
 import '@grythjs/plugin-gwz';
+import '@grythjs/plugin-gyld';
