@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Grip } from '@owebeeone/grip-react';
 import { grok, WORKSPACE_NAME } from '@grythjs/plugin-api';
-import { registerAllTaps } from './taps';
+import { registerAllTaps, WORKSPACE_NAME_CONTROL } from './taps';
 import {
   DESKTOP_CURRENT, DESKTOP_CURRENT_TAP,
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
@@ -21,8 +21,14 @@ function drip<T>(grip: Grip<T>) {
 }
 
 describe('grip seam', () => {
-  it('serves doc grips from registered taps', async () => {
-    await expect.poll(() => drip(WORKSPACE_NAME).get()).toBe('mock-workspace');
+  it('serves the workspace-name grip through Glial without changing the consumer contract', async () => {
+    const workspaceName = drip(WORKSPACE_NAME);
+    await expect.poll(() => workspaceName.get()).toBe('mock-workspace');
+
+    const control = drip(WORKSPACE_NAME_CONTROL);
+    await expect.poll(() => control.get()).toBeDefined();
+    control.get()!.set('glial-workspace');
+    await expect.poll(() => workspaceName.get()).toBe('glial-workspace');
   });
 
   it('lets a participant holding the tap handle drive desktop UI state', async () => {
