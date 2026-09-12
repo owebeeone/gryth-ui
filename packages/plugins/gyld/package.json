@@ -8,7 +8,8 @@
     "./contract": "./src/contract/index.ts"
   },
   "dependencies": {
-    "@grythjs/plugin-api": "workspace:*"
+    "@grythjs/plugin-api": "workspace:*",
+    "@viz-js/viz": "3.30.0"
   },
   "peerDependencies": {
     "@owebeeone/grip-react": "*",

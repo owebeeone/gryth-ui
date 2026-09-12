@@ -4,6 +4,7 @@ import { NO_FOCUS } from './focus';
 import { EMPTY_SET } from './store/state';
 import { GyldStoreTap } from './store/GyldStoreTap';
 import { GyldIndexTap, GyldRecordTap } from './records/taps';
+import { GyldPreviewLayoutTap } from './preview/GyldPreviewLayoutTap';
 
 // The plugin-root taps. They live here rather than in index.ts so a gesture in
 // a view can reach `gyldStoreTap.setDirectoryHandle(...)` without importing
@@ -33,3 +34,8 @@ export const gyldStoreTap = new GyldStoreTap();
  *  destination. Pure, so one instance serves every window. */
 export const gyldIndexTap = new GyldIndexTap();
 export const gyldRecordTap = new GyldRecordTap();
+
+/** The one browser-side layout tap (step 3.1). It owns the wasm Graphviz
+ *  worker, which it starts on the first preview a window asks for and stops
+ *  when no window is asking, so a desk with no preview open carries none. */
+export const gyldPreviewLayoutTap = new GyldPreviewLayoutTap();

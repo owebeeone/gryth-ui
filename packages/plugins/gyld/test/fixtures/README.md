@@ -36,6 +36,7 @@ bundle" and "Fork, link, rebuild and diff").
 | `streams/base/lenses/status.lens.json` | `gyld.lens.v1`, grouped by effective status |
 | `streams/base/lenses/branch.lens.json` | `gyld.lens.v1`, Implies and Offers only |
 | `streams/base/lenses/neighbourhood-key_custody.lens.json` | `gyld.lens.v1`, one member of a parameterised family: `family` and `parameter` are set |
+| `streams/base/lenses/neighbourhood-key_custody.dot` | the DOT `lens_geometry.plan_dot` wrote for that member, which is what the browser preview's own DOT is asserted byte for byte against |
 | `streams/stream-a/stream.json` | `gyld.stream.v1`, `kind` link, parent `base`, chain `[base, stream-a]` |
 | `streams/stream-a/decide-now.json` | `gyld.decide-now.v1`, 25 questions, 3 rulings |
 | `streams/stream-a/projection.json` | `gyld.projection.v1`, the definitions the decide window reads declared classes from |
@@ -78,8 +79,11 @@ The decide window reads it there rather than spelling a class out of a slot.
 
 Not copied, because no reader in this package reads them and they are large:
 `snapshot.json`, `inputs.json`, `annotations.json`, the projections of every
-stream but `base` and `stream-a`, and the `.dot`, `.svg` and `.json0.json`
-files beside each lens. Only one perspective of stream A, stream B and fork-a
+stream but `base` and `stream-a`, and the `.svg` and `.json0.json` files beside
+each lens, and every `.dot` but one. The exception is
+`neighbourhood-key_custody.dot`: step 3.1 composes that same DOT in the browser
+from the emitted `decisions` lens, so the host's own file is the evidence that
+the two agree, and a test compares them byte for byte. Only one perspective of stream A, stream B and fork-a
 is copied (`decisions`), which is the one the diff window draws side by side.
 Those streams and the architecture stream therefore read here as bundles whose
 projection is absent, which is a state the store must render and does.
@@ -118,6 +122,26 @@ renders.
 `report.html` is the one artefact this run did not write at all: its
 `reports.emitted` is false and its `reports.run` names `artifacts/
 iroh-integration-v1`, the earlier run that holds the byte-identical document.
+
+## `preview/`: recorded output of the pinned browser engine
+
+| Path | What it is |
+|---|---|
+| `neighbourhood-key_custody.json0.json` | `dot -Tjson0` of `bundle/streams/base/lenses/neighbourhood-key_custody.dot`, produced by `@viz-js/viz` 3.30.0 (Graphviz 16.0.0 in WebAssembly) on 2026-09-13 |
+
+NOT Gyld output, and the only fixture here that is not. It is what the BROWSER
+lays that DOT out as, recorded so the tests that turn `json0` into a
+`gyld.lens.v1` document do not depend on wasm start-up time. It is machine
+written and never hand adjusted: one test re-runs the pinned engine over the
+composed DOT and asserts this file is still what comes back, so a version bump
+that moves a position fails there rather than drifting silently.
+
+It also settles one open question in `MultiDimensionalGraphViewing.md` section
+7: this document's keys and its objects' and edges' keys are identical to the
+`neighbourhood-key_custody.json0.json` the installed Graphviz 14.1.4 wrote, so
+the `json0` SHAPE does not skew across the two versions. Its `bb` is
+`0,0,1731.8,313.24` against the host's `0,0,1720,291.04`, so the POSITIONS do,
+which is why a browser layout is emitted `pinned: false`.
 
 ## `provisional/`: still hand written, no emitted counterpart
 

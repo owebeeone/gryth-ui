@@ -27,6 +27,33 @@ window wired to it, and a neighbourhood window on the focused record. With no bu
 shows the set picker instead of a picture, because the plugin will not invent a
 place to read Gyld output from.
 
+Neighbourhood opens emitted geometry where there is any. The stream's own lens
+manifest is what decides: an entry of the `neighbourhood` family whose
+`parameter.question` is the focused record's qualified slot is the member Gyld
+emitted for that question, and the new window opens on it, pinned. A question
+the stream emitted no member for opens a BROWSER PREVIEW instead: the window
+goes to the `decisions` lens those members are restricted out of and names the
+question, and `GyldPreviewLayoutTap` lays the neighbourhood of it out here. The
+picker then shows that entry as `neighbourhood of question <slot> preview
+(browser layout, unpinned)`, the provenance footer reads `@viz-js/viz 3.30.0
+graphviz 16.0.0 · PREVIEW, unpinned layout`, and the omission strip says the
+picture omits the pinned layout. Choosing any other perspective drops the
+preview, and choosing an emitted member replaces it with pinned geometry. A
+stream that emitted no `decisions` lens either gets neither: the window opens on
+the same perspective with the focus set and the emitted picture dims to it.
+
+A preview is a LAYOUT of emitted records and never a fact. Every node, edge,
+group, label, shape, fill, font size and justification in it is copied from the
+emitted `decisions` lens of that stream; the legend, snapshot, relations and
+omissions are that lens's own; the closure is the one the Gyld host walks
+(`emit_decision_streams.neighbourhood_closure`: the question, what it requires,
+what requires it, what its alternatives imply, and the gates those wait on),
+read off the drawn edges rather than off a snapshot this package does not have.
+The DOT it composes is `lens_geometry.plan_dot`, and for the one question the
+committed bundle also emitted a member for it is byte identical to the file the
+host wrote, which is what a test asserts. What the browser adds is positions,
+and only positions.
+
 `gyld.detail` shows one record: its kind, definition, description, record id,
 the place it was declared, its declared and effective status, its tier, whether
 it is answerable now, the lean recorded for it, any ruling, the relations the
@@ -123,6 +150,34 @@ exact command line that makes it. Nothing is submitted in this stage: the owner
 runs the command into a new output directory and the watch loop picks the
 bundle up.
 
+## Dependencies
+
+One runtime dependency, added for the browser-side preview above and for
+nothing else.
+
+| | |
+|---|---|
+| Package | `@viz-js/viz` |
+| Version | `3.30.0`, pinned exactly (no range) |
+| Published | 2026-09-01, per the npm registry; added 2026-09-13, twelve days later |
+| Licence | MIT (the wrapper and the build scripts) |
+| Embedded | Graphviz 16.0.0, **EPL-1.0**, compiled to WebAssembly by Emscripten and carried UNMODIFIED. Its provenance attestation (`lib/provenance.json`) names the `graphviz-16.0.0.tar.gz` release it was built from. This is the EPL exception the owner ruled on 2026-09-13, recorded here as the ruling asks |
+| Transitive footprint | none. Zero dependencies and zero peer dependencies; 13 files, 4.98 MB unpacked, of which `dist/viz.js` is 1.18 MB with the wasm inlined |
+| Where it lands | `dist/assets/previewWorker-*.js`, its own chunk of 1.35 MB, loaded only when a window actually asks for a preview. The application chunk grew 10.6 kB (3.4 kB gzipped) for the preview modules themselves |
+
+Graphviz stays a separately installed program on the Gyld side, which is where
+every emitted lens is laid out. Nothing here replaces it: this build exists so a
+reader can see a neighbourhood without a Gyld round trip, and what it produces
+is always marked unpinned.
+
+The `json0` shape is the same across the two Graphviz versions. The document
+keys, the object keys and the edge keys of `dot -Tjson0` from the installed
+14.1.4 and from the embedded 16.0.0 match one for one for the fields this
+package reads, which settles the skew
+`MultiDimensionalGraphViewing.md` section 7 left open. The POSITIONS differ: the
+same DOT lays out to a bounding box of `0,0,1720,291.04` under 14.1.4 and
+`0,0,1731.8,313.24` under 16.0.0, which is why a preview is never pinned.
+
 ## Running it
 
 From the repository root:
@@ -165,6 +220,17 @@ fills in. Choose `base`, then `decisions`, and the graph draws. Clicking a box
 focuses that record, clicking empty canvas clears it, dragging anywhere pans,
 the wheel zooms, and `Fit` puts the whole picture back in view. `Details` and
 `Decide now` open the other two windows already wired to this one.
+
+Focus a question and press `Neighbourhood`. `key_custody` is the one the
+committed bundle emitted a member for, so that one opens pinned Gyld geometry;
+any other question opens the browser preview, and the footer says which you are
+looking at.
+
+The FIRST preview in a freshly started dev server reloads the page once. Vite
+discovers `@viz-js/viz` when the worker first imports it, optimizes it, and
+reloads; the desk is not persisted, so add the root again and repeat. It happens
+once per dependency-optimizer cache, never in a build, and never again in that
+dev server.
 
 The desk is not persisted yet, so a page reload comes back with no windows and
 no bundle root. Add the root again after a reload.
@@ -335,9 +401,39 @@ output directories are placeholders, because they are the owner's to choose and
 Gyld never overwrites one. Each string is asserted by a test, so a change to
 one is a deliberate edit.
 
+A browser preview is of the `decisions` lens and of nothing else. That is what
+the Gyld host restricts every emitted member out of, so a preview of any other
+picture would not be the same lens; a stream that emitted no `decisions` lens
+therefore gets no preview, and the Neighbourhood button falls back to dimming.
+The architecture lineage is in that position today.
+
+A window shows at most one preview, the one it was asked for. The picker offers
+that one rather than an entry per question, because a preview costs a layout on
+the reader's machine and a list of twenty four of them would suggest otherwise.
+Another question is another Neighbourhood press.
+
+A preview's positions are not the emitted member's. Graphviz 14.1.4 on the Gyld
+side and 16.0.0 in the browser lay the same DOT out slightly differently, so a
+reader comparing a preview with an emitted member of the same question will see
+the same records in slightly different places. The provenance footer names both
+engines and marks the preview unpinned, which is the honest answer rather than a
+layout constraint.
+
+The preview worker is not started until a preview is asked for, and is
+terminated when the layout tap has no destinations left. It is not restarted per
+window: one worker serves the desk, and the wasm build inside it is paid for
+once.
+
 `pnpm build` prints a chunk size advisory: the single application chunk is over
 Vite's 500 kB default warning threshold. It is an advisory about code splitting
 for the whole application, not a fault in this package, and the build succeeds.
+The preview worker is a SEPARATE chunk and is not part of that number.
+
+`@viz-js/viz` does run under vitest, because node has WebAssembly, and one test
+asserts that the recorded `json0` fixture is still what the pinned engine lays
+the composed DOT out as. A WEB WORKER does not exist in that environment, so the
+layout tap is driven through an injected renderer in the tests and the worker
+path itself is verified in a browser.
 
 A bundle path that returns 404 stays in the watch set and is re-requested on
 every tick. Selecting a perspective a stream does not have, then moving on,

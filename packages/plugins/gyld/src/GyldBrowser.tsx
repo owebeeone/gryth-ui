@@ -1,13 +1,14 @@
 import { useGrip } from '@owebeeone/grip-react';
 import type { ToolViewProps } from '@grythjs/plugin-api';
 import {
-  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_STREAM, GYLD_LENS, GYLD_RECORDS,
-  GYLD_SET, GYLD_TAB_SEARCH,
+  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PREVIEW, GYLD_DEST_STREAM, GYLD_LENS,
+  GYLD_PREVIEW, GYLD_RECORDS, GYLD_SET, GYLD_TAB_SEARCH,
 } from './grips';
 import { BrowserChrome } from './browser/BrowserChrome';
 import { SetPicker } from './browser/SetPicker';
 import { NO_SEARCH, searchLens } from './browser/search';
 import { LensView } from './lens/LensView';
+import type { GyldLensState } from './store/state';
 
 // The gyld.browser window (step 1.4): one lens of one stream, with the pickers
 // that change the destination, the search that highlights records, the dim
@@ -36,11 +37,10 @@ function Value({ text }: { text: string }) {
   return <dd>{text}</dd>;
 }
 
-function NoLens() {
+function NoLens({ lens }: { lens: GyldLensState | undefined }) {
   const stream = useGrip(GYLD_DEST_STREAM) ?? '';
   const perspective = useGrip(GYLD_DEST_PERSPECTIVE) ?? '';
   const bundle = useGrip(GYLD_BUNDLE);
-  const lens = useGrip(GYLD_LENS);
   return (
     <div className="gyld-placeholder">
       <dl>
@@ -79,9 +79,16 @@ export function GyldBrowser({ tabId }: ToolViewProps) {
   // not reached yet is a desk with a root, and must not flash the picker at
   // the reader while the first census is in flight.
   const set = useGrip(GYLD_SET);
-  const state = useGrip(GYLD_LENS);
+  const emitted = useGrip(GYLD_LENS);
+  const preview = useGrip(GYLD_PREVIEW);
+  const question = useGrip(GYLD_DEST_PREVIEW) ?? '';
   const records = useGrip(GYLD_RECORDS);
   const query = useGrip(GYLD_TAB_SEARCH) ?? '';
+  // A window that asked for a preview draws the preview; every other window
+  // draws the emitted lens its perspective names. The window keeps resolving
+  // the emitted lens either way, because the preview is a restriction OF it
+  // and the layout tap reads it from the same destination.
+  const state = question === '' ? emitted : preview;
 
   // A desk with no root gets the picker, not an empty picture: this plugin
   // never invents a place to read Gyld output from.
@@ -94,8 +101,14 @@ export function GyldBrowser({ tabId }: ToolViewProps) {
     <div className="gyld-browser">
       <BrowserChrome tabId={tabId} lens={lens} search={search} />
       {lens === undefined
-        ? <NoLens />
-        : <LensView scope={`${tabId}-${lens.perspective}`} search={search} />}
+        ? <NoLens lens={state} />
+        : (
+          <LensView
+            scope={`${tabId}-${lens.perspective}`}
+            search={search}
+            state={state}
+          />
+        )}
     </div>
   );
 }

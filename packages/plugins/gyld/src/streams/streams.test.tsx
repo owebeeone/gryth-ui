@@ -366,7 +366,7 @@ describe('a row moves a browser rather than deciding for itself', () => {
     // else: a perspective this window chose would be a Gyld fact it invented
     expect(browserLink({ stream: 'stream-a', perspective: '', focus: '' })).toEqual({
       toolId: GYLD_BROWSER_TOOL,
-      params: { stream: 'stream-a', perspective: '', focus: '' },
+      params: { stream: 'stream-a', perspective: '', focus: '', preview: '' },
     });
     expect(opened).toEqual([]);
   });

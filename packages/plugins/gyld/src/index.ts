@@ -14,7 +14,9 @@ import { DiffWindow } from './diff/DiffWindow';
 import { diffTabTaps } from './diff/diffTabTaps';
 import { CompareWindow } from './compare/CompareWindow';
 import { compareTabTaps } from './compare/compareTabTaps';
-import { GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap } from './rootTaps';
+import {
+  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
+} from './rootTaps';
 import {
   BROWSER_ROLE, COMPARE_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE,
   STREAMS_ROLE, GYLD_BROWSER_TOOL, GYLD_COMPARE_TOOL, GYLD_DECIDE_NOW_TOOL,
@@ -42,6 +44,7 @@ grok.registerTap(GyldFocusTap);
 grok.registerTap(gyldStoreTap);
 grok.registerTap(gyldIndexTap);
 grok.registerTap(gyldRecordTap);
+grok.registerTap(gyldPreviewLayoutTap);
 
 addEntry(GYLD_PLUGIN, {
   tools: {
@@ -131,12 +134,20 @@ export {
   GYLD_DIFF, GYLD_DIFF_SLOT, GYLD_DIFF_SLOT_TAP,
   GYLD_DEST_RUN, GYLD_DEST_RUN_TAP, GYLD_DEST_PROPOSAL, GYLD_DEST_PROPOSAL_TAP,
   GYLD_DEST_SIDE, GYLD_RUN, GYLD_COMPARISON, GYLD_RUN_DRAFT, GYLD_RUN_DRAFT_TAP,
+  GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_PREVIEW,
 } from './grips';
 export * from './focus';
 export * from './tools';
 export {
-  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap,
+  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
 } from './rootTaps';
+export { GyldPreviewLayoutTap, PREVIEW_UNSET } from './preview/GyldPreviewLayoutTap';
+export { PreviewPerspective, type PreviewPlan } from './preview/neighbourhood';
+export { PREVIEW_GRAPH_NAME, dotLabel, previewDot, quote } from './preview/dot';
+export { geometryOf, previewDocument, type PreviewEngine } from './preview/document';
+export {
+  VIZ_PACKAGE, workerRenderer, type PreviewRenderResult, type PreviewRenderer,
+} from './preview/renderer';
 export * from './records/records';
 export { GyldIndexTap, GyldRecordTap } from './records/taps';
 export * from './lens/camera';

@@ -29,8 +29,18 @@ import baseRecord from '../../test/fixtures/bundle/streams/base/stream.json';
 // emitted geometry and never the geometry itself (MDV-4).
 
 const SCOPE_MODEL = 'glade_decisions:GladeDecisions.scope_model';
+const KEY_CUSTODY = 'glade_decisions:GladeDecisions.key_custody';
 const lens = readLens(decisionsFixture);
 const manifest = architectureRecord.lenses;
+
+/** The base stream's picker options, from its own emitted manifest. */
+const baseOptions = () => perspectiveOptions({
+  status: 'ok',
+  stream: 'base',
+  perspectives: ['branch', 'decisions', 'neighbourhood-key_custody', 'status', 'tiers'],
+  notEmitted: [{ perspective: 'neighbourhood', reason: 'parameterised' }],
+  lenses: readStream(baseRecord).lenses,
+}, 'decisions');
 
 const settled = async <T,>(read: () => T, done: (value: T) => boolean): Promise<T> => {
   await expect.poll(() => done(read())).toBe(true);
@@ -221,24 +231,39 @@ describe('what a pick writes, and where a link goes', () => {
     expect(cleared.focus).toEqual(NO_FOCUS);
   });
 
-  it('opens a neighbourhood lens when the stream emitted one', () => {
+  it('opens the EMITTED member when the stream emitted one of this question', () => {
     const link = neighbourhoodLink({
-      stream: 'base', perspective: 'decisions', focus: SCOPE_MODEL,
-      perspectives: ['decisions', 'neighbourhood'],
+      stream: 'base', perspective: 'decisions', focus: KEY_CUSTODY, options: baseOptions(),
     });
     expect(link).toEqual({
       toolId: GYLD_BROWSER_TOOL,
-      params: { stream: 'base', perspective: 'neighbourhood', focus: SCOPE_MODEL },
+      params: {
+        stream: 'base', perspective: 'neighbourhood-key_custody', focus: KEY_CUSTODY,
+        preview: '',
+      },
     });
   });
 
-  it('otherwise keeps the perspective and carries the focus, so the window dims to it', () => {
+  it('opens a browser PREVIEW when no member was emitted for this question', () => {
     const link = neighbourhoodLink({
-      stream: 'base', perspective: 'decisions', focus: SCOPE_MODEL,
-      perspectives: ['branch', 'decisions', 'neighbourhood-key_custody', 'status', 'tiers'],
+      stream: 'base', perspective: 'tiers', focus: SCOPE_MODEL, options: baseOptions(),
+    });
+    // on the emitted lens a neighbourhood is restricted out of, with the
+    // question named: the layout tap does the rest, unpinned.
+    expect(link.params).toEqual({
+      stream: 'base', perspective: 'decisions', focus: SCOPE_MODEL, preview: SCOPE_MODEL,
+    });
+  });
+
+  it('keeps the perspective when the stream emitted neither, so the window dims to it', () => {
+    const options = perspectiveOptions({
+      status: 'ok', stream: 'architecture', perspectives: ['allocation', 'lifecycle'],
+    }, 'allocation');
+    const link = neighbourhoodLink({
+      stream: 'architecture', perspective: 'allocation', focus: SCOPE_MODEL, options,
     });
     expect(link.params).toEqual({
-      stream: 'base', perspective: 'decisions', focus: SCOPE_MODEL,
+      stream: 'architecture', perspective: 'allocation', focus: SCOPE_MODEL, preview: '',
     });
   });
 
@@ -371,12 +396,36 @@ describe('a parameterised family in the perspective picker', () => {
       'neighbourhood-key_custody (neighbourhood of question '
       + 'glade_decisions:GladeDecisions.key_custody)',
     );
-    expect(labelFor({ perspective: 'decisions', emitted: true })).toBe('decisions');
-    expect(labelFor({ perspective: 'full', emitted: false, reason: 'core change' }))
-      .toBe('full (not emitted: core change)');
-    expect(labelFor({ perspective: 'full', emitted: false })).toBe('full (not emitted)');
+    expect(labelFor({ perspective: 'decisions', value: 'decisions', emitted: true }))
+      .toBe('decisions');
+    expect(labelFor({
+      perspective: 'full', value: 'full', emitted: false, reason: 'core change',
+    })).toBe('full (not emitted: core change)');
+    expect(labelFor({ perspective: 'full', value: 'full', emitted: false }))
+      .toBe('full (not emitted)');
     // a family with no parameter names the family and stops there
-    expect(labelFor({ perspective: 'neighbourhood-x', emitted: true, family: 'neighbourhood' }))
-      .toBe('neighbourhood-x (neighbourhood)');
+    expect(labelFor({
+      perspective: 'neighbourhood-x', value: 'neighbourhood-x', emitted: true,
+      family: 'neighbourhood',
+    })).toBe('neighbourhood-x (neighbourhood)');
+  });
+
+  it('offers the preview this window is showing, said to be the browser\'s layout', () => {
+    const options = perspectiveOptions({
+      status: 'ok',
+      stream: 'base',
+      perspectives: ['decisions'],
+      lenses: readStream(baseRecord).lenses,
+    }, 'decisions', SCOPE_MODEL);
+    const preview = options[options.length - 1];
+    expect(preview.preview).toBe(SCOPE_MODEL);
+    expect(preview.emitted).toBe(true);
+    expect(preview.value).toBe(`neighbourhood:${SCOPE_MODEL}`);
+    expect(labelFor(preview)).toBe(
+      `neighbourhood of question ${SCOPE_MODEL} preview (browser layout, unpinned)`,
+    );
+    // and a window showing no preview is offered none
+    expect(perspectiveOptions({ status: 'ok', stream: 'base', perspectives: ['decisions'] },
+      'decisions').some((option) => option.preview !== undefined)).toBe(false);
   });
 });

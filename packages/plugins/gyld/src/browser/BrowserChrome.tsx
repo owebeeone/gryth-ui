@@ -4,14 +4,15 @@ import {
 } from '@grythjs/plugin-api';
 import type { GyldLens } from '../contract';
 import {
-  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_REF,
-  GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP, GYLD_FOCUS, GYLD_STORE_RELOAD,
-  GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP,
-  GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
+  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_PREVIEW,
+  GYLD_DEST_PREVIEW_TAP, GYLD_DEST_REF, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
+  GYLD_FOCUS, GYLD_STORE_RELOAD, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_TAB_DIMMED,
+  GYLD_TAB_DIMMED_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
 } from '../grips';
 import { NOTHING_DIMMED, type GyldDimmed } from '../lens/camera';
 import { NODE_FACETS } from '../lens/facets';
 import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
+import { PreviewPerspective } from '../preview/neighbourhood';
 import { neighbourhoodLink } from './links';
 import { labelFor, perspectiveOptions } from './perspectives';
 import type { GyldSearchMatch } from './search';
@@ -37,6 +38,8 @@ export function BrowserChrome({ tabId, lens, search }: {
   const streamTap = useGrip(GYLD_DEST_STREAM_TAP) as AtomTapHandle<string> | undefined;
   const perspective = useGrip(GYLD_DEST_PERSPECTIVE) ?? '';
   const perspectiveTap = useGrip(GYLD_DEST_PERSPECTIVE_TAP) as AtomTapHandle<string> | undefined;
+  const preview = useGrip(GYLD_DEST_PREVIEW) ?? '';
+  const previewTap = useGrip(GYLD_DEST_PREVIEW_TAP) as AtomTapHandle<string> | undefined;
   const ref = useGrip(GYLD_DEST_REF) ?? '';
   const focus = useGrip(GYLD_FOCUS);
   const query = useGrip(GYLD_TAB_SEARCH) ?? '';
@@ -49,7 +52,11 @@ export function BrowserChrome({ tabId, lens, search }: {
   const openWired = useGrip(DESKTOP_OPEN_WIRED);
 
   const streams = census?.status === 'ready' ? census.streams : [];
-  const options = perspectiveOptions(bundle, perspective);
+  const options = perspectiveOptions(bundle, perspective, preview);
+  // What the picker is ON. A window showing a preview is on the preview, not
+  // on the emitted lens the preview was restricted out of, even though that
+  // lens is the one `Gyld.Lens` resolves underneath.
+  const picked = PreviewPerspective.of(preview)?.optionValue ?? perspective;
 
   return (
     <div className="gyld-chrome">
@@ -71,14 +78,26 @@ export function BrowserChrome({ tabId, lens, search }: {
           perspective
           <select
             className="gyld-pick-perspective"
-            value={perspective}
-            onChange={(event) => perspectiveTap?.set(event.target.value)}
+            value={picked}
+            onChange={(event) => {
+              const chosen = options.find((option) => option.value === event.target.value);
+              // Two writes, one gesture: a preview puts the window on the
+              // emitted lens it restricts AND names the question; anything
+              // else clears the preview, so no layout is left running behind
+              // a picture nobody is looking at.
+              previewTap?.set(chosen?.preview ?? '');
+              perspectiveTap?.set(
+                chosen === undefined
+                  ? event.target.value
+                  : (chosen.preview === undefined ? chosen.perspective : PreviewPerspective.SOURCE),
+              );
+            }}
           >
             {perspective === '' && <option value="">choose a perspective</option>}
             {options.map((option) => (
               <option
-                key={option.perspective}
-                value={option.perspective}
+                key={option.value}
+                value={option.value}
                 disabled={!option.emitted}
                 title={option.reason}
               >
@@ -119,7 +138,7 @@ export function BrowserChrome({ tabId, lens, search }: {
           disabled={openTool === undefined || ref === ''}
           title="a new window on the focused record, leaving this one as it is"
           onClick={() => openTool?.(neighbourhoodLink({
-            stream, perspective, focus: ref, perspectives: bundle?.perspectives ?? [],
+            stream, perspective, focus: ref, options,
           }))}
         >
           Neighbourhood

@@ -1,9 +1,10 @@
 import { createAtomValueTap, type Tap } from '@owebeeone/grip-react';
 import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_REF, GYLD_DEST_REF_TAP,
-  GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP,
-  GYLD_PICKER_URL, GYLD_PICKER_URL_TAP, GYLD_TAB_ID, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
-  perspectiveFromParams, refFromParams, streamFromParams,
+  GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
+  GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL, GYLD_PICKER_URL_TAP,
+  GYLD_TAB_ID, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
+  perspectiveFromParams, previewFromParams, refFromParams, streamFromParams,
 } from '../grips';
 import { lensTabTaps } from '../lens/lensTabTaps';
 
@@ -28,6 +29,12 @@ export function browserTabTaps(tabId: string, params?: Record<string, unknown>):
     // decide-now window wired to this tab resolves it through the graph.
     createAtomValueTap(GYLD_DEST_REF, {
       initial: refFromParams(params), handleGrip: GYLD_DEST_REF_TAP,
+    }),
+    // The question this window previews the neighbourhood of, when the link
+    // asked for one. Empty is the normal case: the window draws the emitted
+    // lens its perspective names and no layout runs in the browser at all.
+    createAtomValueTap(GYLD_DEST_PREVIEW, {
+      initial: previewFromParams(params), handleGrip: GYLD_DEST_PREVIEW_TAP,
     }),
     createAtomValueTap(GYLD_TAB_SEARCH, { initial: '', handleGrip: GYLD_TAB_SEARCH_TAP }),
     // This window's own address, published so a wired sink can retarget it.

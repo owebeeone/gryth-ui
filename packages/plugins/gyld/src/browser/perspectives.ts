@@ -1,4 +1,5 @@
 import type { StreamLens } from '../contract';
+import { PreviewPerspective } from '../preview/neighbourhood';
 import type { GyldBundle } from '../store/state';
 
 // What the perspective picker offers, as PURE functions over what the stream
@@ -16,10 +17,19 @@ import type { GyldBundle } from '../store/state';
  *  picked it out of that family, and why it cannot be chosen. */
 export interface PerspectiveOption {
   perspective: string;
+  /** What the picker's own control carries for this entry. The same as
+   *  `perspective` for everything the stream emitted; a PREVIEW is not a
+   *  perspective of the stream, so it names itself instead. */
+  value: string;
   emitted: boolean;
   family?: string;
   parameter?: Record<string, string>;
   reason?: string;
+  /** The question this entry is a BROWSER PREVIEW of, when it is one. Present
+   *  only on the preview the window is currently showing: a preview is laid
+   *  out on the reader's machine, so the picker offers the one that was asked
+   *  for rather than one entry per question. */
+  preview?: string;
 }
 
 /** The manifest entry for one perspective, when the record carried a manifest
@@ -39,7 +49,7 @@ function optionFor(
   reason?: string,
 ): PerspectiveOption {
   const entry = detail(manifest, perspective);
-  const option: PerspectiveOption = { perspective, emitted };
+  const option: PerspectiveOption = { perspective, value: perspective, emitted };
   if (entry?.family !== undefined) {
     option.family = entry.family;
   }
@@ -52,9 +62,28 @@ function optionFor(
   return option;
 }
 
+/** The emitted member of the `neighbourhood` family that is OF one question,
+ *  when the stream emitted one. This is what decides whether a drill-in opens
+ *  emitted geometry or a browser preview, and it is decided by the manifest's
+ *  own `family` and `parameter`, never by spelling a file name. */
+export function emittedMemberFor(
+  options: readonly PerspectiveOption[],
+  question: string,
+): PerspectiveOption | undefined {
+  if (question === '') {
+    return undefined;
+  }
+  return options.find((option) => option.emitted
+    && option.preview === undefined
+    && option.family === PreviewPerspective.FAMILY
+    && option.parameter?.question === question);
+}
+
 export function perspectiveOptions(
   bundle: GyldBundle | undefined,
   current: string,
+  /** The question this window is previewing, when it is previewing one. */
+  preview = '',
 ): PerspectiveOption[] {
   const manifest = bundle?.lenses;
   const options: PerspectiveOption[] = (bundle?.perspectives ?? []).map(
@@ -71,6 +100,21 @@ export function perspectiveOptions(
       manifest, current, false, 'this stream does not list that perspective at all',
     ));
   }
+  // The preview this window is showing, offered so the picker can say what is
+  // on screen and so moving away from it is one gesture. It is CHOOSABLE, and
+  // it is labelled as the browser's own layout: it is a picture of emitted
+  // records at positions no Gyld run pinned.
+  const member = PreviewPerspective.of(preview);
+  if (member !== undefined) {
+    options.push({
+      perspective: PreviewPerspective.FAMILY,
+      value: member.optionValue,
+      emitted: true,
+      family: PreviewPerspective.FAMILY,
+      parameter: member.parameter,
+      preview,
+    });
+  }
   return options;
 }
 
@@ -83,6 +127,9 @@ export function parameterText(parameter: Record<string, string> | undefined): st
 
 export function labelFor(option: PerspectiveOption): string {
   const parameter = parameterText(option.parameter);
+  if (option.preview !== undefined) {
+    return `${option.perspective} of ${parameter} preview (browser layout, unpinned)`;
+  }
   const member = option.family === undefined
     ? ''
     : ` (${option.family}${parameter === '' ? '' : ` of ${parameter}`})`;

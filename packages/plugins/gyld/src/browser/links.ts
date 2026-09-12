@@ -3,26 +3,35 @@ import type { GyldLens } from '../contract';
 import { NO_FOCUS, type GyldFocus } from '../focus';
 import { toggleSelected, type GyldSelection } from '../lens/camera';
 import { slotOf } from '../lens/scene';
+import { PreviewPerspective } from '../preview/neighbourhood';
 import { GYLD_BROWSER_TOOL } from '../tools';
+import { emittedMemberFor, type PerspectiveOption } from './perspectives';
 
 // The links a browser window writes, as PURE functions. A link is the
 // serializable bundle that locates a view (GrythPluginContract.md); building
 // one is arithmetic over strings, so it is tested without a desktop.
 
-/** The perspective spec section 5.1 reserves for a drill-in. A stream emits it
- *  or it does not; this package never assembles one (MDV-1). */
-export const NEIGHBOURHOOD_PERSPECTIVE = 'neighbourhood';
+/** The parameterised family spec section 5.1 reserves for a drill-in. */
+export const NEIGHBOURHOOD_PERSPECTIVE = PreviewPerspective.FAMILY;
 
 export interface BrowserTarget {
   stream: string;
   perspective: string;
   focus: string;
+  /** The question the new window lays a preview out for, when it opens on one
+   *  rather than on emitted geometry. */
+  preview?: string;
 }
 
 export function browserLink(target: BrowserTarget): ToolLink {
   return {
     toolId: GYLD_BROWSER_TOOL,
-    params: { stream: target.stream, perspective: target.perspective, focus: target.focus },
+    params: {
+      stream: target.stream,
+      perspective: target.perspective,
+      focus: target.focus,
+      preview: target.preview ?? '',
+    },
   };
 }
 
@@ -30,20 +39,42 @@ export function browserLink(target: BrowserTarget): ToolLink {
  * Drill-in (MDV-6): a NEW window seeded with the selected record, the parent
  * window untouched.
  *
- * When the stream emitted a `neighbourhood` lens the new window opens on it.
- * When it did not, the window opens on the SAME perspective with the focus
- * set, and the emitted geometry there dims to the focus record and its emitted
- * neighbours. That is a window-level omission, said as one in the omission
- * strip; it is not a neighbourhood lens and is never labelled as one.
+ * Three outcomes, in order of how much of the picture Gyld emitted:
+ *
+ * 1. The stream emitted a member of the `neighbourhood` family FOR THIS
+ *    question. The window opens on it, and the geometry is pinned Gyld
+ *    geometry. A preview never replaces an emitted member.
+ * 2. It did not, but it emitted the `decisions` lens the members are
+ *    restricted out of. The window opens on THAT lens with a preview of this
+ *    question, which the browser lays out from its records.
+ * 3. It emitted neither. The window opens on the SAME perspective with the
+ *    focus set, and the emitted geometry there dims to the focus record and
+ *    its emitted neighbours. That is a window-level omission, said as one in
+ *    the omission strip; it is not a neighbourhood lens and is never labelled
+ *    as one.
  */
 export function neighbourhoodLink(
-  target: BrowserTarget & { perspectives: readonly string[] },
+  target: BrowserTarget & { options: readonly PerspectiveOption[] },
 ): ToolLink {
-  const emitted = target.perspectives.includes(NEIGHBOURHOOD_PERSPECTIVE);
+  const member = emittedMemberFor(target.options, target.focus);
+  if (member !== undefined) {
+    return browserLink({
+      stream: target.stream, perspective: member.perspective, focus: target.focus,
+    });
+  }
+  const source = target.options.find(
+    (option) => option.emitted && option.perspective === PreviewPerspective.SOURCE,
+  );
+  if (source === undefined || target.focus === '') {
+    return browserLink({
+      stream: target.stream, perspective: target.perspective, focus: target.focus,
+    });
+  }
   return browserLink({
     stream: target.stream,
-    perspective: emitted ? NEIGHBOURHOOD_PERSPECTIVE : target.perspective,
+    perspective: PreviewPerspective.SOURCE,
     focus: target.focus,
+    preview: target.focus,
   });
 }
 

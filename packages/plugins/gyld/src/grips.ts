@@ -83,6 +83,15 @@ export function perspectiveFromParams(params?: Record<string, unknown>): string 
  * and nothing is duplicated downstream. A link that carries neither leaves the
  * window with no record, which is a rendered state, not a default.
  */
+/** The question a browser window opens a PREVIEW of, as a qualified slot. A
+ *  link that carries none opens on emitted geometry, which is every link but
+ *  the one the Neighbourhood button writes for a question no member exists
+ *  for. */
+export function previewFromParams(params?: Record<string, unknown>): string {
+  const value = params?.preview;
+  return typeof value === 'string' ? value : '';
+}
+
 export function refFromParams(params?: Record<string, unknown>): string {
   const ref = params?.ref;
   if (typeof ref === 'string') {
@@ -277,6 +286,30 @@ export const GYLD_PICKER_URL_TAP =
 export const GYLD_PICKER_ERROR = defineGrip<string>('Gyld.Tab.Picker.Error', '');
 export const GYLD_PICKER_ERROR_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Error.Tap');
+
+// ---------------------------------------------------------------------------
+// Step 3.1: the browser-side neighbourhood PREVIEW.
+//
+// A preview is a layout of emitted records (spec section 3.5): the window
+// stays on the emitted `decisions` lens, which is what `Gyld.Lens` resolves,
+// and `Gyld.Dest.Preview` names the ONE question whose neighbourhood of that
+// lens is being laid out in the browser. Empty means this window wants no
+// preview, which is every window until a reader asks for one.
+//
+// The question travels as a QUALIFIED SLOT, because that is the identity that
+// survives a restream (R1) and is what a pick in the picture puts in hand.
+// ---------------------------------------------------------------------------
+
+export const GYLD_DEST_PREVIEW = defineGrip<string>('Gyld.Dest.Preview', '');
+export const GYLD_DEST_PREVIEW_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Dest.Preview.Tap');
+
+// Class 3 conversion plus a layout, per destination from Gyld.Dest.Stream,
+// Gyld.Dest.Preview and Gyld.Lens. Produced by GyldPreviewLayoutTap, and
+// carried in the SAME shape an emitted lens arrives in, so the lens view draws
+// a preview with no branch of its own. `engine.pinned` is false on every
+// document that comes out of it.
+export const GYLD_PREVIEW = defineGrip<GyldLensState>('Gyld.Preview', LENS_UNSET);
 
 // ---------------------------------------------------------------------------
 // Step 2.3: the stream manager's own state. Class 1 atoms, INSTANCE scope, one

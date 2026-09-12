@@ -1,0 +1,12 @@
+digraph glade_neighbourhood {
+  graph [rankdir=TB, bgcolor="white", pad="0.4", nodesep="0.35", ranksep="0.9",
+    newrank=true, fontname="Helvetica", fontsize=20, labelloc="t",
+    label="Glade | Neighbourhood of key_custody\nSolid: Requires | dashed: Implies, labelled with the branch | grey dotted: GatedBy. The question, its prerequisites, its dependants, the questions its alternatives induce and the gates those wait on\nEvery record outside that closure is omitted and counted; positions are this lens's own"];
+  node [fontname="Helvetica", fontsize=11, color="#64748b", margin="0.14,0.08"];
+  edge [color="#475569", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+  "transport_key_binding" [label="transport_key_binding [Q3]\lTransportKeyBinding\l  - binding_record *\l  - one_key_both_roles\l", shape="box", style="rounded,filled", fillcolor="#dcfce7", id="occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a"];
+  "proof_family" [label="proof_family [Q6]\lProofFamily\l  - biscuit\l  - macaroons\l  - taut_grants *\l  - ucan\l", shape="box", style="rounded,filled", fillcolor="#dcfce7", id="occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a"];
+  "key_custody" [label="key_custody [Q11]\lKeyCustody\l  - owner_held_only\l  - recovery_keys\l  - social_recovery\l", shape="box", style="rounded,filled", fillcolor="#fef3c7", id="occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9"];
+  "key_custody" -> "proof_family" [color="#1f4e79", penwidth="1.4", id="asn:d31b97a0b1ea757c9dfe2ad59d3ea3821312515ff6fdb003b1519e417df3e40e#1"];
+  "key_custody" -> "transport_key_binding" [color="#1f4e79", penwidth="1.4", id="asn:236afe015635e5835b92642c55c83df2ab61983df089ba4562fb7c45970d19ef#0"];
+}

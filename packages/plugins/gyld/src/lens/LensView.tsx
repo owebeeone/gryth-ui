@@ -254,9 +254,21 @@ function viewportOf(element: Element): { width: number; height: number; left: nu
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld', search, onSlot }: {
+export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
   scope?: string;
   search?: SceneSearch;
+  /**
+   * The picture to draw, when the window around this one has already resolved
+   * one. A browser window showing a browser PREVIEW passes `Gyld.Preview`
+   * here; every other window passes nothing and this reads `Gyld.Lens`.
+   *
+   * The view does not branch on which it got: a preview arrives in the same
+   * `gyld.lens.v1` shape an emitted lens does, is built into a scene by the
+   * same builder, and its `engine.pinned: false` is what the provenance footer
+   * reads out. Rendering a preview differently would be the view deciding what
+   * is emitted, which is not the view's to decide.
+   */
+  state?: GyldLensState;
   /**
    * Told the QUALIFIED SLOT the reader just picked or hovered, when a window
    * around this one wants to know. The diff window is the one that does: the
@@ -269,7 +281,8 @@ export function LensView({ scope = 'gyld', search, onSlot }: {
    */
   onSlot?: (slot: string) => void;
 }) {
-  const state = useGrip(GYLD_LENS);
+  const resolved = useGrip(GYLD_LENS);
+  const state = shown ?? resolved;
   const camera = useGrip(GYLD_TAB_CAMERA) ?? CAMERA_UNFITTED;
   const drag = useGrip(GYLD_TAB_CAMERA_DRAG);
   const held = useGrip(GYLD_TAB_SELECTION) ?? NO_SELECTION;
