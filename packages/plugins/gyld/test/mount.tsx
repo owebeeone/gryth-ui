@@ -10,7 +10,7 @@ import { NO_FOCUS } from '../src/focus';
 import { GyldIndexTap, GyldRecordTap } from '../src/records/taps';
 import { GyldStoreTap } from '../src/store/GyldStoreTap';
 import type { GyldSet } from '../src/store/state';
-import { FakeBundle, fakeFetch } from './fakeBundle';
+import { EVALUATOR_FILES, FakeBundle, RUN_URL, fakeHosts } from './fakeBundle';
 
 // The desk a window test mounts in: one plugin-root context carrying the set,
 // the focus atom and the three taps the plugin registers at its root, and a
@@ -35,6 +35,8 @@ export interface MountedContext {
 
 export interface MountedDesk extends MountedContext {
   bundle: FakeBundle;
+  /** The evaluator run image this desk's host also serves, at RUN_URL. */
+  run: FakeBundle;
   store: GyldStoreTap;
   /** A tab context of this desk, seeded with one tool's tabTaps. */
   tab(tabId: string, taps: Tap[]): MountedContext;
@@ -73,15 +75,39 @@ function wrap(ctx: MatchingContext): MountedContext {
   };
 }
 
+/**
+ * The evaluator run image, built ONCE for the file.
+ *
+ * The bundle image is per desk because half these tests rewrite a file in it
+ * and watch the store notice. The run image is shared because none of them
+ * does, and because re-serializing it per desk costs real time: one proposal's
+ * comparison carries the saved operation history, which is most of its half
+ * megabyte. A test that wants to mutate a run passes its own image.
+ */
+let sharedRun: FakeBundle | undefined;
+
+function runImage(): FakeBundle {
+  if (sharedRun === undefined) {
+    sharedRun = new FakeBundle(EVALUATOR_FILES);
+  }
+  return sharedRun;
+}
+
 export function mountDesk(
   roots: GyldSet = STATIC_SET,
   bundle: FakeBundle = new FakeBundle(),
+  run: FakeBundle = runImage(),
 ): MountedDesk {
   const ctx = grok.mainPresentationContext.getOrCreateMatchingContext(`gyld-desk-${desks++}`);
   const home = ctx.getGripHomeContext();
   home.registerTap(createAtomValueTap(GYLD_SET, { initial: roots, handleGrip: GYLD_SET_TAP }));
   home.registerTap(createAtomValueTap(GYLD_FOCUS, { initial: NO_FOCUS, handleGrip: GYLD_FOCUS_TAP }));
-  const store = new GyldStoreTap({ watch: false, fetch: fakeFetch(bundle) });
+  // One host for both: the bundle at its base URL and the evaluator run at
+  // its own. A run is not a root of the set, so nothing censuses it.
+  const store = new GyldStoreTap({
+    watch: false,
+    fetch: fakeHosts({ [BASE_URL]: bundle, [RUN_URL]: run }),
+  });
   home.registerTap(store);
   mounted.push(ctx, home);
   home.registerTap(new GyldIndexTap());
@@ -89,6 +115,7 @@ export function mountDesk(
   return {
     ...wrap(ctx),
     bundle,
+    run,
     store,
     tab(tabId: string, taps: Tap[]): MountedContext {
       const tab = ctx.getGripConsumerContext().getOrCreateMatchingContext(`tab:${tabId}`);

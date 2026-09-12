@@ -1,6 +1,8 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
 import { defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
-import type { GyldDecideNow, GyldStreamDiff, GyldValidation } from './contract';
+import type {
+  GyldComparison, GyldDecideNow, GyldEvaluatorRun, GyldStreamDiff, GyldValidation,
+} from './contract';
 import {
   BUNDLE_UNSET, CENSUS_EMPTY, EMPTY_SET, LENS_UNSET, VALUE_UNSET,
   type GyldBundle, type GyldLensState, type GyldRootStatus, type GyldSet,
@@ -54,6 +56,16 @@ export const GYLD_DEST_PERSPECTIVE_TAP =
 // The opening LINK's params for a gyld.browser window (ToolLink.params in
 // plugin-api/src/registry.ts). Params ride the tab record, so they are plain
 // serializable data and arrive typed as unknown.
+export function runFromParams(params?: Record<string, unknown>): string {
+  const value = params?.run;
+  return typeof value === 'string' ? value : '';
+}
+
+export function proposalFromParams(params?: Record<string, unknown>): string {
+  const value = params?.proposal;
+  return typeof value === 'string' ? value : '';
+}
+
 export function streamFromParams(params?: Record<string, unknown>): string {
   const value = params?.stream;
   return typeof value === 'string' ? value : '';
@@ -140,6 +152,47 @@ export const GYLD_DIFF =
 export const GYLD_DIFF_SLOT = defineGrip<string>('Gyld.Tab.Diff.Slot', '');
 export const GYLD_DIFF_SLOT_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Diff.Slot.Tap');
+
+// ---------------------------------------------------------------------------
+// Step 3.2: the compare window's destination, which is an evaluator RUN and
+// one PROPOSAL of it (spec section 2, link params `{ run, proposal }`).
+//
+// A run is not a bundle and is not censused with one: it has no `streams.json`
+// and no streams, it is a directory of proposals indexed by its own `run.json`.
+// So `Gyld.Dest.Run` names the run directly, as the base URL it is served
+// from, and the store tap opens a read-only store on it beside the set's.
+// ---------------------------------------------------------------------------
+
+export const GYLD_DEST_RUN = defineGrip<string>('Gyld.Dest.Run', '');
+export const GYLD_DEST_RUN_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Dest.Run.Tap');
+
+export const GYLD_DEST_PROPOSAL = defineGrip<string>('Gyld.Dest.Proposal', '');
+export const GYLD_DEST_PROPOSAL_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Dest.Proposal.Tap');
+
+/**
+ * Which SIDE of one proposal a picture is of, by name (`baseline` or
+ * `candidate`). It is a per-context atom rather than a prop because the store
+ * tap resolves the lens file from it, and a tap reads destination params, not
+ * React props. The name is the data; the behaviour of a side lives on
+ * `CompareSide` (src/compare/sides.ts), which is what every call site uses.
+ */
+export const GYLD_DEST_SIDE = defineGrip<string>('Gyld.Dest.Side', '');
+
+// Class 2 source, per destination from Gyld.Dest.Run.
+export const GYLD_RUN =
+  defineGrip<GyldValue<GyldEvaluatorRun>>('Gyld.Run', VALUE_UNSET);
+
+// Class 2 source, per destination from Gyld.Dest.Run AND .Proposal.
+export const GYLD_COMPARISON =
+  defineGrip<GyldValue<GyldComparison>>('Gyld.Comparison', VALUE_UNSET);
+
+// Class 1 atom; INSTANCE scope, per tab. The run URL the reader is typing,
+// which becomes the window's destination when they press Read. A draft, like
+// the set picker's: this package never invents a place to read Gyld output
+// from, so the field starts empty and nothing is read until it is filled in.
+export const GYLD_RUN_DRAFT = defineGrip<string>('Gyld.Tab.Run.Draft', '');
+export const GYLD_RUN_DRAFT_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Run.Draft.Tap');
 
 // ---------------------------------------------------------------------------
 // Step 1.2: the two conversion grips. Both are PER DESTINATION, produced by

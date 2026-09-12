@@ -28,6 +28,11 @@ import neighbourhoodLens from './fixtures/bundle/streams/base/lenses/neighbourho
 import baseToStreamA from './fixtures/bundle/diffs/base..stream-a.json';
 import streamAToStreamB from './fixtures/bundle/diffs/stream-a..stream-b.json';
 import streamAToForkA from './fixtures/bundle/diffs/stream-a..fork-a.json';
+import runIndex from './fixtures/evaluator/run.json';
+import carrierComparison from './fixtures/evaluator/carrier/comparison.json';
+import carrierBaselineLens from './fixtures/evaluator/carrier/baseline.lens.json';
+import carrierCandidateLens from './fixtures/evaluator/carrier/candidate.lens.json';
+import gossipComparison from './fixtures/evaluator/gossip/comparison.json';
 import type {
   FetchResponse, GyldDirectoryEntry, GyldDirectoryHandle, GyldFile, GyldFileHandle,
 } from '../src/store/stores';
@@ -81,6 +86,26 @@ export const BUNDLE_FILES: Record<string, unknown> = {
   'streams/architecture/lenses/lifecycle.lens.json': lifecycleLens,
   'streams/architecture/lenses/allocation.lens.json': allocationLens,
 };
+
+/**
+ * One emitted evaluator RUN, at the paths its own `run.json` names.
+ *
+ * Two of the run's four proposals are here, and the index still names all four
+ * (test/fixtures/README.md says which and why), so a test that asks for `docs`
+ * exercises the same absence a run whose file is missing would.
+ */
+export const EVALUATOR_FILES: Record<string, unknown> = {
+  'run.json': runIndex,
+  'carrier/comparison.json': carrierComparison,
+  'carrier/baseline.lens.json': carrierBaselineLens,
+  'carrier/candidate.lens.json': carrierCandidateLens,
+  'gossip/comparison.json': gossipComparison,
+};
+
+/** Where the fake host serves that run. The LAST segment is the run directory,
+ *  so a sibling run resolves beside it exactly as the emitted layout puts
+ *  them under one holding directory. */
+export const RUN_URL = 'https://example.test/runs/iroh-integration-v2';
 
 /** A mutable byte image of the bundle: a test edits one path and the watch
  *  tick sees exactly what a rebuilt bundle on disk would look like. */
@@ -154,6 +179,21 @@ export function fakeFetch(bundle: FakeBundle, baseUrl = 'https://example.test/ou
     } catch {
       return { ok: false, status: 404, text: async () => '' };
     }
+  };
+}
+
+/** One fetch over several hosts: the bundle at its base URL, the evaluator run
+ *  at its own. A request for any other host is a 404, as it would be. */
+export function fakeHosts(hosts: Record<string, FakeBundle>) {
+  const served = Object.entries(hosts).map(([baseUrl, image]) => ({
+    baseUrl, fetch: fakeFetch(image, baseUrl),
+  }));
+  return async (url: string): Promise<FetchResponse> => {
+    const host = served.find((entry) => url.startsWith(`${entry.baseUrl}/`));
+    if (host === undefined) {
+      return { ok: false, status: 404, text: async () => '' };
+    }
+    return host.fetch(url);
   };
 }
 

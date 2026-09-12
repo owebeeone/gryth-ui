@@ -859,3 +859,128 @@
 .gyld-follow-focus {
   margin: 0;
 }
+
+/* --- gyld.compare ------------------------------------------------------- */
+
+.gyld-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 12px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-compare-run {
+  flex: 1 1 320px;
+}
+
+.gyld-run-url {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gyld-compare-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-compare-section h4,
+.gyld-compare-section h5 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.gyld-compare-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+.gyld-compare-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 320px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gyld-compare-snapshots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.gyld-compare-table {
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.gyld-compare-table th,
+.gyld-compare-table td {
+  padding: 2px 8px 2px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.gyld-compare-cost-records,
+.gyld-compare-subtotals,
+.gyld-compare-gates,
+.gyld-compare-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-compare-cost-records li,
+.gyld-compare-subtotals li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+
+.gyld-compare-subtotal {
+  font-weight: 600;
+}
+
+.gyld-compare-future,
+.gyld-compare-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 6px;
+}
+
+.gyld-compare-decision {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 3px 12px;
+  margin: 0;
+}
+
+.gyld-report {
+  width: 100%;
+  height: 520px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.gyld-compare-empty {
+  padding: 8px 0;
+}

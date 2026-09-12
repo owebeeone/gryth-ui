@@ -12,11 +12,13 @@ import { DecideWindow } from './decide/DecideWindow';
 import { decideTabTaps } from './decide/decideTabTaps';
 import { DiffWindow } from './diff/DiffWindow';
 import { diffTabTaps } from './diff/diffTabTaps';
+import { CompareWindow } from './compare/CompareWindow';
+import { compareTabTaps } from './compare/compareTabTaps';
 import { GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap } from './rootTaps';
 import {
-  BROWSER_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE, STREAMS_ROLE,
-  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL,
-  GYLD_DIFF_TOOL, GYLD_STREAMS_TOOL,
+  BROWSER_ROLE, COMPARE_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE,
+  STREAMS_ROLE, GYLD_BROWSER_TOOL, GYLD_COMPARE_TOOL, GYLD_DECIDE_NOW_TOOL,
+  GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL, GYLD_DIFF_TOOL, GYLD_STREAMS_TOOL,
 } from './tools';
 import './gyld.css';
 
@@ -26,9 +28,10 @@ import './gyld.css';
 // lands in the plugin registry under GYLD_PLUGIN.
 //
 // Phase 1 advertised the browser, the record detail and the decide-now list;
-// Phase 2 adds the stream manager, the decide window and the diff. The one
-// remaining tool of section 2, gyld.compare, arrives with its view in Phase 3;
-// none is declared here ahead of a window that can render it.
+// Phase 2 added the stream manager, the decide window and the diff; step 3.2
+// adds gyld.compare over an emitted evaluator run, which completes the tool
+// set section 2 names. None was ever declared ahead of a window that can
+// render it.
 
 // The plugin-root taps: the set atom, the shared focus atom, the one store tap
 // and the two conversion taps. All are registered at the app's root context,
@@ -90,6 +93,15 @@ addEntry(GYLD_PLUGIN, {
       // question that browser is on.
       tabTaps: decideTabTaps,
     },
+    [GYLD_COMPARE_TOOL]: {
+      label: 'Gyld compare',
+      defaultSize: { w: 1100, h: 860 },
+      role: COMPARE_ROLE,
+      windowComponent: CompareWindow,
+      // A RUN and one PROPOSAL of it, plus the run URL draft. Each side's own
+      // state is seeded on its own child context instead.
+      tabTaps: compareTabTaps,
+    },
     [GYLD_DIFF_TOOL]: {
       label: 'Gyld diff',
       defaultSize: { w: 1100, h: 760 },
@@ -117,6 +129,8 @@ export {
   GYLD_ASK_DRAFT, GYLD_ASK_DRAFT_TAP, GYLD_ASK_EXPORT, GYLD_ASK_EXPORT_TAP,
   GYLD_DEST_LEFT, GYLD_DEST_LEFT_TAP, GYLD_DEST_RIGHT, GYLD_DEST_RIGHT_TAP,
   GYLD_DIFF, GYLD_DIFF_SLOT, GYLD_DIFF_SLOT_TAP,
+  GYLD_DEST_RUN, GYLD_DEST_RUN_TAP, GYLD_DEST_PROPOSAL, GYLD_DEST_PROPOSAL_TAP,
+  GYLD_DEST_SIDE, GYLD_RUN, GYLD_COMPARISON, GYLD_RUN_DRAFT, GYLD_RUN_DRAFT_TAP,
 } from './grips';
 export * from './focus';
 export * from './tools';
@@ -147,6 +161,10 @@ export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
 export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
 export { FocusDestTap } from './detail/followFocus';
+export { CompareWindow } from './compare/CompareWindow';
+export { compareTabTaps, sideTabTaps } from './compare/compareTabTaps';
+export * from './compare/report';
+export * from './compare/sides';
 export { DiffWindow } from './diff/DiffWindow';
 export { diffTabTaps, paneTabTaps } from './diff/diffTabTaps';
 export * from './diff/panes';
@@ -169,7 +187,7 @@ export * from './browser/perspectives';
 export * from './browser/search';
 export { directoryPicker, isPickerCancel } from './browser/fsAccess';
 export * from './store/state';
-export { GyldStoreTap, DEFAULT_POLL_MS } from './store/GyldStoreTap';
+export { GyldStoreTap, DEFAULT_POLL_MS, RUN_INDEX_PATH } from './store/GyldStoreTap';
 export {
   DirectoryStore, StaticStore, parseAutoindexNames,
   type FetchLike, type GyldDirectoryHandle, type GyldStore,

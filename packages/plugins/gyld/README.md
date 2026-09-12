@@ -87,6 +87,27 @@ desktop holds one sink per source tab and tool, so a diff window cannot have
 two detail windows following it live, and a window that stays on the record it
 was opened on is what a side by side reading wants anyway.
 
+`gyld.compare` reads one proposal of an emitted evaluator run. It takes the URL
+a run directory is served from, reads that run's own `run.json`, and lists the
+proposals it names. For the proposal picked it shows the frame both sides were
+evaluated under with its context and its pinned obligations, every hard gate
+with the baseline status beside the candidate status, every obligation with
+whether it was retained and how it was satisfied on each side, the costs with
+the state of each record and the conditional subtotals the evaluator was
+willing to add up (an unknown cost is never in one, and a side with nothing
+addable says so rather than showing a zero), the futures with their own gates,
+their own subtotals and the relaxation note that says what each would give up,
+the evidence with its applicability and the provenance recorded for it, the
+structural impact of applying the proposal, the summary rows, and the
+evaluator's `winner` and `architecture_superiority` as the literal `null` they
+are with the reason it gave. The window never ranks proposals and never adds a
+cost up. Above all that it draws the run's own baseline and candidate lens
+files side by side, each in its own context with its own pan, zoom and dim set,
+with what the run says each picture is and what both leave out. At the bottom
+it frames the inspector report: this run emitted none, so the frame is the
+report of the sibling run the index names in `reports.run`, with that name and
+the host's note beside it and the URL it resolved printed out.
+
 `gyld.streams` is the stream manager. It draws the set's streams as the tree
 their `parent` fields make, each row with its kind, lineage, revision, snapshot
 digest, the digest it was built against, its chain, its overlay module and what
@@ -127,6 +148,17 @@ CORS headers a cross origin fetch needs. A bundle served from somewhere else,
 by `python3 -m http.server` for instance, has to send those headers itself or
 be on the same origin as the page, or the browser refuses the read and the root
 shows as one that will not load.
+
+`+ Gyld compare` opens the comparison window instead. It reads an evaluator
+run rather than a bundle, so paste
+
+```
+http://localhost:5173/gyld-evaluator/iroh-integration-v2
+```
+
+into its run field and press `Read run`, then choose a proposal. `carrier` is
+the one whose candidate is the base again; `docs` is the one that moves two
+allocations and relaxes four gates.
 
 The status line under the buttons then says `ready` and the stream switcher
 fills in. Choose `base`, then `decisions`, and the graph draws. Clicking a box
@@ -247,8 +279,27 @@ window wired to a browser ignores the switch and offers none: it already
 follows that browser's selection. No other window follows the focus yet; the
 browser chrome still only prints it.
 
-There is no compare window yet. The specification names `gyld.compare`; it is
-not declared here, because it has no window that can render it yet.
+`gyld.compare` addresses a run by URL, so a run in a picked directory is not
+readable there: a directory handle has no URL, and the window resolves the run
+and the sibling that holds the report by URL arithmetic. The dev server serves
+the runs, and a static host does as well.
+
+The one name `gyld.compare` composes rather than reads is `report.html` inside
+the sibling run: the run that holds the reports predates `run.json` and so
+names no file for it, and the layout specification section 7.8 writes down is
+`<run>/<proposal>/report.html`. The window prints the URL it resolved beside
+the frame. When that older run gains an index of its own, the file it names
+there should be read instead.
+
+A pick in a compare picture publishes a `Gyld.Focus` whose stream is empty,
+because an evaluator lens is of a SNAPSHOT and carries no stream. A detail
+window following the focus then has no bundle to read that record from and says
+so. Nothing is invented: the empty stream is the truth about that picture.
+
+The comparison record's `operation_history` is not read. It is the saved
+operation list the applier replayed, it is most of the bytes of every
+comparison that has one, and no part of the window shows it; the run's own lens
+omissions name it too.
 
 The diff window highlights a corresponding record with the same mechanism the
 search box uses, which dims the rest of both pictures while a record is in

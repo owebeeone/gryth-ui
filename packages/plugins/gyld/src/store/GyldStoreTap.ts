@@ -1,11 +1,14 @@
 import { BaseTap, type Grip, type GripContext } from '@owebeeone/grip-react';
 import {
-  attempt, readDecideNow, readLens, readProjection, readStream, readStreamDiff,
-  readStreamsIndex, readValidation, type ContractResult, type GyldContractError,
+  attempt, readComparison, readDecideNow, readEvaluatorRun, readLens, readProjection,
+  readStream, readStreamDiff, readStreamsIndex, readValidation,
+  type ContractResult, type GyldContractError, type GyldEvaluatorRun, type RunProposal,
 } from '../contract';
+import { CompareSide } from '../compare/sides';
 import {
-  GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_LEFT, GYLD_DEST_PERSPECTIVE, GYLD_DEST_RIGHT,
-  GYLD_DEST_STREAM, GYLD_DIFF, GYLD_LENS, GYLD_SET, GYLD_STORE_RELOAD, GYLD_STORE_STATUS,
+  GYLD_BUNDLE, GYLD_COMPARISON, GYLD_DECIDE_NOW, GYLD_DEST_LEFT, GYLD_DEST_PERSPECTIVE,
+  GYLD_DEST_PROPOSAL, GYLD_DEST_RIGHT, GYLD_DEST_RUN, GYLD_DEST_SIDE, GYLD_DEST_STREAM,
+  GYLD_DIFF, GYLD_LENS, GYLD_RUN, GYLD_SET, GYLD_STORE_RELOAD, GYLD_STORE_STATUS,
   GYLD_STREAMS, GYLD_VALIDATION,
 } from '../grips';
 import {
@@ -63,6 +66,14 @@ export interface GyldStoreTapOptions {
 }
 
 const KEY_SEP = '\u0000';
+
+/** Where the index namespace of the RUN stores starts. A run is addressed by
+ *  its own URL and is never a member of `Gyld.Set`, so its files share the one
+ *  cache without colliding with a set root's indexes. */
+const RUN_ROOT_BASE = 1_000_000;
+
+/** The run index every run directory carries (spec section 7.8). */
+export const RUN_INDEX_PATH = 'run.json';
 
 interface RootRuntime {
   index: number;
@@ -156,6 +167,11 @@ export class GyldStoreTap extends BaseTap {
   private readonly settled = new Map<string, unknown>();
   private readonly lensStates = new WeakMap<GyldValue<unknown>, Map<string, GyldLensState>>();
   private readonly handles = new Map<string, GyldDirectoryHandle>();
+  // The evaluator RUN stores, one per run URL, opened on demand and never
+  // censused: a run has no `streams.json` and no streams, so it is not a root
+  // of the set and does not appear in `Gyld.Store.Status`.
+  private readonly runRoots = new Map<string, RootRuntime>();
+  private readonly runByIndex = new Map<number, RootRuntime>();
 
   private timer: unknown = null;
   private polling = false;
@@ -180,9 +196,11 @@ export class GyldStoreTap extends BaseTap {
       provides: [
         GYLD_STREAMS, GYLD_STORE_STATUS, GYLD_STORE_RELOAD,
         GYLD_BUNDLE, GYLD_LENS, GYLD_DECIDE_NOW, GYLD_VALIDATION, GYLD_DIFF,
+        GYLD_RUN, GYLD_COMPARISON,
       ],
       destinationParamGrips: [
         GYLD_DEST_STREAM, GYLD_DEST_PERSPECTIVE, GYLD_DEST_LEFT, GYLD_DEST_RIGHT,
+        GYLD_DEST_RUN, GYLD_DEST_PROPOSAL, GYLD_DEST_SIDE,
       ],
       homeParamGrips: [GYLD_SET],
     });
@@ -382,6 +400,34 @@ export class GyldStoreTap extends BaseTap {
     // bust and one store serves both paths.
     const store = new DirectoryStore(handle);
     return { index, ref, store, bustStore: store, describe: ref.name, status: 'idle', streams: null };
+  }
+
+  /** The root one cache index belongs to: a root of the set, or a run store. */
+  private rootAt(index: number): RootRuntime | undefined {
+    return index >= RUN_ROOT_BASE ? this.runByIndex.get(index) : this.roots[index];
+  }
+
+  /** The store for one run URL, opened on the first read of that run. Static
+   *  only: a run is addressed by URL, and a picked directory handle has none. */
+  private runRoot(url: string): RootRuntime {
+    const held = this.runRoots.get(url);
+    if (held) {
+      return held;
+    }
+    const options = this.fetchImpl === undefined ? {} : { fetch: this.fetchImpl };
+    const index = RUN_ROOT_BASE + this.runRoots.size;
+    const root: RootRuntime = {
+      index,
+      ref: { kind: 'static', baseUrl: url },
+      store: new StaticStore(url, options),
+      bustStore: new StaticStore(url, { ...options, cacheBust: true }),
+      describe: url,
+      status: 'idle',
+      streams: null,
+    };
+    this.runRoots.set(url, root);
+    this.runByIndex.set(index, root);
+    return root;
   }
 
   // --- Census --------------------------------------------------------------
@@ -588,6 +634,12 @@ export class GyldStoreTap extends BaseTap {
     if (grip === (GYLD_DIFF as unknown as Grip<unknown>)) {
       return this.diffFor(dest);
     }
+    if (grip === (GYLD_RUN as unknown as Grip<unknown>)) {
+      return this.runFor(dest);
+    }
+    if (grip === (GYLD_COMPARISON as unknown as Grip<unknown>)) {
+      return this.comparisonFor(dest);
+    }
     return undefined;
   }
 
@@ -746,6 +798,13 @@ export class GyldStoreTap extends BaseTap {
   }
 
   private lensFor(dest: StoreDestination): GyldLensState {
+    // A context that names a SIDE is one pane of the compare window, whose
+    // picture is a file of an evaluator run rather than of a stream bundle.
+    const rawSide = dest.getDestinationParamValue(GYLD_DEST_SIDE);
+    const side = typeof rawSide === 'string' ? CompareSide.byName(rawSide) : undefined;
+    if (side !== undefined) {
+      return this.evaluatorLens(dest, side);
+    }
     const stream = this.streamParam(dest);
     const rawPerspective = dest.getDestinationParamValue(GYLD_DEST_PERSPECTIVE);
     const perspective = typeof rawPerspective === 'string' ? rawPerspective : '';
@@ -787,6 +846,112 @@ export class GyldStoreTap extends BaseTap {
     return state;
   }
 
+  // --- The evaluator runs ---------------------------------------------------
+
+  private runParam(dest: StoreDestination): string {
+    const value = dest.getDestinationParamValue(GYLD_DEST_RUN);
+    return typeof value === 'string' ? value : '';
+  }
+
+  private proposalParam(dest: StoreDestination): string {
+    const value = dest.getDestinationParamValue(GYLD_DEST_PROPOSAL);
+    return typeof value === 'string' ? value : '';
+  }
+
+  /** `Gyld.Run`: the run's own `run.json`, read from the run's own URL. */
+  private runFor(dest: StoreDestination): GyldValue<unknown> {
+    const run = this.runParam(dest);
+    if (run === '') {
+      return VALUE_UNSET;
+    }
+    return this.load(this.runRoot(run).index, RUN_INDEX_PATH, readEvaluatorRun);
+  }
+
+  /** The proposal the destination names, once the run index has landed. The
+   *  index is the only enumeration of a run there is, so a proposal it does
+   *  not carry is absent rather than a path this tap composes. */
+  private proposalFor(dest: StoreDestination): {
+    root: number;
+    proposal?: RunProposal;
+    pending?: GyldValue<unknown>;
+  } | undefined {
+    const run = this.runParam(dest);
+    const proposal = this.proposalParam(dest);
+    if (run === '' || proposal === '') {
+      return undefined;
+    }
+    const root = this.runRoot(run).index;
+    const index = this.load(root, RUN_INDEX_PATH, readEvaluatorRun);
+    if (index.status !== 'ok' || index.value === undefined) {
+      // Whatever became of the index becomes of what it would have named: a
+      // run that is still loading is loading, one that did not read is
+      // invalid, with its own fault carried.
+      return { root, pending: index };
+    }
+    const found = (index.value as GyldEvaluatorRun).proposals.find(
+      (entry) => entry.id === proposal,
+    );
+    return found === undefined ? { root } : { root, proposal: found };
+  }
+
+  /** `Gyld.Comparison`: one proposal's comparison record, at the path the run
+   *  index names for it. */
+  private comparisonFor(dest: StoreDestination): GyldValue<unknown> {
+    const found = this.proposalFor(dest);
+    if (found === undefined) {
+      return VALUE_UNSET;
+    }
+    if (found.pending !== undefined) {
+      return found.pending;
+    }
+    if (found.proposal === undefined) {
+      return this.once('value-absent', () => ({ status: 'absent' as GyldLoadStatus }));
+    }
+    return this.load(found.root, found.proposal.files.comparison, readComparison);
+  }
+
+  /** One side's picture of one proposal, at the path the run index names. */
+  private evaluatorLens(dest: StoreDestination, side: CompareSide): GyldLensState {
+    const run = this.runParam(dest);
+    const proposal = this.proposalParam(dest);
+    const where = `${run}${KEY_SEP}${proposal}${KEY_SEP}${side.name}`;
+    const state = (status: GyldLoadStatus): GyldLensState => this.once(
+      `run-lens-${status}${KEY_SEP}${where}`,
+      () => ({ status, stream: '', perspective: side.name }),
+    );
+    const found = this.proposalFor(dest);
+    if (found === undefined) {
+      return LENS_UNSET;
+    }
+    if (found.pending !== undefined) {
+      return state(found.pending.status === 'loading' ? 'loading' : 'absent');
+    }
+    if (found.proposal === undefined) {
+      return state('absent');
+    }
+    const value = this.load(found.root, side.lensFile(found.proposal), readLens);
+    let byWhere = this.lensStates.get(value);
+    if (!byWhere) {
+      byWhere = new Map();
+      this.lensStates.set(value, byWhere);
+    }
+    const held = byWhere.get(where);
+    if (held) {
+      return held;
+    }
+    // A lens of an evaluator run belongs to a SNAPSHOT, not to a stream, so
+    // the state names the side it is of where a bundle lens names the stream.
+    const built: GyldLensState = { status: value.status, stream: '', perspective: side.name };
+    if (value.value !== undefined) {
+      built.value = value.value as GyldLensState['value'];
+    }
+    if (value.fault !== undefined) {
+      built.fault = value.fault;
+    }
+    byWhere.set(where, built);
+    return built;
+  }
+
   // --- Loading -------------------------------------------------------------
 
   private load(rootIndex: number, path: string, read: FileReader): GyldValue<unknown> {
@@ -808,7 +973,7 @@ export class GyldStoreTap extends BaseTap {
     if (reader === undefined || this.inFlight.has(key) || this.files.has(key)) {
       return;
     }
-    const root = this.roots[rootIndex];
+    const root = this.rootAt(rootIndex);
     const store = bust ? (root?.bustStore ?? root?.store) : root?.store;
     if (!store) {
       return;
@@ -839,9 +1004,10 @@ export class GyldStoreTap extends BaseTap {
   }
 
   /** A file changed, so the bundle memo that folds it is no longer current. A
-   *  diff is not folded into a bundle, so it invalidates nothing. */
+   *  diff is not folded into a bundle, so it invalidates nothing, and neither
+   *  is anything under an evaluator run: a run is not a bundle. */
   private invalidate(rootIndex: number, path: string): void {
-    if (path.startsWith('diffs/')) {
+    if (path.startsWith('diffs/') || rootIndex >= RUN_ROOT_BASE) {
       return;
     }
     const stream = path.startsWith('streams/') ? path.split('/')[1] : undefined;
@@ -860,7 +1026,7 @@ export class GyldStoreTap extends BaseTap {
       const separator = key.indexOf(KEY_SEP);
       const rootIndex = Number(key.slice(0, separator));
       const path = key.slice(separator + 1);
-      const store = this.roots[rootIndex]?.bustStore;
+      const store = this.rootAt(rootIndex)?.bustStore;
       if (!store) {
         return;
       }
