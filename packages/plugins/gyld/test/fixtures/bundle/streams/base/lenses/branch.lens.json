@@ -1,0 +1,485 @@
+{
+  "format": "gyld.lens.v1",
+  "perspective": "branch",
+  "snapshot": {
+    "lineage": "glade-decision-graph",
+    "revision": "v1",
+    "digest": "94552adafc38d2c6586193d55808901069cc53d72fdd018ebbd6da180682d52c"
+  },
+  "stream": "base",
+  "title": "Glade | Branch-induced questions (Implies)",
+  "relations": [
+    "Offers",
+    "Implies"
+  ],
+  "text_relations": [],
+  "omissions": [
+    "Requires",
+    "GatedBy",
+    "Offers to alternatives that induce no question",
+    "questions outside a branch"
+  ],
+  "legend": {
+    "edges": [
+      {
+        "relation": "Offers",
+        "definition": "f18b2c59f9fb2f7d1118bdc4d6019514a24451a69e9659ef4c71356843f60e81",
+        "color": "#7c3aed",
+        "style": "solid",
+        "label": null
+      },
+      {
+        "relation": "Implies",
+        "definition": "85cfbd80f0dc70dc43f100eb3104452bd5261460a65581292592833cfaac3d5b",
+        "color": "#b45309",
+        "style": "dashed",
+        "label": null
+      }
+    ],
+    "nodes": [
+      {
+        "kind": "Alternative",
+        "status": null,
+        "classification": null,
+        "shape": "box",
+        "fill": "#ede9fe",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Lean",
+        "classification": null,
+        "shape": "box",
+        "fill": "#dcfce7",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Open",
+        "classification": null,
+        "shape": "box",
+        "fill": "#fef3c7",
+        "glyph": null
+      }
+    ]
+  },
+  "engine": {
+    "name": "dot",
+    "version": "14.1.4",
+    "pinned": true
+  },
+  "bb": [
+    0.0,
+    0.0,
+    1114.0,
+    309.0
+  ],
+  "groups": [],
+  "nodes": [
+    {
+      "id": "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "label": "traffic_budget_numbers",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "traffic_budget_numbers",
+        "TrafficBudgetNumbers"
+      ],
+      "pos": [
+        513.12,
+        18.0
+      ],
+      "size": [
+        1.8529,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:7807d884a5f73c3fb0a83ba7d9ca65dbcf9c76cf4438881c8cd9f41d8e193822",
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "label": "blind_relay_tier",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "blind_relay_tier",
+        "BlindRelayTier"
+      ],
+      "pos": [
+        761.12,
+        18.0
+      ],
+      "size": [
+        1.2904,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "label": "dissemination",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "dissemination",
+        "Dissemination"
+      ],
+      "pos": [
+        406.12,
+        220.0
+      ],
+      "size": [
+        1.2175,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "label": "relay_posture",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "relay_posture",
+        "RelayPosture"
+      ],
+      "pos": [
+        647.12,
+        18.0
+      ],
+      "size": [
+        1.1863,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "label": "metadata_exposure",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "metadata_exposure",
+        "MetadataExposure"
+      ],
+      "pos": [
+        364.12,
+        18.0
+      ],
+      "size": [
+        1.6029,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "label": "scope_model",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "scope_model",
+        "ScopeModel"
+      ],
+      "pos": [
+        636.12,
+        220.0
+      ],
+      "size": [
+        1.1654,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:09cc3e08088d761cf54b77f88479f3a6b12d59316f88e9986d6cb8560797e6bc",
+      "slot": "glade_decisions:GladeDecisions.cryptography",
+      "label": "cryptography",
+      "kind": "Alternative",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "filled",
+      "fill": "#ede9fe",
+      "text": [
+        "cryptography",
+        "Cryptography"
+      ],
+      "pos": [
+        748.12,
+        119.0
+      ],
+      "size": [
+        1.1863,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "slot": "glade_decisions:GladeDecisions.gossip_overlay",
+      "label": "gossip_overlay",
+      "kind": "Alternative",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "filled",
+      "fill": "#ede9fe",
+      "text": [
+        "gossip_overlay",
+        "GossipOverlay"
+      ],
+      "pos": [
+        406.12,
+        119.0
+      ],
+      "size": [
+        1.2696,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "slot": "glade_decisions:GladeDecisions.topology",
+      "label": "topology",
+      "kind": "Alternative",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "filled",
+      "fill": "#ede9fe",
+      "text": [
+        "topology",
+        "Topology"
+      ],
+      "pos": [
+        636.12,
+        119.0
+      ],
+      "size": [
+        0.87375,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:fa8e452c4c299e951f9d643ecf08992872f25f9bc82b8c9e03d369c6fc76866f",
+      "slot": "glade_decisions:GladeDecisions.node_trust",
+      "label": "node_trust",
+      "kind": "Alternative",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "box",
+      "style": "filled",
+      "fill": "#ede9fe",
+      "text": [
+        "node_trust",
+        "NodeTrust"
+      ],
+      "pos": [
+        533.12,
+        119.0
+      ],
+      "size": [
+        0.98833,
+        0.5
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "asn:edf0ecd3d18989c9f2fa7364c663e51698e4f7ed161e0c784744fe2866b0680f#1",
+      "slot": "glade_decisions:Dissemination.offers",
+      "relation": "Offers",
+      "ref_index": 1,
+      "owner": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "tail": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "head": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "label": null,
+      "style": {
+        "color": "#7c3aed"
+      },
+      "spline": "e,406.12,137.38 406.12,201.76 406.12,186.24 406.12,163.22 406.12,145.56",
+      "label_pos": null
+    },
+    {
+      "id": "asn:1a74964807d21be928fe67208c8db24e60f0cb4a8b9510bed4c5bf21f6fd34da#0",
+      "slot": "glade_decisions:ScopeModel.offers",
+      "relation": "Offers",
+      "ref_index": 0,
+      "owner": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:09cc3e08088d761cf54b77f88479f3a6b12d59316f88e9986d6cb8560797e6bc",
+      "label": null,
+      "style": {
+        "color": "#7c3aed"
+      },
+      "spline": "e,728.56,137.3 655.89,201.53 674.36,185.2 702.06,160.72 722.28,142.85",
+      "label_pos": null
+    },
+    {
+      "id": "asn:1a74964807d21be928fe67208c8db24e60f0cb4a8b9510bed4c5bf21f6fd34da#2",
+      "slot": "glade_decisions:ScopeModel.offers",
+      "relation": "Offers",
+      "ref_index": 2,
+      "owner": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:fa8e452c4c299e951f9d643ecf08992872f25f9bc82b8c9e03d369c6fc76866f",
+      "label": null,
+      "style": {
+        "color": "#7c3aed"
+      },
+      "spline": "e,551.21,137.38 618.18,201.76 601.3,185.53 575.9,161.11 557.25,143.19",
+      "label_pos": null
+    },
+    {
+      "id": "asn:1a74964807d21be928fe67208c8db24e60f0cb4a8b9510bed4c5bf21f6fd34da#1",
+      "slot": "glade_decisions:ScopeModel.offers",
+      "relation": "Offers",
+      "ref_index": 1,
+      "owner": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "label": null,
+      "style": {
+        "color": "#7c3aed"
+      },
+      "spline": "e,636.12,137.38 636.12,201.76 636.12,186.24 636.12,163.22 636.12,145.56",
+      "label_pos": null
+    },
+    {
+      "id": "asn:7c90d585bc62e23840d645205337ce97069d158f164d5b478dc36aebc11c0aeb",
+      "slot": "glade_decisions:Cryptography.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:09cc3e08088d761cf54b77f88479f3a6b12d59316f88e9986d6cb8560797e6bc",
+      "tail": "occ:09cc3e08088d761cf54b77f88479f3a6b12d59316f88e9986d6cb8560797e6bc",
+      "head": "occ:7807d884a5f73c3fb0a83ba7d9ca65dbcf9c76cf4438881c8cd9f41d8e193822",
+      "label": null,
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,758.84,36.379 750.39,100.76 752.43,85.235 755.45,62.222 757.77,44.562",
+      "label_pos": null
+    },
+    {
+      "id": "asn:81a937f145553b6b1dd02ec29856f2eb1ecaae2599c2fa1ed12b0ff655438c74#1",
+      "slot": "glade_decisions:GossipOverlay.implies",
+      "relation": "Implies",
+      "ref_index": 1,
+      "owner": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "tail": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "head": "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+      "label": null,
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,371.5,36.379 398.81,100.76 392.16,85.094 382.28,61.803 374.77,44.082",
+      "label_pos": null
+    },
+    {
+      "id": "asn:81a937f145553b6b1dd02ec29856f2eb1ecaae2599c2fa1ed12b0ff655438c74#0",
+      "slot": "glade_decisions:GossipOverlay.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "tail": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "head": "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+      "label": null,
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,494.34,36.379 424.76,100.76 442.38,84.459 468.92,59.902 488.32,41.955",
+      "label_pos": null
+    },
+    {
+      "id": "asn:937ac7594cecbd91d031f568589c505fcb6f3653abd0d04aedda0cc353a78a41",
+      "slot": "glade_decisions:NodeTrust.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:fa8e452c4c299e951f9d643ecf08992872f25f9bc82b8c9e03d369c6fc76866f",
+      "tail": "occ:fa8e452c4c299e951f9d643ecf08992872f25f9bc82b8c9e03d369c6fc76866f",
+      "head": "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+      "label": null,
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,393.94,36.463 503.3,100.53 474.79,83.827 431.73,58.6 401.06,40.635",
+      "label_pos": null
+    },
+    {
+      "id": "asn:e634d002d19da855759f90bf6726c21d7ced4f9b4acb79d0826db93f7d0d8864#1",
+      "slot": "glade_decisions:Topology.implies",
+      "relation": "Implies",
+      "ref_index": 1,
+      "owner": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "tail": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "head": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "label": null,
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,645.19,36.379 638.04,100.76 639.77,85.235 642.32,62.222 644.28,44.562",
+      "label_pos": null
+    },
+    {
+      "id": "asn:e634d002d19da855759f90bf6726c21d7ced4f9b4acb79d0826db93f7d0d8864#0",
+      "slot": "glade_decisions:Topology.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "tail": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "head": "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+      "label": null,
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,534.61,36.297 614.42,100.53 594.04,84.129 563.46,59.51 541.22,41.617",
+      "label_pos": null
+    }
+  ],
+  "counts": {
+    "nodes": 10,
+    "edges": 10,
+    "groups": 0,
+    "omitted_occurrences": 65,
+    "omitted_assertions": 30
+  }
+}

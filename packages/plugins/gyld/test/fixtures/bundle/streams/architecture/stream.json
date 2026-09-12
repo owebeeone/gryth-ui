@@ -1,0 +1,135 @@
+{
+  "format": "gyld.stream.v1",
+  "id": "architecture",
+  "kind": "declaration",
+  "parent": null,
+  "parent_snapshot": null,
+  "lineage": "glade-architecture-candidate-1",
+  "revision": "v3",
+  "snapshot": {
+    "lineage": "glade-architecture-candidate-1",
+    "revision": "v3",
+    "digest": "a018b92d07736f73acc3f10530547d802c090ef39fd4928f029fbad9eef0cea5"
+  },
+  "overlay": null,
+  "chain": [
+    "architecture"
+  ],
+  "built": "2026-09-12T16:51:24Z",
+  "principal": "gianni",
+  "note": "base stream plus the architecture lineage; no ruling",
+  "status": "ok",
+  "questions": [],
+  "roots": [],
+  "tiers": {},
+  "lenses": [
+    {
+      "perspective": "dependencies",
+      "emitted": true,
+      "file": "streams/architecture/lenses/dependencies.lens.json",
+      "stream": null,
+      "relations": [
+        "DependsOn",
+        "MayUse",
+        "ReuseCandidate"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "cooperation",
+      "emitted": true,
+      "file": "streams/architecture/lenses/cooperation.lens.json",
+      "stream": null,
+      "relations": [
+        "CooperatesWith"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "state",
+      "emitted": true,
+      "file": "streams/architecture/lenses/state.lens.json",
+      "stream": null,
+      "relations": [
+        "Owns",
+        "UsesScope"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "composition",
+      "emitted": true,
+      "file": "streams/architecture/lenses/composition.lens.json",
+      "stream": null,
+      "relations": [
+        "Constructs",
+        "ConfiguredBy",
+        "Provides"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "bindings",
+      "emitted": true,
+      "file": "streams/architecture/lenses/bindings.lens.json",
+      "stream": null,
+      "relations": [
+        "AssembledBy",
+        "BindsPort",
+        "SelectsProvider",
+        "ForConsumers",
+        "SharedWithin"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "lifecycle",
+      "emitted": true,
+      "file": "streams/architecture/lenses/lifecycle.lens.json",
+      "stream": null,
+      "relations": [
+        "CleanupOwnedBy",
+        "DrainsBefore"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "allocation",
+      "emitted": true,
+      "file": "streams/architecture/lenses/allocation.lens.json",
+      "stream": null,
+      "relations": [
+        "allocation"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "journeys",
+      "emitted": true,
+      "file": "streams/architecture/lenses/journeys.lens.json",
+      "stream": null,
+      "relations": [
+        "journey_relevance"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "requirements",
+      "emitted": true,
+      "file": "streams/architecture/lenses/requirements.lens.json",
+      "stream": null,
+      "relations": [
+        "must_meet"
+      ],
+      "reason": null
+    },
+    {
+      "perspective": "full",
+      "emitted": false,
+      "file": null,
+      "stream": null,
+      "relations": null,
+      "reason": "the core viewer draws the full graph and mints no record ids; giving it ids is a core change, not an example-host one"
+    }
+  ]
+}

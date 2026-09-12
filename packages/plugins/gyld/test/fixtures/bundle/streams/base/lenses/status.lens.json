@@ -1,0 +1,1479 @@
+{
+  "format": "gyld.lens.v1",
+  "perspective": "status",
+  "snapshot": {
+    "lineage": "glade-decision-graph",
+    "revision": "v1",
+    "digest": "94552adafc38d2c6586193d55808901069cc53d72fdd018ebbd6da180682d52c"
+  },
+  "stream": "base",
+  "title": "Glade | Decision status (declared status, no ruling)",
+  "relations": [
+    "Requires",
+    "Implies",
+    "GatedBy"
+  ],
+  "text_relations": [
+    "Offers"
+  ],
+  "omissions": [
+    "evidence and costs",
+    "matrix rows",
+    "requirement text"
+  ],
+  "legend": {
+    "edges": [
+      {
+        "relation": "Requires",
+        "definition": "f0526b9c5fe4700a0cfb0d78a92f14cd2f0458e83a5f142f7ee34b6a9dec106c",
+        "color": "#1f4e79",
+        "style": "solid",
+        "label": null
+      },
+      {
+        "relation": "Implies",
+        "definition": "85cfbd80f0dc70dc43f100eb3104452bd5261460a65581292592833cfaac3d5b",
+        "color": "#b45309",
+        "style": "dashed",
+        "label": null
+      },
+      {
+        "relation": "GatedBy",
+        "definition": "11d7a7f78eda2f4bf2884f3e3a1dd933c413bb29f4c416c1f9035fbf116d558a",
+        "color": "#6b7280",
+        "style": "dotted",
+        "label": "gate"
+      }
+    ],
+    "nodes": [
+      {
+        "kind": "Question",
+        "status": "Decided",
+        "classification": null,
+        "shape": "box",
+        "fill": "#e2e8f0",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Directed",
+        "classification": null,
+        "shape": "box",
+        "fill": "#dbeafe",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Lean",
+        "classification": null,
+        "shape": "box",
+        "fill": "#dcfce7",
+        "glyph": null
+      },
+      {
+        "kind": "Question",
+        "status": "Open",
+        "classification": null,
+        "shape": "box",
+        "fill": "#fef3c7",
+        "glyph": null
+      },
+      {
+        "kind": "Trigger",
+        "status": null,
+        "classification": null,
+        "shape": "folder",
+        "fill": "#f8fafc",
+        "glyph": null
+      }
+    ]
+  },
+  "engine": {
+    "name": "dot",
+    "version": "14.1.4",
+    "pinned": true
+  },
+  "bb": [
+    0.0,
+    0.0,
+    1819.2,
+    676.83
+  ],
+  "groups": [
+    {
+      "id": "grp:decided",
+      "label": "Decided",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:5cc27cd10f481a8cf4454390a6082d3e34b94e011a17f2b33b260e543b8ccb26",
+        "occ:add5342d06690823e16e66fa50474747993e0cbd6f750681f9b5cff40dafafbd",
+        "occ:c1927cb7b8ff5e0b3e0fcb37c498b817a3ff276d7528e6765dfa53a9a1acc2a7",
+        "occ:dbcf8eb348f15b27639f0d5ff57dd866130070afa5c2652c658d1c2f34d1a87f",
+        "occ:ea36c3c718ceac5843f7c530c3c8b8d2eda6a35052f3e4e6588c0e6fd9658a25",
+        "occ:f7164982616e6f287a30a721016117e5d89a36c34acff01742c8aa0e8b183994"
+      ],
+      "bb": [
+        1140.0,
+        338.3,
+        1705.0,
+        574.07
+      ]
+    },
+    {
+      "id": "grp:directed",
+      "label": "Directed",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:885580c27c692defe14879dc11e38eddbab70e065378a727199749c1027ad811"
+      ],
+      "bb": [
+        306.0,
+        477.56,
+        476.0,
+        597.83
+      ]
+    },
+    {
+      "id": "grp:lean",
+      "label": "Lean",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:0c23b6c32e9ff3ae40c9d783b0e1f726c71093be9d4dd39a7b336441df7d1588",
+        "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+        "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+        "occ:40f1b70f76b5c049ee87a4e9bad528c302c7f6526ad99c762b77fec9f123a0ff",
+        "occ:5d26f28256fbc5b3a491febc867af40dbaca6799171fbac6eddf6a595e7c415f",
+        "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+        "occ:842b500e8e5b7d223f78c9b6e0588cf3b5d137c9f381e8bbe8234e33f0ddfa47",
+        "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+        "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+        "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+        "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+        "occ:fedcea6c9fda51ea5f44044e9936890e428617af1b79913e89e1ace3227d9979"
+      ],
+      "bb": [
+        306.0,
+        8.0,
+        1132.0,
+        434.81
+      ]
+    },
+    {
+      "id": "grp:open",
+      "label": "Open",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+        "occ:7807d884a5f73c3fb0a83ba7d9ca65dbcf9c76cf4438881c8cd9f41d8e193822",
+        "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+        "occ:c7d1298725b70222327207f48097f44e74e1d04cd4abfd2eaf72116bf66ac337",
+        "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9"
+      ],
+      "bb": [
+        8.0,
+        25.76,
+        298.0,
+        591.83
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "occ:0c23b6c32e9ff3ae40c9d783b0e1f726c71093be9d4dd39a7b336441df7d1588",
+      "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+      "label": "simulator_tooling",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "simulator_tooling",
+        "SimulatorTooling",
+        "  - dependency_policy_tools",
+        "  - deterministic_runtime_sim",
+        "  - own_sim_only *"
+      ],
+      "pos": [
+        1045.0,
+        51.76
+      ],
+      "size": [
+        2.1862,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "label": "transport_key_binding",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "transport_key_binding",
+        "TransportKeyBinding",
+        "  - binding_record *",
+        "  - one_key_both_roles"
+      ],
+      "pos": [
+        912.0,
+        364.3
+      ],
+      "size": [
+        1.8008,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "slot": "glade_decisions:GladeDecisions.registry_growth",
+      "label": "registry_growth",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "registry_growth",
+        "RegistryGrowth",
+        "  - delegated_referrals",
+        "  - ordered_reconfiguration",
+        "  - trusted_mapping_only *"
+      ],
+      "pos": [
+        867.0,
+        51.76
+      ],
+      "size": [
+        2.0508,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:40f1b70f76b5c049ee87a4e9bad528c302c7f6526ad99c762b77fec9f123a0ff",
+      "slot": "glade_decisions:GladeDecisions.identity_adapters",
+      "label": "identity_adapters",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "identity_adapters",
+        "IdentityAdapters",
+        "  - kerberos_ldap",
+        "  - none_in_v1 *",
+        "  - oidc",
+        "  - spiffe"
+      ],
+      "pos": [
+        599.0,
+        205.03
+      ],
+      "size": [
+        1.4154,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:5cc27cd10f481a8cf4454390a6082d3e34b94e011a17f2b33b260e543b8ccb26",
+      "slot": "glade_decisions:GladeDecisions.shaku_injector",
+      "label": "shaku_injector",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "shaku_injector",
+        "ShakuInjector"
+      ],
+      "pos": [
+        1193.0,
+        527.32
+      ],
+      "size": [
+        1.2383,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:5d26f28256fbc5b3a491febc867af40dbaca6799171fbac6eddf6a595e7c415f",
+      "slot": "glade_decisions:GladeDecisions.text_engine",
+      "label": "text_engine",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "text_engine",
+        "TextEngine",
+        "  - automerge",
+        "  - loro",
+        "  - own_text_profile *",
+        "  - yrs"
+      ],
+      "pos": [
+        523.0,
+        364.3
+      ],
+      "size": [
+        1.655,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "label": "traffic_budget_numbers",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": "grp:open",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "traffic_budget_numbers",
+        "TrafficBudgetNumbers"
+      ],
+      "pos": [
+        83.0,
+        51.76
+      ],
+      "size": [
+        1.8529,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:7807d884a5f73c3fb0a83ba7d9ca65dbcf9c76cf4438881c8cd9f41d8e193822",
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "label": "blind_relay_tier",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": "grp:open",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "blind_relay_tier",
+        "BlindRelayTier"
+      ],
+      "pos": [
+        244.0,
+        205.03
+      ],
+      "size": [
+        1.2904,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "label": "dissemination",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "dissemination",
+        "Dissemination",
+        "  - gossip_overlay",
+        "  - sync_round_only *"
+      ],
+      "pos": [
+        894.0,
+        205.03
+      ],
+      "size": [
+        1.6863,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:842b500e8e5b7d223f78c9b6e0588cf3b5d137c9f381e8bbe8234e33f0ddfa47",
+      "slot": "glade_decisions:GladeDecisions.store_engine",
+      "label": "store_engine",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "store_engine",
+        "StoreEngine",
+        "  - redb_engine",
+        "  - sqlite_engine",
+        "  - whole_state_blob *"
+      ],
+      "pos": [
+        376.0,
+        364.3
+      ],
+      "size": [
+        1.7279,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:885580c27c692defe14879dc11e38eddbab70e065378a727199749c1027ad811",
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "label": "lifecycle_composition",
+      "kind": "Question",
+      "status": "Directed",
+      "classification": null,
+      "group": "grp:directed",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "lifecycle_composition",
+        "LifecycleComposition",
+        "  - dag_runner",
+        "  - graceful_shutdown_crate",
+        "  - sdax_rs *",
+        "  - tokio_primitives"
+      ],
+      "pos": [
+        391.0,
+        527.32
+      ],
+      "size": [
+        2.1342,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "label": "proof_family",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "proof_family",
+        "ProofFamily",
+        "  - biscuit",
+        "  - macaroons",
+        "  - taut_grants *",
+        "  - ucan"
+      ],
+      "pos": [
+        655.0,
+        364.3
+      ],
+      "size": [
+        1.3113,
+        1.16
+      ]
+    },
+    {
+      "id": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "label": "relay_posture",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "relay_posture",
+        "RelayPosture",
+        "  - community_dev_only",
+        "  - iroh_services_pro",
+        "  - self_hosted *"
+      ],
+      "pos": [
+        742.0,
+        205.03
+      ],
+      "size": [
+        1.8529,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:add5342d06690823e16e66fa50474747993e0cbd6f750681f9b5cff40dafafbd",
+      "slot": "glade_decisions:GladeDecisions.shape_catalogue",
+      "label": "shape_catalogue",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "shape_catalogue",
+        "ShapeCatalogue"
+      ],
+      "pos": [
+        1415.0,
+        527.32
+      ],
+      "size": [
+        1.4154,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "label": "metadata_exposure",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": "grp:open",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "metadata_exposure",
+        "MetadataExposure"
+      ],
+      "pos": [
+        232.0,
+        51.76
+      ],
+      "size": [
+        1.6029,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:c1927cb7b8ff5e0b3e0fcb37c498b817a3ff276d7528e6765dfa53a9a1acc2a7",
+      "slot": "glade_decisions:GladeDecisions.grants_as_data",
+      "label": "grants_as_data",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "grants_as_data",
+        "GrantsAsData"
+      ],
+      "pos": [
+        1538.0,
+        527.32
+      ],
+      "size": [
+        1.3113,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:c7d1298725b70222327207f48097f44e74e1d04cd4abfd2eaf72116bf66ac337",
+      "slot": "glade_decisions:GladeDecisions.async_witness",
+      "label": "async_witness",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": "grp:open",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "async_witness",
+        "AsyncWitness",
+        "  - selection_reopened",
+        "  - shaku_confirmed"
+      ],
+      "pos": [
+        225.0,
+        364.3
+      ],
+      "size": [
+        1.7592,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "label": "version_pin",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "version_pin",
+        "VersionPin",
+        "  - bump_to_current *",
+        "  - stay_on_lock"
+      ],
+      "pos": [
+        1063.0,
+        364.3
+      ],
+      "size": [
+        1.6967,
+        0.82667
+      ]
+    },
+    {
+      "id": "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9",
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "label": "key_custody",
+      "kind": "Question",
+      "status": "Open",
+      "classification": null,
+      "group": "grp:open",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fef3c7",
+      "text": [
+        "key_custody",
+        "KeyCustody",
+        "  - owner_held_only",
+        "  - recovery_keys",
+        "  - social_recovery"
+      ],
+      "pos": [
+        232.0,
+        527.32
+      ],
+      "size": [
+        1.5925,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:dbcf8eb348f15b27639f0d5ff57dd866130070afa5c2652c658d1c2f34d1a87f",
+      "slot": "glade_decisions:GladeDecisions.iroh_transport",
+      "label": "iroh_transport",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "iroh_transport",
+        "IrohTransport"
+      ],
+      "pos": [
+        1654.0,
+        527.32
+      ],
+      "size": [
+        1.2071,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:ea36c3c718ceac5843f7c530c3c8b8d2eda6a35052f3e4e6588c0e6fd9658a25",
+      "slot": "glade_decisions:GladeDecisions.store_seam",
+      "label": "store_seam",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "store_seam",
+        "StoreSeam"
+      ],
+      "pos": [
+        1301.0,
+        527.32
+      ],
+      "size": [
+        1.0613,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "label": "scope_model",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "scope_model",
+        "ScopeModel",
+        "  - cryptography",
+        "  - node_trust *",
+        "  - topology"
+      ],
+      "pos": [
+        775.0,
+        364.3
+      ],
+      "size": [
+        1.3217,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:f7164982616e6f287a30a721016117e5d89a36c34acff01742c8aa0e8b183994",
+      "slot": "glade_decisions:GladeDecisions.discovery_fold",
+      "label": "discovery_fold",
+      "kind": "Question",
+      "status": "Decided",
+      "classification": null,
+      "group": "grp:decided",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#e2e8f0",
+      "text": [
+        "discovery_fold",
+        "DiscoveryFold"
+      ],
+      "pos": [
+        1193.0,
+        364.3
+      ],
+      "size": [
+        1.2279,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:fedcea6c9fda51ea5f44044e9936890e428617af1b79913e89e1ace3227d9979",
+      "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+      "label": "bulk_transfer",
+      "kind": "Question",
+      "status": "Lean",
+      "classification": null,
+      "group": "grp:lean",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dcfce7",
+      "text": [
+        "bulk_transfer",
+        "BulkTransfer",
+        "  - defer_bulk",
+        "  - iroh_blobs_port *",
+        "  - own_chunked_streams"
+      ],
+      "pos": [
+        1052.0,
+        205.03
+      ],
+      "size": [
+        1.9988,
+        0.99333
+      ]
+    },
+    {
+      "id": "occ:38d3057e4e1f56c2a160aa62c9a7398cfaa1402d492a273ee0e1c9076a29d208",
+      "slot": "glade_decisions:GladeDecisions.first_real_route_slice",
+      "label": "first_real_route_slice",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "first_real_route_slice"
+      ],
+      "pos": [
+        1318.0,
+        205.03
+      ],
+      "size": [
+        1.655,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:64317477a7e87fb1e959c85bcfc79cf83628c2b58fe0d674ac7c857be641c77d",
+      "slot": "glade_decisions:GladeDecisions.store_pressure",
+      "label": "store_pressure",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "store_pressure"
+      ],
+      "pos": [
+        539.0,
+        527.32
+      ],
+      "size": [
+        1.28,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:92c4f5683131b90d77b592f6628521f5fc48faaff0c50bb90d1322da98030522",
+      "slot": "glade_decisions:GladeDecisions.editing_need",
+      "label": "editing_need",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "editing_need"
+      ],
+      "pos": [
+        651.0,
+        527.32
+      ],
+      "size": [
+        1.1342,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:c3018127e5e713bd3b76cfbd1b980a27033e3118f60ba6e60da9722032042aab",
+      "slot": "glade_decisions:GladeDecisions.failure_model",
+      "label": "failure_model",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "failure_model"
+      ],
+      "pos": [
+        1191.0,
+        205.03
+      ],
+      "size": [
+        1.1758,
+        0.5
+      ]
+    },
+    {
+      "id": "occ:fdeb74d4033f5cd589917eb0eec97884bd652ca865c3808897e908a7a7a18f64",
+      "slot": "glade_decisions:GladeDecisions.first_bulk_supplier",
+      "label": "first_bulk_supplier",
+      "kind": "Trigger",
+      "status": null,
+      "classification": null,
+      "group": null,
+      "shape": "folder",
+      "style": "filled",
+      "fill": "#f8fafc",
+      "text": [
+        "first_bulk_supplier"
+      ],
+      "pos": [
+        1766.0,
+        364.3
+      ],
+      "size": [
+        1.4779,
+        0.5
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "asn:fb508475e360cab4ae0b735dd07db18dc59f3457da95a1a560c4ca6ef9ea0ee4#1",
+      "slot": "glade_decisions:AsyncWitness.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:c7d1298725b70222327207f48097f44e74e1d04cd4abfd2eaf72116bf66ac337",
+      "tail": "occ:885580c27c692defe14879dc11e38eddbab70e065378a727199749c1027ad811",
+      "head": "occ:c7d1298725b70222327207f48097f44e74e1d04cd4abfd2eaf72116bf66ac337",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,254.94,394.34 348.68,485.27 321.67,459.07 287.03,425.47 261.28,400.49",
+      "label_pos": null
+    },
+    {
+      "id": "asn:fb508475e360cab4ae0b735dd07db18dc59f3457da95a1a560c4ca6ef9ea0ee4#0",
+      "slot": "glade_decisions:AsyncWitness.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:c7d1298725b70222327207f48097f44e74e1d04cd4abfd2eaf72116bf66ac337",
+      "tail": "occ:5cc27cd10f481a8cf4454390a6082d3e34b94e011a17f2b33b260e543b8ccb26",
+      "head": "occ:c7d1298725b70222327207f48097f44e74e1d04cd4abfd2eaf72116bf66ac337",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,247.37,394.29 1148.2,521.51 1049,510.71 803.54,483.05 599,452.56 574.01,448.84 568.13,445.4 543,442.81 516.13,440.04 324.98,445.08 300,434.81 282.22,427.5 266.06,413.94 253.34,400.72",
+      "label_pos": null
+    },
+    {
+      "id": "asn:cff756e1666772a12cc867fbafeef9ad2069c65cd9c1db11734024560280cf7b",
+      "slot": "glade_decisions:BulkTransfer.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:fedcea6c9fda51ea5f44044e9936890e428617af1b79913e89e1ace3227d9979",
+      "tail": "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+      "head": "occ:fedcea6c9fda51ea5f44044e9936890e428617af1b79913e89e1ace3227d9979",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1054.5,241.13 1061,334.09 1059.3,310.46 1057,276.83 1055.1,249.96",
+      "label_pos": null
+    },
+    {
+      "id": "asn:55814ae1779be168f8e23c15d88b46a2f5f3146eaa08af04c9c161e694e16860#3",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 3,
+      "owner": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "tail": "occ:f7164982616e6f287a30a721016117e5d89a36c34acff01742c8aa0e8b183994",
+      "head": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,942.43,235.23 1181.7,346.01 1168.2,326.78 1143.7,296.26 1115,279.79 1056.9,246.51 1030.6,270.51 968,246.79 962.15,244.58 956.2,241.97 950.34,239.16",
+      "label_pos": null
+    },
+    {
+      "id": "asn:55814ae1779be168f8e23c15d88b46a2f5f3146eaa08af04c9c161e694e16860#2",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 2,
+      "owner": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,885.45,235.14 822.29,328.37 835.39,317.05 848.8,303.72 859,289.54 868.99,275.65 876.81,258.47 882.5,243.32",
+      "label_pos": null
+    },
+    {
+      "id": "asn:55814ae1779be168f8e23c15d88b46a2f5f3146eaa08af04c9c161e694e16860#0",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "tail": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "head": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,897.33,235.09 908.66,334.09 905.75,308.71 901.53,271.78 898.36,244.09",
+      "label_pos": null
+    },
+    {
+      "id": "asn:55814ae1779be168f8e23c15d88b46a2f5f3146eaa08af04c9c161e694e16860#1",
+      "slot": "glade_decisions:Dissemination.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "tail": "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+      "head": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,925.22,235.09 1031.6,334.09 1003.4,307.83 961.88,269.2 931.83,241.24",
+      "label_pos": null
+    },
+    {
+      "id": "asn:5324753cf7c90ec29d5d03a671f4092db32b4c0129732ed9606ef6ebd7a23baf",
+      "slot": "glade_decisions:IdentityAdapters.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:40f1b70f76b5c049ee87a4e9bad528c302c7f6526ad99c762b77fec9f123a0ff",
+      "tail": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "head": "occ:40f1b70f76b5c049ee87a4e9bad528c302c7f6526ad99c762b77fec9f123a0ff",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,613.69,247.28 640.43,322.39 633.17,301.98 624.32,277.13 616.67,255.64",
+      "label_pos": null
+    },
+    {
+      "id": "asn:d31b97a0b1ea757c9dfe2ad59d3ea3821312515ff6fdb003b1519e417df3e40e#0",
+      "slot": "glade_decisions:ProofFamily.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "tail": "occ:c1927cb7b8ff5e0b3e0fcb37c498b817a3ff276d7528e6765dfa53a9a1acc2a7",
+      "head": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,681.14,406.32 1522.5,508.99 1511.4,497.81 1495.3,484.15 1478,477.56 1420.9,455.82 989.86,457.56 929,452.56 892.42,449.56 883.55,446.09 847,442.81 817.73,440.19 741.34,447.85 715,434.81 704.53,429.63 695.13,421.71 687.05,413.05",
+      "label_pos": null
+    },
+    {
+      "id": "asn:d31b97a0b1ea757c9dfe2ad59d3ea3821312515ff6fdb003b1519e417df3e40e#1",
+      "slot": "glade_decisions:ProofFamily.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "tail": "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9",
+      "head": "occ:8d4a07a9492d5125c427d5964fc0df2da6809b1f6a4dca96e75a071cd9da264a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,665.01,406.3 273.49,491.23 281.82,485.78 290.85,480.86 300,477.56 336.98,464.21 625.87,481.02 653,452.56 662.43,442.66 665.47,428.9 665.44,415.23",
+      "label_pos": null
+    },
+    {
+      "id": "asn:95ada07c1482e88288b59ea9d0a7d3be8fe167dd09020d124723d2e73e63178d",
+      "slot": "glade_decisions:RegistryGrowth.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "tail": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "head": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,873.28,87.952 888.79,174.86 884.85,152.77 879.36,122.03 874.88,96.92",
+      "label_pos": null
+    },
+    {
+      "id": "asn:d66881414575949cc3d325f212614e859e771bdfeb05435cdce85cf799f2cf4b#0",
+      "slot": "glade_decisions:RelayPosture.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "tail": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "head": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,786.26,241.12 885.37,334.32 869.91,317.89 849.83,297.21 831,279.79 819.07,268.75 805.77,257.32 793.18,246.84",
+      "label_pos": null
+    },
+    {
+      "id": "asn:d66881414575949cc3d325f212614e859e771bdfeb05435cdce85cf799f2cf4b#1",
+      "slot": "glade_decisions:RelayPosture.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "tail": "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+      "head": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,809.11,240.96 1011.1,334.05 1003.7,330.09 996.22,326.15 989,322.54 915.74,285.92 894.75,282.41 821,246.79 819.66,246.14 818.31,245.49 816.96,244.83",
+      "label_pos": null
+    },
+    {
+      "id": "asn:8525c211673977db9f82869734b9d66658e68eb5993a71ae9115dbbcb62fcae5#0",
+      "slot": "glade_decisions:ScopeModel.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "tail": "occ:c1927cb7b8ff5e0b3e0fcb37c498b817a3ff276d7528e6765dfa53a9a1acc2a7",
+      "head": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,796.93,400.54 1522.5,509.04 1511.4,497.87 1495.3,484.22 1478,477.56 1381.2,440.25 1115.4,460.51 1012,452.56 1002.1,451.8 843.77,439.37 835,434.81 822.58,428.36 811.63,418.16 802.59,407.54",
+      "label_pos": null
+    },
+    {
+      "id": "asn:8525c211673977db9f82869734b9d66658e68eb5993a71ae9115dbbcb62fcae5#1",
+      "slot": "glade_decisions:ScopeModel.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "tail": "occ:dbcf8eb348f15b27639f0d5ff57dd866130070afa5c2652c658d1c2f34d1a87f",
+      "head": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,796.48,400.51 1639.8,509.06 1629.5,497.91 1614.5,484.26 1598,477.56 1578.3,469.56 854.05,444.18 835,434.81 822.33,428.57 811.24,418.33 802.16,407.6",
+      "label_pos": null
+    },
+    {
+      "id": "asn:e475e22c7f8132a0d92366a2d258d5d3629e59608db518c2d80071f5c433ab9d",
+      "slot": "glade_decisions:StoreEngine.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:842b500e8e5b7d223f78c9b6e0588cf3b5d137c9f381e8bbe8234e33f0ddfa47",
+      "tail": "occ:ea36c3c718ceac5843f7c530c3c8b8d2eda6a35052f3e4e6588c0e6fd9658a25",
+      "head": "occ:842b500e8e5b7d223f78c9b6e0588cf3b5d137c9f381e8bbe8234e33f0ddfa47",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,404.16,400.27 1288.4,509.07 1279.1,497.92 1265.5,484.27 1250,477.56 1239.8,473.15 461.23,439.14 451,434.81 435.96,428.45 422.05,417.68 410.4,406.5",
+      "label_pos": null
+    },
+    {
+      "id": "asn:14b574b9cc5f24d7c2555a13225caaa5dd3555dab4d733664502a25b4849a0ae",
+      "slot": "glade_decisions:TextEngine.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:5d26f28256fbc5b3a491febc867af40dbaca6799171fbac6eddf6a595e7c415f",
+      "tail": "occ:add5342d06690823e16e66fa50474747993e0cbd6f750681f9b5cff40dafafbd",
+      "head": "occ:5d26f28256fbc5b3a491febc867af40dbaca6799171fbac6eddf6a595e7c415f",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,555.32,406.24 1398.6,509.04 1386.8,497.87 1369.9,484.23 1352,477.56 1257.1,442.19 997.97,460.3 897,452.56 852.92,449.18 842.11,445.85 798,442.81 775.48,441.26 615.76,443.68 595,434.81 582.93,429.65 571.71,421.49 561.89,412.53",
+      "label_pos": null
+    },
+    {
+      "id": "asn:236afe015635e5835b92642c55c83df2ab61983df089ba4562fb7c45970d19ef#1",
+      "slot": "glade_decisions:TransportKeyBinding.requires",
+      "relation": "Requires",
+      "ref_index": 1,
+      "owner": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "tail": "occ:dbcf8eb348f15b27639f0d5ff57dd866130070afa5c2652c658d1c2f34d1a87f",
+      "head": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,935.58,394.35 1639.7,509.14 1629.4,498.01 1614.4,484.38 1598,477.56 1347.4,373.59 1238.7,541.02 989,434.81 971.2,427.24 954.78,413.78 941.71,400.71",
+      "label_pos": null
+    },
+    {
+      "id": "asn:236afe015635e5835b92642c55c83df2ab61983df089ba4562fb7c45970d19ef#0",
+      "slot": "glade_decisions:TransportKeyBinding.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "tail": "occ:d528b18afcb06ce84378e3a4ea9b4674249530b69835f338364fca7720b952c9",
+      "head": "occ:0c6233317085b5e7b9f873a2001d7b5cace89eee691fbcb1d2dd69d287d3745a",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,887.38,394.25 273.46,491.14 281.79,485.69 290.82,480.81 300,477.56 412.44,437.79 727.73,486.95 835,434.81 852.12,426.49 868.23,413.19 881.25,400.44",
+      "label_pos": null
+    },
+    {
+      "id": "asn:3656468becfe326e4a8d86cdaf9beb8a02a806e799c192d2b7bbf3bafd354875",
+      "slot": "glade_decisions:VersionPin.requires",
+      "relation": "Requires",
+      "ref_index": 0,
+      "owner": "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+      "tail": "occ:dbcf8eb348f15b27639f0d5ff57dd866130070afa5c2652c658d1c2f34d1a87f",
+      "head": "occ:ce0646ad2f9de063dd22ec46c03df28c1c591530ab8f75e1bddb63393d358e42",
+      "label": null,
+      "style": {
+        "color": "#1f4e79",
+        "penwidth": 1.4
+      },
+      "spline": "e,1084.7,394.52 1639.7,509.25 1629.4,498.18 1614.4,484.56 1598,477.56 1595,476.29 1136.9,436.17 1134,434.81 1117.5,427.16 1102.5,414 1090.6,401.17",
+      "label_pos": null
+    },
+    {
+      "id": "asn:7c90d585bc62e23840d645205337ce97069d158f164d5b478dc36aebc11c0aeb",
+      "slot": "glade_decisions:Cryptography.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:09cc3e08088d761cf54b77f88479f3a6b12d59316f88e9986d6cb8560797e6bc",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:7807d884a5f73c3fb0a83ba7d9ca65dbcf9c76cf4438881c8cd9f41d8e193822",
+      "label": "if cryptography",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,265.66,223.34 727.66,328.17 723.51,326.01 719.26,324.09 715,322.54 579.83,273.29 531.78,327.43 393,289.54 349.11,277.56 339.25,269.79 300,246.79 290.67,241.32 280.98,234.66 272.34,228.33",
+      "label_pos": [
+        423.0,
+        284.66
+      ]
+    },
+    {
+      "id": "asn:81a937f145553b6b1dd02ec29856f2eb1ecaae2599c2fa1ed12b0ff655438c74#1",
+      "slot": "glade_decisions:GossipOverlay.implies",
+      "relation": "Implies",
+      "ref_index": 1,
+      "owner": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "tail": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "head": "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+      "label": "if gossip_overlay",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,260.13,70.13 846.25,174.82 838.02,170.53 829.41,166.48 821,163.27 740.15,132.35 716.45,134.34 631,120.52 485.06,96.916 441.84,129.22 300,87.52 289.05,84.301 277.78,79.318 267.64,74.121",
+      "label_pos": [
+        728.94,
+        125.39
+      ]
+    },
+    {
+      "id": "asn:81a937f145553b6b1dd02ec29856f2eb1ecaae2599c2fa1ed12b0ff655438c74#0",
+      "slot": "glade_decisions:GossipOverlay.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:91c6903f3c8964f8cdde1256e316b0619c4f8d853b55b755e8b8079be41891dd",
+      "tail": "occ:78fb0f0e43a61dfd60796e64e464fc144b9b519808b109cf5310bbcee28fb7a2",
+      "head": "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+      "label": "if gossip_overlay",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,116.41,70.119 848.12,174.86 839.39,170.34 830.12,166.21 821,163.27 785.93,151.96 197.57,97.153 162,87.52 149.31,84.082 136.03,78.915 124.06,73.609",
+      "label_pos": [
+        563.53,
+        125.39
+      ]
+    },
+    {
+      "id": "asn:937ac7594cecbd91d031f568589c505fcb6f3653abd0d04aedda0cc353a78a41",
+      "slot": "glade_decisions:NodeTrust.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:fa8e452c4c299e951f9d643ecf08992872f25f9bc82b8c9e03d369c6fc76866f",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:b22b0927819eb8a7fe34f6c85b7ce1337ba5416e16449b7122e7fe4cf055247d",
+      "label": "if node_trust",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,261.71,70.092 727.24,329.17 723.18,326.79 719.07,324.54 715,322.54 618.75,275.1 558.52,325.65 485.75,246.79 446.58,204.34 496.43,160.76 455,120.52 404.48,71.446 366.37,111.09 300,87.52 289.65,83.844 278.87,78.905 269.03,73.906",
+      "label_pos": [
+        510.88,
+        205.03
+      ]
+    },
+    {
+      "id": "asn:e634d002d19da855759f90bf6726c21d7ced4f9b4acb79d0826db93f7d0d8864#1",
+      "slot": "glade_decisions:Topology.implies",
+      "relation": "Implies",
+      "ref_index": 1,
+      "owner": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:9e4b34144746dd7b7df6f00fcb1a452d35e4c25cee59bca00b7491148fe761f8",
+      "label": "if topology",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,749.36,241.11 767.68,328.4 762.78,305.06 756.3,274.2 751.08,249.3",
+      "label_pos": [
+        780.49,
+        284.66
+      ]
+    },
+    {
+      "id": "asn:e634d002d19da855759f90bf6726c21d7ced4f9b4acb79d0826db93f7d0d8864#0",
+      "slot": "glade_decisions:Topology.implies",
+      "relation": "Implies",
+      "ref_index": 0,
+      "owner": "occ:f535762928271a151c27ee4501af88ecd85e8a17deb5cc1de74d44c3aa8d616d",
+      "tail": "occ:f4ee8c30eea439a4c0bed8244202daf5abc64cbec2143ec1511f12f2533b7c1e",
+      "head": "occ:5e91bdcdcee75500d21b39e9169a06113817a733de8768514a817bbcb1e45458",
+      "label": "if topology",
+      "style": {
+        "style": "dashed",
+        "color": "#b45309"
+      },
+      "spline": "e,118.16,70.158 727.04,328.68 723.05,326.44 719.02,324.36 715,322.54 592.45,267.1 534.37,320.71 422,246.79 362.65,207.75 384.34,158.01 324,120.52 261.58,81.746 232.03,109.78 162,87.52 149.93,83.685 137.23,78.595 125.62,73.496",
+      "label_pos": [
+        443.0,
+        205.03
+      ]
+    },
+    {
+      "id": "asn:8a5bb464f8f691906d093ea23fdee2b21af5a4d117117747802f9e496d28a3a6",
+      "slot": "glade_decisions:BulkTransfer.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:fedcea6c9fda51ea5f44044e9936890e428617af1b79913e89e1ace3227d9979",
+      "tail": "occ:fdeb74d4033f5cd589917eb0eec97884bd652ca865c3808897e908a7a7a18f64",
+      "head": "occ:fedcea6c9fda51ea5f44044e9936890e428617af1b79913e89e1ace3227d9979",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1118.5,241.18 1765.4,345.98 1763.6,326.42 1757.6,295.31 1737,279.79 1683.6,239.55 1200.7,263.55 1136,246.79 1132.8,245.97 1129.6,245.02 1126.4,243.97",
+      "label_pos": [
+        1754.4,
+        284.66
+      ]
+    },
+    {
+      "id": "asn:fe258049717fc5194e0c33e308c8dee0397ed912847d74f811faa3ee42d0f2ce#1",
+      "slot": "glade_decisions:RegistryGrowth.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 1,
+      "owner": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "tail": "occ:c3018127e5e713bd3b76cfbd1b980a27033e3118f60ba6e60da9722032042aab",
+      "head": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,941.14,83.643 1190,186.73 1188,167.5 1181.7,136.97 1162,120.52 1090.2,60.439 1044.2,112.37 954,87.52 952.41,87.083 950.81,86.626 949.21,86.151",
+      "label_pos": [
+        1179.1,
+        125.39
+      ]
+    },
+    {
+      "id": "asn:fe258049717fc5194e0c33e308c8dee0397ed912847d74f811faa3ee42d0f2ce#0",
+      "slot": "glade_decisions:RegistryGrowth.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "tail": "occ:38d3057e4e1f56c2a160aa62c9a7398cfaa1402d492a273ee0e1c9076a29d208",
+      "head": "occ:2cefcf795440971a053649c372aa0a0f9fabc88c210e98c4627c8db7f2c702f9",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,941.09,83.827 1304.4,186.56 1287.9,166.85 1258.2,135.6 1225,120.52 1114.5,70.333 1071.5,117.61 954,87.52 952.4,87.112 950.8,86.681 949.19,86.231",
+      "label_pos": [
+        1251.8,
+        125.39
+      ]
+    },
+    {
+      "id": "asn:3eade09762bb0d88fe22049dda015bf5d796aa15b60919f835262c33d806136f",
+      "slot": "glade_decisions:SimulatorTooling.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:0c23b6c32e9ff3ae40c9d783b0e1f726c71093be9d4dd39a7b336441df7d1588",
+      "tail": "occ:38d3057e4e1f56c2a160aa62c9a7398cfaa1402d492a273ee0e1c9076a29d208",
+      "head": "occ:0c23b6c32e9ff3ae40c9d783b0e1f726c71093be9d4dd39a7b336441df7d1588",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,1124,58.488 1314.9,186.73 1310.5,167.79 1300.8,137.81 1281,120.52 1239.9,84.72 1181,67.778 1132.3,59.787",
+      "label_pos": [
+        1298.5,
+        125.39
+      ]
+    },
+    {
+      "id": "asn:8f04d0c449d5f1c0151b7b1ce68eee8693932f2f99bc55f8a9ed1b6c1143a875",
+      "slot": "glade_decisions:StoreEngine.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:842b500e8e5b7d223f78c9b6e0588cf3b5d137c9f381e8bbe8234e33f0ddfa47",
+      "tail": "occ:64317477a7e87fb1e959c85bcfc79cf83628c2b58fe0d674ac7c857be641c77d",
+      "head": "occ:842b500e8e5b7d223f78c9b6e0588cf3b5d137c9f381e8bbe8234e33f0ddfa47",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,405.74,400.26 534.74,508.93 529.07,489.6 517.07,459 495,442.81 478.97,431.05 468.78,443.7 451,434.81 436.67,427.64 423.12,416.89 411.58,405.97",
+      "label_pos": [
+        513.45,
+        447.68
+      ]
+    },
+    {
+      "id": "asn:5fe451a464eeea1e1a664c769775e5ed9e9c0b48cd6bfef470bb057e9826559d",
+      "slot": "glade_decisions:TextEngine.gated_by",
+      "relation": "GatedBy",
+      "ref_index": 0,
+      "owner": "occ:5d26f28256fbc5b3a491febc867af40dbaca6799171fbac6eddf6a595e7c415f",
+      "tail": "occ:92c4f5683131b90d77b592f6628521f5fc48faaff0c50bb90d1322da98030522",
+      "head": "occ:5d26f28256fbc5b3a491febc867af40dbaca6799171fbac6eddf6a595e7c415f",
+      "label": "gate",
+      "style": {
+        "style": "dotted",
+        "color": "#6b7280"
+      },
+      "spline": "e,564.26,406.4 643.93,509.11 636.1,491.32 622.27,463.32 605,442.81 601.33,438.46 599.27,438.57 595,434.81 586.89,427.68 578.47,419.91 570.38,412.24",
+      "label_pos": [
+        620.38,
+        447.68
+      ]
+    }
+  ],
+  "counts": {
+    "nodes": 29,
+    "edges": 32,
+    "groups": 4,
+    "omitted_occurrences": 46,
+    "omitted_assertions": 15
+  }
+}

@@ -1,0 +1,423 @@
+{
+  "format": "gyld.lens.v1",
+  "perspective": "lifecycle",
+  "snapshot": {
+    "lineage": "glade-architecture-candidate-1",
+    "revision": "v3",
+    "digest": "a018b92d07736f73acc3f10530547d802c090ef39fd4928f029fbad9eef0cea5"
+  },
+  "stream": null,
+  "title": "Glade | Async cleanup ownership and drain order",
+  "relations": [
+    "CleanupOwnedBy",
+    "DrainsBefore"
+  ],
+  "text_relations": [],
+  "omissions": [
+    "every other relation"
+  ],
+  "legend": {
+    "edges": [
+      {
+        "relation": "CleanupOwnedBy",
+        "definition": "aeba6837d8cd1b4170a28c747b4aab03bc35e9c242184b13941449430fbc40bc",
+        "color": "#b91c1c",
+        "style": "solid",
+        "label": "cleanup owner"
+      },
+      {
+        "relation": "DrainsBefore",
+        "definition": "85be2d31d8e5e9f218ef379dc3cba7aa2fce62a0d6c23da5c86bc668c5b4c340",
+        "color": "#b91c1c",
+        "style": "dashed",
+        "label": "drains before"
+      }
+    ],
+    "nodes": [
+      {
+        "kind": "library",
+        "status": null,
+        "classification": "IOAdapter",
+        "shape": "box",
+        "fill": "#fed7aa",
+        "glyph": null
+      },
+      {
+        "kind": "library",
+        "status": null,
+        "classification": "Integration",
+        "shape": "box",
+        "fill": "#dbeafe",
+        "glyph": null
+      }
+    ]
+  },
+  "engine": {
+    "name": "dot",
+    "version": "14.1.4",
+    "pinned": true
+  },
+  "bb": [
+    0.0,
+    0.0,
+    998.5,
+    422.0
+  ],
+  "groups": [
+    {
+      "id": "grp:integration-orchestration-over-injected-ports",
+      "label": "Integration: orchestration over injected ports",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+        "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+        "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba"
+      ],
+      "bb": [
+        191.44,
+        209.0,
+        807.06,
+        343.0
+      ]
+    },
+    {
+      "id": "grp:i-o-adapters",
+      "label": "I/O adapters",
+      "kind": "reading-aid",
+      "occurrence": null,
+      "members": [
+        "occ:5f9dd67e6b3ad7d24565342e71f420fe2b6cc86b3c9b10224a7a13f1fb172e86",
+        "occ:8d97bc7f7d12e1d7f78178445a26bf7dab1810a8196cb93eee1963b7b2c2469c",
+        "occ:c2eb6ca458fa37138ef71a7b4843f8d7a9fc024434886416c35fbcc245aae846"
+      ],
+      "bb": [
+        403.98,
+        8.0,
+        546.52,
+        201.0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "occ:5f9dd67e6b3ad7d24565342e71f420fe2b6cc86b3c9b10224a7a13f1fb172e86",
+      "slot": "glade_architecture:GladeArchitecture.iroh",
+      "label": "iroh",
+      "kind": "library",
+      "status": null,
+      "classification": "IOAdapter",
+      "group": "grp:i-o-adapters",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fed7aa",
+      "text": [
+        "iroh",
+        "IrohAdapter"
+      ],
+      "pos": [
+        475.25,
+        94.0
+      ],
+      "size": [
+        1.1846,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "slot": "glade_architecture:GladeArchitecture.records",
+      "label": "records",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "records",
+        "Records"
+      ],
+      "pos": [
+        235.71,
+        295.0
+      ],
+      "size": [
+        0.945,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+      "slot": "glade_architecture:GladeArchitecture.runtime_services",
+      "label": "runtime_services",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "runtime_services",
+        "Runtime"
+      ],
+      "pos": [
+        742.16,
+        236.0
+      ],
+      "size": [
+        1.5804,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "slot": "glade_architecture:GladeArchitecture.sessions",
+      "label": "sessions",
+      "kind": "library",
+      "status": null,
+      "classification": "Integration",
+      "group": "grp:integration-orchestration-over-injected-ports",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#dbeafe",
+      "text": [
+        "sessions",
+        "Sessions"
+      ],
+      "pos": [
+        235.71,
+        236.0
+      ],
+      "size": [
+        1.0075,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:8d97bc7f7d12e1d7f78178445a26bf7dab1810a8196cb93eee1963b7b2c2469c",
+      "slot": "glade_architecture:GladeArchitecture.storage",
+      "label": "storage",
+      "kind": "library",
+      "status": null,
+      "classification": "IOAdapter",
+      "group": "grp:i-o-adapters",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fed7aa",
+      "text": [
+        "storage",
+        "StorageAdapter"
+      ],
+      "pos": [
+        475.25,
+        153.0
+      ],
+      "size": [
+        1.4867,
+        0.51417
+      ]
+    },
+    {
+      "id": "occ:c2eb6ca458fa37138ef71a7b4843f8d7a9fc024434886416c35fbcc245aae846",
+      "slot": "glade_architecture:GladeArchitecture.websocket",
+      "label": "websocket",
+      "kind": "library",
+      "status": null,
+      "classification": "IOAdapter",
+      "group": "grp:i-o-adapters",
+      "shape": "box",
+      "style": "rounded,filled",
+      "fill": "#fed7aa",
+      "text": [
+        "websocket",
+        "WebSocketAdapter"
+      ],
+      "pos": [
+        475.25,
+        35.0
+      ],
+      "size": [
+        1.7575,
+        0.51417
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "asn:f9c6623a710681bde4ed78dce20e427ba9eda1b44414a412ae83fb0923471225",
+      "slot": "glade_architecture:IrohAdapter.cleanup",
+      "relation": "CleanupOwnedBy",
+      "ref_index": 0,
+      "owner": "occ:5f9dd67e6b3ad7d24565342e71f420fe2b6cc86b3c9b10224a7a13f1fb172e86",
+      "tail": "occ:5f9dd67e6b3ad7d24565342e71f420fe2b6cc86b3c9b10224a7a13f1fb172e86",
+      "head": "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+      "label": "cleanup owner",
+      "style": {
+        "color": "#b91c1c"
+      },
+      "spline": "e,713.48,217.12 518.12,110.6 527.52,114.52 537.42,118.79 546.52,123 589.95,143.09 600.83,148.31 642.27,172.25 664.17,184.9 688.01,200.22 706.8,212.68",
+      "label_pos": [
+        611.89,
+        177.12
+      ]
+    },
+    {
+      "id": "asn:3ed911d71b280958ff0f189537f611bafbdb21c0e505d7ba4b8f158a57b8d38e#0",
+      "slot": "glade_architecture:Records.drain_order",
+      "relation": "DrainsBefore",
+      "ref_index": 0,
+      "owner": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "tail": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "head": "occ:5f9dd67e6b3ad7d24565342e71f420fe2b6cc86b3c9b10224a7a13f1fb172e86",
+      "label": "drains before",
+      "style": {
+        "color": "#b91c1c",
+        "style": "dashed"
+      },
+      "spline": "e,432.16,108.52 261.38,276.16 265.08,272.93 268.74,269.48 271.98,266 294.51,241.78 293.16,230.11 314.98,205.25 350.51,164.77 358.6,152.01 403.98,123 410.35,118.93 417.39,115.23 424.47,111.93",
+      "label_pos": [
+        341.98,
+        210.12
+      ]
+    },
+    {
+      "id": "asn:d6be8de0c1f306e5e9cc6769d1d95b9d7e8e05e01debe27dd67c7013fd653f99",
+      "slot": "glade_architecture:Records.cleanup",
+      "relation": "CleanupOwnedBy",
+      "ref_index": 0,
+      "owner": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "tail": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "head": "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+      "label": "cleanup owner",
+      "style": {
+        "color": "#b91c1c"
+      },
+      "spline": "e,685.07,242.56 270.2,291.08 352.98,281.4 568.38,256.21 676.82,243.53",
+      "label_pos": [
+        475.25,
+        280.05
+      ]
+    },
+    {
+      "id": "asn:3ed911d71b280958ff0f189537f611bafbdb21c0e505d7ba4b8f158a57b8d38e#1",
+      "slot": "glade_architecture:Records.drain_order",
+      "relation": "DrainsBefore",
+      "ref_index": 1,
+      "owner": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "tail": "occ:0b852c8c6cc381e88ed6f9f6b3cb12c9d72df3e27d0110bd21e7d594c9ea586d",
+      "head": "occ:8d97bc7f7d12e1d7f78178445a26bf7dab1810a8196cb93eee1963b7b2c2469c",
+      "label": "drains before",
+      "style": {
+        "color": "#b91c1c",
+        "style": "dashed"
+      },
+      "spline": "e,442.58,171.93 268.25,276.14 311.38,250.36 388.7,204.14 435.36,176.25",
+      "label_pos": [
+        341.98,
+        249.89
+      ]
+    },
+    {
+      "id": "asn:5538d20ca13506e007f446b93391d095ebfca8e2281da083759ba2643b1cc844#0",
+      "slot": "glade_architecture:Sessions.drain_order",
+      "relation": "DrainsBefore",
+      "ref_index": 0,
+      "owner": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "tail": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "head": "occ:5f9dd67e6b3ad7d24565342e71f420fe2b6cc86b3c9b10224a7a13f1fb172e86",
+      "label": "drains before",
+      "style": {
+        "color": "#b91c1c",
+        "style": "dashed"
+      },
+      "spline": "e,432.2,94.922 245.08,217.1 256.95,192.57 281.07,150.33 314.98,128.25 347.43,107.12 390.72,98.796 423.97,95.623",
+      "label_pos": [
+        341.98,
+        133.12
+      ]
+    },
+    {
+      "id": "asn:69972a69f908fe6edea009ec3d48495c6e6075404f93cd83e9926b5565d6004a",
+      "slot": "glade_architecture:Sessions.cleanup",
+      "relation": "CleanupOwnedBy",
+      "ref_index": 0,
+      "owner": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "tail": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "head": "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+      "label": "cleanup owner",
+      "style": {
+        "color": "#b91c1c"
+      },
+      "spline": "e,684.85,236 272.18,236 356.33,236 569.03,236 676.66,236",
+      "label_pos": [
+        475.25,
+        240.88
+      ]
+    },
+    {
+      "id": "asn:5538d20ca13506e007f446b93391d095ebfca8e2281da083759ba2643b1cc844#1",
+      "slot": "glade_architecture:Sessions.drain_order",
+      "relation": "DrainsBefore",
+      "ref_index": 1,
+      "owner": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "tail": "occ:ff9d236da1f6168f5453662e14c220c92b5e0c8d58e8fe1ecc9e4b83303e3fba",
+      "head": "occ:c2eb6ca458fa37138ef71a7b4843f8d7a9fc024434886416c35fbcc245aae846",
+      "label": "drains before",
+      "style": {
+        "color": "#b91c1c",
+        "style": "dashed"
+      },
+      "spline": "e,411.76,45.893 242.01,217.2 251.57,186.55 274.59,125.78 314.98,91.25 340.05,69.823 373.82,56.366 403.82,48.013",
+      "label_pos": [
+        341.98,
+        96.125
+      ]
+    },
+    {
+      "id": "asn:56a7265816bee90ad85c4cbb98b46efe2129d2047b0bd1d6e914354f49671529",
+      "slot": "glade_architecture:StorageAdapter.cleanup",
+      "relation": "CleanupOwnedBy",
+      "ref_index": 0,
+      "owner": "occ:8d97bc7f7d12e1d7f78178445a26bf7dab1810a8196cb93eee1963b7b2c2469c",
+      "tail": "occ:8d97bc7f7d12e1d7f78178445a26bf7dab1810a8196cb93eee1963b7b2c2469c",
+      "head": "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+      "label": "cleanup owner",
+      "style": {
+        "color": "#b91c1c"
+      },
+      "spline": "e,685.08,218.43 529.22,169.6 571.81,182.94 631.8,201.74 677.09,215.93",
+      "label_pos": [
+        611.89,
+        209.25
+      ]
+    },
+    {
+      "id": "asn:788e71c5119bd318b54fe281d91f4543ab0915b142727161b79a6c9644c5b20f",
+      "slot": "glade_architecture:WebSocketAdapter.cleanup",
+      "relation": "CleanupOwnedBy",
+      "ref_index": 0,
+      "owner": "occ:c2eb6ca458fa37138ef71a7b4843f8d7a9fc024434886416c35fbcc245aae846",
+      "tail": "occ:c2eb6ca458fa37138ef71a7b4843f8d7a9fc024434886416c35fbcc245aae846",
+      "head": "occ:057d6790103fb632a78d32034f82942f37db16e8dd46c8696a1106c9f2d11022",
+      "label": "cleanup owner",
+      "style": {
+        "color": "#b91c1c"
+      },
+      "spline": "e,727.11,217.34 525.15,53.862 532.41,57.041 539.73,60.464 546.52,64 591.32,87.339 603.81,92.494 642.27,125.25 672.99,151.42 703.12,186.99 721.89,210.69",
+      "label_pos": [
+        611.89,
+        130.12
+      ]
+    }
+  ],
+  "counts": {
+    "nodes": 6,
+    "edges": 9,
+    "groups": 2,
+    "omitted_occurrences": 137,
+    "omitted_assertions": 220
+  }
+}

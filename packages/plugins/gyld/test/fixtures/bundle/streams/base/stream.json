@@ -1,0 +1,264 @@
+{
+  "format": "gyld.stream.v1",
+  "id": "base",
+  "kind": "fork",
+  "parent": null,
+  "parent_snapshot": null,
+  "lineage": "glade-decision-graph",
+  "revision": "v1",
+  "snapshot": {
+    "lineage": "glade-decision-graph",
+    "revision": "v1",
+    "digest": "94552adafc38d2c6586193d55808901069cc53d72fdd018ebbd6da180682d52c"
+  },
+  "overlay": {
+    "module": "glade_decisions",
+    "root": "GladeDecisions",
+    "text_fingerprint": "5eff7f0991b5fb478ef55a18785634082f05fee7698e6ee5623f36f162c4d1e2"
+  },
+  "chain": [
+    "base"
+  ],
+  "built": "2026-09-12T16:51:24Z",
+  "principal": "gianni",
+  "note": "base stream plus the architecture lineage; no ruling",
+  "status": "ok",
+  "questions": [
+    {
+      "slot": "glade_decisions:GladeDecisions.async_witness",
+      "label": "async_witness",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "second",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "label": "blind_relay_tier",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "branch-induced",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+      "label": "bulk_transfer",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "preferred": "glade_decisions:GladeDecisions.iroh_blobs_port"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.discovery_fold",
+      "label": "discovery_fold",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "label": "dissemination",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "third",
+      "preferred": "glade_decisions:GladeDecisions.sync_round_only"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.grants_as_data",
+      "label": "grants_as_data",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.identity_adapters",
+      "label": "identity_adapters",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "third",
+      "preferred": "glade_decisions:GladeDecisions.none_in_v1"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.iroh_transport",
+      "label": "iroh_transport",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "label": "key_custody",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "roots",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "label": "lifecycle_composition",
+      "declared_status": "Directed",
+      "effective_status": "Directed",
+      "tier": "roots",
+      "preferred": "glade_decisions:GladeDecisions.sdax_rs"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "label": "metadata_exposure",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "branch-induced",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "label": "proof_family",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "second",
+      "preferred": "glade_decisions:GladeDecisions.taut_grants"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.registry_growth",
+      "label": "registry_growth",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "preferred": "glade_decisions:GladeDecisions.trusted_mapping_only"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "label": "relay_posture",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "branch-induced",
+      "preferred": "glade_decisions:GladeDecisions.self_hosted"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "label": "scope_model",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "roots",
+      "preferred": "glade_decisions:GladeDecisions.node_trust"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.shaku_injector",
+      "label": "shaku_injector",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.shape_catalogue",
+      "label": "shape_catalogue",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+      "label": "simulator_tooling",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "preferred": "glade_decisions:GladeDecisions.own_sim_only"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.store_engine",
+      "label": "store_engine",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "preferred": "glade_decisions:GladeDecisions.whole_state_blob"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.store_seam",
+      "label": "store_seam",
+      "declared_status": "Decided",
+      "effective_status": "Decided",
+      "tier": "anchors",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.text_engine",
+      "label": "text_engine",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "gated",
+      "preferred": "glade_decisions:GladeDecisions.own_text_profile"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "label": "traffic_budget_numbers",
+      "declared_status": "Open",
+      "effective_status": "Open",
+      "tier": "branch-induced",
+      "preferred": null
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "label": "transport_key_binding",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "second",
+      "preferred": "glade_decisions:GladeDecisions.binding_record"
+    },
+    {
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "label": "version_pin",
+      "declared_status": "Lean",
+      "effective_status": "Lean",
+      "tier": "roots",
+      "preferred": "glade_decisions:GladeDecisions.bump_to_current"
+    }
+  ],
+  "roots": [
+    "glade_decisions:GladeDecisions.key_custody",
+    "glade_decisions:GladeDecisions.lifecycle_composition",
+    "glade_decisions:GladeDecisions.scope_model",
+    "glade_decisions:GladeDecisions.version_pin"
+  ],
+  "tiers": {
+    "anchors": [
+      "glade_decisions:GladeDecisions.discovery_fold",
+      "glade_decisions:GladeDecisions.grants_as_data",
+      "glade_decisions:GladeDecisions.iroh_transport",
+      "glade_decisions:GladeDecisions.shaku_injector",
+      "glade_decisions:GladeDecisions.shape_catalogue",
+      "glade_decisions:GladeDecisions.store_seam"
+    ],
+    "roots": [
+      "glade_decisions:GladeDecisions.key_custody",
+      "glade_decisions:GladeDecisions.lifecycle_composition",
+      "glade_decisions:GladeDecisions.scope_model",
+      "glade_decisions:GladeDecisions.version_pin"
+    ],
+    "second": [
+      "glade_decisions:GladeDecisions.async_witness",
+      "glade_decisions:GladeDecisions.proof_family",
+      "glade_decisions:GladeDecisions.transport_key_binding"
+    ],
+    "third": [
+      "glade_decisions:GladeDecisions.dissemination",
+      "glade_decisions:GladeDecisions.identity_adapters"
+    ],
+    "gated": [
+      "glade_decisions:GladeDecisions.bulk_transfer",
+      "glade_decisions:GladeDecisions.registry_growth",
+      "glade_decisions:GladeDecisions.simulator_tooling",
+      "glade_decisions:GladeDecisions.store_engine",
+      "glade_decisions:GladeDecisions.text_engine"
+    ],
+    "branch-induced": [
+      "glade_decisions:GladeDecisions.blind_relay_tier",
+      "glade_decisions:GladeDecisions.metadata_exposure",
+      "glade_decisions:GladeDecisions.relay_posture",
+      "glade_decisions:GladeDecisions.traffic_budget_numbers"
+    ]
+  }
+}

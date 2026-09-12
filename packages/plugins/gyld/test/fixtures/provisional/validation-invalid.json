@@ -1,0 +1,30 @@
+{
+  "format": "gyld.validation.v1",
+  "stream": "keys-2026-09-13",
+  "built": "2026-09-13T01:40:00Z",
+  "ok": false,
+  "code": "PREREQUISITE_OPEN",
+  "message": "key_custody cannot be decided while scope_model is Open",
+  "details": {
+    "question": "glade_decisions:GladeDecisions.key_custody",
+    "open": [
+      "glade_decisions:GladeDecisions.scope_model"
+    ]
+  },
+  "findings": [
+    {
+      "code": "PREREQUISITE_OPEN",
+      "message": "key_custody cannot be decided while scope_model is Open",
+      "details": {
+        "question": "glade_decisions:GladeDecisions.key_custody",
+        "open": [
+          "glade_decisions:GladeDecisions.scope_model"
+        ]
+      }
+    }
+  ],
+  "location": {
+    "module": "stream_keys_2026_09_13",
+    "line": 12
+  }
+}
