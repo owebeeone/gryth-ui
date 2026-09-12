@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readLens } from '../contract';
 import {
-  CAMERA_UNFITTED, MAX_SCALE, MIN_SCALE, NOTHING_DIMMED, clampScale, fitCamera, panBy,
-  toggleRelation, toggleSelected, wheelFactor, zoomAt,
+  CAMERA_UNFITTED, MAX_SCALE, MIN_SCALE, NOTHING_DIMMED, clampScale, fitCamera, isPanning,
+  panBy, panningAt, pressAt, toggleRelation, toggleSelected, wheelFactor, zoomAt,
 } from './camera';
 import {
   POINTS_PER_INCH, cornerRadius, decodeSpline, edgeStyle, groupBox, lensExtent, nodeBox, toSvg,
@@ -124,6 +124,28 @@ describe('the camera', () => {
     expect(wheelFactor(-100)).toBeGreaterThan(1);
     expect(wheelFactor(100)).toBeLessThan(1);
     expect(wheelFactor(0)).toBe(1);
+  });
+
+  // The pan gesture and the pick share one press, and the order they resolve
+  // in is not a matter of taste: the pan's capture overlay is a sibling of the
+  // figure, so an overlay mounted by the PRESS takes the release, and a
+  // browser that saw the press on a node and the release on the overlay
+  // dispatches no click at all. The picture then cannot be picked with a real
+  // mouse, which is exactly what it did (verified in Chromium against the
+  // emitted base bundle before this was fixed). So the press only ARMS, and
+  // the overlay is mounted by the first MOVE.
+  it('arms a press without capturing, so the release still reaches the figure', () => {
+    const armed = pressAt(120, 80);
+    expect(armed).toEqual({ x: 120, y: 80, panning: false });
+    expect(isPanning(armed)).toBe(false);
+    expect(isPanning(undefined)).toBe(false);
+  });
+
+  it('starts capturing at the first move, and tracks the pointer from there', () => {
+    const moved = panningAt(140, 95);
+    expect(moved).toEqual({ x: 140, y: 95, panning: true });
+    expect(isPanning(moved)).toBe(true);
+    expect(isPanning(panningAt(141, 96))).toBe(true);
   });
 
   it('toggles a relation and a selection without touching anything else', () => {

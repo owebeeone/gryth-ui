@@ -28,12 +28,42 @@ export const CAMERA_UNFITTED: GyldCamera = Object.freeze({
 export const MIN_SCALE = 0.05;
 export const MAX_SCALE = 8;
 
-/** A camera is dragging while this is set; the view then renders the
- *  full-window overlay that captures the movement as React events. */
+/**
+ * A press is held on the picture while this is set.
+ *
+ * It has two states, and the difference is the whole reason it is not just a
+ * point. A press ARMS the gesture; only a press that has MOVED is a pan, and
+ * only a pan mounts the full-window overlay that captures the movement as
+ * React events.
+ *
+ * The overlay cannot be mounted by the press itself. It is a sibling of the
+ * figure, so it would take the release, and a browser that saw the press on a
+ * node and the release on the overlay dispatches no `click` at all: the pick
+ * would never reach the figure, and the picture could not be selected with a
+ * real mouse. That is what it did until this flag existed.
+ */
 export interface GyldCameraDrag {
   /** Viewport coordinates of the last point seen. */
   x: number;
   y: number;
+  /** Whether the pointer has moved since the press, which is what makes this
+   *  gesture a pan rather than a pick about to happen. */
+  panning: boolean;
+}
+
+/** The armed press a mouse down leaves behind. Not a pan yet. */
+export function pressAt(x: number, y: number): GyldCameraDrag {
+  return { x, y, panning: false };
+}
+
+/** The press after the pointer reached this point. A moved press is a pan. */
+export function panningAt(x: number, y: number): GyldCameraDrag {
+  return { x, y, panning: true };
+}
+
+/** Whether the pan overlay is mounted, said in one place. */
+export function isPanning(drag: GyldCameraDrag | undefined): boolean {
+  return drag?.panning === true;
 }
 
 export function clampScale(k: number): number {

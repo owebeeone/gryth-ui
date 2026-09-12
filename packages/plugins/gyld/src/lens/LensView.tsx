@@ -9,8 +9,8 @@ import {
   GYLD_TAB_HOVER_TAP, GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
 import {
-  CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera, panBy,
-  toggleRelation, wheelFactor, zoomAt,
+  CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera, isPanning,
+  panBy, panningAt, pressAt, toggleRelation, wheelFactor, zoomAt,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
 import { LABEL_FONT_SIZE, LABEL_LINE_HEIGHT, lensExtent } from './geometry';
@@ -339,11 +339,45 @@ export function LensView({ scope = 'gyld', search }: { scope?: string; search?: 
           const at = { x: event.clientX - viewport.left, y: event.clientY - viewport.top };
           cameraTap?.set(zoomAt(cameraTap.get() ?? CAMERA_UNFITTED, at, wheelFactor(event.deltaY)));
         }}
+        // The press ARMS the gesture and nothing more. Mounting the capture
+        // overlay here would take the release away from the figure, and a
+        // browser that saw the press on a node and the release on the overlay
+        // dispatches no click at all, so nothing could ever be picked.
         onMouseDown={(event) => {
           if (event.button !== 0) {
             return;
           }
-          dragTap?.set({ x: event.clientX, y: event.clientY });
+          dragTap?.set(pressAt(event.clientX, event.clientY));
+        }}
+        // The FIRST move is what turns an armed press into a pan, and the pan
+        // overlay is what carries it from there. This handler therefore pans
+        // exactly once per gesture and is then covered by the overlay it
+        // mounted. Read through the handle, never the render closure: a move
+        // and a release can land inside one notification cycle
+        // (CodingRules.md).
+        onMouseMove={(event) => {
+          const held = dragTap?.get();
+          if (held === undefined) {
+            return;
+          }
+          if (event.buttons === 0) {
+            // Released somewhere this window never saw. The press is over.
+            dragTap?.set(undefined);
+            return;
+          }
+          cameraTap?.set(panBy(
+            cameraTap.get() ?? CAMERA_UNFITTED,
+            event.clientX - held.x,
+            event.clientY - held.y,
+          ));
+          dragTap?.set(panningAt(event.clientX, event.clientY));
+        }}
+        // A press that never moved ends here, before the click the figure
+        // picks on. Guarded so a release with nothing held writes nothing.
+        onMouseUp={() => {
+          if (dragTap?.get() !== undefined) {
+            dragTap.set(undefined);
+          }
         }}
       >
         <LensFigure
@@ -375,7 +409,7 @@ export function LensView({ scope = 'gyld', search }: { scope?: string; search?: 
       </div>
       <LensOmissions scene={scene} />
       <LensProvenance scene={scene} />
-      {drag !== undefined && (
+      {isPanning(drag) && (
         <div
           className="drag-overlay gyld-pan"
           onMouseMove={(event) => {
@@ -388,7 +422,7 @@ export function LensView({ scope = 'gyld', search }: { scope?: string; search?: 
               event.clientX - held.x,
               event.clientY - held.y,
             ));
-            dragTap?.set({ x: event.clientX, y: event.clientY });
+            dragTap?.set(panningAt(event.clientX, event.clientY));
           }}
           onMouseUp={() => dragTap?.set(undefined)}
           onMouseLeave={() => dragTap?.set(undefined)}
