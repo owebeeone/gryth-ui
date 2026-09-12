@@ -6,24 +6,34 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // --------------------------------------------------------------------------
-// gyld-bundle: a DEV-ONLY static host for an emitted Gyld bundle.
+// gyld-bundle and gyld-evaluator: DEV-ONLY static hosts for emitted Gyld
+// output.
 // --------------------------------------------------------------------------
 //
 // `@grythjs/plugin-gyld`'s StaticStore reads a bundle over plain HTTP: one
-// GET per bundle-relative path, plus — for a stream whose record carries no
-// `lenses` manifest — a GET of the lenses DIRECTORY, whose autoindex anchors
+// GET per bundle-relative path, plus, for a stream whose record carries no
+// `lenses` manifest, a GET of the lenses DIRECTORY, whose autoindex anchors
 // it parses for the `*.lens.json` names. Every record of the current run does
 // carry a manifest, but a bundle from a host that writes none would leave the
 // perspective picker empty against a server that refuses listings. This
 // middleware therefore does both, exactly as `python3 -m http.server` over the
 // bundle would.
 //
-// The bundle itself is NOT in this repository: it is Gyld output, it is large,
-// and it lives in the gyld workspace. Nothing is copied in; the directory is
-// read where it already is. Point it somewhere else with GYLD_BUNDLE_DIR.
+// TWO roots are mounted, because Gyld emits two unrelated kinds of output and
+// neither is under the other: a decision-stream BUNDLE (`streams.json` and one
+// directory per stream), and an evaluator RUN directory (`run.json` and one
+// directory per proposal). The evaluator mount points at the directory that
+// HOLDS the runs rather than at one run, because a run that skipped the
+// inspector report names the sibling run that holds it (`reports.run`), and
+// `gyld.compare` resolves that report as a sibling of the run it is showing.
+//
+// Neither directory is in this repository: they are Gyld output, they are
+// large, and they live in the gyld workspace. Nothing is copied in; the
+// directories are read where they already are. Point them somewhere else with
+// GYLD_BUNDLE_DIR and GYLD_EVALUATOR_DIR.
 //
 // Dev server only. `configureServer` does not run for `vite build`, so no byte
-// of this reaches a production bundle and no build depends on the directory
+// of this reaches a production bundle and no build depends on the directories
 // being there.
 
 /** Where the browser reaches the bundle: `http://localhost:5173/gyld-bundle`. */
@@ -33,6 +43,17 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
  *  repository's root. A documented default, so `pnpm dev` in the usual
  *  workspace layout needs no environment at all. */
 const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v5'
+
+/** Where the browser reaches the evaluator runs:
+ *  `http://localhost:5173/gyld-evaluator`, with one directory per run under
+ *  it (`iroh-integration-v2/run.json`). */
+const GYLD_EVALUATOR_MOUNT = '/gyld-evaluator/'
+
+/** The directory that holds the emitted evaluator runs, in the same sibling
+ *  member. Both `iroh-integration-v1` (which holds the inspector reports) and
+ *  `iroh-integration-v2` (which holds `run.json` and the lens files) are under
+ *  it, which is what lets a run name its sibling for the report. */
+const GYLD_EVALUATOR_DEFAULT = '../../gyld-wz/gyld/artifacts'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.json': 'application/json; charset=utf-8',
@@ -76,21 +97,31 @@ ${items}
 `
 }
 
-function gyldBundleServer(): Plugin {
+/** One read-only static mount over a directory of emitted Gyld output. The two
+ *  roots differ only in where they point and what they are called, so they are
+ *  one middleware with two configurations rather than two copies of it. */
+function gyldStaticServer(options: {
+  name: string
+  mount: string
+  env: string
+  fallback: string
+  describe: string
+}): Plugin {
   const here = fileURLToPath(new URL('.', import.meta.url))
-  const configured = process.env.GYLD_BUNDLE_DIR
+  const configured = process.env[options.env]
   const root = resolve(
     here,
-    configured === undefined || configured.trim() === '' ? GYLD_BUNDLE_DEFAULT : configured.trim(),
+    configured === undefined || configured.trim() === '' ? options.fallback : configured.trim(),
   )
+  const MOUNT = options.mount
   return {
-    name: 'gyld-bundle-server',
+    name: options.name,
     apply: 'serve',
     configureServer(server) {
       // Two parameters, not three: this middleware answers every request under
       // its mount and never calls `next`, so a miss stays a 404 here instead
       // of reaching Vite's SPA fallback.
-      server.middlewares.use(GYLD_BUNDLE_MOUNT, (req, res) => {
+      server.middlewares.use(MOUNT, (req, res) => {
         // The store's watch tick appends `?gyld_bust=...` to defeat the HTTP
         // cache, so the query is stripped before the path is resolved.
         const raw = (req.url ?? '/').split('?')[0]
@@ -103,10 +134,10 @@ function gyldBundleServer(): Plugin {
           return
         }
         const target = resolve(root, `.${relative}`)
-        // A request must not escape the bundle root, whatever `..` it carries.
+        // A request must not escape the mounted root, whatever `..` it carries.
         if (target !== root && !target.startsWith(root + sep)) {
           res.statusCode = 403
-          res.end('outside the bundle root')
+          res.end('outside the mounted root')
           return
         }
         let stats: ReturnType<typeof statSync>
@@ -120,8 +151,8 @@ function gyldBundleServer(): Plugin {
           res.setHeader('Content-Type', 'text/plain; charset=utf-8')
           res.end(
             target === root
-              ? `no Gyld bundle at ${root} (set GYLD_BUNDLE_DIR)`
-              : `no such bundle file: ${relative}`,
+              ? `no ${options.describe} at ${root} (set ${options.env})`
+              : `no such file under ${options.describe}: ${relative}`,
           )
           return
         }
@@ -129,24 +160,40 @@ function gyldBundleServer(): Plugin {
         if (stats.isDirectory()) {
           if (!raw.endsWith('/')) {
             res.statusCode = 301
-            res.setHeader('Location', `${GYLD_BUNDLE_MOUNT.replace(/\/$/, '')}${relative}/`)
+            res.setHeader('Location', `${MOUNT.replace(/\/$/, '')}${relative}/`)
             res.end()
             return
           }
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
-          res.end(autoindex(join(GYLD_BUNDLE_MOUNT, relative), target))
+          res.end(autoindex(join(MOUNT, relative), target))
           return
         }
         res.setHeader('Content-Type', CONTENT_TYPES[extname(target)] ?? 'application/octet-stream')
         res.end(readFileSync(target))
       })
-      server.config.logger.info(`  ➜  gyld bundle: ${GYLD_BUNDLE_MOUNT} → ${root}`)
+      server.config.logger.info(`  ➜  ${options.describe}: ${MOUNT} → ${root}`)
     },
   }
 }
 
 export default defineConfig({
-  plugins: [react(), gyldBundleServer()],
+  plugins: [
+    react(),
+    gyldStaticServer({
+      name: 'gyld-bundle-server',
+      mount: GYLD_BUNDLE_MOUNT,
+      env: 'GYLD_BUNDLE_DIR',
+      fallback: GYLD_BUNDLE_DEFAULT,
+      describe: 'gyld bundle',
+    }),
+    gyldStaticServer({
+      name: 'gyld-evaluator-server',
+      mount: GYLD_EVALUATOR_MOUNT,
+      env: 'GYLD_EVALUATOR_DIR',
+      fallback: GYLD_EVALUATOR_DEFAULT,
+      describe: 'gyld evaluator runs',
+    }),
+  ],
   // dedupe: the wyred test mount links source from the wyred-wz sibling
   // workspace; these must resolve to THIS app's copies so there is exactly
   // one GripRegistry / grip-react / react per running app

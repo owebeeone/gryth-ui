@@ -158,6 +158,29 @@ to parsing a plain directory autoindex, exactly as it would against
 not there answers 404 rather than falling through to the application, so an
 absent bundle file reads as absent instead of arriving as `index.html`.
 
+## The evaluator runs the dev server serves
+
+`/gyld-evaluator/` is a SECOND mount, over the directory that HOLDS the emitted
+evaluator runs rather than over one run. By default it points at
+`../../gyld-wz/gyld/artifacts`, and the same environment override applies:
+
+```sh
+GYLD_EVALUATOR_DIR=/path/to/some/other/artifacts pnpm dev
+```
+
+So `http://localhost:5173/gyld-evaluator/iroh-integration-v2/run.json` is the
+index of the run, and each proposal is a directory beside it. The mount is over
+the holding directory and not over the run because a run that skipped the
+inspector report names the SIBLING run that holds it, in `reports.run`: the
+`iroh-integration-v2` run's `reports.emitted` is false and its `reports.run` is
+`artifacts/iroh-integration-v1`, whose `report.html` is byte identical for the
+same evaluation inputs. A reader that could only reach one run directory could
+not follow that.
+
+Nothing is copied into this repository here either. The runs are about ten
+megabytes each, mostly `report.html` and `workspace.sqlite`, and they belong to
+the Gyld workspace.
+
 The default names `decision-streams-v5` and not an earlier run for a reason:
 from that run every lens node carries the point size and the justification the
 host drew it with, and this package reads both rather than guessing a font. An
