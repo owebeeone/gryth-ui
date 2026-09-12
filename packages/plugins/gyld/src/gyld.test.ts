@@ -63,6 +63,27 @@ describe('gyld plugin registration', () => {
     tab.release();
   });
 
+  it('advertises the record detail and the decide-now list too', async () => {
+    await expect.poll(() => tools()['gyld.detail']).toBeDefined();
+    expect(tools()['gyld.detail'].label).toBe('Gyld record');
+    expect(tools()['gyld.detail'].role).toBe('stage');
+    expect(tools()['gyld.decidenow'].label).toBe('Gyld decide now');
+    expect(tools()['gyld.decidenow'].role).toBe('crew');
+  });
+
+  it('seeds a sink NOTHING, so a wired window resolves its source', async () => {
+    await expect.poll(() => tools()['gyld.detail']).toBeDefined();
+    // opened wired (Desktop.OpenWired passes no params): a seed here would sit
+    // below the source's parent edge and shadow it for ever
+    expect(tools()['gyld.detail'].tabTaps!('sink')).toEqual([]);
+    expect(tools()['gyld.decidenow'].tabTaps!('sink')).toEqual([]);
+    // opened standalone: its own destination, seeded from its own link
+    expect(tools()['gyld.detail'].tabTaps!('own', {
+      stream: 'base', ref: 'glade_decisions:GladeDecisions.scope_model',
+    })).toHaveLength(2);
+    expect(tools()['gyld.decidenow'].tabTaps!('own', { stream: 'base' })).toHaveLength(1);
+  });
+
   it('two tabs are independent destinations', async () => {
     const a = seedTab('gyld-a', { stream: 'base', perspective: 'decisions' });
     const b = seedTab('gyld-b', { stream: 'keys-2026-09-13', perspective: 'architecture' });

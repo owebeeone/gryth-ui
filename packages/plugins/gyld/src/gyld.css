@@ -384,3 +384,158 @@
   align-items: center;
   gap: 8px;
 }
+
+/* The record detail and the decide-now list (step 1.5). Both are lists of
+   emitted facts, so the styling is typographic only: nothing here decides
+   what is shown. */
+
+.gyld-detail,
+.gyld-decidenow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 12px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-detail-head,
+.gyld-decidenow-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+
+.gyld-detail-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gyld-chip {
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.gyld-chip-wired {
+  border-style: dashed;
+}
+
+.gyld-detail-slot,
+.gyld-detail-facts code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gyld-detail-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 3px 12px;
+  margin: 0;
+}
+
+.gyld-detail-facts dt {
+  opacity: 0.6;
+}
+
+.gyld-detail-facts dd {
+  margin: 0;
+}
+
+.gyld-detail-section h4,
+.gyld-decidenow-group h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.gyld-relations,
+.gyld-closure,
+.gyld-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-relation {
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 6px;
+}
+
+.gyld-relation-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.gyld-relation-name {
+  font-weight: 600;
+}
+
+.gyld-relation-role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  padding-left: 10px;
+}
+
+.gyld-role-name {
+  opacity: 0.6;
+}
+
+.gyld-open-record,
+.gyld-question-open {
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gyld-unresolved {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.gyld-closure li {
+  display: flex;
+  gap: 8px;
+}
+
+.gyld-question {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.gyld-question-why {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: 16px;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.gyld-detail-empty,
+.gyld-decidenow-empty {
+  gap: 6px;
+}

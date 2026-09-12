@@ -2,8 +2,15 @@ import { addEntry, grok } from '@grythjs/plugin-api';
 import { GYLD_PLUGIN } from './grips';
 import { GyldBrowser } from './GyldBrowser';
 import { browserTabTaps } from './browser/browserTabTaps';
+import { DecideNowList } from './decidenow/DecideNowList';
+import { decideNowTabTaps } from './decidenow/decideNowTabTaps';
+import { RecordDetail } from './detail/RecordDetail';
+import { detailTabTaps } from './detail/detailTabTaps';
 import { GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap } from './rootTaps';
-import { BROWSER_ROLE, GYLD_BROWSER_TOOL } from './tools';
+import {
+  BROWSER_ROLE, DECIDE_NOW_ROLE, DETAIL_ROLE,
+  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DETAIL_TOOL,
+} from './tools';
 import './gyld.css';
 
 // @grythjs/plugin-gyld: the Gyld decision-graph tools (see
@@ -11,10 +18,10 @@ import './gyld.css';
 // rulings of 2026-09-13). Importing this module IS registering: the entry
 // lands in the plugin registry under GYLD_PLUGIN.
 //
-// Phase 1 advertises the browser. The remaining tools of section 2
-// (gyld.streams, gyld.decide, gyld.diff and later gyld.compare) are added as
-// their views land; none is declared here ahead of a window that can render
-// it.
+// Phase 1 advertises the browser, the record detail and the decide-now list.
+// The remaining tools of section 2 (gyld.streams, gyld.decide, gyld.diff and
+// later gyld.compare) are added as their views land; none is declared here
+// ahead of a window that can render it.
 
 // The plugin-root taps: the set atom, the shared focus atom, the one store tap
 // and the two conversion taps. All are registered at the app's root context,
@@ -38,6 +45,23 @@ addEntry(GYLD_PLUGIN, {
       // leaves the desktop document. `params` is the opening link, so a
       // reopened window comes back on the same destination.
       tabTaps: browserTabTaps,
+    },
+    [GYLD_DETAIL_TOOL]: {
+      label: 'Gyld record',
+      defaultSize: { w: 520, h: 620 },
+      role: DETAIL_ROLE,
+      windowComponent: RecordDetail,
+      // Seeds ONLY when the opening link carries a destination: a window
+      // opened wired to a browser must resolve the browser's record through
+      // the graph, and a seed of its own would shadow it.
+      tabTaps: detailTabTaps,
+    },
+    [GYLD_DECIDE_NOW_TOOL]: {
+      label: 'Gyld decide now',
+      defaultSize: { w: 560, h: 620 },
+      role: DECIDE_NOW_ROLE,
+      windowComponent: DecideNowList,
+      tabTaps: decideNowTabTaps,
     },
   },
 });
@@ -77,6 +101,12 @@ export { GyldBrowser } from './GyldBrowser';
 export { SetPicker } from './browser/SetPicker';
 export { addDirectoryRoot, addStaticRoot } from './browser/setOps';
 export { browserTabTaps } from './browser/browserTabTaps';
+export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
+export { RecordDetail } from './detail/RecordDetail';
+export { detailTabTaps } from './detail/detailTabTaps';
+export { DecideNowList } from './decidenow/DecideNowList';
+export { groupQuestions, type Group } from './decidenow/groups';
+export { decideNowTabTaps } from './decidenow/decideNowTabTaps';
 export * from './browser/links';
 export * from './browser/search';
 export { directoryPicker, isPickerCancel } from './browser/fsAccess';
