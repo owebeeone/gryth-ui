@@ -9,7 +9,7 @@ substitutes a value for a missing one, so a file that is not there shows as
 absent and a file that does not read shows the contract violation that stopped
 it.
 
-## The three windows
+## The windows
 
 `gyld.browser` is the one that draws. It carries a stream switcher, a
 perspective picker, a search box over emitted labels and qualified slots, one
@@ -36,6 +36,20 @@ induced, and already settled. Each row carries the declared and effective
 status, the tier, the preference recorded for it and the slots that block or
 gate it. Like the detail window it is wired when opened from a browser and
 standalone when opened with a stream of its own.
+
+`gyld.streams` is the stream manager. It draws the set's streams as the tree
+their `parent` fields make, each row with its kind, lineage, revision, snapshot
+digest, the digest it was built against, its chain, its overlay module and what
+its own `validation.json` says, read through a child context per row. A stream
+whose pinned parent digest is not the digest its parent carries now is marked
+`parent moved since build`, which is the one comparison the specification
+defines across two records; the rebuild that would fix it is Gyld's, not this
+window's. Clicking a row shows that stream in the browser this window is wired
+to, or opens one when it is standalone. Under the tree, a form composes a fork
+or a link from a kind, a parent and a name, and the Export button writes the
+exact command line that makes it. Nothing is submitted in this stage: the owner
+runs the command into a new output directory and the watch loop picks the
+bundle up.
 
 ## Running it
 
@@ -145,9 +159,20 @@ shared focus, and the browser chrome prints it, but no window changes what it
 shows because another window's focus moved. The cross window correlation that
 grip is there to carry is still only half wired.
 
-There is no diff, compare, stream manager or ruling window. The specification
-names `gyld.streams`, `gyld.decide`, `gyld.diff` and `gyld.compare`; none is
-declared here, because none has a window that can render it yet.
+There is no decide, diff or compare window yet. The specification names
+`gyld.decide`, `gyld.diff` and `gyld.compare`; none is declared here, because
+none has a window that can render it yet.
+
+The stream manager's new-stream form takes a kind, a parent and a name. Section
+6.3 also names a note; the exported command carries none, because the host's
+`--note` is a flag on the run rather than an operand of the subcommand, and the
+window will not guess how the two are spelled together.
+
+The exported command names the host's `fork` and `link` subcommands, which are
+Gyld-side step 2.2 and are not in `emit_decision_streams.py` yet. The spelling
+here is the one the plan states, with the documented `PYTHONPATH=src:. python3
+-B` prefix and a placeholder output directory, and it is asserted by a test so
+that a change to it is a deliberate edit.
 
 `pnpm build` prints a chunk size advisory: the single application chunk is over
 Vite's 500 kB default warning threshold. It is an advisory about code splitting

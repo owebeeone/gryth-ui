@@ -14,6 +14,7 @@ import {
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './lens/camera';
 import { NO_FOCUS, type GyldFocus } from './focus';
+import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 
 // @grythjs/plugin-gyld grips. Scope and class follow CodingRules.md and the
 // grip inventory in gyld-wz/dev-docs/ui/GyldGrythPlugins.md section 3.3.
@@ -188,6 +189,27 @@ export const GYLD_PICKER_URL_TAP =
 export const GYLD_PICKER_ERROR = defineGrip<string>('Gyld.Tab.Picker.Error', '');
 export const GYLD_PICKER_ERROR_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Error.Tap');
+
+// ---------------------------------------------------------------------------
+// Step 2.3: the stream manager's own state. Class 1 atoms, INSTANCE scope, one
+// set per tab (spec section 3.3, `Gyld.Streams.Draft`).
+//
+// Both are DRAFTS, not Gyld facts. The draft is what the owner has typed so
+// far; the export is the command line composed from it. In this stage nothing
+// is submitted, so neither one ever reaches a bundle: the owner runs the
+// command, and the watch loop picks up what that run emits (spec section 4.6).
+// ---------------------------------------------------------------------------
+
+export const GYLD_STREAM_DRAFT = defineGrip<StreamDraft>('Gyld.Streams.Draft', DRAFT_EMPTY);
+export const GYLD_STREAM_DRAFT_TAP =
+  defineGrip<AtomTapHandle<StreamDraft>>('Gyld.Streams.Draft.Tap');
+
+// The exported command text, empty until the owner presses Export. It is a
+// grip rather than a render-time computation so the box holds what was
+// exported, and keeps holding it while the form is edited underneath.
+export const GYLD_STREAM_EXPORT = defineGrip<string>('Gyld.Streams.Export', '');
+export const GYLD_STREAM_EXPORT_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Streams.Export.Tap');
 
 // The tab id of the window that OWNS this context, seeded by the browser's
 // tabTaps. A sink wired to a browser inherits it through the graph and so

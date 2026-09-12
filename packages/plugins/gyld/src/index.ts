@@ -6,10 +6,12 @@ import { DecideNowList } from './decidenow/DecideNowList';
 import { decideNowTabTaps } from './decidenow/decideNowTabTaps';
 import { RecordDetail } from './detail/RecordDetail';
 import { detailTabTaps } from './detail/detailTabTaps';
+import { StreamManager } from './streams/StreamManager';
+import { streamsTabTaps } from './streams/streamsTabTaps';
 import { GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap } from './rootTaps';
 import {
-  BROWSER_ROLE, DECIDE_NOW_ROLE, DETAIL_ROLE,
-  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DETAIL_TOOL,
+  BROWSER_ROLE, DECIDE_NOW_ROLE, DETAIL_ROLE, STREAMS_ROLE,
+  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DETAIL_TOOL, GYLD_STREAMS_TOOL,
 } from './tools';
 import './gyld.css';
 
@@ -18,10 +20,10 @@ import './gyld.css';
 // rulings of 2026-09-13). Importing this module IS registering: the entry
 // lands in the plugin registry under GYLD_PLUGIN.
 //
-// Phase 1 advertises the browser, the record detail and the decide-now list.
-// The remaining tools of section 2 (gyld.streams, gyld.decide, gyld.diff and
-// later gyld.compare) are added as their views land; none is declared here
-// ahead of a window that can render it.
+// Phase 1 advertised the browser, the record detail and the decide-now list;
+// Phase 2 adds the stream manager. The remaining tools of section 2
+// (gyld.decide, gyld.diff and later gyld.compare) are added as their views
+// land; none is declared here ahead of a window that can render it.
 
 // The plugin-root taps: the set atom, the shared focus atom, the one store tap
 // and the two conversion taps. All are registered at the app's root context,
@@ -63,6 +65,16 @@ addEntry(GYLD_PLUGIN, {
       windowComponent: DecideNowList,
       tabTaps: decideNowTabTaps,
     },
+    [GYLD_STREAMS_TOOL]: {
+      label: 'Gyld streams',
+      defaultSize: { w: 620, h: 640 },
+      role: STREAMS_ROLE,
+      windowComponent: StreamManager,
+      // Seeds the drafts and nothing else: the manager has no destination of
+      // its own, so a window opened wired to a browser resolves that
+      // browser's and can retarget it.
+      tabTaps: streamsTabTaps,
+    },
   },
 });
 
@@ -75,6 +87,7 @@ export {
   GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_RECORDS, GYLD_RECORD,
   GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_TAB_ID, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
   GYLD_PICKER_URL, GYLD_PICKER_URL_TAP, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP,
+  GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP, GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP,
 } from './grips';
 export * from './focus';
 export * from './tools';
@@ -104,6 +117,12 @@ export { browserTabTaps } from './browser/browserTabTaps';
 export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
 export { RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
+export { StreamManager } from './streams/StreamManager';
+export { streamsTabTaps } from './streams/streamsTabTaps';
+export * from './streams/operations';
+export * from './streams/tree';
+export { useStreamTarget, type StreamTarget } from './streams/useStreamTarget';
+export { useKeyedContext } from './contexts';
 export { DecideNowList } from './decidenow/DecideNowList';
 export { groupQuestions, type Group } from './decidenow/groups';
 export { decideNowTabTaps } from './decidenow/decideNowTabTaps';

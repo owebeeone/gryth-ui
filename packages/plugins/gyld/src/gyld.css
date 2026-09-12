@@ -539,3 +539,101 @@
 .gyld-decidenow-empty {
   gap: 6px;
 }
+
+/* The stream manager (step 2.3). A tree of emitted records, each row's own
+   validation beside it, and the two forms that compose a command. Nothing
+   here decides what is shown; the indent is the emitted parent chain. */
+
+.gyld-streams {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 12px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-streams-empty {
+  gap: 6px;
+}
+
+.gyld-stream-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-stream-row {
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  border-radius: 6px;
+}
+
+.gyld-stream-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin-bottom: 4px;
+}
+
+.gyld-stream-open {
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gyld-stream-moved {
+  border-style: dashed;
+  opacity: 1;
+}
+
+.gyld-stream-validation {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gyld-stream-new {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-stream-new h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.gyld-stream-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 6px 10px;
+}
+
+.gyld-stream-name {
+  min-width: 12em;
+}
+
+.gyld-stream-command {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
