@@ -35,7 +35,7 @@ function standalone(tabId: string, ref: string) {
   const tab = desk.tab(tabId, detailTabTaps(tabId, params));
   return {
     view: () => tab.read(GYLD_RECORD).get() as GyldRecordView,
-    render: () => tab.render(<RecordDetail tabId={tabId} params={params} />),
+    render: () => tab.render(<RecordDetail />),
   };
 }
 
@@ -91,7 +91,7 @@ describe('gyld.detail renders emitted facts and says so when there are none', ()
     const desk = mountDesk();
     const tab = desk.tab('detail-bare', detailTabTaps('detail-bare'));
     await settled(() => tab.read(GYLD_RECORD).get() as GyldRecordView, (view) => view !== undefined);
-    expect(tab.render(<RecordDetail tabId="detail-bare" />))
+    expect(tab.render(<RecordDetail />))
       .toContain('no record on this window yet');
   });
 });
@@ -110,7 +110,7 @@ describe('gyld.detail as a wired sink', () => {
       () => sink.read(GYLD_RECORD).get() as GyldRecordView,
       (view) => view?.ref === SCOPE_MODEL && view.status === 'ok',
     );
-    const markup = sink.render(<RecordDetail tabId="sink:detail" />);
+    const markup = sink.render(<RecordDetail />);
     expect(markup).toContain(emitted.occurrence.label);
     expect(markup).toContain('wired to wired-source');
     // the sink inherits the browser's perspective too, so it names the lens

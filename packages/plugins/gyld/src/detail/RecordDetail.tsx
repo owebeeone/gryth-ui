@@ -1,5 +1,4 @@
 import { useGrip } from '@owebeeone/grip-react';
-import type { ToolViewProps } from '@grythjs/plugin-api';
 import type { ProjectionAssertion } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_STREAM,
@@ -123,7 +122,12 @@ function Relation({ assertion, records, onOpen }: {
   );
 }
 
-export function RecordDetail({ params }: ToolViewProps) {
+// Pinning (Desktop.PinTab) is NOT implemented here, so this window never
+// claims to be pinned. It would need its own code path: the desktop cuts the
+// wire on a pin, but an already-resolved consumer keeps resolving through the
+// unlinked parent, so a pinned window would have to compose its view from
+// `recordView` over the ref in its own params instead of from `Gyld.Record`.
+export function RecordDetail() {
   const view = useGrip(GYLD_RECORD);
   const records = useGrip(GYLD_RECORDS);
   const bundle = useGrip(GYLD_BUNDLE);
@@ -152,7 +156,6 @@ export function RecordDetail({ params }: ToolViewProps) {
         {browser.wiredTo !== '' && (
           <span className="gyld-chip gyld-chip-wired">{`wired to ${browser.wiredTo}`}</span>
         )}
-        {params?.pinned === true && <span className="gyld-chip">pinned</span>}
       </header>
 
       <dl className="gyld-detail-facts">
