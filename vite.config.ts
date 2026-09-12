@@ -166,5 +166,17 @@ export default defineConfig({
     fs: { allow: ['..', '../../wyred-wz'] },
   },
   // scripts/*.test.mjs are node check scripts (run by `npm test` directly), not vitest suites
-  test: { include: ['src/**/*.test.{ts,tsx}', 'packages/**/src/**/*.test.{ts,tsx}'] },
+  test: {
+    include: ['src/**/*.test.{ts,tsx}', 'packages/**/src/**/*.test.{ts,tsx}'],
+    // Several suites wait on an asynchronous store: a tap that reads a bundle
+    // of a few dozen files and publishes as each one lands. Vitest's default
+    // `expect.poll` deadline is one second and its test deadline five, which
+    // are ample on an idle machine and not always ample on a loaded one, and a
+    // deadline that depends on the machine is a flaky suite rather than a fast
+    // one. A poll that succeeds returns at once, so the ceiling costs nothing
+    // when the value arrives; the test deadline stays above the poll's so a
+    // poll can actually spend its budget before the test is failed under it.
+    expect: { poll: { timeout: 10000, interval: 20 } },
+    testTimeout: 15000,
+  },
 })

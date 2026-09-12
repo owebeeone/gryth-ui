@@ -6,7 +6,7 @@ import {
 import { readStreamsIndex } from '../contract';
 import { browserLink } from '../browser/links';
 import { GYLD_BROWSER_TOOL } from '../tools';
-import { GYLD_STREAMS, GYLD_TAB_ID } from '../grips';
+import { GYLD_STREAMS, GYLD_TAB_ID, GYLD_VALIDATION } from '../grips';
 import type { GyldStreamsCensus } from '../store/state';
 import { StreamManager } from './StreamManager';
 import { streamsTabTaps } from './streamsTabTaps';
@@ -39,6 +39,23 @@ function mount(tabId: string, bundle = new FakeBundle()) {
     tab,
     census: () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
     render: () => tab.render(<StreamManager />),
+    /**
+     * One row's validation, read as a DRIP in that row's own child context.
+     *
+     * The context must already exist, so this is only called AFTER a render:
+     * the window creates each row's context and seeds it, and looking one up
+     * before that would create an unseeded context the window would then find
+     * and leave unseeded for ever. Waiting on the value rather than on the
+     * rendered text keeps the wait one comparison instead of a whole window
+     * redrawn every twenty milliseconds.
+     */
+    validation: (stream: string) => {
+      const row = tab.ctx.getGripConsumerContext()
+        .getOrCreateMatchingContext(`gyld-stream:${stream}`);
+      const drip = row.getGripConsumerContext().getOrCreateConsumer(GYLD_VALIDATION);
+      drip.subscribe(() => {});
+      return drip;
+    },
   };
 }
 
@@ -153,9 +170,14 @@ describe('each row says what that stream\'s validation says', () => {
     await settled(manager.census, (value) => value?.status === 'ready');
     // the first render creates the per-row contexts; the files land after it
     manager.render();
-    await expect
-      .poll(() => (manager.render().match(/data-validation="ok"/g) ?? []).length)
-      .toBe(index.streams.length);
+    for (const record of index.streams) {
+      await settled(
+        () => manager.validation(record.id).get(),
+        (value) => value?.status === 'ok',
+      );
+    }
+    expect(manager.render().match(/data-validation="ok"/g))
+      .toHaveLength(index.streams.length);
   });
 
   it('says invalid with the code and the finding count, and folds nothing', async () => {
@@ -180,8 +202,14 @@ describe('each row says what that stream\'s validation says', () => {
     const manager = mount('sm-invalid', image);
     await settled(manager.census, (value) => value?.status === 'ready');
     manager.render();
-    await expect.poll(() => manager.render()).toContain('invalid: PREREQUISITE_OPEN');
+    for (const record of index.streams) {
+      await settled(
+        () => manager.validation(record.id).get(),
+        (value) => value?.status === 'ok',
+      );
+    }
     const markup = manager.render();
+    expect(markup).toContain('invalid: PREREQUISITE_OPEN');
     expect(markup).toContain('2 findings');
     expect(markup).toContain('PREREQUISITE_OPEN, GATE_NOT_OCCURRED');
     // the other three streams are untouched: a finding belongs to its stream
@@ -194,7 +222,11 @@ describe('each row says what that stream\'s validation says', () => {
     const manager = mount('sm-absent', image);
     await settled(manager.census, (value) => value?.status === 'ready');
     manager.render();
-    await expect.poll(() => manager.render()).toContain('no validation file');
+    await settled(
+      () => manager.validation('stream-b').get(),
+      (value) => value?.status === 'absent',
+    );
+    expect(manager.render()).toContain('no validation file');
     expect(manager.render()).not.toContain('data-validation="unset"');
   });
 });

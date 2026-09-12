@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readStreamsIndex } from '../contract';
-import { GYLD_DECIDE_NOW, GYLD_RECORDS, GYLD_STREAMS } from '../grips';
+import { GYLD_DECIDE_NOW, GYLD_RECORDS, GYLD_STREAMS, GYLD_VALIDATION } from '../grips';
 import type { GyldStreamsCensus } from '../store/state';
 import type { GyldRecords } from '../records/records';
 import { rebuildCommand } from '../streams/operations';
@@ -48,6 +48,11 @@ function mount(tabId: string, params?: Record<string, unknown>, bundle = new Fak
     census: () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
     records: () => tab.read(GYLD_RECORDS).get() as GyldRecords,
     decideNow: () => tab.read(GYLD_DECIDE_NOW).get(),
+    // Read as a DRIP, not by re-rendering until the text appears: the read
+    // subscribes, which is what makes the store tap load the file, and waiting
+    // on the value is one comparison rather than a whole window redrawn every
+    // twenty milliseconds.
+    validation: () => tab.read(GYLD_VALIDATION).get(),
     render: () => tab.render(<DecideWindow />),
   };
 }
@@ -419,10 +424,9 @@ describe('the window', () => {
       ],
     });
     const window = mount('dc-findings', { stream: 'stream-a' }, image);
-    await settled(window.census, (value) => value?.status === 'ready');
-    window.render();
-    await expect.poll(() => window.render()).toContain('data-code="PREREQUISITE_OPEN"');
+    await settled(window.validation, (value) => value?.status === 'ok');
     const markup = window.render();
+    expect(markup).toContain('data-code="PREREQUISITE_OPEN"');
     expect(markup).toContain('data-code="GATE_NOT_OCCURRED"');
     expect(markup).toContain('version_pin is decided while iroh_transport is open');
     // the details are rendered as emitted, key by key, and not summarised
@@ -435,8 +439,7 @@ describe('the window', () => {
     const image = new FakeBundle();
     image.remove('streams/stream-a/validation.json');
     const window = mount('dc-noval', { stream: 'stream-a' }, image);
-    await settled(window.census, (value) => value?.status === 'ready');
-    window.render();
-    await expect.poll(() => window.render()).toContain('this stream emitted no validation file');
+    await settled(window.validation, (value) => value?.status === 'absent');
+    expect(window.render()).toContain('this stream emitted no validation file');
   });
 });
