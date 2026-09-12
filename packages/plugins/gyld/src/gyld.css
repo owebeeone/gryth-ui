@@ -848,3 +848,14 @@
   max-height: 4.5em;
   overflow: auto;
 }
+
+.gyld-follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.gyld-follow-focus {
+  margin: 0;
+}

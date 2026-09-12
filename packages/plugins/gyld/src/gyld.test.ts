@@ -7,6 +7,7 @@ import './index'; // importing the plugin IS registering it
 import {
   GYLD_PLUGIN, GYLD_DEST_STREAM, GYLD_DEST_PERSPECTIVE,
   GYLD_DEST_STREAM_TAP, GYLD_DEST_PERSPECTIVE_TAP,
+  GYLD_TAB_FOLLOW, GYLD_TAB_FOLLOW_TAP,
 } from './grips';
 
 grok.registerTap(PluginRegistryTap);
@@ -73,14 +74,17 @@ describe('gyld plugin registration', () => {
 
   it('seeds a sink NOTHING, so a wired window resolves its source', async () => {
     await expect.poll(() => tools()['gyld.detail']).toBeDefined();
-    // opened wired (Desktop.OpenWired passes no params): a seed here would sit
-    // below the source's parent edge and shadow it for ever
-    expect(tools()['gyld.detail'].tabTaps!('sink')).toEqual([]);
+    // opened wired (Desktop.OpenWired passes no params): a DESTINATION seed
+    // here would sit below the source's parent edge and shadow it for ever.
+    // The one tap a wired detail window does seed provides `Gyld.Tab.Follow`
+    // and nothing else, which no browser publishes, so it shadows nothing.
+    expect(tools()['gyld.detail'].tabTaps!('sink').flatMap((tap) => [...tap.provides]))
+      .toEqual([GYLD_TAB_FOLLOW, GYLD_TAB_FOLLOW_TAP]);
     expect(tools()['gyld.decidenow'].tabTaps!('sink')).toEqual([]);
     // opened standalone: its own destination, seeded from its own link
     expect(tools()['gyld.detail'].tabTaps!('own', {
       stream: 'base', ref: 'glade_decisions:GladeDecisions.scope_model',
-    })).toHaveLength(2);
+    })).toHaveLength(3);
     expect(tools()['gyld.decidenow'].tabTaps!('own', { stream: 'base' })).toHaveLength(1);
   });
 

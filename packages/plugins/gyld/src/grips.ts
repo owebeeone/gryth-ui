@@ -207,6 +207,16 @@ export const GYLD_FOCUS_TAP = defineGrip<AtomTapHandle<GyldFocus>>('Gyld.Focus.T
 export const GYLD_TAB_SEARCH = defineGrip<string>('Gyld.Tab.Search', '');
 export const GYLD_TAB_SEARCH_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Search.Tap');
 
+// Class 1 atom; INSTANCE scope, per tab. Whether THIS window follows the
+// shared focus (spec section 2: "Gyld.Focus is the cross-window focus every
+// gyld window may follow"). It is per window because following is a reader's
+// choice about one window, not a fact about the graph: a desk can hold one
+// detail window pinned to a record and another walking the focus, which is the
+// correlation MDV-5 asks for. A window WIRED to a browser ignores it, because
+// it already follows that browser's selection and two sources would race.
+export const GYLD_TAB_FOLLOW = defineGrip<boolean>('Gyld.Tab.Follow', false);
+export const GYLD_TAB_FOLLOW_TAP = defineGrip<AtomTapHandle<boolean>>('Gyld.Tab.Follow.Tap');
+
 export const GYLD_PICKER_URL = defineGrip<string>('Gyld.Tab.Picker.Url', '');
 export const GYLD_PICKER_URL_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Url.Tap');

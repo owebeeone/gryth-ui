@@ -33,7 +33,9 @@ it is answerable now, the lean recorded for it, any ruling, the relations the
 record itself carries and its definition closure. Opened from a browser through
 the Details button it is wired to that browser and follows its selection live,
 with no parameter copied. Opened from the launcher with a stream and a record
-in the link it stands alone on that record. Its Decide button opens the decide
+in the link it stands alone on that record, with a `follow focus` switch that
+puts it on the record last focused in any gyld window instead, on whichever
+stream that was. Its Decide button opens the decide
 window on this record, wired to the browser this window follows when it follows
 one and standalone on `{ stream, question }` when it does not; a record the
 stream lists no decide-now row for is not a question to answer, so the button
@@ -213,10 +215,14 @@ contract asks for it and it is what a placement entry would say.
 following its browser is in the specification and is not implemented, so a
 wired detail window always follows.
 
-`Gyld.Focus` is written but not followed. Picking a record publishes it as the
-shared focus, and the browser chrome prints it, but no window changes what it
-shows because another window's focus moved. The cross window correlation that
-grip is there to carry is still only half wired.
+`Gyld.Focus` is followed by one window: a standalone `gyld.detail` whose reader
+turned its `follow focus` switch on shows the record last focused in any gyld
+window, across streams, because the focus is a stream and a qualified slot. It
+does that by rendering inside a child context whose destination is the focus,
+so turning the switch off puts the window straight back on its own record. A
+window wired to a browser ignores the switch and offers none: it already
+follows that browser's selection. No other window follows the focus yet; the
+browser chrome still only prints it.
 
 There is no compare window yet. The specification names `gyld.compare`; it is
 not declared here, because it has no window that can render it yet.

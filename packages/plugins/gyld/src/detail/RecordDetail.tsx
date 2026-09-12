@@ -1,11 +1,14 @@
-import { useGrip } from '@owebeeone/grip-react';
+import { GripProvider, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import { grok } from '@grythjs/plugin-api';
 import type { ProjectionAssertion } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_STREAM,
-  GYLD_RECORD, GYLD_RECORDS,
+  GYLD_RECORD, GYLD_RECORDS, GYLD_TAB_FOLLOW, GYLD_TAB_FOLLOW_TAP, GYLD_TAB_ID,
 } from '../grips';
 import { decideTitle } from '../browser/links';
 import { useBrowserFocus } from '../browser/useBrowserFocus';
+import { useKeyedContext } from '../contexts';
+import { FocusDestTap } from './followFocus';
 import type { GyldRecordView, GyldRecords } from '../records/records';
 import type { GyldBundle } from '../store/state';
 
@@ -29,6 +32,35 @@ const NOT_EMITTED = [
   + 'emitted, so this view is composed by indexing',
 ];
 
+/**
+ * The per-window "follow the shared focus" switch.
+ *
+ * Offered only on a STANDALONE window: a wired one already follows the browser
+ * it is wired to, and two sources for one destination would race. It reads and
+ * writes one per-tab atom and nothing else, so it renders the same inside the
+ * focus context as outside it.
+ */
+function FollowToggle() {
+  const wiredTo = useGrip(GYLD_TAB_ID) ?? '';
+  const follow = useGrip(GYLD_TAB_FOLLOW) ?? false;
+  const tap = useGrip(GYLD_TAB_FOLLOW_TAP) as AtomTapHandle<boolean> | undefined;
+  if (wiredTo !== '') {
+    return null;
+  }
+  return (
+    <label className="gyld-chip gyld-follow" title="show the record last focused in any gyld window">
+      <input
+        type="checkbox"
+        className="gyld-follow-focus"
+        checked={follow}
+        disabled={tap === undefined}
+        onChange={(event) => tap?.set(event.target.checked)}
+      />
+      {follow ? 'following the shared focus' : 'follow focus'}
+    </label>
+  );
+}
+
 function Absent({ view, stream, bundle }: {
   view: GyldRecordView | undefined;
   stream: string;
@@ -43,6 +75,9 @@ function Absent({ view, stream, bundle }: {
   };
   return (
     <div className="gyld-detail gyld-detail-empty">
+      <header className="gyld-detail-head">
+        <FollowToggle />
+      </header>
       <p className="gyld-note">{reason[status] ?? status}</p>
       {view?.ref !== undefined && view.ref !== '' && (
         <p className="gyld-note">{`asked for ${view.ref} in stream ${stream}`}</p>
@@ -128,7 +163,7 @@ function Relation({ assertion, records, onOpen }: {
 // wire on a pin, but an already-resolved consumer keeps resolving through the
 // unlinked parent, so a pinned window would have to compose its view from
 // `recordView` over the ref in its own params instead of from `Gyld.Record`.
-export function RecordDetail() {
+function RecordBody() {
   const view = useGrip(GYLD_RECORD);
   const records = useGrip(GYLD_RECORDS);
   const bundle = useGrip(GYLD_BUNDLE);
@@ -157,6 +192,7 @@ export function RecordDetail() {
         {browser.wiredTo !== '' && (
           <span className="gyld-chip gyld-chip-wired">{`wired to ${browser.wiredTo}`}</span>
         )}
+        <FollowToggle />
         <button
           type="button"
           className="gyld-open-decide"
@@ -265,5 +301,38 @@ export function RecordDetail() {
         <span>{`ref ${ref === '' ? 'none' : ref}`}</span>
       </footer>
     </div>
+  );
+}
+
+/** The key of this window's FOCUS context, under its own tab context. One per
+ *  window, because that is where `getOrCreateMatchingContext` puts it. */
+export const DETAIL_FOCUS_CONTEXT = 'gyld-detail:focus';
+
+/**
+ * One record, from one of two destinations.
+ *
+ * The window's own seeds are the destination normally: the link it was opened
+ * with, or, for a window wired to a browser, that browser's live selection. A
+ * STANDALONE window whose reader turned "follow focus" on takes its
+ * destination from `Gyld.Focus` instead, and it does that by rendering its
+ * body inside a child context that publishes the pair from the focus, the same
+ * way the diff window gives each pane its own stream. Nothing is copied, so
+ * turning it off puts the window back on its own record, and a wired window
+ * never takes this path at all.
+ */
+export function RecordDetail() {
+  const wiredTo = useGrip(GYLD_TAB_ID) ?? '';
+  const follow = useGrip(GYLD_TAB_FOLLOW) ?? false;
+  // Looked up unconditionally: creating the context registers one tap that
+  // reads one atom, and with nothing rendered inside it nothing downstream
+  // resolves. A conditional call would also be a conditional `useRuntime`.
+  const context = useKeyedContext(DETAIL_FOCUS_CONTEXT, () => [new FocusDestTap()]);
+  if (wiredTo !== '' || !follow) {
+    return <RecordBody />;
+  }
+  return (
+    <GripProvider grok={grok} context={context}>
+      <RecordBody />
+    </GripProvider>
   );
 }

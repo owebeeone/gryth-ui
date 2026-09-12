@@ -110,6 +110,7 @@ export {
   GYLD_BUNDLE, GYLD_LENS, GYLD_DECIDE_NOW, GYLD_VALIDATION,
   GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_RECORDS, GYLD_RECORD,
   GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_TAB_ID, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
+  GYLD_TAB_FOLLOW, GYLD_TAB_FOLLOW_TAP,
   GYLD_PICKER_URL, GYLD_PICKER_URL_TAP, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP,
   GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP, GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP,
   GYLD_ANSWER_DRAFT, GYLD_ANSWER_DRAFT_TAP, GYLD_ANSWER_EXPORT, GYLD_ANSWER_EXPORT_TAP,
@@ -143,8 +144,9 @@ export { SetPicker } from './browser/SetPicker';
 export { addDirectoryRoot, addStaticRoot } from './browser/setOps';
 export { browserTabTaps } from './browser/browserTabTaps';
 export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
-export { RecordDetail } from './detail/RecordDetail';
+export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
+export { FocusDestTap } from './detail/followFocus';
 export { DiffWindow } from './diff/DiffWindow';
 export { diffTabTaps, paneTabTaps } from './diff/diffTabTaps';
 export * from './diff/panes';
@@ -163,6 +165,7 @@ export { DecideNowList } from './decidenow/DecideNowList';
 export { groupQuestions, type Group } from './decidenow/groups';
 export { decideNowTabTaps } from './decidenow/decideNowTabTaps';
 export * from './browser/links';
+export * from './browser/perspectives';
 export * from './browser/search';
 export { directoryPicker, isPickerCancel } from './browser/fsAccess';
 export * from './store/state';

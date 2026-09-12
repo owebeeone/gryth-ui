@@ -1,12 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
-import { GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_RECORD } from '../grips';
+import {
+  GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_FOCUS_TAP, GYLD_RECORD, GYLD_TAB_FOLLOW,
+  GYLD_TAB_FOLLOW_TAP,
+} from '../grips';
+import type { GyldFocus } from '../focus';
 import { browserTabTaps } from '../browser/browserTabTaps';
-import { RecordDetail } from './RecordDetail';
+import { DETAIL_FOCUS_CONTEXT, RecordDetail } from './RecordDetail';
 import { detailTabTaps } from './detailTabTaps';
 import type { GyldRecordView } from '../records/records';
-import { mountDesk, wireSink } from '../../test/mount';
+import { mountDesk, wireSink, type MountedDesk } from '../../test/mount';
 import projection from '../../test/fixtures/bundle/streams/base/projection.json';
 import decideNow from '../../test/fixtures/bundle/streams/base/decide-now.json';
 
@@ -184,5 +188,90 @@ describe('gyld.detail opens the decide window on the record it shows', () => {
     const markup = tab.render(<RecordDetail />);
     expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(true);
     expect(markup).toContain('this stream lists no decide-now row for this record');
+  });
+});
+
+describe('gyld.detail following the shared focus', () => {
+  /** The record view inside the window's FOCUS context, which the window
+   *  creates on its first render, exactly as the diff window's panes are. */
+  const followed = (tab: ReturnType<MountedDesk['tab']>) => {
+    const context = tab.ctx.getGripConsumerContext()
+      .getOrCreateMatchingContext(DETAIL_FOCUS_CONTEXT);
+    const drip = context.getGripConsumerContext().getOrCreateConsumer(GYLD_RECORD);
+    drip.subscribe(() => {});
+    return drip;
+  };
+
+  it('offers the toggle on a standalone window, off, with nothing on it', async () => {
+    const desk = mountDesk();
+    const tab = desk.tab('detail-follow-off', detailTabTaps('detail-follow-off'));
+    await expect.poll(() => tab.read(GYLD_TAB_FOLLOW_TAP).get()).toBeDefined();
+    expect(tab.read(GYLD_TAB_FOLLOW).get()).toBe(false);
+    const markup = tab.render(<RecordDetail />);
+    expect(markup).toContain('follow focus');
+    expect(markup).toContain('no record on this window yet');
+    expect(/<input[^>]*class="gyld-follow-focus"[^>]*checked/.test(markup)).toBe(false);
+  });
+
+  it('shows the record last focused in any browser once it is on', async () => {
+    const desk = mountDesk();
+    const tab = desk.tab('detail-follow', detailTabTaps('detail-follow'));
+    (tab.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    // what a click in a browser writes: a stream and a qualified slot
+    (desk.read(GYLD_FOCUS_TAP).get() as AtomTapHandle<GyldFocus>)
+      .set({ stream: 'base', ref: SCOPE_MODEL });
+    tab.render(<RecordDetail />);
+    const view = await settled(
+      () => followed(tab).get() as GyldRecordView,
+      (held) => held?.status === 'ok',
+    );
+    expect(view.ref).toBe(SCOPE_MODEL);
+    const markup = tab.render(<RecordDetail />);
+    expect(markup).toContain(emitted.occurrence.label);
+    expect(markup).toContain('following the shared focus');
+    expect(/<input[^>]*class="gyld-follow-focus"[^>]*checked/.test(markup)).toBe(true);
+  });
+
+  it('follows the focus onto another stream, not just another record', async () => {
+    const desk = mountDesk();
+    const tab = desk.tab('detail-follow-stream', detailTabTaps('detail-follow-stream'));
+    (tab.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    const focus = desk.read(GYLD_FOCUS_TAP).get() as AtomTapHandle<GyldFocus>;
+    focus.set({ stream: 'base', ref: SCOPE_MODEL });
+    tab.render(<RecordDetail />);
+    await settled(
+      () => followed(tab).get() as GyldRecordView,
+      (held) => held?.status === 'ok' && held.ref === SCOPE_MODEL,
+    );
+    // a question stream A added, which the base does not carry at all
+    const PIN_AUDIT = 'glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit';
+    focus.set({ stream: 'stream-a', ref: PIN_AUDIT });
+    await settled(
+      () => followed(tab).get() as GyldRecordView,
+      (held) => held?.status === 'ok' && held.ref === PIN_AUDIT,
+    );
+    expect(tab.render(<RecordDetail />)).toContain('pin_audit');
+  });
+
+  it('leaves a wired window on its browser, whatever the focus says', async () => {
+    const desk = mountDesk();
+    const browser = desk.tab('follow-source', browserTabTaps('follow-source', {
+      stream: 'base', perspective: 'decisions',
+    }));
+    const sink = wireSink(browser, 'sink:follow', detailTabTaps('sink:follow'));
+    (sink.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    (browser.read(GYLD_DEST_REF_TAP).get() as AtomTapHandle<string>).set(SCOPE_MODEL);
+    // the shared focus is somewhere else entirely; a wired window follows the
+    // browser it is wired to and says which one, and offers no toggle at all
+    (desk.read(GYLD_FOCUS_TAP).get() as AtomTapHandle<GyldFocus>)
+      .set({ stream: 'base', ref: 'glade_decisions:GladeDecisions.node_trust' });
+    await settled(
+      () => sink.read(GYLD_RECORD).get() as GyldRecordView,
+      (view) => view?.ref === SCOPE_MODEL && view.status === 'ok',
+    );
+    const markup = sink.render(<RecordDetail />);
+    expect(markup).toContain('wired to follow-source');
+    expect(markup).toContain(emitted.occurrence.label);
+    expect(markup).not.toContain('follow focus');
   });
 });
