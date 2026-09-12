@@ -15,6 +15,7 @@ import {
 } from './lens/camera';
 import { NO_FOCUS, type GyldFocus } from './focus';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
+import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
 
 // @grythjs/plugin-gyld grips. Scope and class follow CodingRules.md and the
 // grip inventory in gyld-wz/dev-docs/ui/GyldGrythPlugins.md section 3.3.
@@ -210,6 +211,36 @@ export const GYLD_STREAM_DRAFT_TAP =
 export const GYLD_STREAM_EXPORT = defineGrip<string>('Gyld.Streams.Export', '');
 export const GYLD_STREAM_EXPORT_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Streams.Export.Tap');
+
+// ---------------------------------------------------------------------------
+// Step 2.4: the decide window's own state. Class 1 atoms, INSTANCE scope, one
+// set per tab (spec section 3.3, `Gyld.Tab.Draft`).
+//
+// Two drafts, because the window does two things and neither is a mode of the
+// other: an answer records a ruling over a question that exists, and an ask
+// declares a question that does not. Each has its own export, so composing one
+// never overwrites the other's text.
+//
+// All four are DRAFTS. Nothing here is a Gyld fact and nothing here reaches a
+// bundle: in this stage the window exports text and the owner runs it (spec
+// section 4.6).
+// ---------------------------------------------------------------------------
+
+export const GYLD_ANSWER_DRAFT = defineGrip<AnswerDraft>('Gyld.Tab.Draft.Answer', ANSWER_EMPTY);
+export const GYLD_ANSWER_DRAFT_TAP =
+  defineGrip<AtomTapHandle<AnswerDraft>>('Gyld.Tab.Draft.Answer.Tap');
+
+export const GYLD_ASK_DRAFT = defineGrip<AskDraft>('Gyld.Tab.Draft.Ask', ASK_EMPTY);
+export const GYLD_ASK_DRAFT_TAP =
+  defineGrip<AtomTapHandle<AskDraft>>('Gyld.Tab.Draft.Ask.Tap');
+
+export const GYLD_ANSWER_EXPORT = defineGrip<string>('Gyld.Tab.Export.Answer', '');
+export const GYLD_ANSWER_EXPORT_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Export.Answer.Tap');
+
+export const GYLD_ASK_EXPORT = defineGrip<string>('Gyld.Tab.Export.Ask', '');
+export const GYLD_ASK_EXPORT_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Export.Ask.Tap');
 
 // The tab id of the window that OWNS this context, seeded by the browser's
 // tabTaps. A sink wired to a browser inherits it through the graph and so

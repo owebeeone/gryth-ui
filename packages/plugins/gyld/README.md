@@ -37,6 +37,20 @@ status, the tier, the preference recorded for it and the slots that block or
 gate it. Like the detail window it is wired when opened from a browser and
 standalone when opened with a stream of its own.
 
+`gyld.decide` answers a question or asks a new one. The answer form lists the
+stream's emitted decide-now rows, draws the picked question's own offered
+alternatives with the recorded lean marked, and takes a principal, a stamp,
+sources and the ruling text. The ask form takes a class, a member, a docstring,
+prerequisites picked from the emitted questions, gates picked from the triggers
+the emitted rows name, and alternatives with at most one marked preferred,
+which is what makes the question Lean rather than Open. Both forms check shape
+only: something empty, or more than one alternative preferred. Both end in
+Export, which writes the overlay module text in the shape section 4.2 writes
+down, composed against the classes the projection declares. Under the header
+the window prints the stream's `validation.json` by code, with the details Gyld
+wrote. Nothing is submitted: the owner merges the text into the stream's
+overlay module and rebuilds.
+
 `gyld.streams` is the stream manager. It draws the set's streams as the tree
 their `parent` fields make, each row with its kind, lineage, revision, snapshot
 digest, the digest it was built against, its chain, its overlay module and what
@@ -159,9 +173,25 @@ shared focus, and the browser chrome prints it, but no window changes what it
 shows because another window's focus moved. The cross window correlation that
 grip is there to carry is still only half wired.
 
-There is no decide, diff or compare window yet. The specification names
-`gyld.decide`, `gyld.diff` and `gyld.compare`; none is declared here, because
-none has a window that can render it yet.
+There is no diff or compare window yet. The specification names `gyld.diff`
+and `gyld.compare`; neither is declared here, because neither has a window that
+can render it yet.
+
+The decide window's principal is a per-tab field, not the glade principal stub.
+`@grythjs/glade` computes that stub from `location.search` at import and owns
+the glade runtime with it, so importing it here would put a DOM read and a
+session client into a package that needs neither and would break a test suite
+that runs without a DOM. Owner ruling O6 says a ruling carries the stage-one
+principal as data until real principals land; a field the owner fills in is
+that, and the exported text shows exactly what will be stamped.
+
+The decide window composes an overlay module holding the ONE record the draft
+adds. A stream's overlay normally holds several, so merging the text into the
+stream's own module is the owner's, which the window says beside the box. The
+two names the window spells itself are the ruling's class and its root member,
+both composed from the question's own emitted class and member; every other
+name in the text is emitted, and the vocabulary imports are the ones
+specification section 4.2 writes down.
 
 The stream manager's new-stream form takes a kind, a parent and a name. Section
 6.3 also names a note; the exported command carries none, because the host's

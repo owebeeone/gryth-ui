@@ -8,10 +8,13 @@ import { RecordDetail } from './detail/RecordDetail';
 import { detailTabTaps } from './detail/detailTabTaps';
 import { StreamManager } from './streams/StreamManager';
 import { streamsTabTaps } from './streams/streamsTabTaps';
+import { DecideWindow } from './decide/DecideWindow';
+import { decideTabTaps } from './decide/decideTabTaps';
 import { GyldFocusTap, GyldSetTap, gyldIndexTap, gyldRecordTap, gyldStoreTap } from './rootTaps';
 import {
-  BROWSER_ROLE, DECIDE_NOW_ROLE, DETAIL_ROLE, STREAMS_ROLE,
-  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DETAIL_TOOL, GYLD_STREAMS_TOOL,
+  BROWSER_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, STREAMS_ROLE,
+  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL,
+  GYLD_STREAMS_TOOL,
 } from './tools';
 import './gyld.css';
 
@@ -21,8 +24,8 @@ import './gyld.css';
 // lands in the plugin registry under GYLD_PLUGIN.
 //
 // Phase 1 advertised the browser, the record detail and the decide-now list;
-// Phase 2 adds the stream manager. The remaining tools of section 2
-// (gyld.decide, gyld.diff and later gyld.compare) are added as their views
+// Phase 2 adds the stream manager and the decide window. The remaining tools
+// of section 2 (gyld.diff and later gyld.compare) are added as their views
 // land; none is declared here ahead of a window that can render it.
 
 // The plugin-root taps: the set atom, the shared focus atom, the one store tap
@@ -75,6 +78,16 @@ addEntry(GYLD_PLUGIN, {
       // browser's and can retarget it.
       tabTaps: streamsTabTaps,
     },
+    [GYLD_DECIDE_TOOL]: {
+      label: 'Gyld decide',
+      defaultSize: { w: 640, h: 760 },
+      role: DECIDE_ROLE,
+      windowComponent: DecideWindow,
+      // The drafts are always seeded; the destination only when the opening
+      // link carries one, so a window opened wired to a browser answers the
+      // question that browser is on.
+      tabTaps: decideTabTaps,
+    },
   },
 });
 
@@ -88,6 +101,8 @@ export {
   GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_TAB_ID, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
   GYLD_PICKER_URL, GYLD_PICKER_URL_TAP, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP,
   GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP, GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP,
+  GYLD_ANSWER_DRAFT, GYLD_ANSWER_DRAFT_TAP, GYLD_ANSWER_EXPORT, GYLD_ANSWER_EXPORT_TAP,
+  GYLD_ASK_DRAFT, GYLD_ASK_DRAFT_TAP, GYLD_ASK_EXPORT, GYLD_ASK_EXPORT_TAP,
 } from './grips';
 export * from './focus';
 export * from './tools';
@@ -117,6 +132,11 @@ export { browserTabTaps } from './browser/browserTabTaps';
 export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
 export { RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
+export { DecideWindow } from './decide/DecideWindow';
+export { decideTabTaps } from './decide/decideTabTaps';
+export * from './decide/drafts';
+export * from './decide/overlay';
+export * from './decide/symbols';
 export { StreamManager } from './streams/StreamManager';
 export { streamsTabTaps } from './streams/streamsTabTaps';
 export * from './streams/operations';

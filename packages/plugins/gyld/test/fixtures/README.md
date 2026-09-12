@@ -31,6 +31,7 @@ sections "The base stream bundle" and "A chain in one bundle").
 | `streams/base/lenses/branch.lens.json` | `gyld.lens.v1`, 10 nodes, 10 edges, no groups |
 | `streams/stream-a/stream.json` | `gyld.stream.v1`, `kind` link, parent `base`, chain `[base, stream-a]` |
 | `streams/stream-a/decide-now.json` | `gyld.decide-now.v1`, 25 questions, 3 rulings |
+| `streams/stream-a/projection.json` | `gyld.projection.v1`, the definitions the decide window reads declared classes from |
 | `streams/stream-a/validation.json` | `gyld.validation.v1`, ok, empty findings |
 | `streams/stream-a/lenses/decisions.lens.json` | `gyld.lens.v1`, 30 nodes, 33 edges, 2 groups |
 | `streams/stream-b/stream.json` | `gyld.stream.v1`, `kind` link, parent `stream-a`, chain of three |
@@ -57,13 +58,18 @@ current identity, an overlay module of their own, rulings, a retired ruling, a
 record that marks a trigger as occurred, and a question a stream added
 (`pin_audit`) with a qualified slot in the overlay's own module.
 
+Stream A's projection is here for one reason: a qualified slot names the member
+(`...GladeDecisions.version_pin`) and an overlay is written against the class
+(`Decides[VersionPin]`), and the class is only in the projection's definitions.
+The decide window reads it there rather than spelling a class out of a slot.
+
 Not copied, because no reader in this package reads them and they are large:
-`snapshot.json`, `inputs.json`, `annotations.json`, the projections of every
-stream but `base`, and the `.dot`, `.svg` and `.json0.json` files beside each
-lens. Only one perspective of stream A and stream B is copied (`decisions`),
-which is the one the diff window draws side by side. Those two streams and the
-architecture stream therefore read here as bundles whose projection is absent,
-which is a state the store must render and does.
+`snapshot.json`, `inputs.json`, `annotations.json`, the projections of `base`'s
+other children and of the architecture lineage, and the `.dot`, `.svg` and
+`.json0.json` files beside each lens. Only one perspective of stream A and
+stream B is copied (`decisions`), which is the one the diff window draws side
+by side. Stream B and the architecture stream therefore read here as bundles
+whose projection is absent, which is a state the store must render and does.
 
 ## `provisional/`: still hand written, no emitted counterpart
 

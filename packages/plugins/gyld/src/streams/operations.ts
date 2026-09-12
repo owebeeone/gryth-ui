@@ -61,6 +61,19 @@ export const STREAM_OPERATIONS: readonly StreamOperation[] = Object.freeze([
   StreamOperation.FORK, StreamOperation.LINK,
 ]);
 
+/**
+ * The command that re-captures one stream after its overlay text changed, or
+ * after its parent moved (spec section 6.4: "a stream whose parent moved, or
+ * whose overlay text was edited outside the UI, is rebuilt with `rebuild`").
+ *
+ * It is not a StreamOperation: it takes one stream rather than a parent and a
+ * new name, and it makes no stream. It is here because the host and the output
+ * placeholder are named here once.
+ */
+export function rebuildCommand(stream: string): string {
+  return `${HOST_COMMAND} rebuild ${stream} --output ${OUTPUT_PLACEHOLDER}`;
+}
+
 /** The operation a picker's value names, or undefined when it names none. A
  *  value that is not an operation selects nothing rather than defaulting to
  *  one, because which of the two runs is the owner's choice, never a

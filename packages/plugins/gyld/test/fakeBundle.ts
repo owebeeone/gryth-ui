@@ -13,6 +13,7 @@ import statusLens from './fixtures/bundle/streams/base/lenses/status.lens.json';
 import branchLens from './fixtures/bundle/streams/base/lenses/branch.lens.json';
 import streamARecord from './fixtures/bundle/streams/stream-a/stream.json';
 import streamADecideNow from './fixtures/bundle/streams/stream-a/decide-now.json';
+import streamAProjection from './fixtures/bundle/streams/stream-a/projection.json';
 import streamAValidation from './fixtures/bundle/streams/stream-a/validation.json';
 import streamADecisionsLens from './fixtures/bundle/streams/stream-a/lenses/decisions.lens.json';
 import streamBRecord from './fixtures/bundle/streams/stream-b/stream.json';
@@ -38,11 +39,14 @@ export const BUNDLE_FILES: Record<string, unknown> = {
   'streams/base/lenses/status.lens.json': statusLens,
   'streams/base/lenses/branch.lens.json': branchLens,
   // The chain over the base: stream A links the base and rules two of its
-  // questions, stream B links A and reopens one of them. Neither carries a
-  // projection here (test/fixtures/README.md says which files were left
-  // behind and why), so both read as bundles whose projection is absent.
+  // questions, stream B links A and reopens one of them. Stream A carries a
+  // projection because the decide window needs the declared CLASS of a record
+  // to compose an overlay and only the projection has it; stream B does not,
+  // so it reads as a bundle whose projection is absent, which is a state the
+  // store renders (test/fixtures/README.md says what was left behind and why).
   'streams/stream-a/stream.json': streamARecord,
   'streams/stream-a/decide-now.json': streamADecideNow,
+  'streams/stream-a/projection.json': streamAProjection,
   'streams/stream-a/validation.json': streamAValidation,
   'streams/stream-a/lenses/decisions.lens.json': streamADecisionsLens,
   'streams/stream-b/stream.json': streamBRecord,
