@@ -20,6 +20,7 @@ import {
 } from './overlay';
 import {
   answerSubmit, askSubmit, composeAnswer, composeAsk, composeRefusal,
+  overwriteRefusal,
 } from './compose';
 
 // The gyld.decide window (step 2.4): answer a question, or ask a new one, and
@@ -147,6 +148,9 @@ function AnswerForm({ target, rows, reason }: {
   const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
   // Nothing composes without the projection, so nothing is offered without it.
   const uncomposable = composeRefusal(records);
+  // And nothing is SENT over a module that already declares records: a submit
+  // writes the module whole, and this one holds the draft's record alone.
+  const unsendable = uncomposable === '' ? overwriteRefusal(records, target) : '';
 
   // A window opened on a record answers THAT question until the reader picks
   // another: a projection of the seed, not a write at mount.
@@ -281,8 +285,8 @@ function AnswerForm({ target, rows, reason }: {
           type="button"
           className="gyld-answer-submit"
           disabled={faults.length > 0 || target === undefined
-            || uncomposable !== '' || !gate.ready}
-          title={uncomposable === '' ? gate.reason : uncomposable}
+            || uncomposable !== '' || unsendable !== '' || !gate.ready}
+          title={[uncomposable, unsendable, gate.reason].find((said) => said !== '') ?? ''}
           onClick={() => {
             // The text is exported AND sent: what the reader can read is what
             // went, and a refusal leaves it there to fix.
@@ -299,6 +303,9 @@ function AnswerForm({ target, rows, reason }: {
       </div>
       {uncomposable !== '' && (
         <p className="gyld-fault gyld-decide-uncomposable">{uncomposable}</p>
+      )}
+      {unsendable !== '' && (
+        <p className="gyld-fault gyld-decide-unsendable">{unsendable}</p>
       )}
       <textarea
         className="gyld-decide-overlay"
@@ -320,6 +327,7 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
   const ops = useGrip(GYLD_OPS);
   const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
   const uncomposable = composeRefusal(records);
+  const unsendable = uncomposable === '' ? overwriteRefusal(records, target) : '';
   const faults = askShapeFaults(draft);
 
   // The gates a question may be given are the triggers the emitted rows
@@ -499,8 +507,8 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
           type="button"
           className="gyld-ask-submit"
           disabled={faults.length > 0 || target === undefined
-            || uncomposable !== '' || !gate.ready}
-          title={uncomposable === '' ? gate.reason : uncomposable}
+            || uncomposable !== '' || unsendable !== '' || !gate.ready}
+          title={[uncomposable, unsendable, gate.reason].find((said) => said !== '') ?? ''}
           onClick={() => {
             // The text is exported AND sent: what the reader can read is what
             // went, and a refusal leaves it there to fix.
@@ -517,6 +525,9 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
       </div>
       {uncomposable !== '' && (
         <p className="gyld-fault gyld-decide-uncomposable">{uncomposable}</p>
+      )}
+      {unsendable !== '' && (
+        <p className="gyld-fault gyld-decide-unsendable">{unsendable}</p>
       )}
       <textarea
         className="gyld-decide-overlay"

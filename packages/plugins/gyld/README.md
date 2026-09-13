@@ -317,9 +317,24 @@ the shares, so the census stays empty; `list` reads the latest build's
 is. The first thing to press against a fresh bundle root is `Rebuild`, which
 captures every stream the Gyld checkout declares into the first build.
 
-A submit is refused before it is sent in exactly two cases, both with the
-reason on the button and beside it: `Gyld.Ops` UNRESOLVED, which means there is
-no glade node in this desktop at all, and a glade connection that is `offline`.
+A submit is refused before it is sent in four cases, each with the reason on
+the button and beside it: `Gyld.Ops` UNRESOLVED, which means there is no glade
+node in this desktop at all; a glade connection that is `offline`; a stream
+whose PROJECTION is not here, because the classes an overlay names are declared
+in it and no share carries it; and a stream whose own overlay module already
+declares records, because a submit writes that module whole and this window
+composes one holding the draft's record alone.
+
+That last one is the important one, and a live run is what found it. The
+supplier's `answer` and `ask` write the overlay MODULE, and section 4.2's shape
+is one module per stream; this window composes the ONE record the draft adds,
+which is right for a text the owner merges by hand and wrong for a text sent
+as the whole module. Submitted over a fork of `stream-a`, that composed module
+took the stream from three rulings to one. So the window reads what the
+stream's own module already declares - the emitted slots whose module is this
+stream's - and refuses the submit with the count and the module named, while
+Export stays exactly as it was. A stream forked or linked for one ruling
+submits; a stream that already carries records is merged by hand.
 Anything else is sent, and what comes back is data, including a refusal: a
 button that could be pressed and would fail honestly is worth more than one
 disabled on a guess. The shape checks are unchanged and still local: a draft
@@ -629,6 +644,14 @@ A submit never retargets a static root by itself; the panel offers the build as
 a root and the reader takes it. The reasons are in "Where the result is read
 from" above: the URL depends on the page's origin, and a root added on a guess
 is a root that does not load.
+
+One answer per stream, then. The refusal above is not a workaround for a
+missing merge: with the supplier writing whole modules and this window
+composing single records, a stream carries one submitted ruling and the next
+one wants its own fork or link, which is the flow section 6.1 describes anyway.
+Reading a stream's current overlay TEXT would be the other answer, and nothing
+emits it: `stream.json` carries the module, the root and a fingerprint of the
+text, never the text.
 
 `occurred` is not offered anywhere. Spec section 4.7 names it, the supplier
 refuses it, and no Gyld host verb exists for it yet, so recording a trigger as

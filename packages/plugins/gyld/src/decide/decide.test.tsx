@@ -15,7 +15,7 @@ import {
   registrationBlock, rulingNames, type OverlayTarget,
 } from './overlay';
 import { declaredSymbol, declaredSymbols } from './symbols';
-import { composeRefusal } from './compose';
+import { composeRefusal, overwriteRefusal } from './compose';
 import { mountDesk } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import streamsFixture from '../../test/fixtures/bundle/streams.json';
@@ -161,6 +161,31 @@ describe('an overlay composes only where the projection is', () => {
     expect(composeRefusal(undefined)).toContain('has not been read yet');
     expect(composeRefusal({ ...RECORDS_UNSET, status: 'unset' as const }))
       .toContain('has not been read yet');
+  });
+});
+
+describe('a submit never drops what the stream\'s overlay already declares', () => {
+  it('refuses to submit over a module that already carries records', async () => {
+    // The supplier's `answer` writes the whole overlay MODULE and this window
+    // composes a module holding the ONE record the draft adds, so submitting
+    // on a stream whose overlay already declares records would delete them.
+    // Found running the real composition: a fork of stream-a went from three
+    // rulings to one. The export path is untouched, because merging by hand is
+    // exactly what it is for.
+    const records = await streamARecords();
+    const reason = overwriteRefusal(records, target);
+    expect(reason).toContain('already declares');
+    expect(reason).toContain('glade_decisions_stream_a');
+    expect(reason).toContain('Export');
+  });
+
+  it('allows a stream whose own module declares nothing yet', () => {
+    // A fresh link: its generated module holds the root class and no record,
+    // so the composed module adds one and drops nothing.
+    expect(overwriteRefusal({ ...RECORDS_UNSET, status: 'ok' as const }, target)).toBe('');
+    // and it says nothing at all when there is no index to read
+    expect(overwriteRefusal(undefined, target)).toBe('');
+    expect(overwriteRefusal({ ...RECORDS_UNSET, status: 'ok' as const }, undefined)).toBe('');
   });
 });
 

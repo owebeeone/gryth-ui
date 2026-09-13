@@ -301,6 +301,29 @@ describe('the decide window offers Submit beside Export', () => {
     expect(markup).toContain('gyld-answer-export');
   });
 
+  it('keeps Export and refuses Submit over a module that already has records', async () => {
+    // stream-a's own overlay declares its rulings and its added question, and
+    // a submit writes the module whole. The export path is untouched.
+    const { ops } = fakeOps();
+    const desk = deskWith({ ops });
+    const tab = desk.tab('sub-overwrite', decideTabTaps('sub-overwrite', {
+      stream: 'stream-a', question: VERSION_PIN,
+    }));
+    await settled(
+      () => tab.read(GYLD_RECORDS).get() as GyldRecords,
+      (value) => value?.status === 'ok',
+    );
+    const markup = tab.render(<DecideWindow />);
+    expect(markup).toContain('gyld-decide-unsendable');
+    expect(markup).toContain('already declares');
+    expect(/<button[^>]*class="gyld-answer-submit"[^>]*disabled/.test(markup)).toBe(true);
+    expect(/<button[^>]*class="gyld-ask-submit"[^>]*disabled/.test(markup)).toBe(true);
+    // the export is refused only by its own shape check (no alternative
+    // chosen yet), never by this: merging by hand is what it is for
+    expect(/<button[^>]*class="gyld-answer-export"[^>]*title=""/.test(markup)).toBe(true);
+    expect(markup).toContain('choose one offered alternative');
+  });
+
   it('disables them while the connection is offline, and says so', async () => {
     const { ops } = fakeOps();
     const desk = deskWith({ ops, status: 'offline' });

@@ -49,6 +49,44 @@ export function composeRefusal(records: GyldRecords | undefined): string {
     + 'build directory as a static root to compose here';
 }
 
+/**
+ * Why this draft may be EXPORTED but not SUBMITTED, or the empty string when
+ * it may be both.
+ *
+ * The supplier's `answer` and `ask` write the overlay MODULE, whole
+ * (`glade-gyld/src/verbs.rs`: the text is written as the stream's overlay
+ * module and the stream is rebuilt). This window composes a module holding the
+ * one record the draft adds, which is right for the export path, because
+ * merging it into a module that already holds others is the owner's. Sent
+ * instead of merged, that same text would DELETE every other record the module
+ * declares, which a live run showed: a fork of stream-a went from three
+ * rulings to one.
+ *
+ * So a stream whose own overlay module already declares records refuses the
+ * submit and says which module and how many. What it declares is read, not
+ * guessed: a qualified slot is `<module>:<Root>.<member>`, and the ones whose
+ * module is this stream's are the records this stream's overlay wrote.
+ */
+export function overwriteRefusal(
+  records: GyldRecords | undefined,
+  target: OverlayTarget | undefined,
+): string {
+  if (records === undefined || target === undefined) {
+    return '';
+  }
+  const prefix = `${target.module}:`;
+  const declared = [...records.occurrenceBySlot.keys()]
+    .filter((slot) => slot.startsWith(prefix));
+  if (declared.length === 0) {
+    return '';
+  }
+  return `${target.module} already declares ${declared.length} `
+    + `record${declared.length === 1 ? '' : 's'}, and a submit writes this module `
+    + 'whole, so it would drop them. Export this text and merge it into the '
+    + 'stream\'s own overlay module instead, or answer on a stream forked or '
+    + 'linked for this ruling';
+}
+
 export interface AnswerInput {
   target: OverlayTarget | undefined;
   draft: AnswerDraft;
