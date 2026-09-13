@@ -3,7 +3,7 @@
   "snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "stream-a@1",
-    "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
+    "digest": "a9f8e0bdd43a6d7f3351829cd1bfdf3d99b83273a14c4e3c2e34d07d3cb6c68d"
   },
   "structural_status": "complete",
   "occurrences": [
@@ -14,11 +14,11 @@
       "label": "lifecycle_composition_ruling",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
-        "line": 79,
+        "line": 91,
         "column": 4,
-        "end_line": 79,
+        "end_line": 91,
         "end_column": 66
       }
     },
@@ -104,11 +104,11 @@
       "label": "bulk_supplier_arrived",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
-        "line": 80,
+        "line": 92,
         "column": 4,
-        "end_line": 80,
+        "end_line": 92,
         "end_column": 52
       }
     },
@@ -284,11 +284,11 @@
       "label": "GladeDecisionsStreamA",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA",
-        "line": 76,
+        "line": 88,
         "column": 0,
-        "end_line": 83,
+        "end_line": 95,
         "end_column": 38
       }
     },
@@ -404,11 +404,11 @@
       "label": "audit_at_slice",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.audit_at_slice",
-        "line": 83,
+        "line": 95,
         "column": 4,
-        "end_line": 83,
+        "end_line": 95,
         "end_column": 38
       }
     },
@@ -659,11 +659,11 @@
       "label": "pin_audit",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
-        "line": 81,
+        "line": 93,
         "column": 4,
-        "end_line": 81,
+        "end_line": 93,
         "end_column": 29
       }
     },
@@ -764,11 +764,11 @@
       "label": "audit_on_bump",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.audit_on_bump",
-        "line": 82,
+        "line": 94,
         "column": 4,
-        "end_line": 82,
+        "end_line": 94,
         "end_column": 36
       }
     },
@@ -1109,11 +1109,11 @@
       "label": "version_pin_ruling",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
-        "line": 78,
+        "line": 90,
         "column": 4,
-        "end_line": 78,
+        "end_line": 90,
         "end_column": 46
       }
     },
@@ -1554,22 +1554,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:VersionPinRuling.decides",
-        "line": 34,
+        "line": 46,
         "column": 4,
-        "end_line": 34,
+        "end_line": 46,
         "end_column": 33
       },
       "origin": {
         "declaration": "39cb932fb0e2965c16be1afe048a0cbed2adc83b41347913106b1c3fe2988398",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:VersionPinRuling.decides",
-          "line": 34,
+          "line": 46,
           "column": 4,
-          "end_line": 34,
+          "end_line": 46,
           "end_column": 33
         }
       }
@@ -1637,22 +1637,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling.decides",
-        "line": 43,
+        "line": 55,
         "column": 4,
-        "end_line": 43,
+        "end_line": 55,
         "end_column": 43
       },
       "origin": {
         "declaration": "27ff6849ba18e63147cb2535f53fea8744ee2c7c0daafb47c092733d12bd48c5",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling.decides",
-          "line": 43,
+          "line": 55,
           "column": 4,
-          "end_line": 43,
+          "end_line": 55,
           "end_column": 43
         }
       }
@@ -1809,22 +1809,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling.selects",
-        "line": 44,
+        "line": 56,
         "column": 4,
-        "end_line": 44,
+        "end_line": 56,
         "end_column": 29
       },
       "origin": {
         "declaration": "1dcc81b54bdeca45cf3ed61172bd04fe42714684878429eb228a0a6a8da95dfa",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling.selects",
-          "line": 44,
+          "line": 56,
           "column": 4,
-          "end_line": 44,
+          "end_line": 56,
           "end_column": 29
         }
       }
@@ -2101,22 +2101,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:PinAudit.offers",
-        "line": 64,
+        "line": 76,
         "column": 4,
-        "end_line": 64,
+        "end_line": 76,
         "end_column": 46
       },
       "origin": {
         "declaration": "308ccadc26929eb424dcfa105cdee85d6c128bd350b4802b0db9daee823b9427",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:PinAudit.offers",
-          "line": 64,
+          "line": 76,
           "column": 4,
-          "end_line": 64,
+          "end_line": 76,
           "end_column": 46
         }
       }
@@ -2141,22 +2141,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:VersionPinRuling.selects",
-        "line": 35,
+        "line": 47,
         "column": 4,
-        "end_line": 35,
+        "end_line": 47,
         "end_column": 36
       },
       "origin": {
         "declaration": "5d816ce43907e7cfbab656f66ef228b4d601bbec50d6b0b0634acd44d3a89916",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:VersionPinRuling.selects",
-          "line": 35,
+          "line": 47,
           "column": 4,
-          "end_line": 35,
+          "end_line": 47,
           "end_column": 36
         }
       }
@@ -2804,22 +2804,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:BulkSupplierArrived.occurred",
-        "line": 52,
+        "line": 64,
         "column": 4,
-        "end_line": 52,
+        "end_line": 64,
         "end_column": 42
       },
       "origin": {
         "declaration": "f536c8b800b497dff9e87880d97afcc517e5cbeaceb4a065aea6dd5c9b7970a7",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:BulkSupplierArrived.occurred",
-          "line": 52,
+          "line": 64,
           "column": 4,
-          "end_line": 52,
+          "end_line": 64,
           "end_column": 42
         }
       }
@@ -3050,22 +3050,22 @@
       },
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:PinAudit.requires",
-        "line": 63,
+        "line": 75,
         "column": 4,
-        "end_line": 63,
+        "end_line": 75,
         "end_column": 35
       },
       "origin": {
         "declaration": "6be62dd58fd7b9637167bb22a87e0429ed5512a3d675a7f24c9225f78fe614f6",
         "source": {
           "module": "glade_decisions_stream_a",
-          "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+          "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
           "qualified_slot": "glade_decisions_stream_a:PinAudit.requires",
-          "line": 63,
+          "line": 75,
           "column": 4,
-          "end_line": 63,
+          "end_line": 75,
           "end_column": 35
         }
       }
@@ -3517,11 +3517,11 @@
       "description": "How the bumped iroh pin is audited before the first real-route slice.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:PinAudit",
-        "line": 58,
+        "line": 70,
         "column": 0,
-        "end_line": 64,
+        "end_line": 76,
         "end_column": 46,
         "authoring": {
           "properties": {
@@ -3538,11 +3538,11 @@
               "slot": "6be62dd58fd7b9637167bb22a87e0429ed5512a3d675a7f24c9225f78fe614f6",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:PinAudit.requires",
-                "line": 63,
+                "line": 75,
                 "column": 4,
-                "end_line": 63,
+                "end_line": 75,
                 "end_column": 35
               },
               "value": {
@@ -3558,11 +3558,11 @@
               "slot": "308ccadc26929eb424dcfa105cdee85d6c128bd350b4802b0db9daee823b9427",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:PinAudit.offers",
-                "line": 64,
+                "line": 76,
                 "column": 4,
-                "end_line": 64,
+                "end_line": 76,
                 "end_column": 46
               },
               "value": {
@@ -3783,11 +3783,11 @@
       "description": "2026-09-13, owner: confirm the recorded direction; sdax-rs at the runtime host.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling",
-        "line": 38,
+        "line": 50,
         "column": 0,
-        "end_line": 44,
+        "end_line": 56,
         "end_column": 29,
         "authoring": {
           "properties": {
@@ -3803,11 +3803,11 @@
               "slot": "27ff6849ba18e63147cb2535f53fea8744ee2c7c0daafb47c092733d12bd48c5",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling.decides",
-                "line": 43,
+                "line": 55,
                 "column": 4,
-                "end_line": 43,
+                "end_line": 55,
                 "end_column": 43
               },
               "value": {
@@ -3823,11 +3823,11 @@
               "slot": "1dcc81b54bdeca45cf3ed61172bd04fe42714684878429eb228a0a6a8da95dfa",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:LifecycleCompositionRuling.selects",
-                "line": 44,
+                "line": 56,
                 "column": 4,
-                "end_line": 44,
+                "end_line": 56,
                 "end_column": 29
               },
               "value": {
@@ -6217,11 +6217,11 @@
       "description": "2026-09-13, owner: take iroh 1.2.0 now; the 1.1.0 fixes cover untrusted input.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:VersionPinRuling",
-        "line": 29,
+        "line": 41,
         "column": 0,
-        "end_line": 35,
+        "end_line": 47,
         "end_column": 36,
         "authoring": {
           "properties": {
@@ -6237,11 +6237,11 @@
               "slot": "39cb932fb0e2965c16be1afe048a0cbed2adc83b41347913106b1c3fe2988398",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:VersionPinRuling.decides",
-                "line": 34,
+                "line": 46,
                 "column": 4,
-                "end_line": 34,
+                "end_line": 46,
                 "end_column": 33
               },
               "value": {
@@ -6257,11 +6257,11 @@
               "slot": "5d816ce43907e7cfbab656f66ef228b4d601bbec50d6b0b0634acd44d3a89916",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:VersionPinRuling.selects",
-                "line": 35,
+                "line": 47,
                 "column": 4,
-                "end_line": 35,
+                "end_line": 47,
                 "end_column": 36
               },
               "value": {
@@ -6987,11 +6987,11 @@
       "description": "Audit the whole dependency set at the bump, once.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:AuditOnBump",
-        "line": 67,
+        "line": 79,
         "column": 0,
-        "end_line": 68,
+        "end_line": 80,
         "end_column": 59,
         "authoring": {
           "properties": {},
@@ -7462,11 +7462,11 @@
       "description": "Audit at the first real-route slice, with the route's own evidence.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:AuditAtSlice",
-        "line": 71,
+        "line": 83,
         "column": 0,
-        "end_line": 72,
+        "end_line": 84,
         "end_column": 77,
         "authoring": {
           "properties": {},
@@ -7835,11 +7835,11 @@
       "description": "2026-09-13, owner: a supplier declared a bulk profile, so the bulk gate is met.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:BulkSupplierArrived",
-        "line": 47,
+        "line": 59,
         "column": 0,
-        "end_line": 52,
+        "end_line": 64,
         "end_column": 42,
         "authoring": {
           "properties": {
@@ -7854,11 +7854,11 @@
               "slot": "f536c8b800b497dff9e87880d97afcc517e5cbeaceb4a065aea6dd5c9b7970a7",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:BulkSupplierArrived.occurred",
-                "line": 52,
+                "line": 64,
                 "column": 4,
-                "end_line": 52,
+                "end_line": 64,
                 "end_column": 42
               },
               "value": {
@@ -8160,11 +8160,11 @@
       "description": "Stream A root: every base member, plus this stream's rulings and question.",
       "source": {
         "module": "glade_decisions_stream_a",
-        "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+        "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
         "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA",
-        "line": 76,
+        "line": 88,
         "column": 0,
-        "end_line": 83,
+        "end_line": 95,
         "end_column": 38,
         "authoring": {
           "properties": {},
@@ -9728,11 +9728,11 @@
               "slot": "1e5b53c978e628ffb712310b9baae254f9ecca651266c4179cf40e01dd3b6019",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
-                "line": 78,
+                "line": 90,
                 "column": 4,
-                "end_line": 78,
+                "end_line": 90,
                 "end_column": 46
               },
               "value": {
@@ -9749,11 +9749,11 @@
               "slot": "6d74ae33441b77eb7680909d9d4ed7288e21369f2121f78243b238747b26440a",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
-                "line": 79,
+                "line": 91,
                 "column": 4,
-                "end_line": 79,
+                "end_line": 91,
                 "end_column": 66
               },
               "value": {
@@ -9770,11 +9770,11 @@
               "slot": "0b09b8396091a5df700aca3bde6485a382410f8da40792b20207e5fe48af3cba",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
-                "line": 80,
+                "line": 92,
                 "column": 4,
-                "end_line": 80,
+                "end_line": 92,
                 "end_column": 52
               },
               "value": {
@@ -9791,11 +9791,11 @@
               "slot": "7620d740d37fbe8451d2b206d206862d1012ba98c072d1c6cf7213cb14ab7cee",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
-                "line": 81,
+                "line": 93,
                 "column": 4,
-                "end_line": 81,
+                "end_line": 93,
                 "end_column": 29
               },
               "value": {
@@ -9812,11 +9812,11 @@
               "slot": "ad4b24fa4db8872941ddc7232fc21347b0396599e6cc1f15568c8df2bdd830b3",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.audit_on_bump",
-                "line": 82,
+                "line": 94,
                 "column": 4,
-                "end_line": 82,
+                "end_line": 94,
                 "end_column": 36
               },
               "value": {
@@ -9833,11 +9833,11 @@
               "slot": "8d1e199d9dfa17601b307261968ca1a03228caa77a34cddd8cdd64ce000b65f1",
               "origin": {
                 "module": "glade_decisions_stream_a",
-                "text_fingerprint": "114b0221c37730c0961fbad79e25542e25a1432919187045282dc0f19b5d7855",
+                "text_fingerprint": "0edc9f88c926c2bd3bf828f64c0e92f0891f95d2c9e943e246298c19c1594812",
                 "qualified_slot": "glade_decisions_stream_a:GladeDecisionsStreamA.audit_at_slice",
-                "line": 83,
+                "line": 95,
                 "column": 4,
-                "end_line": 83,
+                "end_line": 95,
                 "end_column": 38
               },
               "value": {

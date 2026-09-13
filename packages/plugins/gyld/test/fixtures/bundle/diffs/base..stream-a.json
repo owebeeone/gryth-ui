@@ -13,7 +13,7 @@
     "snapshot": {
       "lineage": "glade-decision-graph",
       "revision": "stream-a@1",
-      "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
+      "digest": "a9f8e0bdd43a6d7f3351829cd1bfdf3d99b83273a14c4e3c2e34d07d3cb6c68d"
     }
   },
   "correspondence": "qualified_slot",
@@ -133,7 +133,7 @@
     "added": [
       {
         "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
-        "stream": "stream-a",
+        "stream": "glade_decisions_stream_a",
         "decides": null,
         "selects": null,
         "reopens": null,
@@ -144,7 +144,7 @@
       },
       {
         "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
-        "stream": "stream-a",
+        "stream": "glade_decisions_stream_a",
         "decides": "glade_decisions:GladeDecisions.lifecycle_composition",
         "selects": "glade_decisions:GladeDecisions.sdax_rs",
         "reopens": null,
@@ -153,7 +153,7 @@
       },
       {
         "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
-        "stream": "stream-a",
+        "stream": "glade_decisions_stream_a",
         "decides": "glade_decisions:GladeDecisions.version_pin",
         "selects": "glade_decisions:GladeDecisions.bump_to_current",
         "reopens": null,

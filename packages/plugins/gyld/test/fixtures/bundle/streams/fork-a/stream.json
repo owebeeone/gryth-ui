@@ -6,27 +6,27 @@
   "parent_snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "stream-a@1",
-    "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
+    "digest": "a9f8e0bdd43a6d7f3351829cd1bfdf3d99b83273a14c4e3c2e34d07d3cb6c68d"
   },
   "lineage": "glade-decision-graph",
   "revision": "fork-a@1",
   "snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "fork-a@1",
-    "digest": "b68b322d7fe1fb47b3297efceb7a1b4927a5f807317fe8701f63bd3a2f9ed760"
+    "digest": "88aacb175e65011b5d513e42040fcbe3be6399baf4a2f6c868a47513e02addc1"
   },
   "overlay": {
     "module": "glade_decisions_fork_a",
     "root": "GladeDecisionsForkA",
-    "text_fingerprint": "3cb5b1c9f7c86401d40561fe788a63311f4bbd422a25f2e593db721253f079f5"
+    "text_fingerprint": "05613c6fe6f9e31c145cb3db8a275c88ea502b700cf19113d386d76106f2af8b"
   },
   "chain": [
     "base",
     "fork-a"
   ],
-  "built": "2026-09-12T18:47:13Z",
+  "built": "2026-09-12T21:48:15Z",
   "principal": "gianni",
-  "note": "stream A flattened over the base; it no longer follows stream A",
+  "note": "fork of stream-a",
   "status": "ok",
   "questions": [
     {

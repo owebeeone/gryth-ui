@@ -4,7 +4,7 @@
   "snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "stream-b@1",
-    "digest": "1a5afad5dd3179a4bf88bd3a9e20065a759a02d3275d5a92061eaad090c32680"
+    "digest": "fa2f88b2403ae279c228ba5724b157861e9dd12f20820b09b01d3e2de1a26eed"
   },
   "stream": "stream-b",
   "title": "Glade | Buy/build decision graph (dependencies, not a schedule)",

@@ -6,26 +6,26 @@
   "parent_snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "stream-a@1",
-    "digest": "0cb6cd24a663576267ad0239382f34d084a64b37a3f4f984d4666337d1194403"
+    "digest": "a9f8e0bdd43a6d7f3351829cd1bfdf3d99b83273a14c4e3c2e34d07d3cb6c68d"
   },
   "lineage": "glade-decision-graph",
   "revision": "stream-b@1",
   "snapshot": {
     "lineage": "glade-decision-graph",
     "revision": "stream-b@1",
-    "digest": "1a5afad5dd3179a4bf88bd3a9e20065a759a02d3275d5a92061eaad090c32680"
+    "digest": "fa2f88b2403ae279c228ba5724b157861e9dd12f20820b09b01d3e2de1a26eed"
   },
   "overlay": {
     "module": "glade_decisions_stream_b",
     "root": "GladeDecisionsStreamB",
-    "text_fingerprint": "43a2e5f1039f70a479316bbfe1b91a57091e72ea435b99d02805593758394097"
+    "text_fingerprint": "31ddb1b406873eadfef2961d8d2bdb9987ccf479576d14a1e0559841cce3a010"
   },
   "chain": [
     "base",
     "stream-a",
     "stream-b"
   ],
-  "built": "2026-09-12T18:47:13Z",
+  "built": "2026-09-12T21:48:15Z",
   "principal": "gianni",
   "note": "the lifecycle answer reopened and taken to the in-house fallback",
   "status": "ok",

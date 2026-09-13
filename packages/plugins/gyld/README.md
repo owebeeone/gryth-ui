@@ -291,7 +291,7 @@ which is what the package's own registration test imports.
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is
 copied into this repository: the files are about five megabytes and they belong
 to the Gyld workspace. By default the mount points at
-`../../gyld-wz/gyld/artifacts/decision-streams-v5` relative to this repository,
+`../../gyld-wz/gyld/artifacts/decision-streams-v6` relative to this repository,
 which is where the sibling gwz member emits them. Point it somewhere else with
 an environment variable:
 
@@ -330,11 +330,14 @@ Nothing is copied into this repository here either. The runs are about ten
 megabytes each, mostly `report.html` and `workspace.sqlite`, and they belong to
 the Gyld workspace.
 
-The default names `decision-streams-v5` and not an earlier run for a reason:
-from that run every lens node carries the point size and the justification the
-host drew it with, and this package reads both rather than guessing a font. An
-older bundle has no `fontsize` on its nodes, so its lens files report the
-missing field instead of drawing.
+The default names `decision-streams-v6` and not an earlier run for two
+reasons. From the v5 run every lens node carries the point size and the
+justification the host drew it with, and this package reads both rather than
+guessing a font; an older bundle has no `fontsize` on its nodes, so its lens
+files report the missing field instead of drawing. From the v6 run every
+overlay module carries the `gyld-stream-record:` block Gyld discovers streams
+by, which is the block the decide window's exported and submitted text has to
+keep.
 
 The committed bundle holds five streams over two lineages:
 
