@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readStreamsIndex } from '../contract';
 import { GYLD_DECIDE_NOW, GYLD_RECORDS, GYLD_STREAMS, GYLD_VALIDATION } from '../grips';
 import type { GyldStreamsCensus } from '../store/state';
-import type { GyldRecords } from '../records/records';
+import { RECORDS_UNSET, type GyldRecords } from '../records/records';
 import { rebuildCommand } from '../streams/operations';
 import { DecideWindow } from './DecideWindow';
 import { decideTabTaps } from './decideTabTaps';
@@ -139,12 +139,28 @@ describe('the declared class of a record comes out of the projection', () => {
     // and it does say so, on both forms, rather than offering an Export that
     // writes an empty box and a Submit that sends nothing. This is the state a
     // GLADE root is always in: the supplier publishes no projection.
-    expect(composeRefusal(records)).toContain('projection.json reads as');
+    expect(composeRefusal(records)).toContain('carries no projection here');
     const markup = window.render();
     expect(markup).toContain('gyld-decide-uncomposable');
     expect(markup).toContain('the supplier publishes no projection');
     expect(/<button[^>]*class="gyld-answer-export"[^>]*disabled/.test(markup)).toBe(true);
     expect(/<button[^>]*class="gyld-ask-export"[^>]*disabled/.test(markup)).toBe(true);
+  });
+});
+
+describe('an overlay composes only where the projection is', () => {
+  it('refuses on records that READ but carry no definitions', () => {
+    // The state a glade root is in: the stream record landed on its share, so
+    // the bundle reads `ok`, and the projection is not on any share, so there
+    // is not one definition to name a class from. A status test alone would
+    // call that composable and hand the reader an empty box (found live).
+    const empty = { ...RECORDS_UNSET, status: 'ok' as const, stream: 'demo-keys' };
+    expect(empty.definitions.size).toBe(0);
+    expect(composeRefusal(empty)).toContain('carries no projection here');
+    expect(composeRefusal(empty)).toContain('the bundle reads as ok');
+    expect(composeRefusal(undefined)).toContain('has not been read yet');
+    expect(composeRefusal({ ...RECORDS_UNSET, status: 'unset' as const }))
+      .toContain('has not been read yet');
   });
 });
 

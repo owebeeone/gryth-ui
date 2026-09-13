@@ -35,13 +35,18 @@ export function composeRefusal(records: GyldRecords | undefined): string {
   if (records === undefined || records.status === 'unset') {
     return 'the projection this stream declares its classes in has not been read yet';
   }
-  if (records.status !== 'ok') {
-    return 'this stream\'s projection.json reads as '
-      + `${records.status}, and the classes an overlay names are declared in it. `
-      + 'On a glade root that is expected: the supplier publishes no projection, '
-      + 'so add the build directory as a static root to compose here';
+  // The test is the DEFINITIONS, not the status. A bundle whose stream record
+  // landed reads `ok` whether or not a projection came with it, and a glade
+  // root is exactly that: the record is on its share and the projection is on
+  // no share at all. A status test would call that composable and hand the
+  // reader an empty box.
+  if (records.definitions.size > 0) {
+    return '';
   }
-  return '';
+  return 'this stream carries no projection here, and the classes an overlay names '
+    + `are declared in it (the bundle reads as ${records.status}). On a glade root `
+    + 'that is expected: the supplier publishes no projection.json, so add the '
+    + 'build directory as a static root to compose here';
 }
 
 export interface AnswerInput {
