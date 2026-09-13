@@ -266,7 +266,7 @@ describe('each row says what that stream\'s validation says', () => {
   });
 });
 
-describe('the fork and link forms export a command and submit nothing', () => {
+describe('the fork and link forms export a command, and submit the same one', () => {
   it('spells the command exactly as the host documents it', () => {
     expect(StreamOperation.FORK.command('stream-a', 'fork-b')).toBe(
       'PYTHONPATH=src:. python3 -B scripts/manage_decision_streams.py'
@@ -331,10 +331,15 @@ describe('the fork and link forms export a command and submit nothing', () => {
     expect(/<button[^>]*class="gyld-stream-export"[^>]*disabled/.test(markup)).toBe(true);
   });
 
-  it('says in the window that this stage submits nothing', async () => {
+  it('keeps the export path and says what each of the two buttons does', async () => {
     const manager = mount('sm-says');
     await settled(manager.census, (value) => value?.status === 'ready');
-    expect(manager.render()).toContain('This stage submits nothing');
+    const markup = manager.render();
+    expect(markup).toContain('Export writes the same operation as the command');
+    expect(markup).toContain('run it from the Gyld repository');
+    // a desk with no glade node has no submit to press, and says why
+    expect(/<button[^>]*class="gyld-stream-submit"[^>]*disabled/.test(markup)).toBe(true);
+    expect(markup).toContain('no glade node in this desktop');
   });
 });
 

@@ -212,6 +212,15 @@ export default defineConfig({
     // The Gyld bundle is NOT reached this way: `gyldBundleServer` above reads
     // it directly, so no fs.allow entry points outside the gwz workspace.
     fs: { allow: ['..', '../../wyred-wz'] },
+    // `/gyld/` is GRAZEL's static path over the glade-gyld supplier's bundle
+    // root, and it is what a published `gyld.lens` pointer's `path` names. A
+    // page served by grazel reaches it on its own origin; a page served by
+    // this dev server does not, so a glade root would list streams and draw
+    // nothing. Proxying it here is what makes `pnpm dev` a complete write-path
+    // runbook. The key is a REGEX, deliberately: a plain `/gyld` prefix would
+    // also swallow `/gyld-bundle/` and `/gyld-evaluator/` above, which are
+    // this dev server's own mounts and nothing to do with grazel.
+    proxy: { '^/gyld/': { target: process.env.GRAZEL_URL ?? 'http://127.0.0.1:8080' } },
   },
   // scripts/*.test.mjs are node check scripts (run by `npm test` directly), not vitest suites
   test: {

@@ -6,14 +6,24 @@ import type { GyldRootRef, GyldSet } from '../store/state';
 // caller that is not a picker (an agent writing Gyld.Set.Tap) applies the same
 // rules the picker does.
 
-/** A static root, refused when the set already has it. Pure. */
+/**
+ * A static root, refused when the set already has it. Pure.
+ *
+ * An absolute http or https URL, or a SAME ORIGIN path beginning with `/`. The
+ * second is what grazel's own static base is: the desktop it serves and the
+ * bundle it serves are one origin, so the build an answer named is reached at
+ * `/gyld/builds/<stamp>` with no host to write down (step 4.4).
+ */
 export function addStaticRoot(set: GyldSet, baseUrl: string): { set: GyldSet; error?: string } {
   const url = baseUrl.trim().replace(/\/+$/, '');
   if (url === '') {
     return { set, error: 'a static root needs a URL' };
   }
-  if (!/^https?:\/\//i.test(url)) {
-    return { set, error: `"${url}" is not an http or https URL` };
+  if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
+    return {
+      set,
+      error: `"${url}" is not an http or https URL, nor a path on this origin`,
+    };
   }
   if (set.roots.some((root) => root.kind === 'static' && root.baseUrl === url)) {
     return { set, error: `${url} is already a root of this set` };

@@ -11,9 +11,11 @@ import {
   preferredAlternative, sourceLines,
 } from './drafts';
 import {
-  answerOverlay, askOverlay, isRefusal, overlayTarget, rulingNames, type OverlayTarget,
+  REGISTRATION_MARKER, answerOverlay, askOverlay, isRefusal, overlayTarget,
+  registrationBlock, rulingNames, type OverlayTarget,
 } from './overlay';
 import { declaredSymbol, declaredSymbols } from './symbols';
+import { composeRefusal } from './compose';
 import { mountDesk } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import streamsFixture from '../../test/fixtures/bundle/streams.json';
@@ -66,16 +68,33 @@ async function streamARecords(): Promise<GyldRecords> {
 const target = overlayTarget(census, 'stream-a') as OverlayTarget;
 
 describe('what an overlay may be composed for', () => {
-  it('reads the module and root of the stream and of its parent, both emitted', () => {
+  it('reads the module and root of the stream and of the one it follows', () => {
     expect(isRefusal(target)).toBe(false);
     expect(target).toEqual({
       stream: 'stream-a',
       module: 'glade_decisions_stream_a',
       root: 'GladeDecisionsStreamA',
+      kind: 'link',
+      revision: 'stream-a@1',
+      note: 'version pin and lifecycle ruled, the bulk gate met, one question added',
       parent: 'base',
-      parentModule: 'glade_decisions',
-      parentRoot: 'GladeDecisions',
+      follows: 'base',
+      followsModule: 'glade_decisions',
+      followsRoot: 'GladeDecisions',
     });
+  });
+
+  it('follows the base for a fork, whose parent is provenance and not an import', () => {
+    // fork-a's parent is stream-a and its chain is [base, fork-a]: a fork
+    // restates what still stands over the BASE, so the module it imports and
+    // the root it subclasses are the base's, not stream A's. Composing the
+    // parent's would be `STREAM_REGISTRATION_MISMATCH` on the Gyld side.
+    const fork = overlayTarget(census, 'fork-a') as OverlayTarget;
+    expect(fork.parent).toBe('stream-a');
+    expect(fork.follows).toBe('base');
+    expect(fork.followsModule).toBe('glade_decisions');
+    expect(fork.followsRoot).toBe('GladeDecisions');
+    expect(fork.kind).toBe('fork');
   });
 
   it('refuses a stream with no parent rather than writing into the base module', () => {
@@ -117,6 +136,15 @@ describe('the declared class of a record comes out of the projection', () => {
     // store renders: the window can then say the overlay cannot be composed
     expect(records.status).not.toBe('ok');
     expect(declaredSymbol(records, VERSION_PIN)).toBeUndefined();
+    // and it does say so, on both forms, rather than offering an Export that
+    // writes an empty box and a Submit that sends nothing. This is the state a
+    // GLADE root is always in: the supplier publishes no projection.
+    expect(composeRefusal(records)).toContain('projection.json reads as');
+    const markup = window.render();
+    expect(markup).toContain('gyld-decide-uncomposable');
+    expect(markup).toContain('the supplier publishes no projection');
+    expect(/<button[^>]*class="gyld-answer-export"[^>]*disabled/.test(markup)).toBe(true);
+    expect(/<button[^>]*class="gyld-ask-export"[^>]*disabled/.test(markup)).toBe(true);
   });
 });
 
@@ -137,7 +165,20 @@ describe('the exported overlay is the section 4.2 shape, to the byte', () => {
       label: 'version_pin',
       alternative: declaredSymbol(records, BUMP)!,
     });
-    expect(text).toBe(`"""Stream stream-a: rulings and questions added over base."""
+    expect(text).toBe(`"""Stream stream-a: rulings and questions added over base.
+
+gyld-stream-record:
+{
+  "id": "stream-a",
+  "kind": "link",
+  "parent": "base",
+  "follows": "base",
+  "imports": "glade_decisions",
+  "revision": "stream-a@1",
+  "root": "GladeDecisionsStreamA",
+  "note": "version pin and lifecycle ruled, the bulk gate met, one question added"
+}
+"""
 
 from decision_stream_concepts import Decides, Ruling, Selects
 from glade_decisions import BumpToCurrent, GladeDecisions, VersionPin
@@ -190,7 +231,20 @@ class GladeDecisionsStreamA(GladeDecisions):
       requires: declaredSymbols(records, draft.requires).found,
       gates: [],
     });
-    expect(open).toBe(`"""Stream stream-a: rulings and questions added over base."""
+    expect(open).toBe(`"""Stream stream-a: rulings and questions added over base.
+
+gyld-stream-record:
+{
+  "id": "stream-a",
+  "kind": "link",
+  "parent": "base",
+  "follows": "base",
+  "imports": "glade_decisions",
+  "revision": "stream-a@1",
+  "root": "GladeDecisionsStreamA",
+  "note": "version pin and lifecycle ruled, the bulk gate met, one question added"
+}
+"""
 
 from glade_decision_concepts import Alternative, Offers, Open, Question, Requires
 from glade_decisions import GladeDecisions, VersionPin
@@ -295,6 +349,99 @@ class GladeDecisionsStreamA(GladeDecisions):
   });
 });
 
+describe('a rewritten overlay keeps the stream registration block', () => {
+  it('declares exactly the eight fields, in the order the host writes them', () => {
+    const block = registrationBlock(target);
+    const [marker, ...rest] = block.split('\n');
+    expect(marker).toBe(REGISTRATION_MARKER);
+    const declared = JSON.parse(rest.join('\n')) as Record<string, string>;
+    expect(Object.keys(declared)).toEqual([
+      'id', 'kind', 'parent', 'follows', 'imports', 'revision', 'root', 'note',
+    ]);
+    // every one of them off the emitted record, and none of them empty but
+    // the note, which the host allows to be
+    expect(declared).toEqual({
+      id: 'stream-a',
+      kind: 'link',
+      parent: 'base',
+      follows: 'base',
+      imports: 'glade_decisions',
+      revision: 'stream-a@1',
+      root: 'GladeDecisionsStreamA',
+      note: 'version pin and lifecycle ruled, the bulk gate met, one question added',
+    });
+  });
+
+  it('declares the base as what a fork follows, and imports the base module', () => {
+    const declared = JSON.parse(
+      registrationBlock(overlayTarget(census, 'fork-a') as OverlayTarget)
+        .split('\n').slice(1).join('\n'),
+    ) as Record<string, string>;
+    expect(declared.kind).toBe('fork');
+    expect(declared.parent).toBe('stream-a');
+    expect(declared.follows).toBe('base');
+    expect(declared.imports).toBe('glade_decisions');
+  });
+
+  it('ends the module docstring, with the marker on a line of its own', async () => {
+    const records = await streamARecords();
+    for (const text of [
+      answerOverlay({
+        target,
+        draft: { ...ANSWER_EMPTY, principal: 'p', stamp: 's', text: 't' },
+        question: declaredSymbol(records, VERSION_PIN)!,
+        label: 'version_pin',
+        alternative: declaredSymbol(records, BUMP)!,
+      }),
+      askOverlay({
+        target,
+        draft: {
+          symbol: 'PinAudit',
+          label: 'pin_audit',
+          docstring: 'How the bumped pin is audited.',
+          requires: [],
+          gates: [],
+          alternatives: [
+            {
+              symbol: 'AuditOnBump',
+              label: 'audit_on_bump',
+              description: 'At the bump.',
+              preferred: false,
+            },
+          ],
+        },
+        requires: [],
+        gates: [],
+      }),
+    ]) {
+      const docstring = text.slice(3, text.indexOf('"""', 3));
+      const lines = docstring.split('\n');
+      const at = lines.indexOf(REGISTRATION_MARKER);
+      expect(at).toBeGreaterThan(0);
+      // the host reads everything AFTER the marker line as the object, so the
+      // block is the last thing in the docstring or it is not the object
+      expect(JSON.parse(lines.slice(at + 1).join('\n'))).toHaveProperty('id', 'stream-a');
+      expect(lines[at - 1]).toBe('');
+    }
+  });
+
+  it('imports and subclasses what the block says a fork follows', async () => {
+    const records = await streamARecords();
+    const text = answerOverlay({
+      target: overlayTarget(census, 'fork-a') as OverlayTarget,
+      draft: { ...ANSWER_EMPTY, principal: 'p', stamp: 's', text: 't' },
+      question: declaredSymbol(records, VERSION_PIN)!,
+      label: 'version_pin',
+      alternative: declaredSymbol(records, BUMP)!,
+    });
+    // `_registered` refuses a root that subclasses a name the declared
+    // `imports` module does not carry, so the two have to agree
+    expect(text).toContain('from glade_decisions import BumpToCurrent, GladeDecisions, VersionPin');
+    expect(text).toContain('class GladeDecisionsForkA(GladeDecisions):');
+    expect(text).not.toContain('GladeDecisionsStreamA');
+  });
+});
+
 describe('the local checks are shape, and only shape', () => {
   it('rejects an empty answer field by field, and nothing more', () => {
     expect(answerShapeFaults(ANSWER_EMPTY)).toEqual([
@@ -372,7 +519,7 @@ describe('the window', () => {
     expect(markup).toContain(`value="${VERSION_PIN}"`);
     expect(markup).toContain('answerable now');
     expect(markup).toContain(rebuildCommand());
-    expect(markup).toContain('This stage submits nothing');
+    expect(markup).toContain('Export puts the same text in the box');
     // no question chosen yet, so the export is refused and nothing is composed
     expect(/<button[^>]*class="gyld-answer-export"[^>]*disabled/.test(markup)).toBe(true);
     expect(markup).toContain('choose the question this answers');
@@ -432,6 +579,64 @@ describe('the window', () => {
     // the details are rendered as emitted, key by key, and not summarised
     expect(markup).toContain('<dt>question</dt>');
     expect(markup).toContain(JSON.stringify(IROH_TRANSPORT).replace(/"/g, '&quot;'));
+    expect(markup).toContain('data-validation="invalid"');
+  });
+
+  it('renders a refused registration by its code, like any other finding', async () => {
+    // The five codes the stream-registration reader raises
+    // (`capture_decision_stream.py`) travel into `validation.json` verbatim,
+    // the way a rejected capture does. This window knows no code list, so
+    // each one renders as itself with the details Gyld wrote; the day Gyld
+    // adds a sixth it renders too.
+    const image = new FakeBundle();
+    image.write('streams/stream-a/validation.json', {
+      format: 'gyld.validation.v1',
+      stream: 'stream-a',
+      built: '2026-09-13T01:00:00Z',
+      ok: false,
+      code: 'STREAM_REGISTRATION_MISMATCH',
+      message: 'glade-decisions-stream-a.gyld.py declares the root Wrong; '
+        + 'stream-a names GladeDecisionsStreamA',
+      details: { file: 'glade-decisions-stream-a.gyld.py', stream: 'stream-a' },
+      findings: [
+        {
+          code: 'STREAM_REGISTRATION_INVALID',
+          message: 'glade-decisions-stream-a.gyld.py declares an empty field',
+          details: { file: 'glade-decisions-stream-a.gyld.py' },
+        },
+        {
+          code: 'STREAM_REGISTRATION_MISMATCH',
+          message: 'link stream-a follows base and calls other its parent',
+          details: { file: 'glade-decisions-stream-a.gyld.py', stream: 'stream-a' },
+        },
+        {
+          code: 'STREAM_ID_COLLISION',
+          message: 'two overlays declare stream-a',
+          details: { stream: 'stream-a' },
+        },
+        {
+          code: 'STREAM_PARENT_UNKNOWN',
+          message: 'stream-a names the parent nowhere, which is not declared',
+          details: { stream: 'stream-a', parent: 'nowhere' },
+        },
+        {
+          code: 'STREAM_CHAIN_CYCLE',
+          message: 'the chain of stream-a revisits stream-a',
+          details: { stream: 'stream-a' },
+        },
+      ],
+    });
+    const window = mount('dc-registration', { stream: 'stream-a' }, image);
+    await settled(window.validation, (value) => value?.status === 'ok');
+    const markup = window.render();
+    for (const code of [
+      'STREAM_REGISTRATION_INVALID', 'STREAM_REGISTRATION_MISMATCH',
+      'STREAM_ID_COLLISION', 'STREAM_PARENT_UNKNOWN', 'STREAM_CHAIN_CYCLE',
+    ]) {
+      expect(markup).toContain(`data-code="${code}"`);
+    }
+    expect(markup).toContain('the chain of stream-a revisits stream-a');
+    expect(markup).toContain('<dt>file</dt>');
     expect(markup).toContain('data-validation="invalid"');
   });
 

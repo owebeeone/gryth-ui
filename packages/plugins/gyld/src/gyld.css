@@ -984,3 +984,70 @@
 .gyld-compare-empty {
   padding: 8px 0;
 }
+
+/* Step 4.4: the supplier panel. The last answer, the run's lines as the log
+   folded them, and the build the answer named. */
+
+.gyld-ops-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-ops-panel h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.gyld-ops-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gyld-ops-answer p {
+  margin: 0;
+}
+
+.gyld-ops-stdout,
+.gyld-ops-stderr {
+  margin: 0;
+  max-height: 160px;
+  overflow: auto;
+  padding: 4px 6px;
+  border-left: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.gyld-ops-output {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 6px 8px;
+  max-height: 220px;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gyld-ops-line[data-stream='stderr'] {
+  color: color-mix(in srgb, currentColor 70%, red);
+}
+
+.gyld-ops-line[data-stream='end'] {
+  opacity: 0.7;
+}
+
+.gyld-ops-reason {
+  flex: 1 1 auto;
+}

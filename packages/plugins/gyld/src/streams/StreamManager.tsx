@@ -2,10 +2,14 @@ import { GripProvider, createAtomValueTap, useGrip, type AtomTapHandle } from '@
 import { grok } from '@grythjs/plugin-api';
 import type { GyldValidation } from '../contract';
 import {
-  GYLD_DEST_STREAM, GYLD_SET, GYLD_STORE_RELOAD, GYLD_STORE_STATUS, GYLD_STREAMS,
-  GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP, GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP,
-  GYLD_VALIDATION,
+  GYLD_DEST_STREAM, GYLD_OPS, GYLD_OPS_STATUS, GYLD_SET, GYLD_STORE_RELOAD,
+  GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP,
+  GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP, GYLD_VALIDATION,
 } from '../grips';
+import { OpsPanel } from '../ops/OpsPanel';
+import { ListButton, RebuildButton } from '../ops/RebuildButton';
+import { opsGate } from '../ops/submit';
+import { streamSubmit } from './submit';
 import { SetPicker } from '../browser/SetPicker';
 import { useKeyedContext } from '../contexts';
 import type { GyldValue } from '../store/state';
@@ -167,6 +171,8 @@ function NewStreamForm({ parents }: { parents: string[] }) {
   const draftTap = useGrip(GYLD_STREAM_DRAFT_TAP) as AtomTapHandle<StreamDraft> | undefined;
   const exported = useGrip(GYLD_STREAM_EXPORT) ?? '';
   const exportTap = useGrip(GYLD_STREAM_EXPORT_TAP) as AtomTapHandle<string> | undefined;
+  const ops = useGrip(GYLD_OPS);
+  const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
   const faults = draftShapeFaults(draft);
 
   // Read through the handle, never the render closure: a submit fired straight
@@ -236,6 +242,22 @@ function NewStreamForm({ parents }: { parents: string[] }) {
         <button type="submit" className="gyld-stream-export" disabled={faults.length > 0}>
           Export command
         </button>
+        <button
+          type="button"
+          className="gyld-stream-submit"
+          disabled={faults.length > 0 || !gate.ready}
+          title={gate.reason}
+          onClick={() => {
+            const held = draftTap?.get() ?? draft;
+            exportTap?.set(draftCommand(held));
+            if (ops !== undefined) {
+              void streamSubmit(ops, held);
+            }
+          }}
+        >
+          Submit
+        </button>
+        {!gate.ready && <span className="gyld-note gyld-ops-reason">{gate.reason}</span>}
       </form>
       <p className="gyld-note">{draft.operation.explains}</p>
       <ul className="gyld-omissions">
@@ -244,10 +266,11 @@ function NewStreamForm({ parents }: { parents: string[] }) {
         ))}
       </ul>
       <p className="gyld-note">
-        This stage submits nothing. The command below is what makes the stream:
-        run it from the Gyld repository and it writes the new stream&apos;s
-        overlay module beside the others. Rebuild the bundle after it, and this
-        window picks the new stream up on its next read.
+        Submit asks the supplier to make the stream and build it; the run&apos;s
+        output and its answer appear below. Export writes the same operation as
+        the command instead: run it from the Gyld repository and it writes the
+        new stream&apos;s overlay module beside the others, then rebuild the
+        bundle and this window picks the new stream up on its next read.
       </p>
       <textarea
         className="gyld-stream-command"
@@ -260,8 +283,17 @@ function NewStreamForm({ parents }: { parents: string[] }) {
   );
 }
 
-/** No census, and why. A diagnosis, never an empty tree that would read as a
- *  set with no streams in it. */
+/**
+ * No census, and why. A diagnosis, never an empty tree that would read as a
+ * set with no streams in it.
+ *
+ * The two one-press requests are here as well as on the full window, because
+ * this is the state a glade root starts in: the supplier's bundle root is
+ * app-owned and empty until something builds into it, so nothing has landed on
+ * `gyld.streams` and there is no tree to draw. List says whether the supplier
+ * is there at all, and Rebuild is what makes the first build. A window that
+ * offered neither would leave a live desk with nothing to press.
+ */
 function NoStreams() {
   const census = useGrip(GYLD_STREAMS);
   const roots = useGrip(GYLD_STORE_STATUS) ?? [];
@@ -279,6 +311,11 @@ function NoStreams() {
           {root.error === undefined ? '' : ` (${root.error})`}
         </p>
       ))}
+      <div className="gyld-chrome-row">
+        <ListButton />
+        <RebuildButton />
+      </div>
+      <OpsPanel title="The last submission" />
     </div>
   );
 }
@@ -310,6 +347,8 @@ export function StreamManager() {
         <button type="button" disabled={reload === undefined} onClick={() => reload?.()}>
           Reload
         </button>
+        <ListButton />
+        <RebuildButton />
       </header>
       <div className="gyld-status">
         {roots.map((root) => (
@@ -332,6 +371,7 @@ export function StreamManager() {
         ))}
       </ul>
       <NewStreamForm parents={parentChoices(census)} />
+      <OpsPanel title="The last submission" />
     </div>
   );
 }

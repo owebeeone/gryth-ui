@@ -23,7 +23,9 @@ the `neighbourhood` family itself is the disabled entry beside it. Under the pic
 lens omitted and, in the provenance footer, which lineage, revision, snapshot
 digest, relations and layout engine the file was built from. It writes four
 links: a detail window wired to it, a decide-now window wired to it, a decide
-window wired to it, and a neighbourhood window on the focused record. With no bundle root on the desk it
+window wired to it, and a neighbourhood window on the focused record. Beside
+`Reload`, which re-reads what is there, it carries `Rebuild`, which asks the
+supplier for a new build of it. With no bundle root on the desk it
 shows the set picker instead of a picture, because the plugin will not invent a
 place to read Gyld output from.
 
@@ -87,11 +89,15 @@ prerequisites picked from the emitted questions, gates picked from the triggers
 the emitted rows name, and alternatives with at most one marked preferred,
 which is what makes the question Lean rather than Open. Both forms check shape
 only: something empty, or more than one alternative preferred. Both end in
-Export, which writes the overlay module text in the shape section 4.2 writes
-down, composed against the classes the projection declares. Under the header
-the window prints the stream's `validation.json` by code, with the details Gyld
-wrote. Nothing is submitted: the owner merges the text into the stream's
-overlay module and rebuilds.
+Export and Submit, side by side, over the SAME composed text: Export puts the
+overlay module text in the box in the shape section 4.2 writes down, composed
+against the classes the projection declares, and Submit puts that very text on
+the wire as `answer` or `ask` with the window's own principal. The composed
+module carries the stream's `gyld-stream-record:` block, because an overlay
+that lost it would stop being that stream. Under the header the window prints
+the stream's `validation.json` by code, with the details Gyld wrote, and under
+the forms it prints what the supplier answered and the run's own output lines
+as the log folds them.
 
 `gyld.diff` puts one perspective of two streams side by side. Each pane is a
 lens view in its own child context, with its own camera, selection and dim set,
@@ -106,8 +112,8 @@ lighting up a neighbour. Under the pictures the window reads out the emitted
 selections, rulings added, removed, retired and restored, triggers recorded as
 occurred, assertions, what this perspective's picture gained and lost, and the
 diff's own omissions. A pair the bundle has not compared reads as absent, with
-the command that would write it, because this window never compares two
-bundles itself. Each pane carries a Detail button that opens the record in hand
+the command that would write it and a button that asks the supplier to write
+it, because this window never compares two bundles itself. Each pane carries a Detail button that opens the record in hand
 on that pane's own stream, so the same slot can be read as the left stream has
 it beside the right. Those windows are standalone rather than wired: the
 desktop holds one sink per source tab and tool, so a diff window cannot have
@@ -145,10 +151,12 @@ defines across two records; a record a rebuild wrote answers that itself, in
 `rebuilt_from`, and then the record's answer is what the row shows and says so.
 The rebuild that would fix it is Gyld's, not this window's. Clicking a row shows that stream in the browser this window is wired
 to, or opens one when it is standalone. Under the tree, a form composes a fork
-or a link from a kind, a parent and a name, and the Export button writes the
-exact command line that makes it. Nothing is submitted in this stage: the owner
-runs the command into a new output directory and the watch loop picks the
-bundle up.
+or a link from a kind, a parent and a name, with Export beside Submit over the
+same operands: Export writes the exact command line that makes it, and Submit
+asks the supplier to run it. A Rebuild button in the header re-captures the
+latest bundle into a new build directory, which is spec section 6.4's explicit
+rebuild for a stream whose parent moved or whose overlay text changed outside
+the UI. What came back and what is still coming is under the form.
 
 ## Dependencies
 
@@ -273,8 +281,8 @@ which is true, and the windows show absence. They are real files of the build
 the last answer named, on the static path, so the way to see them is to point a
 static root at that build: grazel serves the bundle root at `/gyld/`, so a
 build directory `builds/build-1789247615547` is at
-`http://localhost:PORT/gyld/builds/build-1789247615547`. The decide window's
-Submit does this for you (below).
+`http://localhost:PORT/gyld/builds/build-1789247615547`. The supplier panel
+offers that root as one press when an answer names a build (below).
 
 The root reads as a loud error when there is no glade in the composition at
 all, rather than as a bundle with nothing in it. `@grythjs/glade` is reached
@@ -285,6 +293,156 @@ contract readers and the whole test suite run with no DOM and no socket. For
 the same reason `registerGyldLive()` is called by the APPLICATION
 (`gryth-ui/src/plugins/index.ts`) rather than by this package's `index.ts`,
 which is what the package's own registration test imports.
+
+## Submitting to the supplier
+
+Every window that composed something to run now has a Submit beside its
+Export, and the Export path is untouched: the two send the SAME text, because
+one function composes it and the button either puts it in the box or puts it
+on the wire.
+
+| window | button | verb | operands |
+|---|---|---|---|
+| `gyld.decide`, answer | Submit answer | `answer` | the stream, and the composed overlay module |
+| `gyld.decide`, ask | Submit question | `ask` | the stream, the composed module's head, and the records under it |
+| `gyld.streams` | Submit | `fork` / `link` | the parent and the new stream's id, the two operands the exported command names |
+| `gyld.streams` | List | `list` | none; it runs no host and builds nothing |
+| `gyld.streams`, `gyld.browser` | Rebuild | `rebuild` | none |
+| `gyld.diff` | Request this diff | `diff` | the pair the window is on, in its own order |
+
+`List` is there because an empty desk and an absent supplier look the same
+from the outside. A bundle root that has never been built publishes nothing on
+the shares, so the census stays empty; `list` reads the latest build's
+`streams.json` without running a host, and its answer says which of the two it
+is. The first thing to press against a fresh bundle root is `Rebuild`, which
+captures every stream the Gyld checkout declares into the first build.
+
+A submit is refused before it is sent in exactly two cases, both with the
+reason on the button and beside it: `Gyld.Ops` UNRESOLVED, which means there is
+no glade node in this desktop at all, and a glade connection that is `offline`.
+Anything else is sent, and what comes back is data, including a refusal: a
+button that could be pressed and would fail honestly is worth more than one
+disabled on a guess. The shape checks are unchanged and still local: a draft
+that does not compose is not sent, and nothing half-composed ever leaves a
+window.
+
+Every build is minutes of Python, so every building verb is sent with
+`stream_output: true` and followed on the `gyld.output` log share keyed by the
+run the supplier answered with. The panel under each form prints what came
+back — the verb, `ok` or refused, the exit code, the run id, who it was
+attributed to, the error, the captured stdout and stderr — and then the run's
+lines in the order the log folded them, ending with the `end` record's own exit
+code. Nothing there is derived: no line is parsed for a meaning, no run is
+called successful beyond the `ok` the supplier set, and a field the answer did
+not carry is not shown.
+
+There is one panel per window and one `Gyld.Ops.Result` per desk, because the
+supplier is one and a run is one: a rebuild started from the stream manager is
+the run the decide window is watching.
+
+### Where the result is read from
+
+A successful build lands in a NEW directory; nothing is ever built over an
+existing one. On a **glade root** the desk converges by itself: the supplier
+publishes the new build's documents onto the four value shares and the store
+reads the shares again as soon as an answer arrives, so every open window
+re-resolves with no reload and no root change.
+
+On a **static or picked root** there is nothing to converge: those roots are
+the directory the reader chose. The panel therefore resolves the build the
+answer named to grazel's static path and offers it as a root to add, in one
+press, rather than adding one itself. That is deliberate. The supplier answers
+with an absolute filesystem path; the only part of it this package knows the
+shape of is the `builds/<stamp>` tail its README fixes, and whether
+`/gyld/builds/<stamp>` is reachable at all depends on the page being served by
+the same grazel that serves the bundle root. Under `pnpm dev` it is reachable
+because the dev server proxies `/gyld/` to grazel (below); under a page served
+from somewhere else it is not, and a root added on a guess would be a root that
+does not load. An answer whose `output_dir` carries no `builds/` segment
+resolves to no URL at all and the panel says so.
+
+A STREAMING answer carries no `output_dir` at all, so today that offer never
+appears for a verb that builds. `stream_output: true` is answered immediately
+with `{ok, run_id, done: false}` and the build directory is only on a
+SYNCHRONOUS answer, which every building verb avoids because a build is minutes
+of Python; the `end` record on the log carries the exit code and not the
+directory either. The consequence is honest and stated rather than papered
+over: on a static root, a submitted build converges nowhere until the reader
+points a root at it themselves, and the panel resolves a build only when a
+synchronous answer names one. Putting `output_dir` on the log's `end` record,
+or publishing the build on a value share of its own, is a supplier-side change
+and is not this package's to make.
+
+### The one text, twice
+
+`answer` takes the overlay module and writes it as the stream's own; `ask`
+takes the module and a question fragment and writes the second under the first
+(`glade-gyld/src/verbs.rs`, `overlay_text`, which joins them as
+`overlay.trim_end() + "\n\n" + question.trim_end() + "\n"`). The ask form
+composes ONE module, so it composes it as those two operands and the export box
+holds their join by that same rule. The module a reader reads and the module
+the supplier writes are therefore the same bytes, not two texts that look
+alike, and a test pins the join against the whole composed module.
+
+### The stream registration block
+
+Gyld discovers streams from the overlays that declare them: a line that is
+exactly `gyld-stream-record:` at the end of a module docstring, followed by one
+JSON object of exactly `id`, `kind`, `parent`, `follows`, `imports`,
+`revision`, `root` and `note` (`gyld/examples/README.md`, "Which streams exist,
+and how a host knows"). The supplier passes an overlay's text through
+unchanged, so a module this window submits without the block would stop being
+that stream. Every exported and submitted overlay therefore carries it, with
+every field read off the emitted stream record.
+
+Two of the eight are not fields of `stream.json`. `follows` is the stream whose
+module the overlay imports, and `imports` is that module: a link follows its
+parent, and a fork restates what still stands over the base and follows the
+base, keeping its parent as provenance only. The record emits a `follows` field
+when the host writes one, and today it does not, so the emitted `chain` answers
+instead — the host builds that chain by walking `follows`
+(`capture_decision_stream.chain`), which makes the entry before this stream in
+its own chain the stream it follows. That is also what the composed module
+imports and what its root subclasses, which is what `STREAM_REGISTRATION_MISMATCH`
+checks.
+
+The five codes that reader raises — `STREAM_REGISTRATION_INVALID`,
+`STREAM_REGISTRATION_MISMATCH`, `STREAM_ID_COLLISION`, `STREAM_PARENT_UNKNOWN`
+and `STREAM_CHAIN_CYCLE` — travel into `validation.json` verbatim the way a
+rejected capture does, and render like every other finding. This package holds
+no list of codes, so a code it has never heard of renders as itself with the
+details Gyld wrote.
+
+## Running the write path
+
+The supplier is a composed child of grazel and the leg is default off
+(`glade-wz/grazel/README.md`, "Composed suppliers"). From the grazel checkout:
+
+```sh
+grazel --mode local --data /tmp/gyld-data \
+  --gyld-supplier-bin ../glade-gyld/target/debug/glade-gyld \
+  --gyld-root /path/to/gyld-wz/gyld
+```
+
+That spawns `glade-node` on `ws://127.0.0.1:9099`, loads `apps/gyld-app.glade`
+beside `apps/grazel-app.glade`, spawns `glade-gyld` against the read-only Gyld
+checkout with the app-owned bundle root `<data>/files/gyld`, and serves that
+bundle root at `/gyld/` on the HTTP port. `--gyld-root` is READ ONLY: the
+supplier seeds its own overlays tree from the checkout's `examples/` and never
+writes a byte back into it.
+
+Then `pnpm dev` in this repository as usual. The page has no
+`/bootstrap.json` in front of it, so `@grythjs/glade` falls back to
+`ws://127.0.0.1:9099`, which is the node grazel just started; the status line
+in the browser chrome says `live` once the socket is up. Press `Add glade node`
+in the set picker and the census arrives on `gyld.streams`. The dev server
+proxies `/gyld/` to grazel (`GRAZEL_URL`, default `http://127.0.0.1:8080`), so
+the lens pointers the shares carry resolve and the pictures draw; without that
+proxy a glade root lists streams and draws nothing, because a lens file is
+fetched over HTTP and only grazel serves it.
+
+Serving the built application from grazel itself (`--ui`) needs no proxy at
+all, because then the page and the bundle root are one origin.
 
 ## The bundle the dev server serves
 
@@ -427,6 +585,15 @@ hand. That is a strong highlight for a hover, and `Clear` puts it back. A
 quieter highlight would be a second mode in the scene builder, and it is not
 one this step needed.
 
+The submit path stamps the GLADE principal, and the decide window's own
+principal field is the one that goes into the ruling text. Those are two
+different things and both are as the owner ruled. `Gyld.Ops` carries the
+per-tab glade principal on every envelope, which is what attributes the RUN and
+what comes back as `attributed_to`; the ruling's `principal =` line is the
+field the reader filled in, which is what the overlay records. A desk where the
+two differ submits a ruling stamped with one and attributed to the other, and
+both are shown.
+
 The decide window's principal is a per-tab field, not the glade principal stub.
 `@grythjs/glade` computes that stub from `location.search` at import and owns
 the glade runtime with it, so importing it here would put a DOM read and a
@@ -444,9 +611,29 @@ name in the text is emitted, and the vocabulary imports are the ones
 specification section 4.2 writes down.
 
 The stream manager's new-stream form takes a kind, a parent and a name. Section
-6.3 also names a note; the exported command carries none, because the host's
-`--note` is a flag on the run rather than an operand of the subcommand, and the
-window will not guess how the two are spelled together.
+6.3 also names a note; neither the exported command nor the submitted request
+carries one, because the host's `--note` is a flag on the run rather than an
+operand of the subcommand, the window will not guess how the two are spelled
+together, and the submitted operands are exactly the ones the exported command
+names. The supplier's `fork` and `link` do take a `note`, so a note field in
+this form is one field and one line away the day the exported command can spell
+it too.
+
+A new stream's overlay module is the SUPPLIER's, not this window's.
+`manage_decision_streams.py fork` and `link` generate it, registration block
+and all, so the stream manager submits two operands rather than text. The
+decide window is the one that writes overlay text, and it only ever rewrites
+the module of a stream that already exists.
+
+A submit never retargets a static root by itself; the panel offers the build as
+a root and the reader takes it. The reasons are in "Where the result is read
+from" above: the URL depends on the page's origin, and a root added on a guess
+is a root that does not load.
+
+`occurred` is not offered anywhere. Spec section 4.7 names it, the supplier
+refuses it, and no Gyld host verb exists for it yet, so recording a trigger as
+occurred is still an overlay the owner writes by hand. The same goes for `lens`
+and `inspect`.
 
 The exported commands are `scripts/manage_decision_streams.py`'s four verbs as
 that host documents them: `fork PARENT NEW`, `link PARENT NEW`, `rebuild

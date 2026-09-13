@@ -13,6 +13,7 @@ import { NOTHING_DIMMED, type GyldDimmed } from '../lens/camera';
 import { NODE_FACETS } from '../lens/facets';
 import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
 import { PreviewPerspective } from '../preview/neighbourhood';
+import { RebuildButton } from '../ops/RebuildButton';
 import { neighbourhoodLink } from './links';
 import { labelFor, perspectiveOptions } from './perspectives';
 import type { GyldSearchMatch } from './search';
@@ -164,6 +165,7 @@ export function BrowserChrome({ tabId, lens, search }: {
         <button type="button" disabled={reload === undefined} onClick={() => reload?.()}>
           Reload
         </button>
+        <RebuildButton />
         <span className="gyld-note gyld-focus-line">
           {focus === undefined || focus.ref === ''
             ? 'no record focused'

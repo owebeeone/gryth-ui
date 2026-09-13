@@ -3,9 +3,11 @@ import type { DecideNowQuestion, GyldValidation, ValidationFinding } from '../co
 import {
   GYLD_ANSWER_DRAFT, GYLD_ANSWER_DRAFT_TAP, GYLD_ANSWER_EXPORT, GYLD_ANSWER_EXPORT_TAP,
   GYLD_ASK_DRAFT, GYLD_ASK_DRAFT_TAP, GYLD_ASK_EXPORT, GYLD_ASK_EXPORT_TAP,
-  GYLD_DECIDE_NOW, GYLD_DEST_REF, GYLD_DEST_STREAM, GYLD_RECORDS, GYLD_STREAMS,
-  GYLD_TAB_ID, GYLD_VALIDATION,
+  GYLD_DECIDE_NOW, GYLD_DEST_REF, GYLD_DEST_STREAM, GYLD_OPS, GYLD_OPS_STATUS,
+  GYLD_RECORDS, GYLD_STREAMS, GYLD_TAB_ID, GYLD_VALIDATION,
 } from '../grips';
+import { OpsPanel } from '../ops/OpsPanel';
+import { opsGate } from '../ops/submit';
 import type { GyldRecords } from '../records/records';
 import type { GyldValue } from '../store/state';
 import { rebuildCommand } from '../streams/operations';
@@ -14,10 +16,11 @@ import {
   filledAlternatives, type AnswerDraft, type AskDraft,
 } from './drafts';
 import {
-  answerOverlay, askOverlay, isRefusal, overlayTarget,
-  type OverlayTarget,
+  askJoin, isRefusal, overlayTarget, type AskFragments, type OverlayTarget,
 } from './overlay';
-import { declaredSymbol, declaredSymbols } from './symbols';
+import {
+  answerSubmit, askSubmit, composeAnswer, composeAsk, composeRefusal,
+} from './compose';
 
 // The gyld.decide window (step 2.4): answer a question, or ask a new one, and
 // export what makes it.
@@ -140,6 +143,10 @@ function AnswerForm({ target, rows, reason }: {
   const exportTap = useGrip(GYLD_ANSWER_EXPORT_TAP) as AtomTapHandle<string> | undefined;
   const records = useGrip(GYLD_RECORDS);
   const seeded = useGrip(GYLD_DEST_REF) ?? '';
+  const ops = useGrip(GYLD_OPS);
+  const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
+  // Nothing composes without the projection, so nothing is offered without it.
+  const uncomposable = composeRefusal(records);
 
   // A window opened on a record answers THAT question until the reader picks
   // another: a projection of the seed, not a write at mount.
@@ -148,22 +155,13 @@ function AnswerForm({ target, rows, reason }: {
   const question = rows.find((row) => row.slot === chosen);
   const effective: AnswerDraft = { ...draft, question: chosen };
   const faults = answerShapeFaults(effective);
+  // Read through the HANDLE, never the render closure: a press straight after
+  // the last keystroke would otherwise compose the draft before it
+  // (CodingRules.md, "Gesture handlers read via tap handles").
   const compose = (): string => {
     const held = { ...(draftTap?.get() ?? draft) };
     held.question = held.question === '' ? chosen : held.question;
-    if (target === undefined || answerShapeFaults(held).length > 0 || records === undefined) {
-      return '';
-    }
-    const row = rows.find((entry) => entry.slot === held.question);
-    const questionSymbol = declaredSymbol(records, held.question);
-    const alternativeSymbol = declaredSymbol(records, held.alternative);
-    if (row === undefined || questionSymbol === undefined || alternativeSymbol === undefined) {
-      return '';
-    }
-    return answerOverlay({
-      target, draft: held, question: questionSymbol, label: row.label,
-      alternative: alternativeSymbol,
-    });
+    return composeAnswer({ target, draft: held, rows, records });
   };
 
   return (
@@ -269,14 +267,39 @@ function AnswerForm({ target, rows, reason }: {
           <li key={fault}>{fault}</li>
         ))}
       </ul>
-      <button
-        type="button"
-        className="gyld-answer-export"
-        disabled={faults.length > 0 || target === undefined}
-        onClick={() => exportTap?.set(compose())}
-      >
-        Export overlay
-      </button>
+      <div className="gyld-chrome-row">
+        <button
+          type="button"
+          className="gyld-answer-export"
+          disabled={faults.length > 0 || target === undefined || uncomposable !== ''}
+          title={uncomposable}
+          onClick={() => exportTap?.set(compose())}
+        >
+          Export overlay
+        </button>
+        <button
+          type="button"
+          className="gyld-answer-submit"
+          disabled={faults.length > 0 || target === undefined
+            || uncomposable !== '' || !gate.ready}
+          title={uncomposable === '' ? gate.reason : uncomposable}
+          onClick={() => {
+            // The text is exported AND sent: what the reader can read is what
+            // went, and a refusal leaves it there to fix.
+            const text = compose();
+            exportTap?.set(text);
+            if (ops !== undefined) {
+              void answerSubmit(ops, target, text);
+            }
+          }}
+        >
+          Submit answer
+        </button>
+        {!gate.ready && <span className="gyld-note gyld-ops-reason">{gate.reason}</span>}
+      </div>
+      {uncomposable !== '' && (
+        <p className="gyld-fault gyld-decide-uncomposable">{uncomposable}</p>
+      )}
       <textarea
         className="gyld-decide-overlay"
         readOnly
@@ -294,24 +317,20 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
   const exported = useGrip(GYLD_ASK_EXPORT) ?? '';
   const exportTap = useGrip(GYLD_ASK_EXPORT_TAP) as AtomTapHandle<string> | undefined;
   const records = useGrip(GYLD_RECORDS);
+  const ops = useGrip(GYLD_OPS);
+  const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
+  const uncomposable = composeRefusal(records);
   const faults = askShapeFaults(draft);
 
   // The gates a question may be given are the triggers the emitted rows
   // already name, and nothing else: a trigger this bundle never mentioned is
   // not offered, because the window does not know it exists.
   const triggers = [...new Set(rows.flatMap((row) => row.gated_by))].sort();
-  const compose = (): string => {
-    const held = draftTap?.get() ?? draft;
-    if (target === undefined || askShapeFaults(held).length > 0 || records === undefined) {
-      return '';
-    }
-    const requires = declaredSymbols(records, held.requires);
-    const gates = declaredSymbols(records, held.gates);
-    if (requires.missing.length > 0 || gates.missing.length > 0) {
-      return '';
-    }
-    return askOverlay({ target, draft: held, requires: requires.found, gates: gates.found });
-  };
+  // The composition is the supplier's two operands; the box holds the join of
+  // them, which is the module the supplier writes, byte for byte.
+  const compose = (): AskFragments | undefined => composeAsk({
+    target, draft: draftTap?.get() ?? draft, records,
+  });
   const toggle = (list: 'requires' | 'gates', slot: string) => {
     draftTap?.update((held) => {
       const chosen = held[list];
@@ -463,14 +482,42 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
           <li key={fault}>{fault}</li>
         ))}
       </ul>
-      <button
-        type="button"
-        className="gyld-ask-export"
-        disabled={faults.length > 0 || target === undefined}
-        onClick={() => exportTap?.set(compose())}
-      >
-        Export overlay
-      </button>
+      <div className="gyld-chrome-row">
+        <button
+          type="button"
+          className="gyld-ask-export"
+          disabled={faults.length > 0 || target === undefined || uncomposable !== ''}
+          title={uncomposable}
+          onClick={() => {
+            const parts = compose();
+            exportTap?.set(parts === undefined ? '' : askJoin(parts));
+          }}
+        >
+          Export overlay
+        </button>
+        <button
+          type="button"
+          className="gyld-ask-submit"
+          disabled={faults.length > 0 || target === undefined
+            || uncomposable !== '' || !gate.ready}
+          title={uncomposable === '' ? gate.reason : uncomposable}
+          onClick={() => {
+            // The text is exported AND sent: what the reader can read is what
+            // went, and a refusal leaves it there to fix.
+            const parts = compose();
+            exportTap?.set(parts === undefined ? '' : askJoin(parts));
+            if (ops !== undefined) {
+              void askSubmit(ops, target, parts);
+            }
+          }}
+        >
+          Submit question
+        </button>
+        {!gate.ready && <span className="gyld-note gyld-ops-reason">{gate.reason}</span>}
+      </div>
+      {uncomposable !== '' && (
+        <p className="gyld-fault gyld-decide-uncomposable">{uncomposable}</p>
+      )}
       <textarea
         className="gyld-decide-overlay"
         readOnly
@@ -510,16 +557,19 @@ export function DecideWindow() {
         ? <p className="gyld-fault gyld-decide-refusal">{(resolved as { reason: string }).reason}</p>
         : (
           <p className="gyld-note">
-            This stage submits nothing. The text below is the overlay module for
-            this one record; merge it into the stream&apos;s own overlay module,
-            then rebuild with
+            The text below is the overlay module for this one record. Submit
+            sends it to the supplier, which writes it as the stream&apos;s
+            overlay module and rebuilds; the run&apos;s output and its answer
+            appear below. Export puts the same text in the box instead, to
+            merge by hand and rebuild with
             {' '}
             <code className="gyld-decide-command">{rebuildCommand()}</code>
-            . Gyld captures and validates it, and what comes back is the
-            validation shown here.
+            . Either way Gyld captures and validates it, and what comes back is
+            the validation shown here.
           </p>
         )}
       <ValidationPanel />
+      <OpsPanel title="The last submission" />
       <AnswerForm target={target} rows={rows} reason={reason} />
       <AskForm target={target} rows={rows} />
     </div>

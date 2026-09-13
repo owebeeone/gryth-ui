@@ -12,6 +12,8 @@ import { recordParams } from '../browser/links';
 import { useKeyedContext } from '../contexts';
 import { LensView } from '../lens/LensView';
 import { diffCommand } from '../streams/operations';
+import { DiffButton } from '../ops/RebuildButton';
+import { OpsPanel } from '../ops/OpsPanel';
 import { GYLD_DETAIL_TOOL } from '../tools';
 import type { GyldValue } from '../store/state';
 import { paneTabTaps } from './diffTabTaps';
@@ -292,12 +294,17 @@ function NoDiff({ value, left, right }: {
         <p className="gyld-fault">{`${value.fault.path}: ${value.fault.message}`}</p>
       )}
       {status === 'absent' && left !== '' && right !== '' && (
-        <p className="gyld-note">
-          This window never compares two bundles itself. Gyld writes the
-          comparison, and this is the command that writes this one:
-          {' '}
-          <code className="gyld-diff-command">{diffCommand(left, right)}</code>
-        </p>
+        <>
+          <p className="gyld-note">
+            This window never compares two bundles itself. Gyld writes the
+            comparison; the button asks the supplier to write this one, and
+            this is the command that writes it by hand:
+            {' '}
+            <code className="gyld-diff-command">{diffCommand(left, right)}</code>
+          </p>
+          <DiffButton />
+          <OpsPanel title="The last submission" />
+        </>
       )}
     </div>
   );

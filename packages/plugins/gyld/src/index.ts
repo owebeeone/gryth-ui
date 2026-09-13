@@ -145,6 +145,11 @@ export {
   type GyldOpsWire, type GyldOutputRecord,
 } from './ops/ops';
 export { GYLD_DOMAIN, GyldSurfaces, gyldOutputTap } from './ops/surfaces';
+export {
+  GYLD_STATIC_BASE, buildUrl, opsGate, retargetToBuild, type OpsGate,
+} from './ops/submit';
+export { OpsPanel } from './ops/OpsPanel';
+export { DiffButton, ListButton, RebuildButton } from './ops/RebuildButton';
 export * from './focus';
 export * from './tools';
 export {
@@ -192,10 +197,12 @@ export { DecideWindow } from './decide/DecideWindow';
 export { decideTabTaps } from './decide/decideTabTaps';
 export * from './decide/drafts';
 export * from './decide/overlay';
+export * from './decide/compose';
 export * from './decide/symbols';
 export { StreamManager } from './streams/StreamManager';
 export { streamsTabTaps } from './streams/streamsTabTaps';
 export * from './streams/operations';
+export { streamSubmit } from './streams/submit';
 export * from './streams/tree';
 export { useStreamTarget, type StreamTarget } from './streams/useStreamTarget';
 export { useKeyedContext } from './contexts';
