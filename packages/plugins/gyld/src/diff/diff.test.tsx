@@ -2,8 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
 import { readLens, readStreamDiff } from '../contract';
-import { GYLD_DIFF, GYLD_DIFF_SLOT_TAP, GYLD_LENS, GYLD_STREAMS } from '../grips';
+import {
+  GYLD_DIFF, GYLD_DIFF_SLOT_TAP, GYLD_LENS, GYLD_PICKER_ERROR_TAP,
+  GYLD_PICKER_URL, GYLD_PICKER_URL_TAP, GYLD_SET, GYLD_SET_TAP, GYLD_STREAMS,
+} from '../grips';
 import { recordParams } from '../browser/links';
+import { addStaticRoot } from '../browser/setOps';
 import type { GyldLensState, GyldStreamsCensus, GyldValue } from '../store/state';
 import { diffPath } from '../store/layout';
 import { diffCommand } from '../streams/operations';
@@ -51,6 +55,28 @@ function mount(tabId: string, params: Record<string, unknown>, bundle = new Fake
     },
   };
 }
+
+describe('the set picker this window shows actually works', () => {
+  it('seeds the picker atoms, so typing a root and adding it lands', () => {
+    // The window falls back to the SetPicker on a desk with no root, exactly
+    // as the browser and the stream manager do, and the picker writes its URL
+    // and its error through per-tab atoms. Without those two seeds it renders
+    // and does nothing at all, silently, which is what a live run found.
+    const desk = mountDesk(undefined, new FakeBundle());
+    const tab = desk.tab('df-picker', diffTabTaps('df-picker', {}));
+    const url = tab.read(GYLD_PICKER_URL_TAP).get() as AtomTapHandle<string> | undefined;
+    const error = tab.read(GYLD_PICKER_ERROR_TAP).get() as AtomTapHandle<string> | undefined;
+    expect(url).toBeDefined();
+    expect(error).toBeDefined();
+    const set = tab.read(GYLD_SET_TAP).get() as AtomTapHandle<{ roots: unknown[] }> | undefined;
+    url?.set('/gyld/builds/build-1');
+    expect(tab.read(GYLD_PICKER_URL).get()).toBe('/gyld/builds/build-1');
+    set?.update((held) => addStaticRoot(held as never, '/gyld/builds/build-1').set as never);
+    expect((tab.read(GYLD_SET).get() as { roots: unknown[] }).roots).toContainEqual(
+      { kind: 'static', baseUrl: '/gyld/builds/build-1' },
+    );
+  });
+});
 
 describe('two panes, two streams, one perspective', () => {
   it('resolves a lens per pane, each on its own stream', async () => {

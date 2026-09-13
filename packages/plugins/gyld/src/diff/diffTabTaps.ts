@@ -2,7 +2,8 @@ import { BaseTap, createAtomValueTap, type Grip, type Tap } from '@owebeeone/gri
 import {
   GYLD_DEST_LEFT, GYLD_DEST_LEFT_TAP, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP,
   GYLD_DEST_RIGHT, GYLD_DEST_RIGHT_TAP, GYLD_DEST_STREAM, GYLD_DIFF_SLOT,
-  GYLD_DIFF_SLOT_TAP, GYLD_TAB_ID, perspectiveFromParams,
+  GYLD_DIFF_SLOT_TAP, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL,
+  GYLD_PICKER_URL_TAP, GYLD_TAB_ID, perspectiveFromParams,
 } from '../grips';
 import { lensTabTaps } from '../lens/lensTabTaps';
 import type { DiffPane } from './panes';
@@ -44,6 +45,12 @@ export function diffTabTaps(tabId: string, params?: Record<string, unknown>): Ta
       initial: perspectiveFromParams(params), handleGrip: GYLD_DEST_PERSPECTIVE_TAP,
     }),
     createAtomValueTap(GYLD_DIFF_SLOT, { initial: '', handleGrip: GYLD_DIFF_SLOT_TAP }),
+    // The set picker's two per-tab atoms. This window falls back to the picker
+    // on a desk with no root, exactly as the browser and the stream manager
+    // do, and the picker writes the typed URL and its refusal through these.
+    // Without them it draws and does nothing, silently.
+    createAtomValueTap(GYLD_PICKER_URL, { initial: '', handleGrip: GYLD_PICKER_URL_TAP }),
+    createAtomValueTap(GYLD_PICKER_ERROR, { initial: '', handleGrip: GYLD_PICKER_ERROR_TAP }),
     createAtomValueTap(GYLD_TAB_ID, { initial: tabId }),
   ];
 }
