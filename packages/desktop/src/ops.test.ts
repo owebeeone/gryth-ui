@@ -10,8 +10,9 @@ import {
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
   dockOrMerge, probeArea, normalizeFoundations, captureGrid, dockingHome, setTabSource,
+  dragOverlayClass,
 } from './ops';
-import type { FacetKind, LayoutNode, WindowRecord } from './grips.desktop';
+import type { FacetKind, LayoutNode, WindowDrag, WindowRecord } from './grips.desktop';
 
 const SIZE = { w: 400, h: 300 };
 
@@ -681,5 +682,48 @@ describe('docking homes from tool roles', () => {
     const streams = list.find((w) => w.tabs[0].facet === 'gyld.streams')!;
     const remembered = openFoundation(list, 1, DEF, { [streams.id]: 'inspector' }, ROLES);
     expect(remembered.list.find((w) => w.id === streams.id)!.dock?.area).toBe('inspector');
+  });
+});
+
+// The drag overlay is a FULL-WINDOW element at z-index 1000. Whatever class it
+// carries, it must carry no class that some shell element also answers to — a
+// bare `sidebar` made it match `.sidebar` and paint that rule's opaque panel,
+// at that rule's fixed width, over the sidebar for the length of the gesture.
+describe('dragOverlayClass', () => {
+  const base = {
+    id: 'w1', pointerX: 10, pointerY: 20, canvasLeft: 0, canvasTop: 0, zoom: 1,
+    dropTarget: null, dropDesktop: null, dropArea: null, dropSplit: null,
+  };
+  const sidebar: WindowDrag = { ...base, kind: 'sidebar', id: 'sidebar', baseW: 200 };
+  const splitter: WindowDrag = {
+    ...base, kind: 'splitter', interiorId: 'root', index: 0, axis: 'row',
+    baseA: 50, baseB: 50, spanPx: 800,
+  };
+  const move: WindowDrag = {
+    ...base, kind: 'move', baseX: 0, baseY: 0, baseW: 400, baseH: 300,
+    nearTop: false, snapTarget: null,
+  };
+
+  it('prefixes the kind, so no drag can dress the overlay as another element', () => {
+    expect(dragOverlayClass(sidebar)).toBe('drag-overlay drag-sidebar');
+    expect(dragOverlayClass(move)).toBe('drag-overlay drag-move');
+    expect(dragOverlayClass({ ...move, kind: 'resize' })).toBe('drag-overlay drag-resize');
+  });
+
+  it('prefixes the splitter axis too, and adds it only for a splitter', () => {
+    expect(dragOverlayClass(splitter)).toBe('drag-overlay drag-splitter drag-axis-row');
+    expect(dragOverlayClass({ ...splitter, axis: 'column' }))
+      .toBe('drag-overlay drag-splitter drag-axis-column');
+    expect(dragOverlayClass(sidebar).split(' ')).toHaveLength(2);
+  });
+
+  it('emits no bare token that names a shell element', () => {
+    // every word `desktop.css` uses for something that is NOT the overlay
+    const SHELL = ['sidebar', 'row', 'column', 'desktop', 'area', 'gwin', 'tab'];
+    for (const drag of [sidebar, splitter, move, { ...move, kind: 'resize' } as WindowDrag]) {
+      for (const token of dragOverlayClass(drag).split(' ')) {
+        expect(SHELL).not.toContain(token);
+      }
+    }
   });
 });

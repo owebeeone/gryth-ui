@@ -49,7 +49,7 @@
   z-index: 5;
 }
 .sidebar-resize:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
-.drag-overlay.sidebar { cursor: col-resize; }
+.drag-overlay.drag-sidebar { cursor: col-resize; }
 
 .sidebar.closed {
   width: 44px;
@@ -320,14 +320,18 @@ span.side-group-label { cursor: default; }
 
 /* Drag overlay: captures mouse movement as React events while a drag grip is
    set. Fixed over the WHOLE app so drops on sidebar desktop icons work. */
+/* The full-window gesture surface. Its modifier classes are all `drag-`
+   prefixed (ops.dragOverlayClass) because this element is a bare pane over
+   the WHOLE app: any class it shares with a shell element would paint that
+   element's background and geometry across everything for the gesture. */
 .drag-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
 }
-.drag-overlay.move { cursor: grabbing; }
-.drag-overlay.resize { cursor: nwse-resize; }
-.drag-overlay.tab { cursor: grabbing; }
+.drag-overlay.drag-move { cursor: grabbing; }
+.drag-overlay.drag-resize { cursor: nwse-resize; }
+.drag-overlay.drag-tab { cursor: grabbing; }
 
 .tab-ghost {
   position: absolute;
@@ -566,8 +570,8 @@ span.side-group-label { cursor: default; }
 .gwin.foundation .splitter.row { cursor: col-resize; }
 .gwin.foundation .splitter.column { cursor: row-resize; }
 .gwin.foundation .splitter:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
-.drag-overlay.splitter.row { cursor: col-resize; }
-.drag-overlay.splitter.column { cursor: row-resize; }
+.drag-overlay.drag-splitter.drag-axis-row { cursor: col-resize; }
+.drag-overlay.drag-splitter.drag-axis-column { cursor: row-resize; }
 
 /* Splitters must be reachable ABOVE docked frames (frames render later in
    the same stacking context; an explicit z-index lifts the 6px bands). */

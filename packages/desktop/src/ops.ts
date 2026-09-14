@@ -1,4 +1,4 @@
-import type { AreaEdge, FacetKind, FoundationDef, LayoutNode, SnapTarget, WindowRecord } from './grips.desktop';
+import type { AreaEdge, FacetKind, FoundationDef, LayoutNode, SnapTarget, WindowDrag, WindowRecord } from './grips.desktop';
 
 // Pure transforms over the desktop document (the DESKTOP_WINDOWS list).
 // Window chrome applies these through the atom tap handle; headless
@@ -779,4 +779,23 @@ export function overviewLayout(
     });
   });
   return out;
+}
+
+/** The class list of the full-window drag overlay.
+ *
+ * The overlay's classes are a NAMESPACE, not a description. A drag's `kind`
+ * and a splitter's `axis` are document words — 'sidebar', 'row', 'column' —
+ * and emitting them bare made the overlay match the shell's OWN `.sidebar`
+ * rule: it inherited that rule's fixed width and its opaque panel background,
+ * so every sidebar resize painted a grey panel over the sidebar for the whole
+ * gesture and the live resize underneath was simply hidden. Prefixing every
+ * modifier is what keeps a drag state from dressing the overlay as some other
+ * element; `desktop.css` matches these prefixed names and nothing else.
+ */
+export function dragOverlayClass(drag: WindowDrag): string {
+  const classes = ['drag-overlay', `drag-${drag.kind}`];
+  if (drag.kind === 'splitter') {
+    classes.push(`drag-axis-${drag.axis}`);
+  }
+  return classes.join(' ');
 }

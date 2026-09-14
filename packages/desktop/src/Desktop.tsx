@@ -27,6 +27,7 @@ import {
   moveWindow, moveWindowFree, openFoundation, overviewLayout,
   placeWindows, probeArea, raiseWindow, resizeWindow, selectTab, sendToDesktop,
   setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapWindow,
+  dragOverlayClass,
   type Rect,
 } from './ops';
 import { resolveTool, toolRoles } from './facets';
@@ -864,7 +865,7 @@ export default function Desktop() {
       </div>
       {drag && (
         <div
-          className={`drag-overlay ${drag.kind}${drag.kind === 'splitter' ? ` ${drag.axis}` : ''}`}
+          className={dragOverlayClass(drag)}
           onMouseMove={(e) => dragMove(e.clientX, e.clientY, e.altKey)}
           onMouseUp={(e) => dragEnd(e.clientX, e.clientY, e.altKey)}
           onMouseLeave={(e) => dragEnd(e.clientX, e.clientY, e.altKey)}
