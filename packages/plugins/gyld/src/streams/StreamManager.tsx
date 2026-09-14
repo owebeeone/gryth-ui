@@ -95,14 +95,15 @@ function StreamRowView({ row, target }: { row: StreamRow; target: StreamTarget }
           type="button"
           className="gyld-stream-open"
           disabled={!target.ready}
+          // the id itself, because a narrow column clips the label to fit
           title={target.wiredTo === ''
-            ? 'open a browser on this stream'
-            : `show this stream in browser ${target.wiredTo}`}
+            ? `${row.id} — open a browser on this stream`
+            : `${row.id} — show this stream in browser ${target.wiredTo}`}
           onClick={() => target.show(row.id)}
         >
           {row.id}
         </button>
-        <span className="gyld-chip">{record.kind}</span>
+        <span className="gyld-chip" title={record.kind}>{record.kind}</span>
         {target.showing === row.id && (
           <span className="gyld-chip gyld-chip-wired">shown</span>
         )}
@@ -118,7 +119,10 @@ function StreamRowView({ row, target }: { row: StreamRow; target: StreamTarget }
           </span>
         )}
         {row.parentMissing && (
-          <span className="gyld-chip gyld-fault">
+          <span
+            className="gyld-chip gyld-fault"
+            title={`the parent this record names, ${record.parent}, is in no root of this set`}
+          >
             {`parent ${record.parent} is not in this set`}
           </span>
         )}

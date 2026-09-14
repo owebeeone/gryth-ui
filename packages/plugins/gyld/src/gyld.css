@@ -603,9 +603,52 @@
   gap: 0.833em;
   padding: 1em 1.167em;
   height: 100%;
+  min-width: 0;
   box-sizing: border-box;
   overflow: auto;
+  /* Inherited by every box in the window, so an identifier with no break in
+     it (`glade_decisions_demo_keys.GladeDecisionsDemoKeys`) wraps inside its
+     card instead of widening it. This is the LAST resort: the line still
+     takes the break opportunities it has first, so a chain or a path breaks
+     at its separators before a word is broken mid-token. It also shrinks the
+     min-content contribution, which is what lets the flex and grid boxes
+     below reach their `min-width: 0`. */
+  overflow-wrap: anywhere;
   font: 0.8em/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+/* This window lives in the explorer column of a locked desk — about a fifth
+   of the width, and the reader drags it narrower still. A flex or grid item's
+   automatic minimum size is its CONTENT, so one long identifier held the
+   whole card open and carried the card past the pane border; every box on the
+   card path is allowed to shrink instead. */
+.gyld-streams > *,
+.gyld-stream-row,
+.gyld-stream-head,
+.gyld-stream-head > *,
+.gyld-stream-new,
+.gyld-stream-new > *,
+.gyld-stream-form > *,
+.gyld-streams .gyld-detail-facts > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* The value column may be narrower than its content; without the `minmax(0,
+   …)` pair `1fr` floors at max-content and the grid outgrows the card. */
+.gyld-streams .gyld-detail-facts {
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+}
+
+/* The two one-line labels: a stream id and a status chip are read at a
+   glance, so they are clipped rather than wrapped, and carry the whole text
+   in `title` for the column that is too narrow to show it. */
+.gyld-stream-open,
+.gyld-stream-head .gyld-chip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gyld-streams-empty {
@@ -679,8 +722,19 @@
   gap: 0.5em 0.833em;
 }
 
+/* The controls sit inside their own label, so the label's shrink has to reach
+   them: a `select` is as wide as its widest option (a stream id), and a text
+   field as wide as its `min-width`, and neither would give the room back. */
+.gyld-stream-form .gyld-chrome-field,
+.gyld-stream-form select,
+.gyld-stream-form input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 12em is still what the name field ASKS for; it may now be given less. */
 .gyld-stream-name {
-  min-width: 12em;
+  flex: 1 1 12em;
 }
 
 .gyld-stream-command {
@@ -1061,6 +1115,24 @@
   gap: 0.5em;
   padding-top: 0.667em;
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* The panel goes under the form of a window that may be a narrow column, and
+   what the supplier says is long: a run id, an output directory, a build URL,
+   a log line. Same rule as the cards — the boxes shrink, the text wraps. */
+.gyld-ops-panel,
+.gyld-ops-panel > *,
+.gyld-ops-answer > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.gyld-ops-answer,
+.gyld-ops-output,
+.gyld-ops-stdout,
+.gyld-ops-stderr {
+  overflow-wrap: anywhere;
 }
 
 .gyld-ops-panel h4 {
