@@ -321,9 +321,9 @@ A submit is refused before it is sent in four cases, each with the reason on
 the button and beside it: `Gyld.Ops` UNRESOLVED, which means there is no glade
 node in this desktop at all; a glade connection that is `offline`; a stream
 whose PROJECTION is not here, because the classes an overlay names are declared
-in it and no share carries it; and a stream whose own overlay module already
-declares records, because a submit writes that module whole and this window
-composes one holding the draft's record alone.
+in it and no share carries it; and a stream whose own overlay module declares
+something the submit would drop, because a submit writes that module whole and
+this window composes one holding the draft's record alone.
 
 That last one is the important one, and a live run is what found it. The
 supplier's `answer` and `ask` write the overlay MODULE, and section 4.2's shape
@@ -332,9 +332,23 @@ which is right for a text the owner merges by hand and wrong for a text sent
 as the whole module. Submitted over a fork of `stream-a`, that composed module
 took the stream from three rulings to one. So the window reads what the
 stream's own module already declares - the emitted slots whose module is this
-stream's - and refuses the submit with the count and the module named, while
-Export stays exactly as it was. A stream forked or linked for one ruling
-submits; a stream that already carries records is merged by hand.
+stream's that name a MEMBER of its root, `<module>:<Root>.<member>` - and
+refuses the submit with the count and the module named, while Export stays
+exactly as it was.
+
+The root class itself is not one of those records. Its slot is
+`<module>:<Root>`, with no member after the module prefix, and it is the one
+memberless occurrence slot a module contributes; every generated overlay
+declares it and the composed module declares it again, so counting it refused
+every stream ever forked or linked FOR one ruling, which is the very flow the
+refusal advises, and left no submittable stream at all. A second live run found
+that (2026-09-14: a link's module owned one slot, its root class, and the
+window said "already declares 1 record"). What the window does read off the
+root is its NAME: a module whose declared root is not the root the stream
+record registers is refused too, with both names given, because the submit
+writes the registered one and that would drop the other. A stream forked or
+linked for one ruling submits; a stream that already carries records is merged
+by hand.
 Anything else is sent, and what comes back is data, including a refusal: a
 button that could be pressed and would fail honestly is worth more than one
 disabled on a guess. The shape checks are unchanged and still local: a draft

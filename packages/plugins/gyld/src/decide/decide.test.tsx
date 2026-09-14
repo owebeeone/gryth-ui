@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { readStreamsIndex } from '../contract';
+import { readProjection, readStreamsIndex } from '../contract';
 import { GYLD_DECIDE_NOW, GYLD_RECORDS, GYLD_STREAMS, GYLD_VALIDATION } from '../grips';
 import type { GyldStreamsCensus } from '../store/state';
-import { RECORDS_UNSET, type GyldRecords } from '../records/records';
+import { RECORDS_UNSET, indexProjection, type GyldRecords } from '../records/records';
 import { rebuildCommand } from '../streams/operations';
 import { DecideWindow } from './DecideWindow';
 import { decideTabTaps } from './decideTabTaps';
@@ -19,6 +19,7 @@ import { composeRefusal, overwriteRefusal } from './compose';
 import { mountDesk } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import streamsFixture from '../../test/fixtures/bundle/streams.json';
+import streamAProjection from '../../test/fixtures/bundle/streams/stream-a/projection.json';
 
 // Step 2.4: gyld.decide. The window composes text and exports it; it submits
 // nothing, validates nothing and folds nothing. Every name in the composed
@@ -164,6 +165,32 @@ describe('an overlay composes only where the projection is', () => {
   });
 });
 
+/**
+ * The projection a stream forked or linked FOR ONE RULING actually has: every
+ * record of the stream it follows, and its own module declaring one class, the
+ * root, named `root`.
+ *
+ * Built out of stream A's emitted projection by dropping the records stream A
+ * itself added, which leaves the shape the live link `demo-keys-ruling` had on
+ * 2026-09-14: one slot whose module is the stream's,
+ * `glade_decisions_demo_keys_ruling:GladeDecisionsDemoKeysRuling`, with no
+ * `.member` after the module prefix.
+ */
+function freshOverlay(root: string): GyldRecords {
+  const projection = readProjection(streamAProjection);
+  const prefix = `${target.module}:`;
+  const mine = (slot: string): boolean => slot.startsWith(prefix);
+  const occurrences = projection.occurrences
+    .filter((held) => !mine(held.source.qualified_slot)
+      || held.source.qualified_slot === `${prefix}${target.root}`)
+    .map((held) => (mine(held.source.qualified_slot)
+      ? { ...held, label: root, source: { ...held.source, qualified_slot: `${prefix}${root}` } }
+      : held));
+  const assertions = projection.assertions
+    .filter((held) => !mine(held.source.qualified_slot));
+  return indexProjection({ ...projection, occurrences, assertions }, target.stream);
+}
+
 describe('a submit never drops what the stream\'s overlay already declares', () => {
   it('refuses to submit over a module that already carries records', async () => {
     // The supplier's `answer` writes the whole overlay MODULE and this window
@@ -174,14 +201,44 @@ describe('a submit never drops what the stream\'s overlay already declares', () 
     // exactly what it is for.
     const records = await streamARecords();
     const reason = overwriteRefusal(records, target);
-    expect(reason).toContain('already declares');
+    // SIX, not seven: stream A's module owns seven slots in this projection
+    // and one of them is the root class itself, which the composed module
+    // declares again. What a submit would drop is the six placed records.
+    expect([...records.occurrenceBySlot.keys()]
+      .filter((slot) => slot.startsWith(`${target.module}:`))).toHaveLength(7);
+    expect(reason).toContain('already declares 6 records');
     expect(reason).toContain('glade_decisions_stream_a');
     expect(reason).toContain('Export');
   });
 
+  it('does not count the root class every generated module declares', () => {
+    // A stream linked or forked for one ruling, which is what the refusal
+    // above advises. Its module declares exactly the root class, and the
+    // composed module regenerates that class under the very same name, so
+    // nothing is lost and the submit is allowed. Live on 2026-09-14 this was
+    // refused with "already declares 1 record", which put every fork and every
+    // link in the same place and made the submit unreachable.
+    const records = freshOverlay(target.root);
+    expect([...records.occurrenceBySlot.keys()]
+      .filter((slot) => slot.startsWith(`${target.module}:`)))
+      .toEqual([`${target.module}:${target.root}`]);
+    expect(overwriteRefusal(records, target)).toBe('');
+  });
+
+  it('refuses a module whose root class is not the root the stream registered', () => {
+    // The composed module writes `class <the registered root>`, so a module
+    // declaring its root under any other name would lose that class. The two
+    // disagreeing is the stream manager's to settle and the window says which
+    // is which rather than overwriting one with the other.
+    const reason = overwriteRefusal(freshOverlay('GladeDecisionsElsewhere'), target);
+    expect(reason).toContain('GladeDecisionsElsewhere');
+    expect(reason).toContain('GladeDecisionsStreamA');
+    expect(reason).not.toContain('already declares');
+  });
+
   it('allows a stream whose own module declares nothing yet', () => {
-    // A fresh link: its generated module holds the root class and no record,
-    // so the composed module adds one and drops nothing.
+    // The module of a stream whose build carries no slot of it at all: there
+    // is nothing to drop, so there is nothing to refuse.
     expect(overwriteRefusal({ ...RECORDS_UNSET, status: 'ok' as const }, target)).toBe('');
     // and it says nothing at all when there is no index to read
     expect(overwriteRefusal(undefined, target)).toBe('');

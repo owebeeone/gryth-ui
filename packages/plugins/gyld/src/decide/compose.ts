@@ -64,8 +64,22 @@ export function composeRefusal(records: GyldRecords | undefined): string {
  *
  * So a stream whose own overlay module already declares records refuses the
  * submit and says which module and how many. What it declares is read, not
- * guessed: a qualified slot is `<module>:<Root>.<member>`, and the ones whose
- * module is this stream's are the records this stream's overlay wrote.
+ * guessed: a placed record's qualified slot is `<module>:<Root>.<member>`, and
+ * the ones whose module is this stream's are the records this stream's overlay
+ * wrote.
+ *
+ * The module's own ROOT CLASS is not one of them. Its slot is `<module>:<Root>`
+ * with no `.member` after the module prefix - the one memberless occurrence
+ * slot a module contributes, and every generated overlay declares it, so
+ * counting it refused every fork and every link ever made for one ruling,
+ * which is exactly the flow this refusal advises (live, 2026-09-14: the link
+ * `demo-keys-ruling` owned one slot,
+ * `glade_decisions_demo_keys_ruling:GladeDecisionsDemoKeysRuling`, and was
+ * refused with "already declares 1 record"). Nothing is lost by rewriting that
+ * class, because the composed module declares it again - PROVIDED it declares
+ * it under the same name. So a module whose declared root is not the root the
+ * stream registered is refused too, naming both: that class would be dropped,
+ * and which of the two names is right is the stream manager's to settle.
  */
 export function overwriteRefusal(
   records: GyldRecords | undefined,
@@ -75,16 +89,27 @@ export function overwriteRefusal(
     return '';
   }
   const prefix = `${target.module}:`;
-  const declared = [...records.occurrenceBySlot.keys()]
+  const owned = [...records.occurrenceBySlot.keys()]
     .filter((slot) => slot.startsWith(prefix));
-  if (declared.length === 0) {
-    return '';
+  // After the module prefix, so a dotted module name is not read as a member.
+  const declared = owned.filter((slot) => slot.slice(prefix.length).includes('.'));
+  if (declared.length > 0) {
+    return `${target.module} already declares ${declared.length} `
+      + `record${declared.length === 1 ? '' : 's'}, and a submit writes this module `
+      + 'whole, so it would drop them. Export this text and merge it into the '
+      + 'stream\'s own overlay module instead, or answer on a stream forked or '
+      + 'linked for this ruling';
   }
-  return `${target.module} already declares ${declared.length} `
-    + `record${declared.length === 1 ? '' : 's'}, and a submit writes this module `
-    + 'whole, so it would drop them. Export this text and merge it into the '
-    + 'stream\'s own overlay module instead, or answer on a stream forked or '
-    + 'linked for this ruling';
+  const foreign = owned
+    .filter((slot) => !slot.slice(prefix.length).includes('.') && slot !== `${prefix}${target.root}`)
+    .map((slot) => slot.slice(prefix.length));
+  if (foreign.length > 0) {
+    return `${target.module} declares its root class as ${foreign.join(', ')} and `
+      + `${target.stream} registers ${target.root}, so a submit would write the `
+      + 'registered root and drop that class. Settle the two in the stream '
+      + 'manager, or export this text and merge it by hand';
+  }
+  return '';
 }
 
 export interface AnswerInput {
