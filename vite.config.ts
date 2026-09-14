@@ -197,6 +197,10 @@ function gyldStaticServer(options: {
  * share one.
  */
 export function grythShared(): UserConfig {
+  // One grazel, two proxied paths (below). `gyld-ui.py` sets GRAZEL_URL to the
+  // HTTP port of the grazel it just started, so a second instance on other
+  // ports proxies to ITS grazel and not to the default one.
+  const grazelUrl = process.env.GRAZEL_URL ?? 'http://127.0.0.1:8080'
   return {
     plugins: [
       react(),
@@ -233,7 +237,10 @@ export function grythShared(): UserConfig {
       // The Gyld bundle is NOT reached this way: `gyldBundleServer` above reads
       // it directly, so no fs.allow entry points outside the gwz workspace.
       fs: { allow: ['..', '../../wyred-wz'] },
-      // `/gyld/` is GRAZEL's static path over the glade-gyld supplier's bundle
+      // Two paths of GRAZEL's are proxied onto this dev server's origin, both
+      // at `GRAZEL_URL` (default `http://127.0.0.1:8080`).
+      //
+      // `/gyld/` is grazel's static path over the glade-gyld supplier's bundle
       // root, and it is what a published `gyld.lens` pointer's `path` names. A
       // page served by grazel reaches it on its own origin; a page served by
       // this dev server does not, so a glade root would list streams and draw
@@ -241,7 +248,21 @@ export function grythShared(): UserConfig {
       // runbook. The key is a REGEX, deliberately: a plain `/gyld` prefix would
       // also swallow `/gyld-bundle/` and `/gyld-evaluator/` above, which are
       // this dev server's own mounts and nothing to do with grazel.
-      proxy: { '^/gyld/': { target: process.env.GRAZEL_URL ?? 'http://127.0.0.1:8080' } },
+      //
+      // `/bootstrap.json` is grazel's session-placement seam (GDL-032): the
+      // body carries `node_ws`, and `@grythjs/glade` fetches it to learn which
+      // node to attach to. Unproxied, this dev server answers it with the SPA
+      // fallback, so the page falls back to `ws://127.0.0.1:9099` and a second
+      // composition on other ports would attach to the FIRST one's node, or to
+      // none. Proxied, `pnpm dev` and `pnpm dev:gyld` both follow grazel's own
+      // placement. With no grazel behind it the proxy errors and the fetch does
+      // not answer `ok`, which is the same path `resolveNodeWs` already takes
+      // when nothing is there: the dev fallback still applies, with the proxy
+      // error visible in the console.
+      proxy: {
+        '^/gyld/': { target: grazelUrl },
+        '/bootstrap.json': { target: grazelUrl },
+      },
     },
   }
 }
