@@ -520,9 +520,12 @@ def count_streams(build: Path) -> Optional[int]:
 
 
 def write_latest(bundle: Path, build: Path) -> None:
-    relative = build.name if build.parent == bundle / "builds" else str(build)
-    if build.parent == bundle / "builds":
-        relative = "builds/{}".format(build.name)
+    """Point `latest.json` at a build, bundle-root-relative the way the
+    supplier writes it (`bundle.rs::write_latest`)."""
+    try:
+        relative = str(build.relative_to(bundle))
+    except ValueError:
+        relative = str(build)
     (bundle / "latest.json").write_text(
         json.dumps({"output_dir": relative}) + "\n", encoding="utf-8"
     )
