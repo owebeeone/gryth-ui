@@ -220,6 +220,16 @@ export interface DesktopSetup {
   foundation?: FoundationDef;
   /** Open desk 1 LOCKED on that preset, instead of floating windows. */
   locked?: boolean;
+  /**
+   * The tools desk 1 opens with, in the order they should be opened.
+   *
+   * A target whose windows ARE its purpose should not ask the reader to open
+   * them first. They are opened through the SAME `Desktop.OpenTool` intent the
+   * launcher invokes, so a booted window and a launched one are the same
+   * window, docked by the same role. Naming any tool also means this desk is
+   * not empty, so the shell's first-run Welcome window is not opened.
+   */
+  tools?: readonly ToolLink[];
 }
 
 // Lock desk 1 at composition time. A target whose desk IS its purpose
@@ -267,7 +277,20 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   if (setup?.foundation !== undefined) {
     DesktopFoundationPresetTap.set(setup.foundation);
   }
+  const tools = setup?.tools ?? [];
+  if (tools.length > 0) {
+    // The Welcome window is the shell's answer to a desktop with nothing on
+    // it, and a desk that names its own tools is not that. Cleared BEFORE the
+    // lock, so the preset is adopted onto the desk those tools land on rather
+    // than onto the window they replace.
+    DesktopWindowsTap.set([]);
+  }
   if (setup?.locked === true) {
     lockFirstDesk();
+  }
+  // Through the launcher's own intent, so a booted window and a launched one
+  // are the same window, docked by the same declared role.
+  for (const link of tools) {
+    openToolIntent(link);
   }
 }

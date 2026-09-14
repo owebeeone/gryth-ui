@@ -25,7 +25,14 @@ const EXPECTED: Record<ToolId, string> = {
 
 describe('the gyld target desk', () => {
   it('is the Gyld pane preset, locked from the first paint', () => {
-    expect(GYLD_DESK).toEqual({ foundation: GYLD, locked: true });
+    expect(GYLD_DESK.foundation).toBe(GYLD);
+    expect(GYLD_DESK.locked).toBe(true);
+    // and the two windows it opens with: streams first, so the tree is there
+    // to be picked from before the browser beside it draws. What that costs
+    // the desk is asserted in `landing.test.ts`.
+    expect(GYLD_DESK.tools).toEqual([
+      { toolId: 'gyld.streams' }, { toolId: 'gyld.browser' },
+    ]);
   });
 
   it('places every Gyld tool in the pane its role names', async () => {
