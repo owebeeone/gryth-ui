@@ -27,7 +27,11 @@ window wired to it, and a neighbourhood window on the focused record. Beside
 `Reload`, which re-reads what is there, it carries `Rebuild`, which asks the
 supplier for a new build of it. With no bundle root on the desk it
 shows the set picker instead of a picture, because the plugin will not invent a
-place to read Gyld output from.
+place to read Gyld output from — but a desk in a composition WITH a glade node
+lands on that node by itself and never sees the picker (below, "What an empty
+desk lands on"). A window that has a root and has chosen no stream or
+perspective opens on what the census puts first, so it draws rather than
+waiting for two picks.
 
 Neighbourhood opens emitted geometry where there is any. The stream's own lens
 manifest is what decides: an entry of the `neighbourhood` family whose
@@ -196,8 +200,9 @@ pnpm dev
 ```
 
 Vite prints the address it is serving on, normally `http://localhost:5173/`.
-Open that, then click `+ Gyld browser` in the launcher down the left side. The
-window opens on the set picker.
+Open that, then click `+ Gyld browser` in the launcher down the left side.
+`pnpm dev` has no grazel behind it, so no glade node answers and the window
+opens on the set picker, which says so.
 
 The dev server also serves an emitted Gyld bundle at `/gyld-bundle/`, so paste
 
@@ -243,12 +248,66 @@ dev server.
 The desk is not persisted yet, so a page reload comes back with no windows and
 no bundle root. Add the root again after a reload.
 
+## What an empty desk lands on
+
+A desk with no bundle root used to open on the set picker whatever else was
+true, and a reader who had started the whole composition and opened the URL it
+printed was shown a picker that said "this desk has no bundle root" while a
+glade node was answering the whole time. So the desk LANDS.
+
+`GyldLandingTap` (`src/landing/`) is registered once at the plugin root. It
+watches `Gyld.Ops.Status` — this package's mirror of the glade connection — and
+on the EDGE into `live`, with no root of any kind on the desk, it adds the
+glade root the way `Add glade node` does, through the set atom's own handle. It
+is a tap and not a React effect because the transition is state: the session
+can come up before a window mounts, after it mounts, or not at all, and a tap
+sees all three the same way. The edge is the whole rule, so a reader who
+removes that root keeps it removed while the session stays up, and a desk that
+already has a root of its own is left alone.
+
+`Gyld.Landing` is what it publishes, and the set picker is a pure read of it.
+Three states, and the picker says one of them:
+
+| the glade session | what the picker says |
+|---|---|
+| `connecting` | `connecting to the glade node at ws://...`, and nothing to press: the desk lands on the node by itself when it answers, and a picker drawn here would be a picker drawn over that |
+| `live`, desk emptied | the node is live and this desk has no root; `Add glade node` puts it back |
+| `offline`, or no glade in the composition at all | `No glade node answered at ws://...`, then the command that starts the composition (`python3 gyld-ui.py start` from the gryth-ui root, which prints the URL), then the two file roots as the other way in |
+
+The URL in those lines is `Gyld.Node`, mirrored from `Glade.Node`, which
+`startGlade()` publishes as soon as grazel's `/bootstrap.json` has been asked
+and BEFORE the socket is tried. So it is the node this page would have
+attached to, which is exactly the thing to name beside "nothing answered". A
+page whose bootstrap has not answered yet names none, and the copy says "the
+node URL this page would use" rather than inventing one.
+
+A composition with no glade at all registers no producer for `Gyld.Ops.Status`,
+so it reads as the empty default, which is `ABSENT` and not `offline`: nothing
+lands, the picker shows, and its two file roots are the whole of what that desk
+can do. That is the case `pnpm dev:gyld` alone is in.
+
+### What a window opens on
+
+A window whose opening link named no stream, or no perspective, fills what it
+did not carry from the census: the first stream `streams.json` lists, and for
+the perspective `decisions` when that stream's own lens manifest emitted it and
+the first entry of that manifest when it did not (the architecture lineage is
+the second case). `GyldFirstPickTap`, one per browser window, seeded by
+`browserTabTaps`; the pure rule is `src/browser/firstPick.ts` and what a window
+chose for itself is `Gyld.Tab.Picked`.
+
+Every choice is emitted data and every choice is a fill, never an overwrite: it
+writes only into a destination atom that is EMPTY, which is how "this window
+has no destination yet" is spelled. A reader's pick is never moved, and a
+census that names nothing chooses nothing.
+
 ## The glade node as a root
 
 There is a third kind of root beside a served URL and a picked directory: the
-glade node itself. `Add glade node` in the set picker adds it, and the bundle
-then arrives on the value shares the `glade-gyld` supplier publishes onto after
-each build (`glade-wz/glade-gyld/README.md`, "Results"):
+glade node itself. `Add glade node` in the set picker adds it — and the landing
+above adds it for an empty desk — and the bundle then arrives on the value
+shares the `glade-gyld` supplier publishes onto after each build
+(`glade-wz/glade-gyld/README.md`, "Results"):
 
 | surface | key | what the root reads from it |
 |---|---|---|
@@ -284,6 +343,33 @@ build directory `builds/build-1789247615547` is at
 `http://localhost:PORT/gyld/builds/build-1789247615547`. The supplier panel
 offers that root as one press when an answer names a build (below).
 
+### A root that is there and empty
+
+The supplier's bundle root is app-owned and starts empty: `glade-gyld`
+publishes onto those four shares AFTER a build, so a composition that has never
+built anything answers every read with "nothing has landed". That used to
+render as `glade node: error (nothing has landed on gyld.streams for
+streams.json)`, which is a lie about a state nothing went wrong in — the node
+answered, the mounts are there, and the share is simply empty.
+
+It is its own status now. `ShareStore` throws `NothingPublished`, the store tap
+turns that into a root whose status is `waiting` and whose `error` is absent,
+and the stream manager leads with what the wait is for: the supplier has
+published no build yet; its first build may be running; otherwise press
+Rebuild, which captures every stream the Gyld checkout declares into the first
+build. When a run whose id begins with `boot` is in view — the supplier's own
+first build, announced on the `gyld.output` log share — that run is NAMED
+instead, and the Rebuild advice is withheld, because pressing it over a build
+already going starts a second one and every build is minutes of Python. The
+sentences are `src/store/waiting.ts` and the one-line status every window
+prints per root is its `rootLine`.
+
+The limit is which boot run a desk can see: `Gyld.Ops.RunId` is the run this
+desk's own output mount is on, so a `boot` run is named once this desk is
+following it. A supplier that publishes its boot run where the desk reads it
+without having asked is a supplier-side change and is not this package's to
+make.
+
 The root reads as a loud error when there is no glade in the composition at
 all, rather than as a bundle with nothing in it. `@grythjs/glade` is reached
 from exactly one file of this package, `src/live.ts`, because that module
@@ -310,8 +396,8 @@ on the wire.
 | `gyld.streams`, `gyld.browser` | Rebuild | `rebuild` | none |
 | `gyld.diff` | Request this diff | `diff` | the pair the window is on, in its own order |
 
-`List` is there because an empty desk and an absent supplier look the same
-from the outside. A bundle root that has never been built publishes nothing on
+`List` is there because an unbuilt bundle root and an absent supplier look
+similar from the outside. A bundle root that has never been built publishes nothing on
 the shares, so the census stays empty; `list` reads the latest build's
 `streams.json` without running a host, and its answer says which of the two it
 is. The first thing to press against a fresh bundle root is `Rebuild`, which
@@ -494,8 +580,10 @@ composition on other ports is followed rather than guessed — `gyld-ui.py start
 --port 5180` proves it, its page opening `ws://127.0.0.1:9106` and not the
 default. With no grazel behind the proxy the fetch does not answer and
 `@grythjs/glade` falls back to `ws://127.0.0.1:9099` exactly as it always did.
-The status line in the browser chrome says `live` once the socket is up. Press
-`Add glade node` in the set picker and the census arrives on `gyld.streams`.
+The status line in the browser chrome says `live` once the socket is up, and
+the desk puts the glade node on itself at that moment (above, "What an empty
+desk lands on"), so the census arrives on `gyld.streams` with nothing pressed.
+`Add glade node` is still there for a desk whose root was removed.
 
 Serving the built application from grazel itself needs no proxy at all, because
 then the page and the bundle root are one origin:
@@ -602,6 +690,28 @@ without a reload. `Reload` in the browser chrome drops the whole cache and
 reads it all again.
 
 ## Known limits
+
+The landing is on the EDGE into a ready session, so a desk whose glade session
+drops and comes back with no root on it lands again. That is the same rule read
+twice rather than a second one, and the case it makes is the honest one: the
+reader emptied the desk, the composition restarted, and the desk comes back on
+the node the page is attached to. A root removed while the session stays up is
+never put back.
+
+The reload story is unchanged and is what makes the landing worth having: the
+desk is not persisted, so every reload starts with no root and lands again.
+
+`Gyld.Tab.Picked` records what a window chose for itself and nothing reads it
+but a test. It exists because the tap that fills the destination has to publish
+something, and what it publishes is the act rather than a second copy of the
+destination — the destination is still `Gyld.Dest.Stream` and
+`Gyld.Dest.Perspective`, which is what the whole graph resolves from.
+
+A window that opens itself on a stream and then has its stream changed by the
+reader keeps the perspective it was on, exactly as it always did. The opening
+pick fills an EMPTY value and nothing else, so a perspective the new stream
+never emitted reads as absent with the stream's own list beside it, which is
+the answer the window has always given.
 
 Each tool declares a `role` in `tools.ts`, and the desktop ignores it. Window
 placement comes from the desktop's own map from tool id to foundation, so every
