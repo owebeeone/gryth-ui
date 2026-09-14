@@ -7,9 +7,9 @@ Run them with `pnpm test:py`, or directly:
 
 They exercise only what can be decided without a running composition — port
 derivation, the state file, the stale-lock decision, readiness detection over
-log text, `/bootstrap.json` parsing, the `ensure_stage` mirror and the status
-verdict — so the suite needs no grazel, no node and no Python 3.13. It runs on
-the system `python3` (3.10) exactly as the script does.
+log text, the supplier's first-build and publication lines, `/bootstrap.json`
+parsing and the status verdict — so the suite needs no grazel, no node and no
+Python 3.13. It runs on the system `python3` (3.10) exactly as the script does.
 """
 
 import importlib.util
@@ -287,98 +287,146 @@ class BootstrapTest(unittest.TestCase):
                 gu.parse_bootstrap(body)
 
 
-class EnsureStageTest(unittest.TestCase):
-    """Mirrors glade-gyld/src/bundle.rs::ensure_stage — so this must behave the
-    way that test suite pins it: idempotent, one symlink per file, a written
-    file wins, and the checkout is never touched."""
+class FirstBuildTest(unittest.TestCase):
+    """The supplier lays and builds the bundle root itself now (glade-gyld
+    `supplier.rs`), so what the script has to read out of grazel's log is
+    whether that first build is still in flight."""
 
-    def _checkout(self, root):
-        examples = root / "gyld" / "examples"
-        examples.mkdir(parents=True)
-        (examples / "glade-decisions.gyld.py").write_text("base\n", encoding="utf-8")
-        (examples / "glade.gyld.py").write_text("glade\n", encoding="utf-8")
-        (examples / "sub").mkdir()
-        return root / "gyld"
+    FRESH = "\n".join(
+        [
+            "[node] listening 9099",
+            "[gyld] glade-gyld: attaching to ws://127.0.0.1:9099 as ws-razel/gyld.ops",
+            "[gyld] glade-gyld: first build of /d/files/gyld — the bundle root "
+            "holds none (run boot-1)",
+            "[gwz] glade-gwz: serving; SIGTERM/SIGINT to stop",
+            "[gyld] glade-gyld: serving; SIGTERM/SIGINT to stop",
+            "[gyld] glade-gyld: the checkout declares fork-a, stream-a, stream-b",
+        ]
+    )
+    PUBLISHED = "[gyld] glade-gyld: published builds/build-1789363954989 (5 streams)"
 
-    def test_it_lays_the_layout_the_supplier_documents(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            gyld_root = self._checkout(root)
-            bundle = root / "bundle"
-            gu.ensure_stage(gyld_root, bundle)
-            self.assertTrue((bundle / "overlays").is_dir())
-            self.assertTrue((bundle / "builds").is_dir())
-            self.assertTrue((bundle / "stage").is_dir())
-            self.assertTrue((bundle / "stage" / "examples").is_symlink())
-            seeded = bundle / "stage" / "examples" / "glade-decisions.gyld.py"
-            self.assertEqual(seeded.read_text(encoding="utf-8"), "base\n")
+    def test_a_fresh_root_names_the_run_its_first_build_took(self):
+        self.assertEqual(gu.first_build_run(self.FRESH), "boot-1")
 
-    def test_every_example_file_becomes_one_symlink(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            gyld_root = self._checkout(root)
-            bundle = root / "bundle"
-            gu.ensure_stage(gyld_root, bundle)
-            overlays = bundle / "overlays"
-            names = sorted(entry.name for entry in overlays.iterdir())
-            self.assertEqual(names, ["glade-decisions.gyld.py", "glade.gyld.py"])
-            for name in names:
-                self.assertTrue((overlays / name).is_symlink())
+    def test_a_publication_ends_the_first_build(self):
+        landed = self.FRESH + "\n" + self.PUBLISHED
+        self.assertIsNone(gu.first_build_run(landed))
 
-    def test_a_written_overlay_wins_and_a_second_pass_leaves_it(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            gyld_root = self._checkout(root)
-            bundle = root / "bundle"
-            gu.ensure_stage(gyld_root, bundle)
-            mine = bundle / "overlays" / "glade-decisions.gyld.py"
-            mine.unlink()
-            mine.write_text("overlay\n", encoding="utf-8")
-            written = bundle / "overlays" / "glade-decisions-keys.gyld.py"
-            written.write_text("keys\n", encoding="utf-8")
-            gu.ensure_stage(gyld_root, bundle)
-            self.assertEqual(mine.read_text(encoding="utf-8"), "overlay\n")
-            self.assertFalse(mine.is_symlink())
-            self.assertEqual(written.read_text(encoding="utf-8"), "keys\n")
+    def test_a_root_that_already_holds_a_build_makes_no_first_build(self):
+        attached = "\n".join(
+            [
+                "[gyld] glade-gyld: serving; SIGTERM/SIGINT to stop",
+                self.PUBLISHED,
+            ]
+        )
+        self.assertIsNone(gu.first_build_run(attached))
 
-    def test_it_is_idempotent_so_the_suppliers_own_pass_finds_nothing_to_do(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            gyld_root = self._checkout(root)
-            bundle = root / "bundle"
-            gu.ensure_stage(gyld_root, bundle)
-            before = sorted(
-                (path.relative_to(bundle), path.is_symlink())
-                for path in bundle.rglob("*")
+    def test_an_empty_log_is_not_a_first_build_in_flight(self):
+        self.assertIsNone(gu.first_build_run(""))
+
+    def test_the_six_readiness_lines_are_still_all_there_on_a_fresh_root(self):
+        ready = "\n".join(
+            [
+                "[node] app grazel registered (+11 record(s), 0 unchanged)",
+                "[node] app gyld registered (+8 record(s), 1 unchanged)",
+                "[node] workspace ws-razel serving",
+                self.FRESH,
+            ]
+        )
+        self.assertEqual(gu.missing_readiness(ready, 9099), [])
+
+
+class PublicationTest(unittest.TestCase):
+    """`published <build> (<n> streams)` is the supplier saying the census
+    reached the value shares — which is what a desk waits for."""
+
+    def test_a_publication_names_the_build_and_counts_its_streams(self):
+        found = gu.latest_publication(
+            "[gyld] glade-gyld: published builds/build-1789363954989 (5 streams)"
+        )
+        self.assertIsNotNone(found)
+        self.assertEqual(found.build, "builds/build-1789363954989")
+        self.assertEqual(found.streams, 5)
+
+    def test_one_stream_reads_as_well_as_many(self):
+        found = gu.latest_publication(
+            "[gyld] glade-gyld: published builds/build-1 (1 stream)"
+        )
+        self.assertEqual(found.streams, 1)
+
+    def test_the_latest_publication_wins_when_a_log_carries_several(self):
+        text = "\n".join(
+            [
+                "[gyld] glade-gyld: published builds/build-1 (5 streams)",
+                "[gyld] glade-gyld: published builds/build-2 (6 streams)",
+            ]
+        )
+        self.assertEqual(gu.latest_publication(text).build, "builds/build-2")
+
+    def test_a_log_with_no_publication_names_none(self):
+        self.assertIsNone(gu.latest_publication("[gyld] glade-gyld: serving"))
+
+    def test_a_sibling_suppliers_line_is_not_a_gyld_publication(self):
+        self.assertIsNone(
+            gu.latest_publication(
+                "[gwz] glade-gwz: published builds/build-1 (5 streams)"
             )
-            gu.ensure_stage(gyld_root, bundle)
-            gu.ensure_stage(gyld_root, bundle)
-            after = sorted(
-                (path.relative_to(bundle), path.is_symlink())
-                for path in bundle.rglob("*")
-            )
-            self.assertEqual(before, after)
+        )
 
-    def test_the_read_only_checkout_is_never_written(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            gyld_root = self._checkout(root)
-            bundle = root / "bundle"
-            gu.ensure_stage(gyld_root, bundle)
-            (bundle / "overlays" / "new.gyld.py").write_text("new\n", encoding="utf-8")
-            gu.ensure_stage(gyld_root, bundle)
-            listed = sorted(p.name for p in (gyld_root / "examples").iterdir())
-            self.assertEqual(
-                listed, ["glade-decisions.gyld.py", "glade.gyld.py", "sub"]
-            )
+    def test_a_not_published_note_is_not_a_publication(self):
+        self.assertIsNone(
+            gu.latest_publication("[gyld] glade-gyld: not published: too large")
+        )
 
-    def test_a_checkout_with_no_examples_still_lays_the_layout(self):
+    def test_the_publication_of_one_named_build_is_found_among_others(self):
+        text = "\n".join(
+            [
+                "[gyld] glade-gyld: published builds/build-1 (5 streams)",
+                "[gyld] glade-gyld: published builds/build-2 (6 streams)",
+            ]
+        )
+        found = gu.publication_of(text, "builds/build-1")
+        self.assertEqual(found.streams, 5)
+        self.assertIsNone(gu.publication_of(text, "builds/build-3"))
+
+    def test_a_build_is_named_the_way_the_suppliers_log_names_it(self):
+        bundle = Path("/d/files/gyld")
+        self.assertEqual(
+            gu.build_name(bundle, bundle / "builds" / "build-7"), "builds/build-7"
+        )
+
+    def test_a_build_outside_the_bundle_root_keeps_its_absolute_path(self):
+        self.assertEqual(
+            gu.build_name(Path("/d/files/gyld"), Path("/elsewhere/build-7")),
+            "/elsewhere/build-7",
+        )
+
+
+class LogSliceTest(unittest.TestCase):
+    """grazel appends to one log per instance, so a restart's readiness and
+    publication lines would otherwise be read off the previous run's."""
+
+    def test_only_what_was_written_after_the_offset_is_read(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            bundle = root / "bundle"
-            gu.ensure_stage(root / "no-such-checkout", bundle)
-            self.assertTrue((bundle / "overlays").is_dir())
-            self.assertTrue((bundle / "stage" / "examples").is_symlink())
+            log = Path(tmp) / "grazel.log"
+            log.write_text("old run\n", encoding="utf-8")
+            offset = gu.log_size(log)
+            with open(str(log), "a", encoding="utf-8") as handle:
+                handle.write("new run\n")
+            self.assertEqual(gu.log_since(log, offset), "new run\n")
+            self.assertEqual(gu.log_since(log, 0), "old run\nnew run\n")
+
+    def test_a_log_that_is_not_there_yet_has_no_size_and_reads_as_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp) / "not-yet.log"
+            self.assertEqual(gu.log_size(log), 0)
+            self.assertEqual(gu.log_since(log, 0), "")
+
+    def test_a_multibyte_line_survives_the_slice(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp) / "grazel.log"
+            log.write_text("first build of /d — none\n", encoding="utf-8")
+            self.assertIn("—", gu.log_since(log, 0))
 
 
 class VerdictTest(unittest.TestCase):

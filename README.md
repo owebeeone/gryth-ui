@@ -51,8 +51,8 @@ python3 gyld-ui.py stop [--purge]           # no --port: every instance
 
 | verb | what it does |
 |---|---|
-| `start` | prerequisites, then grazel, then the bundle root and its first build, then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |
-| `status` | grazel's `/bootstrap.json`, the node's WS port, the supplier serving, the bundle root seeded and how many streams it lists, the page, and in dev mode the two proxied paths. Exit 0 when it works, 1 when it does not. `--json` for a machine. |
+| `start` | prerequisites, then grazel, then a wait for the supplier to publish a build (it lays the bundle root and makes the first one itself, as run `boot-1`), then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |
+| `status` | grazel's `/bootstrap.json`, the node's WS port, the supplier serving, the bundle root built and how many streams it lists, the supplier's publication of that build, the page, and in dev mode the two proxied paths. Exit 0 when it works, 1 when it does not. `--json` for a machine. |
 | `stop` | SIGTERM to grazel's process group (which takes the node and both suppliers) and to vite's, SIGKILL what is left, clear a lock the node did not, and confirm nothing of the instance survives. The data stays unless `--purge`. |
 | `restart` | `stop`, then `start` with the options the instance recorded. |
 
@@ -67,8 +67,10 @@ it. Ports derive from the one port you open (5173 → 8080/9099, which is what t
 runbook prints), so two instances never collide and each page attaches to its
 own node.
 
-The Gyld hosts need Python 3.13 (`--python`, default
-`/opt/homebrew/bin/python3.13`); the script itself runs on the system `python3`.
+The Gyld hosts the supplier runs need Python 3.13 at
+`/opt/homebrew/bin/python3.13` — `glade-gyld`'s own default, which grazel gives
+it no way to override, so `start` checks that path rather than offering an
+option; the script itself runs on the system `python3`.
 The whole composition, and what each piece is, is in
 `../dev-docs/GrythGyldDemoRunbook.md`.
 

@@ -539,7 +539,7 @@ python3 gyld-ui.py stop --purge
 ```
 
 That is everything below, done and checked: grazel with this leg switched on,
-the bundle root laid and given its first build, `pnpm dev:gyld` in front with
+a wait for the supplier to publish the build it lays the root and makes itself, `pnpm dev:gyld` in front with
 both proxied paths pointed at THAT grazel, and the URL as the last line. It is
 idempotent, it takes `--port` for a second instance with its own ports and its
 own data, and `--mode built` serves `dist-gyld` from grazel with no dev server

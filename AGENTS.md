@@ -117,8 +117,8 @@ checked against BOTH targets — `pnpm build` and `pnpm build:gyld`.
 
 ## `gyld-ui.py` — the running composition
 
-The Gyld write path is grazel + a glade node + the `glade-gyld` supplier + a
-seeded bundle root + the desktop. Do not stand that up by hand: `gyld-ui.py` at
+The Gyld write path is grazel + a glade node + the `glade-gyld` supplier (which
+lays the bundle root and makes its first build itself) + the desktop. Do not stand that up by hand: `gyld-ui.py` at
 the repository root does it, and `../dev-docs/GrythGyldDemoRunbook.md` explains
 what each piece is.
 
@@ -131,9 +131,9 @@ what each piece is.
   a ruling submitted from the UI is written into the bundle root there. Only
   `stop --purge` deletes one. Never point `--data` at `/tmp`.
 - Python 3.10 compatible ON PURPOSE — it runs on the system `python3`. Only the
-  Gyld hosts it invokes need 3.13 (`--python`). Stdlib only: no dependency may
-  be added to it.
-- It mirrors two things that live in other repositories: `ensure_stage` from
-  `glade-gyld/src/bundle.rs`, and the stream discovery
-  `manage_decision_streams.py rebuild` does. Both are marked in the source. If
-  either moves, this script moves with it.
+  Gyld hosts the SUPPLIER runs need 3.13, at `/opt/homebrew/bin/python3.13`;
+  grazel passes no interpreter through, so that is a prerequisite check and not
+  an option. Stdlib only: no dependency may be added to it.
+- It runs no Gyld host and lays no bundle root: `glade-gyld` owns both. `start`
+  waits for the supplier's `published builds/… (N streams)` line, and `status`
+  checks the log carries one for the build `latest.json` names.
