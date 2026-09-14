@@ -63,6 +63,31 @@ export function firstPick(
   return pick.stream === '' && pick.perspective === '' ? NOTHING_PICKED : pick;
 }
 
+/**
+ * The perspective a browser lands on when it is RETARGETED to another stream.
+ *
+ * A reader who moved a browser to `tiers` and then picks another stream is
+ * still reading tiers, so the perspective travels — but only where the stream
+ * being moved to emitted it. A perspective the new stream does not carry is
+ * not a picture, so the first-pick rule above answers instead, exactly as it
+ * does for a window that never had one. Nothing is invented either way: both
+ * answers come from that stream's own lens manifest, and a stream the census
+ * does not carry answers with nothing at all.
+ */
+export function keptPerspective(
+  census: GyldStreamsCensus | undefined,
+  stream: string,
+  perspective: string,
+): string {
+  const on = census?.status === 'ready'
+    ? census.streams.find((entry) => entry.id === stream)
+    : undefined;
+  if (perspective !== '' && (on?.perspectives ?? []).includes(perspective)) {
+    return perspective;
+  }
+  return firstPick(census, stream, '').perspective;
+}
+
 /** `decisions` where the stream emitted it, else what its manifest lists
  *  first, else nothing: a stream whose perspectives are not known is a stream
  *  this cannot open, and a window on no perspective is a rendered state. */

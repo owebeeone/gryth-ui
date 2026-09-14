@@ -106,7 +106,7 @@ export const TickerBleedTap = createAtomValueTap(TICKER_BLEED, {
 // tool's default size (v1 policy — always a new window), docking home on a
 // gridded desktop. Published as a grip value, so the launcher, plugins,
 // and agents all open views through this one surface.
-const openToolIntent = (link: ToolLink) => {
+function openToolAt(link: ToolLink, source?: string): void {
   const defs = allTools(PluginRegistryTap.get());
   const def = resolveTool(defs, link.toolId);
   const out = openToolWindow(
@@ -115,11 +115,15 @@ const openToolIntent = (link: ToolLink) => {
     def.defaultSize,
     DesktopCurrentTap.get(),
     link.params,
-    undefined,
+    source,
     toolRoles(defs),
   );
   DesktopWindowsTap.set(out.list);
   DesktopFocusedTap.set(out.focusId);
+}
+
+const openToolIntent = (link: ToolLink) => {
+  openToolAt(link);
 };
 export const OpenToolTap = createAtomValueTap(DESKTOP_OPEN_TOOL, {
   initial: openToolIntent,
@@ -229,7 +233,24 @@ export interface DesktopSetup {
    * window, docked by the same role. Naming any tool also means this desk is
    * not empty, so the shell's first-run Welcome window is not opened.
    */
-  tools?: readonly ToolLink[];
+  tools?: readonly DeskTool[];
+}
+
+/**
+ * One tool a desk opens with, and — when it is a SINK — the tool it is wired
+ * to (`Desktop.OpenWired`'s relation, declared instead of clicked).
+ *
+ * A desk whose two windows are a selector and the view it drives must open
+ * them wired, or the selector opens a second view on every pick because it
+ * resolves no source to retarget. Declaring it here is the same wire the
+ * chrome makes for a sink opened at runtime: the source's tab id lands on the
+ * sink's tab record and `wireTabSource` makes the source's context a parent.
+ */
+export interface DeskTool extends ToolLink {
+  /** The tool this one is opened WIRED to, named EARLIER in the same list. A
+   *  tool that is not in the list ahead of this one wires nothing, because the
+   *  tab it would name does not exist yet. */
+  wiredTo?: ToolId;
 }
 
 // Lock desk 1 at composition time. A target whose desk IS its purpose
@@ -288,9 +309,15 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   if (setup?.locked === true) {
     lockFirstDesk();
   }
-  // Through the launcher's own intent, so a booted window and a launched one
-  // are the same window, docked by the same declared role.
+  // Through the launcher's own open path, so a booted window and a launched
+  // one are the same window, docked by the same declared role. The tab id each
+  // one lands on is read off the list BEFORE it opens (what `openWindow` will
+  // assign), which is how `Desktop.OpenWiredPair` names a source that does not
+  // exist yet, so a later tool in the list can be opened wired to it.
+  const openedAs = new Map<ToolId, string>();
   for (const link of tools) {
-    openToolIntent(link);
+    const tabId = nextTabId(DesktopWindowsTap.get());
+    openToolAt(link, link.wiredTo === undefined ? undefined : openedAs.get(link.wiredTo));
+    openedAs.set(link.toolId, tabId);
   }
 }

@@ -23,10 +23,13 @@ async function landing(setup: Parameters<typeof registerDesktopTaps>[1]) {
   handle.get()!.set(openWindow([], 'welcome', { w: 520, h: 280 }).list);
   registerDesktopTaps(grok, setup);
   const list: WindowRecord[] = handle.get()!.get() ?? [];
+  const tabOf = (facet: string) =>
+    list.flatMap((w) => w.tabs).find((tab) => tab.facet === facet);
   return {
     facets: list.flatMap((w) => w.tabs.map((tab) => tab.facet)),
     areaOf: (facet: string) =>
       list.find((w) => w.tabs.some((tab) => tab.facet === facet))?.dock?.area,
+    tabOf,
   };
 }
 
@@ -35,13 +38,18 @@ describe('landing on the gyld target', () => {
     await expect.poll(() => Object.keys(allTools(PluginRegistryTap.get())).length)
       .toBeGreaterThanOrEqual(7);
     const desk = await landing(GYLD_DESK);
-    // the locked preset's own grid, then exactly the two tools the desk names
-    expect(desk.facets).toEqual(['grid', 'gyld.streams', 'gyld.browser']);
+    // the locked preset's own grid, then exactly the two tools the desk names,
+    // in the order they open: the browser first, so the tree can be wired to it
+    expect(desk.facets).toEqual(['grid', 'gyld.browser', 'gyld.streams']);
     // the reader asked for Gyld, so the shell does not greet them first
     expect(desk.facets).not.toContain('welcome');
     // and each landed by its declared role, not by the order it was opened
     expect(desk.areaOf('gyld.streams')).toBe('explorer');
     expect(desk.areaOf('gyld.browser')).toBe('stage');
+    // the WIRE: the tree's tab names the browser's tab as its source, which is
+    // what makes a stream click retarget that browser rather than open another
+    expect(desk.tabOf('gyld.streams')?.source).toBe(desk.tabOf('gyld.browser')?.id);
+    expect(desk.tabOf('gyld.browser')?.source).toBeUndefined();
   });
 
   it('leaves a desk that names no tool exactly as it was', async () => {

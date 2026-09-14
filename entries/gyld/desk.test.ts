@@ -27,11 +27,14 @@ describe('the gyld target desk', () => {
   it('is the Gyld pane preset, locked from the first paint', () => {
     expect(GYLD_DESK.foundation).toBe(GYLD);
     expect(GYLD_DESK.locked).toBe(true);
-    // and the two windows it opens with: streams first, so the tree is there
-    // to be picked from before the browser beside it draws. What that costs
-    // the desk is asserted in `landing.test.ts`.
+    // and the two windows it opens with: the browser first, because the tree
+    // is opened WIRED to it and a sink names a source that already exists. The
+    // wire is what makes a stream click retarget that browser instead of
+    // opening a second one. What the pair costs the desk is asserted in
+    // `landing.test.ts`.
     expect(GYLD_DESK.tools).toEqual([
-      { toolId: 'gyld.streams' }, { toolId: 'gyld.browser' },
+      { toolId: 'gyld.browser' },
+      { toolId: 'gyld.streams', wiredTo: 'gyld.browser' },
     ]);
   });
 

@@ -1,13 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { createAtomValueTap } from '@owebeeone/grip-react';
+import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
 import {
   DESKTOP_OPEN_TOOL, DESKTOP_RETARGET_TAB, type ToolLink,
 } from '@grythjs/plugin-api';
 import { readStreamsIndex } from '../contract';
 import { browserLink } from '../browser/links';
+import { keptPerspective } from '../browser/firstPick';
+import { browserTabTaps } from '../browser/browserTabTaps';
 import { GYLD_BROWSER_TOOL } from '../tools';
 import {
-  GYLD_OPS_RUN_ID, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_TAB_ID, GYLD_VALIDATION,
+  GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_STREAM,
+  GYLD_DEST_STREAM_TAP, GYLD_OPS_RUN_ID, GYLD_STORE_STATUS, GYLD_STREAMS,
+  GYLD_TAB_ID, GYLD_VALIDATION,
 } from '../grips';
 import type { GyldRootStatus, GyldStreamsCensus } from '../store/state';
 import { ROOT_WAITING, WAITING_REASON } from '../store/waiting';
@@ -18,9 +22,11 @@ import {
   draftShapeFaults, operationNamed, rebuildCommand,
 } from './operations';
 import { parentChoices, streamRows } from './tree';
+import { showStream, type StreamTargetHandles } from './useStreamTarget';
 import { mountDesk, wireSink } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import streamsFixture from '../../test/fixtures/bundle/streams.json';
+import architectureRecord from '../../test/fixtures/bundle/streams/architecture/stream.json';
 
 // Step 2.3: gyld.streams. The tree is the census, the parent-moved indicator
 // is the one comparison section 4.3 defines, and the exported command is the
@@ -370,13 +376,18 @@ describe('a row moves a browser rather than deciding for itself', () => {
     );
     const markup = tab.render(<StreamManager />);
     expect(/<button[^>]*class="gyld-stream-open"[^>]*disabled/.test(markup)).toBe(false);
-    // the link a row writes is the browser link, with the stream and nothing
-    // else: a perspective this window chose would be a Gyld fact it invented
-    expect(browserLink({ stream: 'stream-a', perspective: '', focus: '' })).toEqual({
+    // A desk with no browser to move opens ONE, on that stream and no
+    // perspective: a perspective this window chose would be a Gyld fact it
+    // invented, and the new window's own first pick fills it from the manifest.
+    showStream(
+      { wiredTo: '', openTool: (link: ToolLink) => { opened.push(link); } },
+      'stream-a',
+    );
+    expect(opened).toEqual([browserLink({ stream: 'stream-a', perspective: '', focus: '' })]);
+    expect(opened[0]).toEqual({
       toolId: GYLD_BROWSER_TOOL,
       params: { stream: 'stream-a', perspective: '', focus: '', preview: '' },
     });
-    expect(opened).toEqual([]);
   });
 
   it('retargets the browser it is wired to, and says which one', async () => {
@@ -398,6 +409,100 @@ describe('a row moves a browser rather than deciding for itself', () => {
     const markup = sink.render(<StreamManager />);
     expect(markup).toContain('wired to sm-source');
     expect(markup).toContain('show this stream in browser sm-source');
+  });
+
+  /**
+   * The tree over a REAL browser: the desk's own wire (entries/gyld/desk.ts
+   * opens the tree wired to the browser), so what a pick does is what a pick
+   * does on the desk.
+   *
+   * The handles are resolved from the SINK's context exactly as the hook
+   * resolves them, and the act is called directly: this package renders to
+   * static markup and dispatches no click.
+   */
+  const overBrowser = async (name: string, params: Record<string, unknown>) => {
+    const desk = mountDesk();
+    const opened: ToolLink[] = [];
+    const retargets: { tab: string; params: Record<string, unknown> }[] = [];
+    const home = desk.ctx.getGripHomeContext();
+    home.registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, {
+      initial: (link: ToolLink) => { opened.push(link); },
+    }));
+    home.registerTap(createAtomValueTap(DESKTOP_RETARGET_TAB, {
+      initial: (tab: string, next: Record<string, unknown>) => {
+        retargets.push({ tab, params: next });
+      },
+    }));
+    const browser = desk.tab(name, browserTabTaps(name, params));
+    const tree = wireSink(browser, `tab:${name}-tree`, streamsTabTaps());
+    await settled(
+      () => tree.read(GYLD_STREAMS).get() as GyldStreamsCensus,
+      (value) => value?.status === 'ready',
+    );
+    const handles: StreamTargetHandles = {
+      wiredTo: tree.read(GYLD_TAB_ID).get() ?? '',
+      census: tree.read(GYLD_STREAMS).get(),
+      stream: tree.read(GYLD_DEST_STREAM_TAP).get() as AtomTapHandle<string>,
+      perspective: tree.read(GYLD_DEST_PERSPECTIVE_TAP).get() as AtomTapHandle<string>,
+      retarget: tree.read(DESKTOP_RETARGET_TAB).get(),
+      openTool: tree.read(DESKTOP_OPEN_TOOL).get(),
+    };
+    return { browser, tree, handles, opened, retargets };
+  };
+
+  it('moves the wired browser and opens NOTHING, however many picks', async () => {
+    const on = await overBrowser('sm-wired', { stream: 'base', perspective: 'decisions' });
+    expect(on.handles.wiredTo).toBe('sm-wired');
+    showStream(on.handles, 'stream-a');
+    // the browser itself moved — the live window, through its own handle
+    expect(on.browser.read(GYLD_DEST_STREAM).get()).toBe('stream-a');
+    // and its tab RECORD carries the same, so a reload comes back on it
+    expect(on.retargets).toEqual([{
+      tab: 'sm-wired',
+      params: { stream: 'stream-a', perspective: 'decisions', focus: '' },
+    }]);
+    showStream(on.handles, 'stream-b');
+    expect(on.browser.read(GYLD_DEST_STREAM).get()).toBe('stream-b');
+    // two picks, two moves, no window: the launcher is what opens a second
+    // browser, and this tree never does it behind a pick
+    expect(on.opened).toEqual([]);
+  });
+
+  it('keeps the perspective where the stream emitted it, first-picks where it did not', async () => {
+    const on = await overBrowser('sm-persp', { stream: 'base', perspective: 'tiers' });
+    showStream(on.handles, 'stream-a');
+    // stream-a emits `tiers`, so the reader stays on the picture they chose
+    expect(on.browser.read(GYLD_DEST_PERSPECTIVE).get()).toBe('tiers');
+    showStream(on.handles, 'architecture');
+    // architecture emits no `tiers` at all, so the first-pick rule answers off
+    // that stream's OWN manifest rather than leaving a perspective it has not
+    const landed = on.browser.read(GYLD_DEST_PERSPECTIVE).get() ?? '';
+    expect(landed).not.toBe('tiers');
+    expect(architectureRecord.lenses.map((entry) => entry.perspective)).toContain(landed);
+    expect(on.opened).toEqual([]);
+  });
+});
+
+describe('the perspective a retargeted browser lands on', () => {
+  const census = (perspectives: string[]): GyldStreamsCensus => ({
+    status: 'ready',
+    streams: [{ id: 'to', rootIndex: 0, record: index.streams[0], perspectives }],
+    collisions: [],
+    loadedAt: '',
+  });
+
+  it('travels where the stream emitted it', () => {
+    expect(keptPerspective(census(['decisions', 'tiers']), 'to', 'tiers')).toBe('tiers');
+  });
+
+  it('gives way to the opening perspective where it did not', () => {
+    expect(keptPerspective(census(['decisions', 'tiers']), 'to', 'journeys')).toBe('decisions');
+    expect(keptPerspective(census(['journeys', 'state']), 'to', 'tiers')).toBe('journeys');
+  });
+
+  it('answers nothing for a stream the census does not carry', () => {
+    expect(keptPerspective(census(['decisions']), 'absent', 'tiers')).toBe('');
+    expect(keptPerspective(undefined, 'to', 'tiers')).toBe('');
   });
 });
 

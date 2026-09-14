@@ -14,13 +14,21 @@ import { GYLD_BROWSER_TOOL, GYLD_STREAMS_TOOL } from '@grythjs/plugin-gyld';
 //
 // Which window lands where is NOT decided here. Each tool declares its own
 // `role` and the preset carries areas of those names, so the tools below are
-// named in the order they open and in no area at all: the stream tree's
-// `explorer` role puts it on the left and the browser's `stage` role puts it
-// in the middle (see packages/desktop/src/foundations.ts, GYLD).
+// named in no area at all: the stream tree's `explorer` role puts it on the
+// left and the browser's `stage` role puts it in the middle (see
+// packages/desktop/src/foundations.ts, GYLD).
 //
 // They are named because a reader who opens this target has already said what
 // they came for. An empty desk with a Welcome window on it makes them open the
 // two windows every session begins with; a desk that opens them does not.
+//
+// The BROWSER opens first and the tree is opened WIRED to it, which is the
+// relation the pane layout already draws: the selector on the left drives the
+// view in the middle. The wire is what makes a stream click RETARGET that
+// browser — the tree resolves the browser's own destination handle through it
+// (packages/plugins/gyld/src/streams/useStreamTarget.ts) — instead of opening
+// a second browser on every pick. A reader who wants a second browser opens
+// one from the launcher, which is how a second of any tool is opened.
 //
 // A separate module from `main.tsx` for the reason `plugins.ts` is one:
 // `main.tsx` mounts React and lights the live write path on import, so the
@@ -28,5 +36,8 @@ import { GYLD_BROWSER_TOOL, GYLD_STREAMS_TOOL } from '@grythjs/plugin-gyld';
 export const GYLD_DESK: DesktopSetup = {
   foundation: GYLD,
   locked: true,
-  tools: [{ toolId: GYLD_STREAMS_TOOL }, { toolId: GYLD_BROWSER_TOOL }],
+  tools: [
+    { toolId: GYLD_BROWSER_TOOL },
+    { toolId: GYLD_STREAMS_TOOL, wiredTo: GYLD_BROWSER_TOOL },
+  ],
 };

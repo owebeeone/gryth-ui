@@ -4,7 +4,7 @@
 import './desktop.css';
 
 export { default as Desktop } from './Desktop';
-export { registerDesktopTaps, type DesktopSetup } from './taps.desktop';
+export { registerDesktopTaps, type DeskTool, type DesktopSetup } from './taps.desktop';
 export * from './grips.desktop';
 export * from './themes';
 export * from './ops';
