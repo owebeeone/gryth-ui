@@ -349,6 +349,19 @@
   font-weight: 600;
 }
 
+/* What the picker LEADS with: the glade presence, then what to do about it.
+   The lead is the fact and reads at full strength; the fix is the command
+   under it. Neither is dimmed the way an aside is. */
+
+.gyld-lead {
+  margin: 0;
+}
+
+.gyld-fix {
+  margin: 0;
+  opacity: 0.85;
+}
+
 .gyld-picker-row {
   display: flex;
   flex-wrap: wrap;

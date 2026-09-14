@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import type { AtomTapHandle } from '@owebeeone/grip-react';
+import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
 import { readLens, readStream } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM,
-  GYLD_FOCUS, GYLD_LENS, GYLD_RECORD, GYLD_STREAMS, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
+  GYLD_FOCUS, GYLD_LANDING, GYLD_LENS, GYLD_RECORD, GYLD_STREAMS, GYLD_TAB_SEARCH,
+  GYLD_TAB_SEARCH_TAP,
 } from '../grips';
 import { NO_FOCUS } from '../focus';
+import { GladePresence, type GyldLanding } from '../landing/landing';
 import { GYLD_BROWSER_TOOL } from '../tools';
 import { GyldBrowser } from '../GyldBrowser';
 import { buildScene } from '../lens/scene';
@@ -332,6 +334,16 @@ describe('the wire', () => {
 });
 
 describe('the empty desk', () => {
+  /** The picker as one landing renders it, with no root on the desk. */
+  const pickerOn = (name: string, landing: GyldLanding): string => {
+    const desk = mountDesk(EMPTY_ROOTS);
+    const tab = desk.tab(name, [
+      ...browserTabTaps(name),
+      createAtomValueTap(GYLD_LANDING, { initial: landing }),
+    ]);
+    return tab.render(<GyldBrowser tabId={name} />);
+  };
+
   it('shows the set picker rather than a picture', async () => {
     const desk = mountDesk(EMPTY_ROOTS);
     const tab = desk.tab('empty', browserTabTaps('empty'));
@@ -341,9 +353,44 @@ describe('the empty desk', () => {
     );
     const markup = tab.render(<GyldBrowser tabId="empty" />);
     expect(markup).toContain('gyld-picker');
-    expect(markup).toContain('has no bundle root');
     expect(markup).toContain('File System Access');
     expect(markup).not.toContain('gyld-lens-svg');
+  });
+
+  it('says it is connecting, and offers nothing, while the session settles', () => {
+    const markup = pickerOn('settling', {
+      presence: GladePresence.CONNECTING, node: 'ws://127.0.0.1:9106', landed: false,
+    });
+    expect(markup).toContain('connecting to the glade node at ws://127.0.0.1:9106');
+    // no picker at all: the desk lands on the node by itself when it answers
+    expect(markup).not.toContain('Add glade node');
+    expect(markup).not.toContain('Add static root');
+    expect(markup).not.toContain('Open directory');
+  });
+
+  it('leads with the node that never answered and with the command that starts it', () => {
+    const markup = pickerOn('nonode', {
+      presence: GladePresence.OFFLINE, node: 'ws://127.0.0.1:9099', landed: false,
+    });
+    expect(markup).toContain(
+      'No glade node answered at ws://127.0.0.1:9099, so this desk has nothing to read.',
+    );
+    expect(markup).toContain('python3 gyld-ui.py start');
+    // the two file roots stay, as the alternative rather than as the lead
+    expect(markup.indexOf('No glade node answered'))
+      .toBeLessThan(markup.indexOf('Add static root'));
+    expect(markup).toContain('An emitted Gyld bundle on disk is the other way in');
+    expect(markup).toContain('Add glade node');
+    expect(markup).toContain('Open directory');
+  });
+
+  it('offers the node back to a live desk whose root was removed', () => {
+    const markup = pickerOn('emptied', {
+      presence: GladePresence.LIVE, node: 'ws://127.0.0.1:9106', landed: true,
+    });
+    expect(markup).toContain('The glade node at ws://127.0.0.1:9106 is live');
+    expect(markup).toContain('Add glade node');
+    expect(markup).not.toContain('python3 gyld-ui.py start');
   });
 });
 

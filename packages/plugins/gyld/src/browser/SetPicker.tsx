@@ -1,8 +1,9 @@
 import { useGrip } from '@owebeeone/grip-react';
 import {
-  GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL, GYLD_PICKER_URL_TAP,
-  GYLD_SET, GYLD_SET_TAP, GYLD_STORE_STATUS,
+  GYLD_LANDING, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL,
+  GYLD_PICKER_URL_TAP, GYLD_SET, GYLD_SET_TAP, GYLD_STORE_STATUS,
 } from '../grips';
+import { LANDING_UNSET, landingSays } from '../landing/landing';
 import { gyldStoreTap } from '../rootTaps';
 import { directoryPicker, isPickerCancel, type PickedDirectoryHandle } from './fsAccess';
 import { addDirectoryRoot, addShareRoot, addStaticRoot, describeRoot } from './setOps';
@@ -10,6 +11,13 @@ import { addDirectoryRoot, addShareRoot, addStaticRoot, describeRoot } from './s
 // The set picker: the browser window's EMPTY STATE and its "add a root"
 // affordance. A desk with no root gets this instead of a picture, because the
 // plugin never invents a place to read Gyld output from.
+//
+// WHAT IT LEADS WITH is the landing (`../landing/landing.ts`), because "this
+// desk has no bundle root" is the least useful true thing that can be said
+// here: a reader who started the composition and opened the printed URL wants
+// to know whether a node answered, and where. So the lead is the glade
+// presence — still connecting, nothing answered, or live with the root taken
+// off — and the two file roots are offered under it as the other way in.
 //
 // Every write goes through a tap handle, and every set write goes through
 // `update()` rather than a render-closure read followed by a set: the
@@ -24,6 +32,7 @@ export function SetPicker() {
   const error = useGrip(GYLD_PICKER_ERROR) ?? '';
   const errorTap = useGrip(GYLD_PICKER_ERROR_TAP);
   const roots = useGrip(GYLD_STORE_STATUS) ?? [];
+  const says = landingSays(useGrip(GYLD_LANDING) ?? LANDING_UNSET);
   const picker = directoryPicker();
 
   const addUrl = () => {
@@ -96,13 +105,40 @@ export function SetPicker() {
     errorTap?.set(failure ?? '');
   };
 
+  // Still finding out. A picker drawn here would be a picker drawn over a node
+  // that is about to answer, and the desk lands on it by itself when it does.
+  if (!says.offers) {
+    return (
+      <div className="gyld-picker gyld-picker-settling">
+        <h3>Gyld browser</h3>
+        <p className="gyld-lead">{says.lead}</p>
+      </div>
+    );
+  }
   return (
     <div className="gyld-picker">
       <h3>Gyld browser</h3>
+      <p className="gyld-lead">{says.lead}</p>
+      {says.fix !== '' && <p className="gyld-fix">{says.fix}</p>}
+      <div className="gyld-picker-row">
+        <button
+          type="button"
+          className="gyld-add-share"
+          onClick={addShare}
+          disabled={!setTap}
+        >
+          Add glade node
+        </button>
+        <span className="gyld-note">
+          the bundle the glade-gyld supplier publishes onto the gyld shares
+          after each build; the same windows read it, and submitting from them
+          needs it
+        </span>
+      </div>
       <p className="gyld-note">
-        This desk has no bundle root. Point it at an emitted Gyld bundle: a
-        served output directory (for example <code>python3 -m http.server</code>
-        {' '}over it) or a local directory.
+        An emitted Gyld bundle on disk is the other way in: a served output
+        directory (for example <code>python3 -m http.server</code> over it) or a
+        local directory.
       </p>
       <form
         className="gyld-picker-row"
@@ -133,21 +169,6 @@ export function SetPicker() {
             static root instead
           </span>
         )}
-      </div>
-      <div className="gyld-picker-row">
-        <button
-          type="button"
-          className="gyld-add-share"
-          onClick={addShare}
-          disabled={!setTap}
-        >
-          Add glade node
-        </button>
-        <span className="gyld-note">
-          the bundle the glade-gyld supplier publishes onto the gyld shares
-          after each build; the same windows read it, and submitting from them
-          needs it
-        </span>
       </div>
       {error !== '' && <p className="gyld-fault">{error}</p>}
       <ul className="gyld-picker-roots">

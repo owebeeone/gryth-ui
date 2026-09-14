@@ -81,11 +81,13 @@ describe('gyld.browser', () => {
     expect(markup).toContain('emitted perspectives: dependencies');
   });
 
-  it('says the desk has no bundle root at all', async () => {
+  it('says why there is no root at all, rather than drawing a picture', async () => {
     const window = mount('no-root', 'base', 'decisions', EMPTY_ROOTS);
     await expect.poll(() => window.lens()?.status).toBe('absent');
     const markup = window.render();
-    expect(markup).toContain('This desk has no bundle root');
+    // no landing is published on this desk, so the picker reads the default:
+    // no glade in the composition, which is the state it leads with
+    expect(markup).toContain('No glade node answered');
     expect(markup).not.toContain('gyld-lens-svg');
   });
 });
