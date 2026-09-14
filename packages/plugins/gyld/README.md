@@ -713,10 +713,15 @@ pick fills an EMPTY value and nothing else, so a perspective the new stream
 never emitted reads as absent with the stream's own list beside it, which is
 the answer the window has always given.
 
-Each tool declares a `role` in `tools.ts`, and the desktop ignores it. Window
-placement comes from the desktop's own map from tool id to foundation, so every
-gyld window lands on the `stage` fallback. The role is declared because the
-contract asks for it and it is what a placement entry would say.
+Each tool declares a `role` in `tools.ts`, and that is what places its window
+on a locked desk: `gyld.streams` is the `explorer` (the stream tree is the
+selector), `gyld.browser`, `gyld.compare` and `gyld.diff` take the `stage`,
+`gyld.decidenow` the `pulse` under it, and `gyld.detail` and `gyld.decide` the
+`inspector`. The desktop resolves a window's home as designation, then role,
+then fallback, so the Gyld pane preset (`GYLD` in the desktop's
+`foundations.ts`, which the Gyld target locks at boot) names no gyld tool at
+all — it carries areas of those names and the roles do the rest. On a preset
+without them, a gyld window still lands on the fallback.
 
 `gyld.detail` cannot be pinned to a record. A pinned detail window that stops
 following its browser is in the specification and is not implemented, so a

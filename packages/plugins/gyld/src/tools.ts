@@ -14,17 +14,22 @@ export const GYLD_DIFF_TOOL: ToolId = 'gyld.diff';
 export const GYLD_COMPARE_TOOL: ToolId = 'gyld.compare';
 
 /**
- * The `role` each tool advertises, per the table in spec section 2.
+ * The `role` each tool advertises: the KIND of pane it belongs in, named
+ * once here and read by the desktop when a desk is locked
+ * (`ops.dockingHome` — a designation on the preset still wins, and a role no
+ * preset has an area for falls back).
  *
- * Advisory only: packages/desktop/src/foundations.ts places a window by TOOL
- * ID through its own `designate` map and never reads `role`, so every gyld
- * window lands on the `stage` fallback today. Declared because the contract
- * asks for it and it is what a designate entry would say.
+ * These are the areas of the Gyld desk (`packages/desktop/src/foundations.ts`,
+ * GYLD): the stream tree is the SELECTOR on the left, what you read is on the
+ * `stage`, what wants a decision now is the `pulse` under it, and what the
+ * stage's selection IS — the record, and the ruling being written about it —
+ * is the `inspector` on the right. On a preset without those areas (HUB) a
+ * gyld window still lands on the fallback.
  */
-export const BROWSER_ROLE = 'explorer';
-export const DETAIL_ROLE = 'stage';
-export const DECIDE_NOW_ROLE = 'crew';
-export const STREAMS_ROLE = 'crew';
-export const DECIDE_ROLE = 'stage';
-export const DIFF_ROLE = 'stage';
+export const STREAMS_ROLE = 'explorer';
+export const BROWSER_ROLE = 'stage';
 export const COMPARE_ROLE = 'stage';
+export const DIFF_ROLE = 'stage';
+export const DECIDE_NOW_ROLE = 'pulse';
+export const DETAIL_ROLE = 'inspector';
+export const DECIDE_ROLE = 'inspector';

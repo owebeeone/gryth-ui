@@ -49,7 +49,7 @@ describe('gyld plugin registration', () => {
     const tool = tools()['gyld.browser'];
     expect(tool.label).toBe('Gyld browser');
     expect(tool.defaultSize).toEqual({ w: 900, h: 620 });
-    expect(tool.role).toBe('explorer');
+    expect(tool.role).toBe('stage');
     expect(typeof tool.windowComponent).toBe('function');
   });
 
@@ -67,9 +67,9 @@ describe('gyld plugin registration', () => {
   it('advertises the record detail and the decide-now list too', async () => {
     await expect.poll(() => tools()['gyld.detail']).toBeDefined();
     expect(tools()['gyld.detail'].label).toBe('Gyld record');
-    expect(tools()['gyld.detail'].role).toBe('stage');
+    expect(tools()['gyld.detail'].role).toBe('inspector');
     expect(tools()['gyld.decidenow'].label).toBe('Gyld decide now');
-    expect(tools()['gyld.decidenow'].role).toBe('crew');
+    expect(tools()['gyld.decidenow'].role).toBe('pulse');
   });
 
   it('seeds a sink NOTHING, so a wired window resolves its source', async () => {
