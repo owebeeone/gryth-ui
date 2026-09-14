@@ -294,6 +294,9 @@ importers:
 
   packages/plugins/gyld:
     dependencies:
+      '@grythjs/desktop':
+        specifier: workspace:*
+        version: link:../../desktop
       '@grythjs/glade':
         specifier: workspace:*
         version: link:../../glade

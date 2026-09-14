@@ -15,6 +15,7 @@ import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './lens/camera';
+import { LENS_PALETTE_LIGHT, type GyldLensPalette } from './lens/palette';
 import { NO_FOCUS, type GyldFocus } from './focus';
 import { LANDING_UNSET, type GyldLanding } from './landing/landing';
 import { NOTHING_PICKED, type GyldFirstPick } from './browser/firstPick';
@@ -252,6 +253,15 @@ export const GYLD_TAB_HOVER_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ho
 
 export const GYLD_TAB_DIMMED = defineGrip<GyldDimmed>('Gyld.Tab.Dimmed', NOTHING_DIMMED);
 export const GYLD_TAB_DIMMED_TAP = defineGrip<AtomTapHandle<GyldDimmed>>('Gyld.Tab.Dimmed.Tap');
+
+// The colours the picture is drawn WITH, as against the colours it was
+// emitted with. Class 3 conversion over `Desktop.Theme` and the theme table,
+// produced at the plugin root (see rootTaps.ts) and read by every lens view.
+// It is not state: nothing writes it, and it holds no answer the theme does
+// not already determine. The default is the LIGHT desk the lens files were
+// emitted for, so a view with no theme in reach draws the emitted colours.
+export const GYLD_LENS_PALETTE =
+  defineGrip<GyldLensPalette>('Gyld.Lens.Palette', LENS_PALETTE_LIGHT);
 
 // ---------------------------------------------------------------------------
 // Step 1.4: the browser window's own state and the shared focus.

@@ -9,6 +9,7 @@
     "./live": "./src/live.ts"
   },
   "dependencies": {
+    "@grythjs/desktop": "workspace:*",
     "@grythjs/glade": "workspace:*",
     "@grythjs/plugin-api": "workspace:*",
     "@owebeeone/glial-runtime": "workspace:*",

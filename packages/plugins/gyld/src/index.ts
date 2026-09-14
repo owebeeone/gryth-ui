@@ -15,8 +15,8 @@ import { diffTabTaps } from './diff/diffTabTaps';
 import { CompareWindow } from './compare/CompareWindow';
 import { compareTabTaps } from './compare/compareTabTaps';
 import {
-  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldPreviewLayoutTap,
-  gyldRecordTap, gyldStoreTap,
+  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldLensPaletteTap,
+  gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
 } from './rootTaps';
 import {
   BROWSER_ROLE, COMPARE_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE,
@@ -46,6 +46,10 @@ grok.registerTap(gyldStoreTap);
 grok.registerTap(gyldIndexTap);
 grok.registerTap(gyldRecordTap);
 grok.registerTap(gyldPreviewLayoutTap);
+// And the palette conversion, so every lens view draws the emitted picture in
+// colours that read on THIS desk's theme rather than on the light canvas the
+// lens file was emitted for.
+grok.registerTap(gyldLensPaletteTap);
 // And the landing tap, which watches the mirrored glade presence so an empty
 // desk puts the glade node on itself when the session comes up.
 grok.registerTap(gyldLandingTap);
@@ -158,8 +162,8 @@ export { DiffButton, ListButton, RebuildButton } from './ops/RebuildButton';
 export * from './focus';
 export * from './tools';
 export {
-  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldPreviewLayoutTap,
-  gyldRecordTap, gyldStoreTap,
+  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldLensPaletteTap,
+  gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
 } from './rootTaps';
 export { GyldLandingTap } from './landing/GyldLandingTap';
 export {
@@ -175,6 +179,8 @@ export {
 } from './preview/renderer';
 export * from './records/records';
 export { GyldIndexTap, GyldRecordTap } from './records/taps';
+export * from './lens/contrast';
+export * from './lens/palette';
 export * from './lens/camera';
 export * from './lens/facets';
 export * from './lens/geometry';
@@ -186,7 +192,7 @@ export {
 export {
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_TAP, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP, GYLD_TAB_HOVER, GYLD_TAB_HOVER_TAP,
-  GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP,
+  GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_LENS_PALETTE,
 } from './grips';
 export { BrowserChrome } from './browser/BrowserChrome';
 export { GyldBrowser } from './GyldBrowser';

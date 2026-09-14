@@ -5,7 +5,8 @@ import { applyPick } from './pick';
 import type { GyldFocus } from '../focus';
 import {
   GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_FOCUS_TAP,
-  GYLD_LENS, GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
+  GYLD_LENS, GYLD_LENS_PALETTE,
+  GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_CAMERA_TAP, GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_HOVER,
   GYLD_TAB_HOVER_TAP, GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
@@ -15,6 +16,9 @@ import {
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
 import { EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent } from './geometry';
+import {
+  LENS_PALETTE_LIGHT, inkOn, labelOn, lineOn, type GyldLensPalette,
+} from './palette';
 import {
   buildScene, lensKeyOf, recordIdOf, slotOf,
   type LensScene, type SceneEdge, type SceneNode, type SceneSearch,
@@ -31,6 +35,15 @@ import {
 // Gestures read the CURRENT value through the atom's handle rather than the
 // render closure, because a drip notification is queued and a mouse can move
 // and release inside one cycle (CodingRules.md).
+//
+// COLOUR is the one thing the view decides for itself, and it decides it from
+// `Gyld.Lens.Palette` and nothing else. The emitted FILLS are left alone —
+// they are the status legend — but the ink a box's text is written in, and
+// every line, arrow head and legend sample, are moved onto the desk's own
+// canvas until they meet the WCAG minima (./contrast.ts). A lens file is
+// emitted for a light canvas; a dark desk would otherwise show light text on
+// a pastel fill and near-invisible edges, and none of that is a layout
+// change, so MDV-4 still holds.
 
 function classOf(
   item: { dimmed: boolean; selected: boolean; hovered: boolean; matched: boolean },
@@ -45,7 +58,11 @@ function classOf(
   ].filter((name) => name !== '').join(' ');
 }
 
-function EdgeShape({ edge, marker }: { edge: SceneEdge; marker: string }) {
+function EdgeShape({ edge, marker, palette }: {
+  edge: SceneEdge;
+  marker: string;
+  palette: GyldLensPalette;
+}) {
   if (edge.hidden) {
     return null;
   }
@@ -54,7 +71,7 @@ function EdgeShape({ edge, marker }: { edge: SceneEdge; marker: string }) {
       <path
         d={edge.path}
         fill="none"
-        stroke={edge.color ?? 'currentColor'}
+        stroke={lineOn(palette, edge.color)}
         strokeWidth={edge.width ?? 1.2}
         strokeDasharray={edge.dash}
         markerEnd={edge.head === undefined ? undefined : `url(#${marker})`}
@@ -66,7 +83,7 @@ function EdgeShape({ edge, marker }: { edge: SceneEdge; marker: string }) {
           y={edge.labelAt.y}
           className="gyld-edge-label"
           fontSize={EDGE_LABEL_FONT_SIZE}
-          fill={edge.color ?? 'currentColor'}
+          fill={labelOn(palette, edge.color)}
         >
           {edge.label}
         </text>
@@ -75,10 +92,13 @@ function EdgeShape({ edge, marker }: { edge: SceneEdge; marker: string }) {
   );
 }
 
-function NodeShape({ node }: { node: SceneNode }) {
+function NodeShape({ node, palette }: { node: SceneNode; palette: GyldLensPalette }) {
   if (node.hidden) {
     return null;
   }
+  // The emitted fill stands for the node's status, so it is drawn as emitted
+  // and the TEXT moves instead: whichever of the desk's two inks reads on it.
+  const ink = inkOn(palette, node.fill);
   return (
     <g id={node.id} data-record={recordIdOf(node.id) ?? undefined} data-slot={node.slot} className={classOf(node, 'gyld-node')}>
       <rect
@@ -87,8 +107,8 @@ function NodeShape({ node }: { node: SceneNode }) {
         width={node.box.width}
         height={node.box.height}
         rx={node.radius}
-        fill={node.fill ?? 'var(--win, Canvas)'}
-        stroke="currentColor"
+        fill={node.fill ?? palette.canvas}
+        stroke={palette.stroke}
       />
       {node.lines.map((line, index) => (
         <text
@@ -98,6 +118,10 @@ function NodeShape({ node }: { node: SceneNode }) {
           fontSize={node.fontSize}
           textAnchor={node.anchor}
           className="gyld-node-line"
+          // An inline style, not a `fill` attribute: `.gyld-node-line` sets
+          // `fill: currentColor` in the sheet, and a stylesheet rule beats a
+          // presentation attribute.
+          style={{ fill: ink }}
         >
           {line}
         </text>
@@ -106,15 +130,15 @@ function NodeShape({ node }: { node: SceneNode }) {
   );
 }
 
-function Figure({ scene, camera, markerFor }: {
+function Figure({ scene, camera, markerFor, palette }: {
   scene: LensScene;
   camera: GyldCamera;
   markerFor: (edge: SceneEdge) => string;
+  palette: GyldLensPalette;
 }) {
   const markers = new Map<string, string>();
   for (const edge of scene.edges) {
-    const color = edge.color ?? 'currentColor';
-    markers.set(markerFor(edge), color);
+    markers.set(markerFor(edge), lineOn(palette, edge.color));
   }
   return (
     <g transform={cameraTransform(camera)}>
@@ -135,10 +159,10 @@ function Figure({ scene, camera, markerFor }: {
         </g>
       ))}
       {scene.edges.map((edge) => (
-        <EdgeShape key={edge.id} edge={edge} marker={markerFor(edge)} />
+        <EdgeShape key={edge.id} edge={edge} marker={markerFor(edge)} palette={palette} />
       ))}
       {scene.nodes.map((node) => (
-        <NodeShape key={node.id} node={node} />
+        <NodeShape key={node.id} node={node} palette={palette} />
       ))}
     </g>
   );
@@ -147,11 +171,17 @@ function Figure({ scene, camera, markerFor }: {
 /** The figure, the legend, the omission strip and the provenance footer, as a
  *  pure function of a scene. Exported so a test renders it with no grip at
  *  all and the view stays the thin grip-reading wrapper. */
-export function LensFigure({ scene, camera, scope, onPick, onHover }: {
+export function LensFigure({
+  scene, camera, scope, palette = LENS_PALETTE_LIGHT, onPick, onHover,
+}: {
   scene: LensScene;
   camera: GyldCamera;
   /** Namespaces the SVG marker ids, so two windows never share one. */
   scope: string;
+  /** The desk's colours. Defaults to the LIGHT palette, which is the canvas
+   *  the lens files are emitted for, so a caller with no theme in reach draws
+   *  the emitted colours exactly. */
+  palette?: GyldLensPalette;
   onPick?: (lensId: string, additive: boolean) => void;
   onHover?: (lensId: string) => void;
 }) {
@@ -172,14 +202,18 @@ export function LensFigure({ scene, camera, scope, onPick, onHover }: {
       }}
       onMouseLeave={() => onHover?.('')}
     >
-      <Figure scene={scene} camera={camera} markerFor={markerFor} />
+      <Figure scene={scene} camera={camera} markerFor={markerFor} palette={palette} />
     </svg>
   );
 }
 
-export function LensLegend({ scene, dimmed, onToggle }: {
+export function LensLegend({ scene, dimmed, palette = LENS_PALETTE_LIGHT, onToggle }: {
   scene: LensScene;
   dimmed: GyldDimmed;
+  /** The same palette the figure is drawn with, so the legend names the
+   *  colours that are actually ON the picture and not the ones the file was
+   *  emitted with. */
+  palette?: GyldLensPalette;
   onToggle?: (relation: string) => void;
 }) {
   return (
@@ -197,7 +231,7 @@ export function LensLegend({ scene, dimmed, onToggle }: {
             <svg width="26" height="10" aria-hidden="true">
               <line
                 x1="1" y1="5" x2="25" y2="5"
-                stroke={entry.color}
+                stroke={lineOn(palette, entry.color)}
                 strokeWidth="2"
                 strokeDasharray={entry.style === 'dashed' ? '6 4' : entry.style === 'dotted' ? '2 3' : undefined}
               />
@@ -208,7 +242,10 @@ export function LensLegend({ scene, dimmed, onToggle }: {
       })}
       {scene.legendNodes.map((entry) => (
         <span key={`${entry.kind}/${entry.status ?? ''}/${entry.classification ?? ''}`} className="gyld-legend-node">
-          <span className="gyld-swatch" style={{ background: entry.fill }} />
+          <span
+            className="gyld-swatch"
+            style={{ background: entry.fill, borderColor: palette.stroke }}
+          />
           {entry.kind}
           {entry.status === undefined ? '' : ` · ${entry.status}`}
           {entry.classification === undefined ? '' : ` · ${entry.classification}`}
@@ -289,6 +326,7 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
   const held = useGrip(GYLD_TAB_SELECTION) ?? NO_SELECTION;
   const hover = useGrip(GYLD_TAB_HOVER) ?? '';
   const dimmed = useGrip(GYLD_TAB_DIMMED) ?? NOTHING_DIMMED;
+  const palette = useGrip(GYLD_LENS_PALETTE) ?? LENS_PALETTE_LIGHT;
   const stream = useGrip(GYLD_DEST_STREAM) ?? '';
   const ref = useGrip(GYLD_DEST_REF) ?? '';
   const cameraTap = useGrip(GYLD_TAB_CAMERA_TAP) as AtomTapHandle<GyldCamera> | undefined;
@@ -348,6 +386,7 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
       <LensLegend
         scene={scene}
         dimmed={dimmed}
+        palette={palette}
         onToggle={(relation) => {
           dimmedTap?.set(toggleRelation(dimmedTap.get() ?? NOTHING_DIMMED, relation));
         }}
@@ -413,6 +452,7 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
           scene={scene}
           camera={camera}
           scope={scope}
+          palette={palette}
           onHover={(id) => {
             if ((hoverTap?.get() ?? '') !== id) {
               hoverTap?.set(id);

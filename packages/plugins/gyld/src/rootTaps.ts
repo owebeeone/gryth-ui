@@ -1,6 +1,8 @@
-import { createAtomValueTap } from '@owebeeone/grip-react';
-import { GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_SET, GYLD_SET_TAP } from './grips';
+import { createAtomValueTap, createFunctionTap } from '@owebeeone/grip-react';
+import { DESKTOP_THEME } from '@grythjs/desktop';
+import { GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_LENS_PALETTE, GYLD_SET, GYLD_SET_TAP } from './grips';
 import { NO_FOCUS } from './focus';
+import { paletteOf } from './lens/palette';
 import { EMPTY_SET } from './store/state';
 import { GyldStoreTap } from './store/GyldStoreTap';
 import { GyldIndexTap, GyldRecordTap } from './records/taps';
@@ -25,6 +27,28 @@ export const GyldSetTap = createAtomValueTap(GYLD_SET, {
 export const GyldFocusTap = createAtomValueTap(GYLD_FOCUS, {
   initial: NO_FOCUS,
   handleGrip: GYLD_FOCUS_TAP,
+});
+
+/**
+ * `Gyld.Lens.Palette`: the colours the lens views DRAW with, converted from
+ * the desk's theme and the theme table. A class 3 conversion — one grip in,
+ * one grip out, no store, no clock — so one instance at the plugin root
+ * serves every window, and switching the theme in Settings redraws every open
+ * picture with no window state to keep in step.
+ *
+ * The theme is a HOME parameter: it is one desk-wide fact, not something a
+ * window carries per destination. `Desktop.Theme` defaults to `light`, so a
+ * target that ships no appearance editor still resolves a palette.
+ */
+export const gyldLensPaletteTap = createFunctionTap<
+  { palette: typeof GYLD_LENS_PALETTE },
+  { theme: typeof DESKTOP_THEME }
+>({
+  provides: [GYLD_LENS_PALETTE],
+  homeParamGrips: [DESKTOP_THEME],
+  compute: ({ getHomeParam }) => new Map([
+    [GYLD_LENS_PALETTE, paletteOf(getHomeParam(DESKTOP_THEME) ?? 'light')],
+  ]),
 });
 
 /** The one store tap for this plugin (spec section 3.4: registered once at the
