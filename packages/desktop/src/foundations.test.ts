@@ -43,8 +43,10 @@ describe('the foundation preset', () => {
     expect(rects.get('inspector')!.w).toBe(240);
     expect(rects.get('stage')!.h).toBe(700);
     expect(rects.get('pulse')!.h).toBe(300);
-    // no tool named here: every window is placed by the role it declares
-    expect(GYLD.designate).toEqual({});
+    // one tool named here, and one only: `settings` declares the `crew` role
+    // and this preset has no crew, so it would otherwise land on the stage.
+    // Everything else is placed by the role it declares.
+    expect(GYLD.designate).toEqual({ settings: 'inspector' });
     expect(GYLD.fallback).toBe('stage');
   });
 });

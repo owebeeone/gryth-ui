@@ -1,14 +1,25 @@
-// The Gyld-only target's plugin list. This one import is the WHOLE list, and
-// that is the point of the target: a desk for the Gyld decision graph and
-// nothing unrelated to it.
+// The Gyld-only target's plugin list: the Gyld plugin, and the desk's own
+// appearance editor. Two imports, and the list is closed at two.
 //
-// Nothing else is needed to have a working desktop. The shell's own facets
-// (welcome, grid), its appearance grips and its window management ship with
-// `@grythjs/desktop` and are registered by `registerAllTaps()` inside `boot()`,
-// not by any plugin; `@grythjs/plugin-settings` only adds an EDITOR for
-// appearance grips the chrome already defaults (see its index.ts). So the
-// desktop the full target renders and the desktop this one renders differ in
-// their launcher and in nothing else.
+// `@grythjs/plugin-gyld` is the point of the target: a desk for the Gyld
+// decision graph and nothing unrelated to it.
+//
+// `@grythjs/plugin-settings` is not a tool of another subject, which is the
+// test this list applies. It is the editor for THIS desk's own appearance —
+// theme, wallpaper, UI zoom, font size — and it owns the PRODUCERS of the
+// appearance grips the chrome consumes (see its index.ts). The chrome
+// defaults every one of them, so the desk renders without it; what it cannot
+// do without it is change any of them, and a desk whose reader cannot set
+// their own font size is not a narrower desk, it is an unfinished one.
+// Its tool declares the `crew` role, which this desk has no area for, so the
+// GYLD preset designates it to `inspector`
+// (packages/desktop/src/foundations.ts).
+//
+// The shell's own facets (welcome, grid) and its window management are not
+// plugins at all: they ship with `@grythjs/desktop` and are registered by
+// `registerAllTaps()` inside `boot()`. So the desktop the full target renders
+// and the desktop this one renders differ in their launcher and in nothing
+// else.
 //
 // There is deliberately no `import.meta.glob` here. `src/plugins/index.ts`
 // globs `./*/index.ts` so that dropping a directory in adds a plugin; this
@@ -21,3 +32,4 @@
 // and `sessionStorage` at import. Keeping it out of this file is what lets
 // `plugins.test.ts` import the list and check it against the registry.
 import '@grythjs/plugin-gyld';
+import '@grythjs/plugin-settings';

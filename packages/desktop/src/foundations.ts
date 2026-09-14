@@ -37,10 +37,14 @@ export const HUB: FoundationDef = {
 // decision now, and `inspector` on the right is what the stage's selection
 // IS — the record, and the ruling being written about it.
 //
-// `designate` is deliberately EMPTY: every window here is placed by the role
-// its own plugin declares (ToolDef.role → ops.dockingHome), so this preset
-// names no tool of another package and a Gyld tool added later lands in the
-// right area without editing the desktop.
+// Every window here is placed by the role its own plugin declares
+// (ToolDef.role → ops.dockingHome), so a Gyld tool added later lands in the
+// right area without editing the desktop. `designate` therefore carries ONE
+// name, and only because the tool it names has nowhere else to go: `settings`
+// declares the `crew` role — on the Hub it sits with the people — and this
+// desk has no crew column, so without an override the appearance editor would
+// fall back onto the STAGE, on top of the document the reader came to read.
+// Overriding a role a preset cannot honour is exactly what designate is for.
 export const GYLD: FoundationDef = {
   layout: {
     id: 'root', size: 100, direction: 'row',
@@ -56,6 +60,6 @@ export const GYLD: FoundationDef = {
       { id: 'inspector', size: 24 },
     ],
   },
-  designate: {},
+  designate: { settings: 'inspector' },
   fallback: 'stage',
 };
