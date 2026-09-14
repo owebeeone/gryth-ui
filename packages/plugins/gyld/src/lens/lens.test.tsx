@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readLens } from '../contract';
 import {
-  CAMERA_UNFITTED, MAX_SCALE, MIN_SCALE, NOTHING_DIMMED, clampScale, fitCamera, isPanning,
+  CAMERA_UNFITTED, MAX_SCALE, MIN_SCALE, NOTHING_DIMMED, clampScale, fitCamera,
+  isMeasurableViewport, isPanning, needsFit,
   panBy, panningAt, pressAt, toggleRelation, toggleSelected, wheelFactor, zoomAt,
 } from './camera';
+import { STAGE_CLASS, stageOf } from './stage';
 import {
   LABEL_INSET, LINE_SPACING, POINTS_PER_INCH, cornerRadius, decodeSpline, edgeStyle,
   groupBox, lensExtent, nodeBox, toSvg,
@@ -157,6 +159,86 @@ describe('the camera', () => {
     expect(toggleSelected({ ids: ['occ:a'] }, 'occ:a', false).ids).toEqual([]);
     expect(toggleSelected({ ids: ['occ:a'] }, 'occ:b', true).ids).toEqual(['occ:a', 'occ:b']);
     expect(toggleSelected({ ids: ['occ:a'] }, 'occ:b', false).ids).toEqual(['occ:b']);
+  });
+});
+
+/** The three elements a Fit press walks between, with no DOM at all: the
+ *  button, the lens root it is inside, and what each selector finds under that
+ *  root. The legend's 26x10 line sample comes FIRST in the real document,
+ *  which is what made `querySelector('svg')` the wrong question to ask. */
+function fakeLensRoot() {
+  const stage = { tag: 'div' } as unknown as Element;
+  const swatch = { tag: 'svg' } as unknown as Element;
+  const root = {
+    querySelector(selector: string) {
+      if (selector === 'svg') {
+        return swatch;
+      }
+      if (selector === `.${STAGE_CLASS}`) {
+        return stage;
+      }
+      return null;
+    },
+  } as unknown as Element;
+  const button = {
+    closest(selector: string) {
+      if (selector === '.gyld-lens') {
+        return root;
+      }
+      return null;
+    },
+  } as unknown as Element;
+  return { button, stage, swatch };
+}
+
+// Fitting the picture: WHICH box is measured, and what happens when that box
+// cannot be measured. Both were wrong, and both wrote the same camera — the
+// whole graph at MIN_SCALE in the top-left corner, which is what the reader
+// saw every time the Fit button was pressed.
+describe('fitting to the box that shows the picture', () => {
+  const extent = lensExtent(lens);
+
+  it('refuses a viewport nothing can be seen in', () => {
+    expect(isMeasurableViewport({ width: 452, height: 277 })).toBe(true);
+    expect(isMeasurableViewport({ width: 452, height: 0 })).toBe(false);
+    expect(isMeasurableViewport({ width: 0, height: 0 })).toBe(false);
+    expect(isMeasurableViewport({ width: -1, height: 10 })).toBe(false);
+    expect(isMeasurableViewport({ width: Number.NaN, height: 10 })).toBe(false);
+  });
+
+  // Why the guard is not a nicety. `fitCamera` is unchanged and correct; these
+  // are the two boxes it was being handed.
+  it('states what fitting to one of those would have written', () => {
+    const collapsed = fitCamera(extent, { width: 452, height: 0 }, 'key');
+    expect(collapsed.k).toBe(MIN_SCALE);
+    const swatch = fitCamera(extent, { width: 26, height: 10 }, 'key');
+    expect(swatch.k).toBe(MIN_SCALE);
+    expect(swatch.tx).toBeLessThan(0);
+    expect(swatch.ty).toBeLessThan(0);
+  });
+
+  it('leaves a lens unfitted when there was nothing to fit it to', () => {
+    // An unmeasurable viewport writes NO camera, so `fittedTo` still names
+    // nothing and the next measurable measurement fits for real.
+    expect(needsFit(CAMERA_UNFITTED, 'key')).toBe(true);
+    const fitted = fitCamera(extent, { width: 900, height: 500 }, 'key');
+    expect(needsFit(fitted, 'key')).toBe(false);
+    expect(needsFit(fitCamera(extent, { width: 900, height: 500 }, 'other'), 'key')).toBe(true);
+  });
+
+  it('asks the lens for its stage by name, not for the first svg under it', () => {
+    const { button, stage, swatch } = fakeLensRoot();
+    expect(stageOf(button)).toBe(stage);
+    expect(stageOf(button)).not.toBe(swatch);
+    expect(stageOf(null)).toBeNull();
+    expect(stageOf(undefined)).toBeNull();
+  });
+
+  it('draws the legend with svg line samples, which is what `svg` found', () => {
+    const markup = renderToStaticMarkup(
+      <LensLegend scene={buildScene(lens)} dimmed={NOTHING_DIMMED} />,
+    );
+    expect(markup).toContain('<svg');
   });
 });
 

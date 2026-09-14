@@ -73,7 +73,36 @@ export function clampScale(k: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, k));
 }
 
-/** The camera that puts the whole lens inside a viewport, with a margin. */
+/**
+ * Whether a measured viewport is one a fit can be computed from at all.
+ *
+ * A window in a tab that is not on top, a panel whose docked geometry has not
+ * been applied yet, and an element that is not in the document all measure
+ * zero. Fitting to one is not a small error: `fitCamera` below divides by the
+ * extent, the clamp floors the ratio at MIN_SCALE, and the whole picture lands
+ * in the top-left corner at 5%. That is what the reader sees, so the callers
+ * ask this first and do nothing at all rather than write such a camera.
+ */
+export function isMeasurableViewport(viewport: { width: number; height: number }): boolean {
+  return Number.isFinite(viewport.width) && Number.isFinite(viewport.height)
+    && viewport.width > 0 && viewport.height > 0;
+}
+
+/**
+ * Whether this lens still wants the one automatic fit `fittedTo` records.
+ *
+ * A camera "fitted" while the viewport measured zero is NOT fitted, and the
+ * record of that is that nothing was written: a caller that finds an
+ * unmeasurable viewport never reaches `fitCamera`, so `fittedTo` still names
+ * another lens (or nothing at all) and the next measurement that IS measurable
+ * — a later mount's ref callback, or the Fit button — fits for real.
+ */
+export function needsFit(camera: GyldCamera, key: string): boolean {
+  return camera.fittedTo !== key;
+}
+
+/** The camera that puts the whole lens inside a viewport, with a margin.
+ *  Only ever called with a viewport `isMeasurableViewport` accepted. */
 export function fitCamera(
   extent: Box,
   viewport: { width: number; height: number },

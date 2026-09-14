@@ -143,9 +143,16 @@
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
 }
 
+/* The box that SHOWS the picture, and so the box every fit and every wheel
+   zoom measures. `flex: 1` hands it the free space; the FLOOR keeps it from
+   being squeezed out of existence. The legend, the omission strip and the
+   provenance footer are content-sized and wrap, so in a short window they took
+   the whole panel, this collapsed to zero height, and a camera fitted to a box
+   of no size is MIN_SCALE in the top-left corner. The two strips below give
+   way and scroll instead. */
 .gyld-lens-stage {
   flex: 1;
-  min-height: 0;
+  min-height: 8.333em;
   overflow: hidden;
   cursor: grab;
 }
@@ -211,6 +218,10 @@
   stroke-width: 1.5;
 }
 
+/* Below the picture, and second in line for the room: `overflow-y: auto` is
+   what lets flex shrink this strip at all (a visible overflow floors a flex
+   item at its content size), so a short window takes the space from here and
+   not from the stage. */
 .gyld-omissions {
   display: flex;
   flex-wrap: wrap;
@@ -218,6 +229,7 @@
   margin: 0;
   padding: 0.455em 0.909em;
   list-style: none;
+  overflow-y: auto;
   border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
   opacity: 0.75;
   font-size: 0.917em;
@@ -232,11 +244,14 @@
   content: 'this window omits ';
 }
 
+/* Last in line for the room, and scrolls rather than pushing the picture out
+   (see `.gyld-omissions` above). */
 .gyld-provenance {
   display: flex;
   flex-wrap: wrap;
   gap: 0.364em 1.273em;
   padding: 0.455em 0.909em;
+  overflow-y: auto;
   border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.917em;

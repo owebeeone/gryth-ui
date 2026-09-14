@@ -11,10 +11,12 @@ import {
   GYLD_TAB_HOVER_TAP, GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
 import {
-  CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera, isPanning,
+  CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera,
+  isMeasurableViewport, isPanning, needsFit,
   panBy, panningAt, pressAt, toggleRelation, wheelFactor, zoomAt,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
+import { STAGE_CLASS, stageOf, viewportOf } from './stage';
 import { EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent } from './geometry';
 import {
   LENS_PALETTE_LIGHT, inkOn, labelOn, lineOn, type GyldLensPalette,
@@ -280,12 +282,6 @@ export function LensProvenance({ scene }: { scene: LensScene }) {
   );
 }
 
-/** The viewport of the SVG the gesture happened in. */
-function viewportOf(element: Element): { width: number; height: number; left: number; top: number } {
-  const rect = element.getBoundingClientRect();
-  return { width: rect.width, height: rect.height, left: rect.left, top: rect.top };
-}
-
 /**
  * The window's lens. Reads `Gyld.Lens` and the per-tab view atoms; writes
  * through their handles. The camera is fitted once per lens by a REF CALLBACK
@@ -348,12 +344,26 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
   const selection = effectiveSelection(lens, held, ref);
   const scene = buildScene(lens, { selection, hover, dimmed, search });
 
-  const fitTo = (element: Element, force: boolean) => {
-    const held = cameraTap?.get() ?? CAMERA_UNFITTED;
-    if (!force && held.fittedTo === key) {
+  // The fit measures the STAGE — the box that shows the picture — and never
+  // the SVG or anything found by tag under the lens root (./stage.ts).
+  const fitTo = (element: Element | null | undefined, force: boolean) => {
+    if (element === null || element === undefined) {
       return;
     }
-    cameraTap?.set(fitCamera(lensExtent(lens), viewportOf(element), key));
+    const held = cameraTap?.get() ?? CAMERA_UNFITTED;
+    if (!force && !needsFit(held, key)) {
+      return;
+    }
+    const viewport = viewportOf(element);
+    if (!isMeasurableViewport(viewport)) {
+      // Nothing is on screen to fit to yet: a tab that is not on top, or a
+      // panel whose docked geometry has not landed. Write NOTHING. Fitting a
+      // lens to a box of no size is MIN_SCALE in the corner, and leaving
+      // `fittedTo` alone is exactly what lets the next measurable
+      // measurement — a later mount, or the Fit button — fit for real.
+      return;
+    }
+    cameraTap?.set(fitCamera(lensExtent(lens), viewport, key));
   };
 
   return (
@@ -363,10 +373,7 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
         <button
           type="button"
           onClick={(event) => {
-            const svg = event.currentTarget.closest('.gyld-lens')?.querySelector('svg');
-            if (svg) {
-              fitTo(svg, true);
-            }
+            fitTo(stageOf(event.currentTarget), true);
           }}
         >
           Fit
@@ -392,15 +399,16 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
         }}
       />
       <div
-        className="gyld-lens-stage"
+        className={STAGE_CLASS}
         // The ref callback fits the camera once per lens. Keyed on the lens so
         // a new perspective re-mounts and fits again.
         key={key}
+        // The stage IS the box the picture is shown in, so the stage is what
+        // is measured. A mount that measures zero fits nothing and leaves the
+        // lens unfitted, so the Fit button still has its one automatic fit to
+        // give when the window is finally showing something.
         ref={(element) => {
-          const svg = element?.querySelector('svg');
-          if (svg) {
-            fitTo(svg, false);
-          }
+          fitTo(element, false);
         }}
         onWheel={(event) => {
           const viewport = viewportOf(event.currentTarget);
