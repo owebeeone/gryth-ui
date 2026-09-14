@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import type { Grip, Tap } from '@owebeeone/grip-react';
 import {
   grok, PluginRegistryTap, PLUGIN_REGISTRY, allTools, pluginFrom,
@@ -113,5 +114,19 @@ describe('gyld plugin registration', () => {
     expect(tab.read(GYLD_DEST_STREAM).get()).toBe('');
     expect(tab.read(GYLD_DEST_PERSPECTIVE).get()).toBe('');
     tab.release();
+  });
+});
+
+// The desktop scales every window's text by setting a px font-size on
+// `.desktop` from `Desktop.FontScale` (packages/desktop/src/Desktop.tsx), so
+// only em-sized text follows the user's scale. This is the same file-read the
+// preview suite does for its fixtures.
+describe('gyld.css follows the desktop font scale', () => {
+  it('sizes no text in px, because a px font-size ignores Desktop.FontScale', () => {
+    const css = readFileSync(new URL('./gyld.css', import.meta.url), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ''); // prose may say "12px" about the past
+    // `font-size:` and the `font:` shorthand both carry a size; neither may be px.
+    const sized = css.match(/\bfont(?:-size)?\s*:[^;}]*/g) ?? [];
+    expect(sized.filter((declaration) => /\dpx/.test(declaration))).toEqual([]);
   });
 });
