@@ -6,8 +6,11 @@ import {
   type TabLinkInfo, type ToolId, type ToolLink,
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
-import { DESKTOP_BUILTINS_PLUGIN, type FoundationDef } from './grips.desktop';
+import { DESKTOP_BUILTINS_PLUGIN, DESKTOP_RESET_LAYOUT, type FoundationDef } from './grips.desktop';
 import { HUB } from './foundations';
+import {
+  DEFAULT_ENTRY, deskPorts, startLayoutPersistence, type LayoutPersistence,
+} from './layoutStorageTap';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
@@ -100,6 +103,11 @@ export const TickerHoverTap = createAtomValueTap(TICKER_HOVER, {
 export const TickerBleedTap = createAtomValueTap(TICKER_BLEED, {
   initial: null,
   handleGrip: TICKER_BLEED_TAP,
+});
+// INTERIM: filled in below once persistence has started, and a no-op until
+// then and wherever there is no store at all (see ./layoutStorageTap).
+export const ResetLayoutTap = createAtomValueTap(DESKTOP_RESET_LAYOUT, {
+  initial: () => {},
 });
 
 // The Desktop.OpenTool intent: invoking a LINK opens a new window at the
@@ -231,6 +239,12 @@ export const DesktopTabLinksTap = new TabLinksTap();
 // composes the shell. Both are optional and both default to the full
 // desktop's behavior: preset HUB, first desk floating.
 export interface DesktopSetup {
+  /**
+   * This target's name, which is what its INTERIM stored desk is keyed by, so
+   * the Gyld target and the full desktop keep separate desks in one browser
+   * profile (./layoutStorageTap). Default `desktop`.
+   */
+  entry?: string;
   /** The pane preset every lock on this composition opens (default HUB). */
   foundation?: FoundationDef;
   /** Open desk 1 LOCKED on that preset, instead of floating windows. */
@@ -279,6 +293,29 @@ function lockFirstDesk(): void {
   DesktopWindowsTap.set(out.list);
 }
 
+// One persistence session per composition root: a suite that composes a bare
+// desk and then the target's calls `registerDesktopTaps` twice, and the stored
+// desk must be restored once and written back by one writer.
+let persistence: LayoutPersistence | null = null;
+
+function startPersistence(grok: Grok, entry: string): LayoutPersistence {
+  if (persistence === null) {
+    persistence = startLayoutPersistence(
+      deskPorts(grok, {
+        current: DesktopCurrentTap,
+        windows: DesktopWindowsTap,
+        gridMemory: DesktopGridMemoryTap,
+        preset: DesktopFoundationPresetTap,
+        sidebarOpen: SidebarOpenTap,
+        sidebarWidth: SidebarWidthTap,
+      }),
+      { entry },
+    );
+    ResetLayoutTap.set(persistence.reset);
+  }
+  return persistence;
+}
+
 export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   // publish the not-yet-converted builtin tools at the desktop's own
   // plugin grip — the chrome consumes that grip like any plugin consumer
@@ -298,6 +335,7 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   grok.registerTap(DesktopFoundationPresetTap);
   grok.registerTap(TickerHoverTap);
   grok.registerTap(TickerBleedTap);
+  grok.registerTap(ResetLayoutTap);
   grok.registerTap(OpenToolTap);
   grok.registerTap(RetargetTabTap);
   grok.registerTap(OpenWiredTap);
@@ -309,6 +347,14 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   // lock opens the preset the target just named
   if (setup?.foundation !== undefined) {
     DesktopFoundationPresetTap.set(setup.foundation);
+  }
+  // INTERIM demo persistence, BEFORE the rest of the setup: a stored desk is
+  // the reader's own and the entry's `locked`/`tools` defaults are what a desk
+  // opens with when there is no stored one. See ./layoutStorageTap — this
+  // whole seam is stand-in code for a glial value instance.
+  const persisted = startPersistence(grok, setup?.entry ?? DEFAULT_ENTRY);
+  if (persisted.restored) {
+    return;
   }
   const tools = setup?.tools ?? [];
   if (tools.length > 0) {

@@ -134,6 +134,13 @@ export const DESKTOP_WALLPAPER_TAP = defineGrip<AtomTapHandle<string>>('Desktop.
 export const DESKTOP_WALLPAPER_THEMED = defineGrip<boolean>('Desktop.WallpaperThemed', true);
 export const DESKTOP_WALLPAPER_THEMED_TAP = defineGrip<AtomTapHandle<boolean>>('Desktop.WallpaperThemed.Tap');
 
+// Desktop.ResetLayout intent: forget the INTERIM stored desk document and come
+// back on this entry's own defaults. Produced by ./layoutStorageTap, consumed
+// by @grythjs/plugin-settings; a no-op when nothing is persisted. Goes when the
+// document does (see ./layoutDocument's header).
+export type ResetLayout = () => void;
+export const DESKTOP_RESET_LAYOUT = defineGrip<ResetLayout>('Desktop.ResetLayout');
+
 // Instance scope: drag-in-progress. Never replicated, never persisted.
 // dropTarget: frame whose titlebar the pointer is over (snap-to-tab).
 // dropDesktop: sidebar desktop icon the pointer is over (send-to-desktop).

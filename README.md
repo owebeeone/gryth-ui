@@ -95,3 +95,26 @@ copying it.
 Adding a target means adding a directory under `entries/` and a config that
 spreads `grythShared()`; `entries/` is already covered by the type-check, the
 lint, the vitest include and the no-React-state scan.
+
+## Desk layout persistence — INTERIM
+
+The desk survives a reload: the windows and where they are docked, which
+virtual desktop you were on, the sidebar, the pane preset and the grid memory,
+and the appearance settings (theme, wallpaper, UI zoom, font scale). A Gyld
+window also comes back on the stream and perspective it was last moved to,
+because a pick folds back into its tab record. Camera and selection do not
+persist. The desk is written to `localStorage` under
+`gryth.desk.layout.v1.<entry>` — the entry name is in the key, so the Gyld
+target and the full desktop keep separate desks in one browser profile — and
+**Settings → Desk → Reset layout** clears it and reloads on the entry's own
+defaults. A browser with no storage, a full quota or blocked site data simply
+does not persist; nothing else changes.
+
+This is **interim demo code and is not definitive**. Environ state belongs in a
+glial value instance (`../dev-docs/GrythVision.md`, and the scope comments in
+`packages/desktop/src/grips.desktop.ts`); persistence is one of glial's two
+recorded gaps, per
+`glade-wz/dev-docs/glial/GlialFitAssessment-2026-09-15.md`. What will move when
+that lands is the document SHAPE — one versioned blob, one all-or-nothing
+write — which lives in `packages/desktop/src/layoutDocument.ts` and is known
+to nothing outside it and `packages/desktop/src/layoutStorageTap.ts`.

@@ -34,6 +34,10 @@ import { GYLD_BROWSER_TOOL, GYLD_STREAMS_TOOL } from '@grythjs/plugin-gyld';
 // `main.tsx` mounts React and lights the live write path on import, so the
 // choice is stated where a test can read it back.
 export const GYLD_DESK: DesktopSetup = {
+  // and its own name, which is what the INTERIM stored desk is keyed by: this
+  // target and the full desktop are two desks, not one seen twice
+  // (packages/desktop/src/layoutStorageTap.ts).
+  entry: 'gyld',
   foundation: GYLD,
   locked: true,
   tools: [

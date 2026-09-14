@@ -5,6 +5,7 @@ import {
   DESKTOP_WALLPAPER_THEMED, DESKTOP_WALLPAPER_THEMED_TAP,
   DESKTOP_ZOOM, DESKTOP_ZOOM_TAP,
   DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP,
+  DESKTOP_RESET_LAYOUT,
   THEMES, THEME_IDS,
 } from '@grythjs/desktop';
 
@@ -23,6 +24,7 @@ export function Settings() {
   const zoomTap = useGrip(DESKTOP_ZOOM_TAP);
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
   const fontScaleTap = useGrip(DESKTOP_FONT_SCALE_TAP);
+  const resetLayout = useGrip(DESKTOP_RESET_LAYOUT);
   return (
     <div className="facet-pad settings-facet">
       <h3>Display</h3>
@@ -76,6 +78,15 @@ export function Settings() {
         value={wallpaper}
         onChange={(e) => wallpaperTap?.set(e.target.value)}
       />
+      <h3>Desk</h3>
+      <p className="settings-hint">
+        This desk — its windows, where they are docked, and everything above —
+        is remembered in this browser between reloads. Interim demo
+        persistence: it is local to this browser and does not roam.
+      </p>
+      <button type="button" className="settings-reset" onClick={() => resetLayout?.()}>
+        Reset layout
+      </button>
     </div>
   );
 }

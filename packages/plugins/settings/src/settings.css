@@ -83,3 +83,16 @@
   margin-bottom: 0.5rem;
   cursor: pointer;
 }
+/* INTERIM: the reset for the demo desk persistence (@grythjs/desktop's
+   layoutStorageTap). Goes when that does. */
+.settings-reset {
+  appearance: none;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.settings-reset:hover { border-color: var(--accent); }
