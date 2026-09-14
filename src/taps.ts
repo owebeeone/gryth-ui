@@ -2,7 +2,7 @@ import { GlialBinder } from '@owebeeone/glial-runtime';
 import { glialTap, type GlialTapController } from '@owebeeone/glial-runtime/grip';
 import { defineManifest } from '@owebeeone/glial-runtime/manifest';
 import { defineGrip, grok, PluginRegistryTap, WORKSPACE_NAME } from '@grythjs/plugin-api';
-import { registerDesktopTaps } from '@grythjs/desktop';
+import { registerDesktopTaps, type DesktopSetup } from '@grythjs/desktop';
 
 // App-level taps: the composition root's own providers. Shell chrome taps live
 // in @grythjs/desktop. The workspace-name surface is the first incremental
@@ -36,11 +36,13 @@ export const WorkspaceNameTap = glialTap({
 
 let seededWorkspaceName = false;
 
-export function registerAllTaps() {
+export function registerAllTaps(desk?: DesktopSetup) {
   // the registry tap lives in the context graph like every other tap;
   // entries added before it attaches publish on attach
   grok.registerTap(PluginRegistryTap);
-  registerDesktopTaps(grok);
+  // the target's desk (pane preset, first-desk lock) is shell configuration,
+  // so it goes where the shell's taps are registered
+  registerDesktopTaps(grok, desk);
   grok.registerTap(WorkspaceNameTap);
   // Preserve the existing demo value, but send it through the Glial instance
   // write/fold path. This seed is provider policy, not a WORKSPACE_NAME consumer

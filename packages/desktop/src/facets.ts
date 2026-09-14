@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import type { GrythPlugin, ToolDef, ToolId } from '@grythjs/plugin-api';
 import { GridFacet, MissingToolFacet, WelcomeFacet } from './facetComponents';
+import type { RoleMap } from './ops';
 
 // The desktop's own builtin tools — published at DESKTOP_BUILTINS_PLUGIN by
 // registerDesktopTaps like any other plugin. These are SHELL tools, not
@@ -16,6 +17,19 @@ export const DESKTOP_BUILTINS: GrythPlugin = {
     grid: { label: 'Grid', defaultSize: { w: 640, h: 480 }, windowComponent: GridFacet },
   },
 };
+
+// Every tool's declared ROLE, as the RoleMap the docking-home rule takes.
+// Registry DATA again: the chrome reads what plugins declare and imports
+// none of them, so a preset places a tool it has never heard of.
+export function toolRoles(defs: Record<ToolId, ToolDef>): RoleMap {
+  const roles: RoleMap = {};
+  for (const [id, def] of Object.entries(defs)) {
+    if (def.role !== undefined) {
+      roles[id] = def.role;
+    }
+  }
+  return roles;
+}
 
 // Registry lookup with the MissingTool placeholder for unknown ids. The
 // placeholder defs are cached so the component identity stays stable across

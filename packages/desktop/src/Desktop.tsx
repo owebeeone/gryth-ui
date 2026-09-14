@@ -11,7 +11,7 @@ import {
   SIDEBAR_WIDTH, SIDEBAR_WIDTH_TAP,
   DESKTOP_THEME, DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_THEMED,
   DESKTOP_ZOOM, DESKTOP_FONT_SCALE,
-  DESKTOP_GRID_MEMORY_TAP,
+  DESKTOP_GRID_MEMORY_TAP, DESKTOP_FOUNDATION_PRESET,
   WINDOW_DRAG, WINDOW_DRAG_TAP,
   WINDOW_MENU, WINDOW_MENU_TAP,
   AREA_MENU, AREA_MENU_TAP,
@@ -29,7 +29,7 @@ import {
   setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapWindow,
   type Rect,
 } from './ops';
-import { resolveTool } from './facets';
+import { resolveTool, toolRoles } from './facets';
 import { SCHEME_WALLPAPERS, THEMES } from './themes';
 import { HUB } from './foundations';
 import { observeCanvas } from './canvasGuard';
@@ -118,6 +118,8 @@ export default function Desktop() {
   const uiZoom = useGrip(DESKTOP_ZOOM) ?? 1;
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
   const gridMemoryTap = useGrip(DESKTOP_GRID_MEMORY_TAP);
+  // The pane preset a lock opens: the target's, when it named one.
+  const preset = useGrip(DESKTOP_FOUNDATION_PRESET) ?? HUB;
   const canvas = useGrip(CANVAS_SIZE) ?? { w: 0, h: 0 };
   const canvasTap = useGrip(CANVAS_SIZE_TAP);
   const bleed = useGrip(TICKER_BLEED) ?? null;
@@ -502,7 +504,7 @@ export default function Desktop() {
 
   // The lock toggles a desktop's grid. Unlocking stashes the layout +
   // assignments (grid memory); re-locking restores them, with newcomers
-  // adopted by designate/fallback.
+  // adopted by designation, then by the tool's own role, then the fallback.
   const toggleGrid = (desk: number) => {
     const wins = windowsTap?.get() ?? [];
     const f = foundationOn(wins, desk);
@@ -514,7 +516,7 @@ export default function Desktop() {
       focusTopVisible(next, currentTap?.get() ?? 1);
     } else {
       const stash = (gridMemoryTap?.get() ?? {})[desk];
-      const out = openFoundation(wins, desk, stash?.def ?? HUB, stash?.assignments ?? {});
+      const out = openFoundation(wins, desk, stash?.def ?? preset, stash?.assignments ?? {}, toolRoles(defs));
       windowsTap?.set(out.list);
       focusTopVisible(out.list, currentTap?.get() ?? 1);
     }

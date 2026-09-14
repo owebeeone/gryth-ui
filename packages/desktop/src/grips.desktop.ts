@@ -2,6 +2,7 @@ import type { AtomTapHandle } from '@owebeeone/grip-react';
 import { defineGrip, type GrythPlugin, type ToolId } from '@grythjs/plugin-api';
 import type { ThemeId } from './themes';
 import type { GridStash, Rect } from './ops';
+import { HUB } from './foundations';
 
 // The desktop's own plugin: the not-yet-converted builtin tools, published
 // at this grip like any other plugin (the chrome hard-codes ITS grip — the
@@ -109,6 +110,14 @@ export const DESKTOP_ZOOM = defineGrip<number>('Desktop.UiZoom', 1);
 export const DESKTOP_ZOOM_TAP = defineGrip<AtomTapHandle<number>>('Desktop.UiZoom.Tap');
 export const DESKTOP_FONT_SCALE = defineGrip<number>('Desktop.FontScale', 10);
 export const DESKTOP_FONT_SCALE_TAP = defineGrip<AtomTapHandle<number>>('Desktop.FontScale.Tap');
+
+// The pane preset a lock opens on a desk with no grid memory (environ).
+// The chrome DEFAULTS it, exactly as it defaults theme and wallpaper, so the
+// shell renders with no producer at all; a TARGET whose desk is one purpose
+// (the Gyld desk) hands its own preset to registerDesktopTaps and every lock
+// on that composition opens that layout instead.
+export const DESKTOP_FOUNDATION_PRESET = defineGrip<FoundationDef>('Desktop.FoundationPreset', HUB);
+export const DESKTOP_FOUNDATION_PRESET_TAP = defineGrip<AtomTapHandle<FoundationDef>>('Desktop.FoundationPreset.Tap');
 
 // Per-desktop grid memory (environ): unlocking stashes the foundation's
 // layout + window assignments; the lock toggle restores them.

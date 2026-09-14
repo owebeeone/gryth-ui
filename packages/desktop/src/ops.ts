@@ -58,6 +58,29 @@ export function openWindow(
   return { list: [...list, win], id };
 }
 
+// What each tool ROLE says: the KIND of area a tool belongs in, keyed by
+// tool id (ToolDef.role, projected by facets.toolRoles). A plugin declares
+// it once and every preset that has a leaf of that name honors it, so a
+// preset never has to name another package's tools.
+export type RoleMap = Partial<Record<FacetKind, string>>;
+
+// The one docking-home rule, shared by every path that places a window on a
+// foundation: the preset's own designation wins (it is the desk owner's
+// override), else the tool's role when this preset HAS an area of that name,
+// else the fallback. A role naming no area of this preset is not an error —
+// the preset simply has no such home.
+export function dockingHome(def: FoundationDef, facet: FacetKind, roles: RoleMap = {}): string {
+  const designated = def.designate[facet];
+  if (designated !== undefined) {
+    return designated;
+  }
+  const role = roles[facet];
+  if (role !== undefined && collectLeaves(def.layout).some((leaf) => leaf.id === role)) {
+    return role;
+  }
+  return def.fallback;
+}
+
 // Open a tool from a LINK (toolId + serializable params): the one open
 // path shared by the launcher, plugins, and agents (the Desktop.OpenTool
 // intent). v1 window policy: ALWAYS a new window — find-or-switch is a
@@ -70,13 +93,14 @@ export function openToolWindow(
   desktop: number,
   params?: Record<string, unknown>,
   source?: string,
+  roles: RoleMap = {},
 ): { list: WindowRecord[]; id: string; focusId: string } {
   const result = openWindow(list, facet, size, desktop, params, source);
   let next = result.list;
   let focusId = result.id;
   const f = foundationOn(next, desktop);
   if (f?.foundation) {
-    const dm = dockOrMerge(next, result.id, f.id, f.foundation.designate[facet] ?? f.foundation.fallback);
+    const dm = dockOrMerge(next, result.id, f.id, dockingHome(f.foundation, facet, roles));
     next = dm.list;
     focusId = dm.frameId;
   }
@@ -559,14 +583,15 @@ export function undockWindow(list: WindowRecord[], id: string): WindowRecord[] {
 }
 
 // Create a foundation on a desktop and adopt its floaters: remembered
-// assignments first (grid memory), then designated facets to their home,
-// the rest to the fallback area. Sticky floaters, minimized frames, and
-// other foundations are skipped.
+// assignments first (grid memory), then the docking home each facet
+// resolves to (designation, role, fallback). Sticky floaters, minimized
+// frames, and other foundations are skipped.
 export function openFoundation(
   list: WindowRecord[],
   desktop: number,
   def: FoundationDef,
   assignments: Record<string, string> = {},
+  roles: RoleMap = {},
 ): { list: WindowRecord[]; id: string } {
   const id = nextWindowId(list);
   const tabId = nextTabId(list);
@@ -577,7 +602,7 @@ export function openFoundation(
     const facet = (w.tabs.find((t) => t.id === w.activeTab) ?? w.tabs[0]).facet;
     const area = (remembered && leafIds.has(remembered))
       ? remembered
-      : def.designate[facet] ?? def.fallback;
+      : dockingHome(def, facet, roles);
     // adoption docks the frame; an edge snap yields (exclusive homes)
     return { ...w, dock: { foundation: id, area }, snap: undefined };
   });

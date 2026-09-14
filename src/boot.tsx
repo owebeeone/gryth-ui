@@ -1,6 +1,7 @@
 import { GripProvider } from '@owebeeone/grip-react';
 import ReactDOM from 'react-dom/client';
 import { grok, main } from '@grythjs/plugin-api';
+import type { DesktopSetup } from '@grythjs/desktop';
 import { startGlade } from '@grythjs/glade';
 import { registerAllTaps } from './taps';
 import App from './App';
@@ -18,10 +19,14 @@ import App from './App';
 // and its appearance grips ship with the chrome, so a target may list one
 // plugin and still render.
 
-export function boot(): void {
+// A target may also say what its DESK is — which pane preset a lock opens
+// and whether the first desk opens locked (see @grythjs/desktop's
+// DesktopSetup). Omitted, the desk is the full desktop's: HUB, floating.
+export function boot(desk?: DesktopSetup): void {
   // The registry tap registers idempotently on first use, so ordering against
-  // the plugin imports that already ran is free.
-  registerAllTaps();
+  // the plugin imports that already ran is free. The desk setup rides with it:
+  // the plugin list is complete by now, so a boot-time lock adopts by role.
+  registerAllTaps(desk);
 
   // Connect to grazel's glade node (GLP-0006 P1.S4). Plugins have registered
   // their glial mounts + boot subscriptions by the time a target calls this;

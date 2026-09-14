@@ -4,9 +4,11 @@
 import './desktop.css';
 
 export { default as Desktop } from './Desktop';
-export { registerDesktopTaps } from './taps.desktop';
+export { registerDesktopTaps, type DesktopSetup } from './taps.desktop';
 export * from './grips.desktop';
 export * from './themes';
 export * from './ops';
 export * from './ticker';
-export { DESKTOP_BUILTINS, resolveTool } from './facets';
+// The pane presets a target may hand to registerDesktopTaps.
+export { HUB, GYLD } from './foundations';
+export { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';

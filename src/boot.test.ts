@@ -12,6 +12,9 @@ import { fileURLToPath } from 'node:url';
 // load in this suite's node environment (see
 // `packages/plugins/gyld/src/live.ts`). Source is enough to prove the shape:
 // each entry calls `boot()` and none of them mounts a React root of its own.
+// An entry may hand `boot()` its DESK (the pane preset, and whether the first
+// desk opens locked) — that is a target's choice like its plugin list, and it
+// goes through the shared render rather than around it.
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const read = (path: string) => readFileSync(new URL(path, `file://${here}`), 'utf8');
@@ -26,16 +29,17 @@ const ENTRIES: Record<string, string> = {
 
 describe('the shared boot', () => {
   it('owns the React root, the taps and the glade session', () => {
-    expect(BOOT).toMatch(/export function boot\(\)/);
+    expect(BOOT).toMatch(/export function boot\(desk\?: DesktopSetup\)/);
     expect(BOOT).toContain('createRoot');
-    expect(BOOT).toContain('registerAllTaps()');
+    expect(BOOT).toContain('registerAllTaps(desk)');
     expect(BOOT).toContain('startGlade()');
   });
 
   it.each(Object.keys(ENTRIES))('%s calls boot() and renders nothing itself', (name) => {
     const source = ENTRIES[name];
     expect(source).toMatch(/import \{ boot \} from '[^']*\/boot'/);
-    expect(source).toMatch(/^boot\(\);$/m);
+    // bare, or with this target's desk — and nothing else
+    expect(source).toMatch(/^boot\((GYLD_DESK)?\);$/m);
     // A target that mounted its own root would be a second render path, and
     // the two desktops would start drifting the moment one of them changed.
     expect(source).not.toContain('createRoot');

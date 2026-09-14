@@ -9,7 +9,7 @@ import {
   clampAllWindows,
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
-  dockOrMerge, probeArea, normalizeFoundations, captureGrid,
+  dockOrMerge, probeArea, normalizeFoundations, captureGrid, dockingHome,
 } from './ops';
 import type { FacetKind, LayoutNode, WindowRecord } from './grips.desktop';
 
@@ -615,3 +615,52 @@ describe('tool links and open intents', () => {
     // unknown tab id: same list back (no notify churn)
     expect(setTabParams(next, 'nope', { a: 1 })).toBe(next);
   });
+
+// A plugin declares the KIND of area its tool belongs in (ToolDef.role);
+// the desk owner's own designation still wins, and a preset that has no such
+// area is not obliged to invent one.
+describe('docking homes from tool roles', () => {
+  const TREE: LayoutNode = {
+    id: 'root', size: 100, direction: 'row',
+    children: [
+      { id: 'explorer', size: 20 },
+      { id: 'stage', size: 56 },
+      { id: 'inspector', size: 24 },
+    ],
+  };
+  const DEF = { layout: TREE, designate: { chat: 'stage' }, fallback: 'stage' };
+  const ROLES = { chat: 'explorer', 'gyld.streams': 'explorer', 'gyld.detail': 'inspector', vms: 'nowhere' };
+
+  it('resolves designation, then role, then fallback', () => {
+    expect(dockingHome(DEF, 'gyld.streams', ROLES)).toBe('explorer');
+    expect(dockingHome(DEF, 'chat', ROLES)).toBe('stage');       // designate wins over role
+    expect(dockingHome(DEF, 'vms', ROLES)).toBe('stage');        // role names no area here
+    expect(dockingHome(DEF, 'welcome', ROLES)).toBe('stage');    // no role at all
+    expect(dockingHome(DEF, 'gyld.streams')).toBe('stage');      // roles unknown to this caller
+  });
+
+  it('openToolWindow docks a newcomer by its role', () => {
+    const f = openFoundation([], 1, DEF);
+    const byRole = openToolWindow(f.list, 'gyld.detail', SIZE, 1, undefined, undefined, ROLES);
+    expect(byRole.list.find((w) => w.id === byRole.focusId)!.dock)
+      .toEqual({ foundation: f.id, area: 'inspector' });
+    // designated tool ignores its role
+    const designated = openToolWindow(byRole.list, 'chat', SIZE, 1, undefined, undefined, ROLES);
+    expect(designated.list.find((w) => w.id === designated.focusId)!.dock?.area).toBe('stage');
+  });
+
+  it('openFoundation adopts by role, and grid memory still outranks it', () => {
+    const list = openMany(['gyld.streams', 'gyld.detail', 'vms']);
+    const out = openFoundation(list, 1, DEF, {}, ROLES);
+    const areaOf = (facet: FacetKind) =>
+      out.list.find((w) => w.tabs.some((t) => t.facet === facet))!.dock?.area;
+    expect(areaOf('gyld.streams')).toBe('explorer');
+    expect(areaOf('gyld.detail')).toBe('inspector');
+    expect(areaOf('vms')).toBe('stage'); // role names no area of this preset
+
+    // remembered assignments are the reader's own placement: they win
+    const streams = list.find((w) => w.tabs[0].facet === 'gyld.streams')!;
+    const remembered = openFoundation(list, 1, DEF, { [streams.id]: 'inspector' }, ROLES);
+    expect(remembered.list.find((w) => w.id === streams.id)!.dock?.area).toBe('inspector');
+  });
+});

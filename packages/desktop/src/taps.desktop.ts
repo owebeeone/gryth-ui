@@ -5,8 +5,9 @@ import {
   DESKTOP_RETARGET_TAB, DESKTOP_TAB_LINKS,
   type TabLinkInfo, type ToolId, type ToolLink,
 } from '@grythjs/plugin-api';
-import { DESKTOP_BUILTINS, resolveTool } from './facets';
-import { DESKTOP_BUILTINS_PLUGIN } from './grips.desktop';
+import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
+import { DESKTOP_BUILTINS_PLUGIN, type FoundationDef } from './grips.desktop';
+import { HUB } from './foundations';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
@@ -20,10 +21,14 @@ import {
   AREA_MENU, AREA_MENU_TAP,
   CANVAS_SIZE, CANVAS_SIZE_TAP,
   DESKTOP_GRID_MEMORY, DESKTOP_GRID_MEMORY_TAP,
+  DESKTOP_FOUNDATION_PRESET, DESKTOP_FOUNDATION_PRESET_TAP,
   TICKER_HOVER, TICKER_HOVER_TAP,
   TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
-import { findWiredTab, freezeTab, nextTabId, openToolWindow, openWindow, setTabParams } from './ops';
+import {
+  findWiredTab, foundationOn, freezeTab, nextTabId,
+  openFoundation, openToolWindow, openWindow, setTabParams,
+} from './ops';
 
 // Shell chrome taps — the desktop document (environ scope) plus the
 // instance-scope gesture state. These are the desktop itself, NOT plugins
@@ -84,6 +89,10 @@ export const DesktopGridMemoryTap = createAtomValueTap(DESKTOP_GRID_MEMORY, {
   initial: {},
   handleGrip: DESKTOP_GRID_MEMORY_TAP,
 });
+export const DesktopFoundationPresetTap = createAtomValueTap(DESKTOP_FOUNDATION_PRESET, {
+  initial: HUB,
+  handleGrip: DESKTOP_FOUNDATION_PRESET_TAP,
+});
 export const TickerHoverTap = createAtomValueTap(TICKER_HOVER, {
   initial: null,
   handleGrip: TICKER_HOVER_TAP,
@@ -98,13 +107,16 @@ export const TickerBleedTap = createAtomValueTap(TICKER_BLEED, {
 // gridded desktop. Published as a grip value, so the launcher, plugins,
 // and agents all open views through this one surface.
 const openToolIntent = (link: ToolLink) => {
-  const def = resolveTool(allTools(PluginRegistryTap.get()), link.toolId);
+  const defs = allTools(PluginRegistryTap.get());
+  const def = resolveTool(defs, link.toolId);
   const out = openToolWindow(
     DesktopWindowsTap.get(),
     link.toolId,
     def.defaultSize,
     DesktopCurrentTap.get(),
     link.params,
+    undefined,
+    toolRoles(defs),
   );
   DesktopWindowsTap.set(out.list);
   DesktopFocusedTap.set(out.focusId);
@@ -132,9 +144,10 @@ const openWiredIntent = (sourceTabId: string, link: ToolLink) => {
   // already wired and live: the WTA grip updates it in place — do NOT
   // raise/refocus on every click (that was the jarring jump).
   if (existing) return;
-  const def = resolveTool(allTools(PluginRegistryTap.get()), link.toolId);
+  const defs = allTools(PluginRegistryTap.get());
+  const def = resolveTool(defs, link.toolId);
   const out = openToolWindow(
-    list, link.toolId, def.defaultSize, DesktopCurrentTap.get(), link.params, sourceTabId,
+    list, link.toolId, def.defaultSize, DesktopCurrentTap.get(), link.params, sourceTabId, toolRoles(defs),
   );
   DesktopWindowsTap.set(out.list);
   DesktopFocusedTap.set(out.focusId);
@@ -151,8 +164,13 @@ const openWiredPairIntent = (sourceToolId: ToolId, sinkToolId: ToolId, params?: 
   const desktop = DesktopCurrentTap.get();
   const list = DesktopWindowsTap.get();
   const srcTabId = nextTabId(list);
-  const a = openToolWindow(list, sourceToolId, resolveTool(defs, sourceToolId).defaultSize, desktop, params);
-  const b = openToolWindow(a.list, sinkToolId, resolveTool(defs, sinkToolId).defaultSize, desktop, params, srcTabId);
+  const roles = toolRoles(defs);
+  const a = openToolWindow(
+    list, sourceToolId, resolveTool(defs, sourceToolId).defaultSize, desktop, params, undefined, roles,
+  );
+  const b = openToolWindow(
+    a.list, sinkToolId, resolveTool(defs, sinkToolId).defaultSize, desktop, params, srcTabId, roles,
+  );
   DesktopWindowsTap.set(b.list);
   DesktopFocusedTap.set(b.focusId);
 };
@@ -194,7 +212,32 @@ class TabLinksTap extends BaseTap {
 }
 export const DesktopTabLinksTap = new TabLinksTap();
 
-export function registerDesktopTaps(grok: Grok) {
+// What a TARGET says about its desk, at the one place a target already
+// composes the shell. Both are optional and both default to the full
+// desktop's behavior: preset HUB, first desk floating.
+export interface DesktopSetup {
+  /** The pane preset every lock on this composition opens (default HUB). */
+  foundation?: FoundationDef;
+  /** Open desk 1 LOCKED on that preset, instead of floating windows. */
+  locked?: boolean;
+}
+
+// Lock desk 1 at composition time. A target whose desk IS its purpose
+// should not make the reader find the lock button first. The adoption is
+// the ordinary one — same openFoundation, same roles — so a boot-locked
+// desk and a hand-locked one are the same desk.
+function lockFirstDesk(): void {
+  const list = DesktopWindowsTap.get();
+  if (foundationOn(list, 1)) {
+    return;
+  }
+  const out = openFoundation(
+    list, 1, DesktopFoundationPresetTap.get(), {}, toolRoles(allTools(PluginRegistryTap.get())),
+  );
+  DesktopWindowsTap.set(out.list);
+}
+
+export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   // publish the not-yet-converted builtin tools at the desktop's own
   // plugin grip — the chrome consumes that grip like any plugin consumer
   addEntry(DESKTOP_BUILTINS_PLUGIN, DESKTOP_BUILTINS);
@@ -210,6 +253,7 @@ export function registerDesktopTaps(grok: Grok) {
   grok.registerTap(AreaMenuTap);
   grok.registerTap(CanvasSizeTap);
   grok.registerTap(DesktopGridMemoryTap);
+  grok.registerTap(DesktopFoundationPresetTap);
   grok.registerTap(TickerHoverTap);
   grok.registerTap(TickerBleedTap);
   grok.registerTap(OpenToolTap);
@@ -218,4 +262,12 @@ export function registerDesktopTaps(grok: Grok) {
   grok.registerTap(OpenWiredPairTap);
   grok.registerTap(PinTabTap);
   grok.registerTap(DesktopTabLinksTap);
+  // the target's desk, after the taps exist: the preset first, so a boot
+  // lock opens the preset the target just named
+  if (setup?.foundation !== undefined) {
+    DesktopFoundationPresetTap.set(setup.foundation);
+  }
+  if (setup?.locked === true) {
+    lockFirstDesk();
+  }
 }
