@@ -2,9 +2,9 @@ import { GripProvider, createAtomValueTap, useGrip, type AtomTapHandle } from '@
 import { grok } from '@grythjs/plugin-api';
 import type { GyldValidation } from '../contract';
 import {
-  GYLD_DEST_STREAM, GYLD_OPS, GYLD_OPS_STATUS, GYLD_SET, GYLD_STORE_RELOAD,
-  GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_STREAM_DRAFT, GYLD_STREAM_DRAFT_TAP,
-  GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP, GYLD_VALIDATION,
+  GYLD_DEST_STREAM, GYLD_OPS, GYLD_OPS_RUN_ID, GYLD_OPS_STATUS, GYLD_SET,
+  GYLD_STORE_RELOAD, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_STREAM_DRAFT,
+  GYLD_STREAM_DRAFT_TAP, GYLD_STREAM_EXPORT, GYLD_STREAM_EXPORT_TAP, GYLD_VALIDATION,
 } from '../grips';
 import { OpsPanel } from '../ops/OpsPanel';
 import { ListButton, RebuildButton } from '../ops/RebuildButton';
@@ -13,6 +13,7 @@ import { streamSubmit } from './submit';
 import { SetPicker } from '../browser/SetPicker';
 import { useKeyedContext } from '../contexts';
 import type { GyldValue } from '../store/state';
+import { anyWaiting, bootRunOf, rootLine, waitingSays } from '../store/waiting';
 import {
   DRAFT_EMPTY, STREAM_OPERATIONS, draftCommand, draftShapeFaults, operationNamed,
   type StreamDraft,
@@ -293,23 +294,30 @@ function NewStreamForm({ parents }: { parents: string[] }) {
  * `gyld.streams` and there is no tree to draw. List says whether the supplier
  * is there at all, and Rebuild is what makes the first build. A window that
  * offered neither would leave a live desk with nothing to press.
+ *
+ * That state is a WAIT, not a fault, so it leads with what it is waiting for
+ * (../store/waiting.ts). Nothing failed: the node answered and its shares are
+ * empty, which is what a bundle root nobody has built into looks like.
  */
 function NoStreams() {
   const census = useGrip(GYLD_STREAMS);
   const roots = useGrip(GYLD_STORE_STATUS) ?? [];
+  const bootRun = bootRunOf(useGrip(GYLD_OPS_RUN_ID) ?? '');
   const said: Record<string, string> = {
     empty: 'no bundle root on this desk',
     loading: 'reading the census',
   };
   const status = census?.status ?? 'empty';
+  const waiting = anyWaiting(roots);
   return (
-    <div className="gyld-streams gyld-streams-empty">
-      <p className="gyld-note">{said[status] ?? status}</p>
+    <div className="gyld-streams gyld-streams-empty" data-waiting={waiting}>
+      {waiting
+        ? waitingSays(bootRun).map((line) => (
+          <p key={line} className="gyld-waiting">{line}</p>
+        ))
+        : <p className="gyld-note">{said[status] ?? status}</p>}
       {roots.map((root) => (
-        <p key={root.describe} className="gyld-note">
-          {`${root.describe}: ${root.status}`}
-          {root.error === undefined ? '' : ` (${root.error})`}
-        </p>
+        <p key={root.describe} className="gyld-note">{rootLine(root)}</p>
       ))}
       <div className="gyld-chrome-row">
         <ListButton />
@@ -352,11 +360,7 @@ export function StreamManager() {
       </header>
       <div className="gyld-status">
         {roots.map((root) => (
-          <span key={root.describe}>
-            {`${root.describe}: ${root.status}`}
-            {root.error === undefined ? '' : ` (${root.error})`}
-            {root.watchLive ? ' · watching' : ''}
-          </span>
+          <span key={root.describe}>{rootLine(root)}</span>
         ))}
       </div>
       {collisions.map((collision) => (

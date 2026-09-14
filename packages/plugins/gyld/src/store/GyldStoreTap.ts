@@ -18,7 +18,8 @@ import {
   DirectoryStore, StaticStore, errorMessage,
   type GyldDirectoryHandle, type GyldStore,
 } from './stores';
-import { ShareStore, type GyldShareProvider } from './shareStore';
+import { NothingPublished, ShareStore, type GyldShareProvider } from './shareStore';
+import { ROOT_WAITING } from './waiting';
 import {
   BUNDLE_UNSET, CENSUS_EMPTY, CENSUS_LOADING, LENS_UNSET, VALUE_LOADING, VALUE_UNSET,
   type CensusStream, type GyldBundle, type GyldFault, type GyldLensState,
@@ -650,6 +651,14 @@ export class GyldStoreTap extends BaseTap {
       root.error = undefined;
     } catch (err) {
       if (epoch !== this.epoch) {
+        return;
+      }
+      if (err instanceof NothingPublished) {
+        // Not a failure. The node answered and its shares are empty, which is
+        // what a bundle root nobody has built into looks like: the root is
+        // WAITING, and the windows say what for (./waiting.ts).
+        root.status = ROOT_WAITING;
+        root.error = undefined;
         return;
       }
       root.status = 'error';

@@ -7,6 +7,7 @@ import { decideTitle } from '../browser/links';
 import { useBrowserFocus, type BrowserFocus } from '../browser/useBrowserFocus';
 import { groupQuestions } from './groups';
 import type { GyldBundle, GyldValue } from '../store/state';
+import { rootLine } from '../store/waiting';
 
 // The gyld.decidenow window (step 1.5): the stream's emitted decide-now list.
 //
@@ -116,10 +117,7 @@ function NoList({ value, stream, bundle }: {
         <p key={fault.path} className="gyld-fault">{`${fault.path}: ${fault.message}`}</p>
       ))}
       {roots.map((root) => (
-        <p key={root.describe} className="gyld-note">
-          {`${root.describe}: ${root.status}`}
-          {root.error === undefined ? '' : ` (${root.error})`}
-        </p>
+        <p key={root.describe} className="gyld-note">{rootLine(root)}</p>
       ))}
     </div>
   );

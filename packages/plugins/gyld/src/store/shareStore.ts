@@ -28,6 +28,23 @@ import type { GyldStore } from './stores';
 // window shows absence, which is true: those files are on the static path of
 // the build the answer named, not on this share.
 
+/**
+ * Nothing has landed on a share YET.
+ *
+ * Its own class because it is its own fact. The supplier publishes onto these
+ * shares after each build, so a bundle root that has never been built answers
+ * this to every read: the node is there, the mount is there, and the share is
+ * empty. The store tap turns it into a `waiting` root rather than an error,
+ * and a reader is told to wait for the first build or to start one, instead of
+ * being shown a failure that did not happen.
+ */
+export class NothingPublished extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NothingPublished';
+  }
+}
+
 /** A published pointer to one file on grazel's static path. */
 export interface GyldFilePointer {
   /** The URL path grazel serves that file at, static base included. */
@@ -194,7 +211,7 @@ export class ShareStore implements GyldStore {
   private required(surface: GyldShareSurface, key: string | undefined, path: string): string {
     const value = this.provider.value(surface, key);
     if (value === undefined) {
-      throw new Error(
+      throw new NothingPublished(
         `nothing has landed on ${surface.gladeId}${key === undefined ? '' : ` (${key})`} `
         + `for ${path}`,
       );
@@ -205,7 +222,9 @@ export class ShareStore implements GyldStore {
   private async lens(key: string): Promise<string> {
     const raw = this.provider.value(GyldShareSurface.LENS, key);
     if (raw === undefined) {
-      throw new Error(`nothing has landed on ${GyldShareSurface.LENS.gladeId} (${key})`);
+      throw new NothingPublished(
+        `nothing has landed on ${GyldShareSurface.LENS.gladeId} (${key})`,
+      );
     }
     const pointer = readPointer(raw);
     return verified(pointer, await this.provider.fetch(pointer.path));

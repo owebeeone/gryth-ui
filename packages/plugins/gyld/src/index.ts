@@ -232,6 +232,10 @@ export {
 } from './store/stores';
 export * from './store/layout';
 export {
-  GyldShareSurface, ShareStore, readPointer, verified,
+  GyldShareSurface, NothingPublished, ShareStore, readPointer, verified,
   type GyldFilePointer, type GyldShareProvider,
 } from './store/shareStore';
+export {
+  BOOT_RUN, ROOT_WAITING, WAITING_REASON, anyWaiting, bootRunOf, isWaiting,
+  rootLine, waitingSays,
+} from './store/waiting';

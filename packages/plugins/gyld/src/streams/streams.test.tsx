@@ -6,8 +6,11 @@ import {
 import { readStreamsIndex } from '../contract';
 import { browserLink } from '../browser/links';
 import { GYLD_BROWSER_TOOL } from '../tools';
-import { GYLD_STREAMS, GYLD_TAB_ID, GYLD_VALIDATION } from '../grips';
-import type { GyldStreamsCensus } from '../store/state';
+import {
+  GYLD_OPS_RUN_ID, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_TAB_ID, GYLD_VALIDATION,
+} from '../grips';
+import type { GyldRootStatus, GyldStreamsCensus } from '../store/state';
+import { ROOT_WAITING, WAITING_REASON } from '../store/waiting';
 import { StreamManager } from './StreamManager';
 import { streamsTabTaps } from './streamsTabTaps';
 import {
@@ -395,5 +398,55 @@ describe('a row moves a browser rather than deciding for itself', () => {
     const markup = sink.render(<StreamManager />);
     expect(markup).toContain('wired to sm-source');
     expect(markup).toContain('show this stream in browser sm-source');
+  });
+});
+
+describe('a bundle root with nothing built into it yet', () => {
+  /**
+   * The stream manager over a desk whose one root is WAITING.
+   *
+   * The two home values are seeded on the tab's own context, which shadows the
+   * store tap's: this asserts what the window says about a waiting root, and
+   * `store/share.test.ts` asserts that an empty share is one.
+   */
+  const waitingWindow = (name: string, runId: string) => {
+    const root: GyldRootStatus = {
+      root: { kind: 'share' },
+      describe: 'glade node',
+      status: ROOT_WAITING,
+      watchLive: true,
+    };
+    const desk = mountDesk();
+    const tab = desk.tab(name, [
+      ...streamsTabTaps(),
+      createAtomValueTap(GYLD_STORE_STATUS, { initial: [root] }),
+      createAtomValueTap(GYLD_STREAMS, { initial: { status: 'ready', streams: [], collisions: [], loadedAt: '' } as GyldStreamsCensus }),
+      createAtomValueTap(GYLD_OPS_RUN_ID, { initial: runId }),
+    ]);
+    return tab.render(<StreamManager />);
+  };
+
+  it('says what it is waiting for, and offers the build that would end it', () => {
+    const markup = waitingWindow('sm-waiting', '');
+    expect(markup).toContain('data-waiting="true"');
+    expect(markup).toContain(WAITING_REASON);
+    expect(markup).toContain('waiting state, not a failure');
+    expect(markup).toContain('press Rebuild');
+    expect(markup).toContain('gyld-ops-rebuild');
+    // and the status line carries the reason rather than an error it has none of
+    expect(markup).toContain(`glade node: waiting (${WAITING_REASON})`);
+    expect(markup).not.toContain('nothing has landed on gyld.streams');
+  });
+
+  it('names the supplier\'s own first build when one is on the output share', () => {
+    const markup = waitingWindow('sm-boot', 'boot-1789247615547');
+    expect(markup).toContain('Its first build is running as boot-1789247615547');
+    expect(markup).not.toContain('press Rebuild');
+  });
+
+  it('leaves a desk with no root at all saying exactly that', async () => {
+    const manager = mount('sm-noroot');
+    await settled(manager.census, (value) => value?.status === 'ready');
+    expect(manager.render()).not.toContain('data-waiting="true"');
   });
 });

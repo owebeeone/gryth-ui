@@ -10,6 +10,7 @@ import {
   GYLD_TAB_DIMMED_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
 } from '../grips';
 import { NOTHING_DIMMED, type GyldDimmed } from '../lens/camera';
+import { rootLine } from '../store/waiting';
 import { NODE_FACETS } from '../lens/facets';
 import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
 import { PreviewPerspective } from '../preview/neighbourhood';
@@ -194,11 +195,7 @@ export function BrowserChrome({ tabId, lens, search }: {
       )}
       <div className="gyld-status">
         {roots.map((root) => (
-          <span key={root.describe}>
-            {`${root.describe}: ${root.status}`}
-            {root.error === undefined ? '' : ` (${root.error})`}
-            {root.watchLive ? ' · watching' : ''}
-          </span>
+          <span key={root.describe}>{rootLine(root)}</span>
         ))}
       </div>
     </div>

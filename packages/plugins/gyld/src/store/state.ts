@@ -29,7 +29,14 @@ export interface GyldSet {
 
 export const EMPTY_SET: GyldSet = Object.freeze({ roots: [] });
 
-export type RootStatusKind = 'idle' | 'loading' | 'ready' | 'error';
+/**
+ * What a root of the set is doing.
+ *
+ * `waiting` is a root that is THERE and empty: a glade node whose supplier has
+ * published no build yet answers every read with "nothing has landed", which
+ * is not a failure and is not rendered as one (see ./waiting.ts).
+ */
+export type RootStatusKind = 'idle' | 'loading' | 'ready' | 'waiting' | 'error';
 
 export interface GyldRootStatus {
   root: GyldRootRef;

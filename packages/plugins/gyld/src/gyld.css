@@ -362,6 +362,13 @@
   opacity: 0.85;
 }
 
+/* A root that is there and empty. It reads at full strength, because it is
+   what the window is about, and it is NOT styled as a fault: nothing failed. */
+
+.gyld-waiting {
+  margin: 0;
+}
+
 .gyld-picker-row {
   display: flex;
   flex-wrap: wrap;
