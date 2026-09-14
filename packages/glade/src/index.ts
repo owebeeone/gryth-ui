@@ -14,6 +14,8 @@ export {
   addGladeSubscription,
   startGlade,
   resolveController,
+  GLADE_NODE,
+  GLADE_NODE_TAP,
   GLADE_STATUS,
   GLADE_STATUS_TAP,
   type GladeStatus,

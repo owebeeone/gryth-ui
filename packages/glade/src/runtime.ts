@@ -107,6 +107,18 @@ function setStatus(s: GladeStatus): void {
   GladeStatusTap.set(s);
 }
 
+/** The node WS URL this page attaches to, published as soon as the bootstrap
+ *  has resolved one and BEFORE the socket is tried — so a panel can name the
+ *  node it is waiting for, and name the one that never answered. Empty until
+ *  then. */
+export const GLADE_NODE = defineGrip<string>('Glade.Node', '');
+export const GLADE_NODE_TAP = defineGrip<AtomTapHandle<string>>('Glade.Node.Tap');
+const GladeNodeTap = createAtomValueTap(GLADE_NODE, {
+  initial: '',
+  handleGrip: GLADE_NODE_TAP,
+});
+grok.registerTap(GladeNodeTap);
+
 // --- boot subscriptions registry ---------------------------------------------
 // Plugins contribute the surfaces they want the node to replay on connect (node
 // interest + late-join history). startGlade replays them all — the app never
@@ -146,6 +158,7 @@ export async function startGlade(): Promise<void> {
   started = true;
   try {
     const url = await resolveNodeWs();
+    GladeNodeTap.set(url);
     await client.connect(url);
     await client.hello?.(principal);
     for (const s of subscriptions) {

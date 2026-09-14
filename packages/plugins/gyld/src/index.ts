@@ -15,7 +15,8 @@ import { diffTabTaps } from './diff/diffTabTaps';
 import { CompareWindow } from './compare/CompareWindow';
 import { compareTabTaps } from './compare/compareTabTaps';
 import {
-  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
+  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldPreviewLayoutTap,
+  gyldRecordTap, gyldStoreTap,
 } from './rootTaps';
 import {
   BROWSER_ROLE, COMPARE_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE,
@@ -45,6 +46,9 @@ grok.registerTap(gyldStoreTap);
 grok.registerTap(gyldIndexTap);
 grok.registerTap(gyldRecordTap);
 grok.registerTap(gyldPreviewLayoutTap);
+// And the landing tap, which watches the mirrored glade presence so an empty
+// desk puts the glade node on itself when the session comes up.
+grok.registerTap(gyldLandingTap);
 
 addEntry(GYLD_PLUGIN, {
   tools: {
@@ -137,6 +141,7 @@ export {
   GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_PREVIEW,
   GYLD_OPS, GYLD_OPS_RESULT, GYLD_OPS_RESULT_TAP, GYLD_OPS_RUN_ID,
   GYLD_OPS_RUN_ID_TAP, GYLD_OPS_STREAM, GYLD_OPS_STATUS,
+  GYLD_LANDING, GYLD_NODE,
 } from './grips';
 export * from './ops/verbs';
 export {
@@ -153,8 +158,14 @@ export { DiffButton, ListButton, RebuildButton } from './ops/RebuildButton';
 export * from './focus';
 export * from './tools';
 export {
-  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
+  GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldPreviewLayoutTap,
+  gyldRecordTap, gyldStoreTap,
 } from './rootTaps';
+export { GyldLandingTap } from './landing/GyldLandingTap';
+export {
+  GladePresence, LANDING_UNSET, landingSays, landsGladeRoot,
+  type GyldLanding, type LandingSays,
+} from './landing/landing';
 export { GyldPreviewLayoutTap, PREVIEW_UNSET } from './preview/GyldPreviewLayoutTap';
 export { PreviewPerspective, type PreviewPlan } from './preview/neighbourhood';
 export { PREVIEW_GRAPH_NAME, dotLabel, previewDot, quote } from './preview/dot';

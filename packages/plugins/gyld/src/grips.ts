@@ -16,6 +16,7 @@ import {
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './lens/camera';
 import { NO_FOCUS, type GyldFocus } from './focus';
+import { LANDING_UNSET, type GyldLanding } from './landing/landing';
 import type { GyldOps, GyldOpsResult, GyldOutputRecord } from './ops/ops';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
@@ -403,6 +404,29 @@ export const GYLD_OPS_STREAM = defineGrip<GyldOutputRecord[]>('Gyld.Ops.Stream',
  * suite must stay able to run without one (owner ruling O6's boundary).
  */
 export const GYLD_OPS_STATUS = defineGrip<string>('Gyld.Ops.Status', '');
+
+/**
+ * The node URL the page would attach to, mirrored from `Glade.Node` by the
+ * live module for the same reason `Gyld.Ops.Status` is: this package must not
+ * import the module that reads the DOM.
+ *
+ * Empty until grazel's `/bootstrap.json` has been asked (and in a composition
+ * with no glade at all), which is why the picker names it only when it has
+ * one. It is the URL the page WOULD use, resolved before the socket is tried,
+ * so it is exactly the right thing to print beside "nothing answered".
+ */
+export const GYLD_NODE = defineGrip<string>('Gyld.Node', '');
+
+// ---------------------------------------------------------------------------
+// What an empty desk lands on.
+//
+// `Gyld.Landing` is produced by `GyldLandingTap` at the plugin root: the glade
+// presence, the node URL, and whether this desk put the glade root on itself.
+// The set picker is a pure read of it, so the copy a reader sees is decided in
+// one place and asserted without a window.
+// ---------------------------------------------------------------------------
+
+export const GYLD_LANDING = defineGrip<GyldLanding>('Gyld.Landing', LANDING_UNSET);
 
 // The tab id of the window that OWNS this context, seeded by the browser's
 // tabTaps. A sink wired to a browser inherits it through the graph and so
