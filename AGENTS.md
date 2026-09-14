@@ -30,8 +30,14 @@ Adopted from grip-lab's AGENTS.md.
 - `src/grips.ts` — grip (typed value handle) definitions, grouped by scope
   (doc / environ / instance).
 - `src/taps.ts` — taps (data producers) and the `registerAllTaps()` helper.
-- `src/bootstrap.tsx` — registers taps and mounts the app under
-  `GripProvider`.
+- `src/boot.tsx` — `boot()`: registers taps, starts the glade session and
+  mounts the app under `GripProvider`. Every target calls it.
+- `src/bootstrap.tsx` — the FULL desktop target's entry: the whole plugin list
+  (`src/plugins/`), then `boot()`.
+- `entries/<target>/` — an additional entry point. A target is `index.html` +
+  `main.tsx` + a `plugins.ts` that chooses the plugin list; it differs from the
+  full desktop in nothing else. `entries/gyld/` is the Gyld-only desktop, built
+  by `vite.gyld.config.ts` into `dist-gyld/`. See README.md, "Targets".
 - `src/App.tsx` — the root React component.
 
 ## Design rules
@@ -97,7 +103,10 @@ Adopted from grip-lab's AGENTS.md.
 
 ## Verification commands
 
-- Dev server: `pnpm dev`
-- Type-check + build: `pnpm build`
+- Dev server: `pnpm dev` (full desktop), `pnpm dev:gyld` (Gyld only)
+- Type-check + build: `pnpm build` → `dist/`, `pnpm build:gyld` → `dist-gyld/`
 - Lint (includes the no-React-state ban): `pnpm lint`
 - Tests (no-React-state scan + vitest): `pnpm test`
+
+A change to the shared render, to a Vite option or to the plugin lists must be
+checked against BOTH targets — `pnpm build` and `pnpm build:gyld`.

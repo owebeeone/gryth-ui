@@ -460,18 +460,31 @@ bundle root at `/gyld/` on the HTTP port. `--gyld-root` is READ ONLY: the
 supplier seeds its own overlays tree from the checkout's `examples/` and never
 writes a byte back into it.
 
-Then `pnpm dev` in this repository as usual. The page has no
-`/bootstrap.json` in front of it, so `@grythjs/glade` falls back to
-`ws://127.0.0.1:9099`, which is the node grazel just started; the status line
-in the browser chrome says `live` once the socket is up. Press `Add glade node`
-in the set picker and the census arrives on `gyld.streams`. The dev server
-proxies `/gyld/` to grazel (`GRAZEL_URL`, default `http://127.0.0.1:8080`), so
-the lens pointers the shares carry resolve and the pictures draw; without that
-proxy a glade root lists streams and draws nothing, because a lens file is
-fetched over HTTP and only grazel serves it.
+Then `pnpm dev:gyld` in this repository. That is the GYLD-ONLY target
+(`entries/gyld`, `vite.gyld.config.ts`): the same desktop with this plugin as
+its whole plugin list, so the launcher offers the Gyld windows and nothing
+unrelated to them. `pnpm dev` still runs the full desktop and works exactly the
+same way for this path; the two dev servers differ only in the plugin list.
 
-Serving the built application from grazel itself (`--ui`) needs no proxy at
-all, because then the page and the bundle root are one origin.
+Either way the page has no `/bootstrap.json` in front of it, so
+`@grythjs/glade` falls back to `ws://127.0.0.1:9099`, which is the node grazel
+just started; the status line in the browser chrome says `live` once the socket
+is up. Press `Add glade node` in the set picker and the census arrives on
+`gyld.streams`. The dev server proxies `/gyld/` to grazel (`GRAZEL_URL`,
+default `http://127.0.0.1:8080`), so the lens pointers the shares carry resolve
+and the pictures draw; without that proxy a glade root lists streams and draws
+nothing, because a lens file is fetched over HTTP and only grazel serves it.
+
+Serving the built application from grazel itself needs no proxy at all, because
+then the page and the bundle root are one origin:
+
+```sh
+pnpm build:gyld                  # -> dist-gyld/, root-absolute asset URLs
+grazel ... --ui /path/to/gryth-ui/dist-gyld
+```
+
+and the desk is then at `http://127.0.0.1:8080/`. `pnpm build` and `--ui dist`
+do the same for the full desktop.
 
 ## The bundle the dev server serves
 

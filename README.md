@@ -30,3 +30,25 @@ pnpm test        # headless seam tests (vitest)
 pnpm dev         # vite dev server
 pnpm build       # tsc + vite build
 ```
+
+## Targets
+
+There are two entry points into this application, and they differ in one thing:
+which plugins they import. Everything after the plugin list — the taps, the
+glade session, the React root — is `src/boot.tsx`, which both call.
+
+| target | entry | plugins | scripts |
+|---|---|---|---|
+| full desktop | `index.html` → `src/main.tsx` → `src/bootstrap.tsx` | `src/plugins/` — every plugin the composition root lists | `pnpm dev`, `pnpm build` → `dist/` |
+| Gyld only | `entries/gyld/index.html` → `entries/gyld/main.tsx` | `entries/gyld/plugins.ts` — `@grythjs/plugin-gyld`, and nothing else | `pnpm dev:gyld`, `pnpm build:gyld` → `dist-gyld/` |
+
+The Gyld-only target is a desk for the Gyld decision graph with nothing
+unrelated on it. It needs no other plugin: the shell's own facets and its
+appearance grips ship with `@grythjs/desktop`, so the two desktops differ in
+their launcher and in nothing else. Its config, `vite.gyld.config.ts`, takes
+every shared option from `grythShared()` in `vite.config.ts` rather than
+copying it.
+
+Adding a target means adding a directory under `entries/` and a config that
+spreads `grythShared()`; `entries/` is already covered by the type-check, the
+lint, the vitest include and the no-React-state scan.
