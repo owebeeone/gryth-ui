@@ -9,7 +9,7 @@ import {
   clampAllWindows,
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
-  dockOrMerge, probeArea, normalizeFoundations, captureGrid, dockingHome,
+  dockOrMerge, probeArea, normalizeFoundations, captureGrid, dockingHome, setTabSource,
 } from './ops';
 import type { FacetKind, LayoutNode, WindowRecord } from './grips.desktop';
 
@@ -614,6 +614,25 @@ describe('tool links and open intents', () => {
     expect(next[0].tabs[0].params).toEqual({ session: 'sess-2' });
     // unknown tab id: same list back (no notify churn)
     expect(setTabParams(next, 'nope', { a: 1 })).toBe(next);
+  });
+
+  // The wire OpenWired makes at open time, made AFTER the fact: a sink that
+  // outlived its source adopts the tool's most recently focused tab, which is
+  // the only way it can name a browser the desk has just opened FOR it.
+  it('setTabSource wires an existing tab to the newest tab of a tool', () => {
+    const first = openWindow([], 'gyld.browser', SIZE, 1);
+    const tree = openWindow(first.list, 'gyld.streams', SIZE, 1);
+    const second = openWindow(tree.list, 'gyld.browser', SIZE, 1);
+    const treeTab = tree.list[1].tabs[0].id;
+    const newest = second.list[2].tabs[0].id;
+
+    const wired = setTabSource(second.list, treeTab, 'gyld.browser');
+    expect(wired[1].tabs[0].source).toBe(newest); // z-order: the LAST one
+    // idempotent: the same wire asked for twice notifies nobody
+    expect(setTabSource(wired, treeTab, 'gyld.browser')).toBe(wired);
+    // nothing to wire to, and nothing to wire: the same list back
+    expect(setTabSource(second.list, 'nope', 'gyld.browser')).toBe(second.list);
+    expect(setTabSource(second.list, treeTab, 'gyld.decide')).toBe(second.list);
   });
 
 // A plugin declares the KIND of area its tool belongs in (ToolDef.role);

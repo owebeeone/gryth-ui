@@ -47,7 +47,7 @@ function mount(tabId: string, bundle = new FakeBundle()) {
     desk,
     tab,
     census: () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
-    render: () => tab.render(<StreamManager />),
+    render: () => tab.render(<StreamManager tabId="sm" />),
     /**
      * One row's validation, read as a DRIP in that row's own child context.
      *
@@ -374,13 +374,16 @@ describe('a row moves a browser rather than deciding for itself', () => {
       () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
       (value) => value?.status === 'ready',
     );
-    const markup = tab.render(<StreamManager />);
+    const markup = tab.render(<StreamManager tabId="sm" />);
     expect(/<button[^>]*class="gyld-stream-open"[^>]*disabled/.test(markup)).toBe(false);
     // A desk with no browser to move opens ONE, on that stream and no
     // perspective: a perspective this window chose would be a Gyld fact it
     // invented, and the new window's own first pick fills it from the manifest.
     showStream(
-      { wiredTo: '', openTool: (link: ToolLink) => { opened.push(link); } },
+      {
+        wiredTo: '', tabId: 'sm-open', onDesk: '',
+        openTool: (link: ToolLink) => { opened.push(link); },
+      },
       'stream-a',
     );
     expect(opened).toEqual([browserLink({ stream: 'stream-a', perspective: '', focus: '' })]);
@@ -406,7 +409,7 @@ describe('a row moves a browser rather than deciding for itself', () => {
       () => sink.read(GYLD_STREAMS).get() as GyldStreamsCensus,
       (value) => value?.status === 'ready',
     );
-    const markup = sink.render(<StreamManager />);
+    const markup = sink.render(<StreamManager tabId="sm" />);
     expect(markup).toContain('wired to sm-source');
     expect(markup).toContain('show this stream in browser sm-source');
   });
@@ -441,6 +444,8 @@ describe('a row moves a browser rather than deciding for itself', () => {
     );
     const handles: StreamTargetHandles = {
       wiredTo: tree.read(GYLD_TAB_ID).get() ?? '',
+      tabId: `${name}-tree`,
+      onDesk: name,
       census: tree.read(GYLD_STREAMS).get(),
       stream: tree.read(GYLD_DEST_STREAM_TAP).get() as AtomTapHandle<string>,
       perspective: tree.read(GYLD_DEST_PERSPECTIVE_TAP).get() as AtomTapHandle<string>,
@@ -480,6 +485,70 @@ describe('a row moves a browser rather than deciding for itself', () => {
     expect(landed).not.toBe('tiers');
     expect(architectureRecord.lenses.map((entry) => entry.perspective)).toContain(landed);
     expect(on.opened).toEqual([]);
+  });
+});
+
+/**
+ * A pick made with NO browser wired — the desk the reader left when they
+ * closed the stage browser. The tree used to open a fresh UNWIRED browser on
+ * every pick from then on, one per click, until the page was reloaded.
+ *
+ * The intents are stubs because what is asserted is what the tree ASKS the
+ * desk for; `packages/desktop/src/ops.test.ts` asserts what the desk does with
+ * it. The census is left out: which perspective a retarget lands on is the
+ * `keptPerspective` rule below, not this one.
+ */
+describe('a pick made with no browser wired', () => {
+  const desk = () => {
+    const opened: ToolLink[] = [];
+    const retargets: { tab: string; params: Record<string, unknown> }[] = [];
+    const wired: { tab: string; source: string }[] = [];
+    const on = (wiredTo: string, onDesk: string): StreamTargetHandles => ({
+      wiredTo,
+      tabId: 'tree',
+      onDesk,
+      openTool: (link: ToolLink) => { opened.push(link); },
+      retarget: (tab: string, params: Record<string, unknown>) => {
+        retargets.push({ tab, params });
+      },
+      setTabSource: (tab: string, source: string) => { wired.push({ tab, source }); },
+    });
+    return { opened, retargets, wired, on };
+  };
+
+  it('adopts the browser already on the desk instead of opening another', () => {
+    const it0 = desk();
+    showStream(it0.on('', 'b1'), 'stream-a');
+    // the one on the desk MOVES, and this window wires itself to it
+    expect(it0.retargets).toEqual([
+      { tab: 'b1', params: { stream: 'stream-a', perspective: '', focus: '' } },
+    ]);
+    expect(it0.wired).toEqual([{ tab: 'tree', source: GYLD_BROWSER_TOOL }]);
+    expect(it0.opened).toEqual([]);
+  });
+
+  it('opens one WIRED when the desk has none, and the next pick moves it', () => {
+    const it0 = desk();
+    showStream(it0.on('', ''), 'stream-a');
+    expect(it0.opened).toEqual([browserLink({ stream: 'stream-a', perspective: '', focus: '' })]);
+    // opened WIRED: the desk resolves the tab it just made for this window
+    expect(it0.wired).toEqual([{ tab: 'tree', source: GYLD_BROWSER_TOOL }]);
+    // and with the wire made, the next pick RETARGETS it — no second browser,
+    // which is the whole of the hole this closes
+    showStream(it0.on('b1', 'b1'), 'stream-b');
+    expect(it0.retargets).toEqual([
+      { tab: 'b1', params: { stream: 'stream-b', perspective: '', focus: '' } },
+    ]);
+    expect(it0.opened).toHaveLength(1);
+  });
+
+  it('leaves the wiring alone when the launcher opens a second browser', () => {
+    const it0 = desk();
+    // the desk now carries two; b2 is the newest, this tree is wired to b1
+    showStream(it0.on('b1', 'b2'), 'stream-a');
+    expect(it0.retargets.map((entry) => entry.tab)).toEqual(['b1']);
+    expect(it0.wired).toEqual([]);
+    expect(it0.opened).toEqual([]);
   });
 });
 
@@ -528,7 +597,7 @@ describe('a bundle root with nothing built into it yet', () => {
       createAtomValueTap(GYLD_STREAMS, { initial: { status: 'ready', streams: [], collisions: [], loadedAt: '' } as GyldStreamsCensus }),
       createAtomValueTap(GYLD_OPS_RUN_ID, { initial: runId }),
     ]);
-    return tab.render(<StreamManager />);
+    return tab.render(<StreamManager tabId="sm" />);
   };
 
   it('says what it is waiting for, and offers the build that would end it', () => {

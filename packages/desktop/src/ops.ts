@@ -121,6 +121,43 @@ export function findWiredTab(
   return null;
 }
 
+// WIRE an EXISTING tab as the SINK of another — the relation Desktop.OpenWired
+// makes when it spawns a sink, made after the fact for a sink that outlived
+// its source. The source is named by TOOL and resolved here to that tool's
+// most recently focused tab (last in z-order), because a sink that has just
+// asked the shell to OPEN its source cannot know the tab id the shell assigned
+// it — and the shell does. Only the RECORD is written: the chrome adds the
+// source's context as a parent on the next render (Window.tsx, wireTabSource),
+// which is the same path a sink opened wired takes.
+//
+// Returns the SAME list when there is nothing to do: no such sink tab, no tab
+// of that tool, or the wire already being the one asked for (idempotent, so a
+// repeated call notifies nobody).
+export function setTabSource(
+  list: WindowRecord[],
+  tabId: string,
+  sourceFacet: FacetKind,
+): WindowRecord[] {
+  let source: string | undefined;
+  for (const w of list) {
+    for (const t of w.tabs) {
+      if (t.facet === sourceFacet && t.id !== tabId) {
+        source = t.id;
+      }
+    }
+  }
+  if (source === undefined) {
+    return list;
+  }
+  const frame = list.find((w) => w.tabs.some((t) => t.id === tabId));
+  if (!frame || frame.tabs.find((t) => t.id === tabId)?.source === source) {
+    return list;
+  }
+  return list.map((w) => (w === frame
+    ? { ...w, tabs: w.tabs.map((t) => (t.id === tabId ? { ...t, source } : t)) }
+    : w));
+}
+
 // Replace a tab's LINK params in place — the "send to an EXISTING window"
 // half of link invocation (Desktop.RetargetTab). The view re-resolves
 // against the new params. Returns the SAME list when the tab is unknown.

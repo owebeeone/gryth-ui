@@ -16,6 +16,10 @@ interface TabEntry {
   // the source tab this sink is currently wired to (a parent edge on its
   // home context), so re-wiring is idempotent and rewires cleanly
   wiredTo?: string;
+  // and the CONTEXT that edge points at, kept because the source tab may be
+  // reaped before the sink is rewired — its entry is gone by then, and the
+  // parent edge is only removable with the context object itself
+  wiredCtx?: MatchingContext;
 }
 
 const entries = new Map<string, TabEntry>();
@@ -76,22 +80,34 @@ export function tabContextFor(
 // (tabContextFor called for each).
 export function wireTabSource(tabId: string, sourceTabId: string, sourceCtx: MatchingContext): void {
   const entry = entries.get(tabId);
-  if (!entry || entry.wiredTo === sourceTabId) return;
-  const home = entry.ctx.getGripHomeContext();
-  if (entry.wiredTo) {
-    const prev = entries.get(entry.wiredTo);
-    if (prev) home.unlinkParent(prev.ctx.getGripHomeContext());
+  if (!entry || entry.wiredTo === sourceTabId) {
+    return;
   }
-  home.addParent(sourceCtx.getGripHomeContext(), -1);
+  const home = entry.ctx.getGripHomeContext();
+  if (entry.wiredCtx) {
+    home.unlinkParent(entry.wiredCtx.getGripHomeContext());
+  }
+  const source = sourceCtx.getGripHomeContext();
+  home.addParent(source, -1);
+  // A sink wired AFTER its consumers have already resolved (the stream tree
+  // adopting a browser, once the one it was opened against is closed) must be
+  // re-resolved: grip tells its resolver about an unlinked parent and not
+  // about an added one, so without this the sink keeps the resolution it had
+  // before the edge existed — for the tree, the empty tab id that says
+  // "no browser", for ever.
+  home.getGrok().resolver.addParent(home, source);
   entry.wiredTo = sourceTabId;
+  entry.wiredCtx = sourceCtx;
 }
 
 // UNWIRE a sink (e.g. when it is pinned/frozen): drop the source parent edge
 // so it stops resolving the source's grips. Idempotent — a no-op if unwired.
 export function unwireTab(tabId: string): void {
   const entry = entries.get(tabId);
-  if (!entry?.wiredTo) return;
-  const prev = entries.get(entry.wiredTo);
-  if (prev) entry.ctx.getGripHomeContext().unlinkParent(prev.ctx.getGripHomeContext());
+  if (!entry?.wiredCtx) {
+    return;
+  }
+  entry.ctx.getGripHomeContext().unlinkParent(entry.wiredCtx.getGripHomeContext());
   entry.wiredTo = undefined;
+  entry.wiredCtx = undefined;
 }

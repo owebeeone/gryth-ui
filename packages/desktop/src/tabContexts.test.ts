@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createAtomValueTap, type Grip } from '@owebeeone/grip-react';
 import { grok, defineGrip, type ToolDef } from '@grythjs/plugin-api';
 import { registerDesktopTaps } from './taps.desktop';
-import { hasTabContext, tabContextFor } from './tabContexts';
+import { hasTabContext, tabContextFor, unwireTab, wireTabSource } from './tabContexts';
 import { DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP } from './grips.desktop';
 import { closeWindow, openWindow } from './ops';
 
@@ -36,6 +36,36 @@ describe('chrome-held tab contexts', () => {
     const seeded = ctx.getGripConsumerContext().getOrCreateConsumer(SEED);
     seeded.subscribe(() => {});
     await expect.poll(() => seeded.get()).toBe('seeded');
+  });
+
+  // A sink wired AFTER the fact — the stream tree adopting a browser once the
+  // one it was opened against is closed. Its consumers have already resolved
+  // (to the grip's own default, which is how "no source" is spelled), so the
+  // new parent edge is worth nothing unless they are resolved again.
+  it('re-resolves a sink wired after its consumers already resolved', async () => {
+    const windowsTap = drip(DESKTOP_WINDOWS_TAP);
+    await expect.poll(() => windowsTap.get()).toBeDefined();
+    const handle = windowsTap.get()!;
+    const source = openWindow(handle.get() ?? [], 'chat', { w: 10, h: 10 });
+    const sink = openWindow(source.list, 'chat', { w: 10, h: 10 });
+    handle.set(sink.list);
+    const sourceTab = source.list.find((w) => w.id === source.id)!.tabs[0].id;
+    const sinkTab = sink.list.find((w) => w.id === sink.id)!.tabs[0].id;
+
+    const sourceCtx = tabContextFor(grok, sourceTab, DEF);
+    const PLAIN: ToolDef = {
+      label: 'P', defaultSize: { w: 1, h: 1 }, windowComponent: DEF.windowComponent,
+    };
+    const sinkCtx = tabContextFor(grok, sinkTab, PLAIN);
+    const seen = sinkCtx.getGripConsumerContext().getOrCreateConsumer(SEED);
+    seen.subscribe(() => {});
+    await expect.poll(() => seen.get()).toBe('unseeded'); // unwired: the default
+
+    wireTabSource(sinkTab, sourceTab, sourceCtx);
+    await expect.poll(() => seen.get()).toBe('seeded');
+    // and the wire comes back off again when the sink is pinned
+    unwireTab(sinkTab);
+    await expect.poll(() => seen.get()).toBe('unseeded');
   });
 
   it('retires the context and its taps when the tab leaves the document', async () => {

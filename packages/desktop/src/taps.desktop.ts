@@ -2,7 +2,7 @@ import { BaseTap, createAtomValueTap, type Grip, type GripContext, type Grok } f
 import {
   addEntry, allTools, PluginRegistryTap,
   DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_OPEN_WIRED_PAIR, DESKTOP_PIN_TAB,
-  DESKTOP_RETARGET_TAB, DESKTOP_TAB_LINKS,
+  DESKTOP_RETARGET_TAB, DESKTOP_SET_TAB_SOURCE, DESKTOP_TAB_LINKS,
   type TabLinkInfo, type ToolId, type ToolLink,
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
@@ -27,7 +27,7 @@ import {
 } from './grips.desktop';
 import {
   findWiredTab, foundationOn, freezeTab, nextTabId,
-  openFoundation, openToolWindow, openWindow, setTabParams,
+  openFoundation, openToolWindow, openWindow, setTabParams, setTabSource,
 } from './ops';
 
 // Shell chrome taps — the desktop document (environ scope) plus the
@@ -158,6 +158,17 @@ const openWiredIntent = (sourceTabId: string, link: ToolLink) => {
 };
 export const OpenWiredTap = createAtomValueTap(DESKTOP_OPEN_WIRED, {
   initial: openWiredIntent,
+});
+
+// Desktop.SetTabSource intent: wire an EXISTING tab as the sink of a tool's
+// most recently focused tab — the wire OpenWired makes at open time, made
+// after the fact by a sink that outlived its source (a stream tree whose
+// browser was closed adopts the one on the desk instead of opening another).
+// The chrome makes the parent edge on the next render.
+export const SetTabSourceTap = createAtomValueTap(DESKTOP_SET_TAB_SOURCE, {
+  initial: (tabId: string, sourceToolId: ToolId) => {
+    DesktopWindowsTap.update((list) => setTabSource(list, tabId, sourceToolId));
+  },
 });
 
 // Desktop.OpenWiredPair intent: open a SOURCE seeded from params plus a SINK
@@ -291,6 +302,7 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   grok.registerTap(RetargetTabTap);
   grok.registerTap(OpenWiredTap);
   grok.registerTap(OpenWiredPairTap);
+  grok.registerTap(SetTabSourceTap);
   grok.registerTap(PinTabTap);
   grok.registerTap(DesktopTabLinksTap);
   // the target's desk, after the taps exist: the preset first, so a boot

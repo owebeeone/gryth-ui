@@ -75,6 +75,15 @@ export const DESKTOP_RETARGET_TAB = defineGrip<RetargetTab>('Desktop.RetargetTab
 export type OpenWired = (sourceTabId: string, link: ToolLink) => void;
 export const DESKTOP_OPEN_WIRED = defineGrip<OpenWired>('Desktop.OpenWired');
 
+// Shell-provided intent: WIRE an existing tab as the SINK of another — the
+// same relation `Desktop.OpenWired` makes at open time, made after the fact
+// for a sink whose source was closed. The source is named by TOOL, and the
+// shell resolves it to that tool's most recently focused tab: a sink that has
+// just asked the shell to OPEN its source cannot know the tab id the shell
+// assigned it. Nothing is opened here, and no tab of that tool wires nothing.
+export type SetTabSource = (tabId: string, sourceToolId: ToolId) => void;
+export const DESKTOP_SET_TAB_SOURCE = defineGrip<SetTabSource>('Desktop.SetTabSource');
+
 // Shell-provided intent: open a SOURCE seeded from `params` plus a SINK
 // WIRED to it, in one shot — the patchbay's "drop a connected pair" (e.g. a
 // workspace-graph file click opens an explorer AT the file and a viewer

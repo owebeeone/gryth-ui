@@ -459,7 +459,7 @@ describe('the stream manager offers Submit and Rebuild', () => {
       () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
       (value) => value?.status === 'ready',
     );
-    const markup = tab.render(<StreamManager />);
+    const markup = tab.render(<StreamManager tabId="sm" />);
     expect(/<button[^>]*class="gyld-stream-submit"/.test(markup)).toBe(true);
     expect(/<button[^>]*class="gyld-ops-rebuild"/.test(markup)).toBe(true);
     // List builds nothing, so it is never refused on shape
@@ -481,7 +481,7 @@ describe('the stream manager offers Submit and Rebuild', () => {
     tab.read(GYLD_SET_TAP).get()?.set({
       roots: [{ kind: 'static', baseUrl: 'http://localhost:1/nothing' }],
     });
-    const markup = tab.render(<StreamManager />);
+    const markup = tab.render(<StreamManager tabId="sm" />);
     expect(markup).toContain('gyld-streams-empty');
     expect(/<button[^>]*class="gyld-ops-list"[^>]*disabled/.test(markup)).toBe(false);
     expect(/<button[^>]*class="gyld-ops-rebuild"[^>]*disabled/.test(markup)).toBe(false);
@@ -495,7 +495,7 @@ describe('the stream manager offers Submit and Rebuild', () => {
       () => tab.read(GYLD_STREAMS).get() as GyldStreamsCensus,
       (value) => value?.status === 'ready',
     );
-    const markup = tab.render(<StreamManager />);
+    const markup = tab.render(<StreamManager tabId="sm" />);
     expect(/<button[^>]*class="gyld-ops-rebuild"[^>]*disabled/.test(markup)).toBe(true);
     expect(markup).toContain('no glade node');
   });

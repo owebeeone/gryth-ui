@@ -1,5 +1,5 @@
 import { GripProvider, createAtomValueTap, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
-import { grok } from '@grythjs/plugin-api';
+import { grok, type ToolViewProps } from '@grythjs/plugin-api';
 import type { GyldValidation } from '../contract';
 import {
   GYLD_DEST_STREAM, GYLD_OPS, GYLD_OPS_RUN_ID, GYLD_OPS_STATUS, GYLD_SET,
@@ -328,12 +328,13 @@ function NoStreams() {
   );
 }
 
-export function StreamManager() {
+export function StreamManager({ tabId }: ToolViewProps) {
   const set = useGrip(GYLD_SET);
   const census = useGrip(GYLD_STREAMS);
   const roots = useGrip(GYLD_STORE_STATUS) ?? [];
   const reload = useGrip(GYLD_STORE_RELOAD);
-  const target = useStreamTarget();
+  // its OWN tab, so a pick with no browser wired can wire this window to one
+  const target = useStreamTarget(tabId);
 
   // A desk with no root gets the picker, exactly as the browser does: this
   // plugin never invents a place to read Gyld output from.
