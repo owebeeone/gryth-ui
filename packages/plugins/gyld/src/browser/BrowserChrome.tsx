@@ -1,6 +1,6 @@
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import {
-  DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED,
+  DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_RETARGET_TAB,
 } from '@grythjs/plugin-api';
 import type { GyldLens } from '../contract';
 import {
@@ -16,6 +16,7 @@ import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../too
 import { PreviewPerspective } from '../preview/neighbourhood';
 import { RebuildButton } from '../ops/RebuildButton';
 import { neighbourhoodLink } from './links';
+import { pickPerspective, pickStream, type DestinationHandles } from './destination';
 import { labelFor, perspectiveOptions } from './perspectives';
 import type { GyldSearchMatch } from './search';
 
@@ -52,6 +53,15 @@ export function BrowserChrome({ tabId, lens, search }: {
   const reload = useGrip(GYLD_STORE_RELOAD);
   const openTool = useGrip(DESKTOP_OPEN_TOOL);
   const openWired = useGrip(DESKTOP_OPEN_WIRED);
+  // where a pick lands: this window's own destination atoms, and its tab
+  // RECORD, so a restored desk reopens the window on the last pick (./destination)
+  const destination: DestinationHandles = {
+    tabId,
+    stream: streamTap,
+    perspective: perspectiveTap,
+    preview: previewTap,
+    retarget: useGrip(DESKTOP_RETARGET_TAB),
+  };
 
   const streams = census?.status === 'ready' ? census.streams : [];
   const options = perspectiveOptions(bundle, perspective, preview);
@@ -68,7 +78,7 @@ export function BrowserChrome({ tabId, lens, search }: {
           <select
             className="gyld-pick-stream"
             value={stream}
-            onChange={(event) => streamTap?.set(event.target.value)}
+            onChange={(event) => pickStream(destination, event.target.value)}
           >
             {stream === '' && <option value="">choose a stream</option>}
             {streams.map((entry) => (
@@ -81,19 +91,7 @@ export function BrowserChrome({ tabId, lens, search }: {
           <select
             className="gyld-pick-perspective"
             value={picked}
-            onChange={(event) => {
-              const chosen = options.find((option) => option.value === event.target.value);
-              // Two writes, one gesture: a preview puts the window on the
-              // emitted lens it restricts AND names the question; anything
-              // else clears the preview, so no layout is left running behind
-              // a picture nobody is looking at.
-              previewTap?.set(chosen?.preview ?? '');
-              perspectiveTap?.set(
-                chosen === undefined
-                  ? event.target.value
-                  : (chosen.preview === undefined ? chosen.perspective : PreviewPerspective.SOURCE),
-              );
-            }}
+            onChange={(event) => pickPerspective(destination, options, event.target.value)}
           >
             {perspective === '' && <option value="">choose a perspective</option>}
             {options.map((option) => (
