@@ -17,16 +17,23 @@ import type { GyldStore } from './stores';
 //   gyld.stream     <stream>         -> streams/<stream>/stream.json
 //   gyld.decisions  <stream>         -> streams/<stream>/decide-now.json
 //   gyld.lens       <stream>/<persp> -> a {path, digest, bytes} POINTER
+//   gyld.file       <stream>/<file>  -> a {path, digest, bytes} POINTER
 //
 // A lens file is the large one, so it travels as a pointer and is fetched over
 // HTTP from grazel's static path. The pointer is never trusted: the bytes are
 // digested and counted, and a mismatch is refused AS DATA, which the store tap
 // renders as a file that did not read rather than as a picture.
 //
-// Everything else a bundle holds (`projection.json`, `validation.json`, an
-// emitted diff) is NOT on a share. A read of one reports exactly that, and the
-// window shows absence, which is true: those files are on the static path of
-// the build the answer named, not on this share.
+// `projection.json` (the records) and `validation.json` travel the same way on
+// `gyld.file`, through the same fetch-and-check path, because without them a
+// glade root could not read a single record: every Gyld record window reads the
+// projection, and the only way to it was to add the build directory as a static
+// root by hand and re-point it after every build.
+//
+// Everything else a bundle holds (an emitted diff, say) is NOT on a share. A
+// read of one reports exactly that, and the window shows absence, which is
+// true: those files are on the static path of the build the answer named, not
+// on this share.
 
 /**
  * Nothing has landed on a share YET.
@@ -63,7 +70,12 @@ export class GyldShareSurface {
   static readonly STREAM = new GyldShareSurface('gyld.stream', true);
   static readonly DECISIONS = new GyldShareSurface('gyld.decisions', true);
   static readonly LENS = new GyldShareSurface('gyld.lens', true);
+  static readonly FILE = new GyldShareSurface('gyld.file', true);
 }
+
+/** The bundle files of one stream that arrive as `gyld.file` pointers, keyed
+ *  `<stream>/<file>`. The supplier's `STREAM_FILES`, this side of the wire. */
+export const SHARED_STREAM_FILES = ['projection.json', 'validation.json'] as const;
 
 /**
  * What a share-backed root reads through. The live module implements this over
@@ -107,18 +119,18 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** The pointer one `gyld.lens` value carries, or why it is not one. */
+/** The pointer one pointed-at surface's value carries, or why it is not one. */
 export function readPointer(raw: string): GyldFilePointer {
   const json: unknown = JSON.parse(raw);
   const held = json as Partial<GyldFilePointer>;
   if (typeof held?.path !== 'string' || held.path === '') {
-    throw new Error('lens pointer carries no path');
+    throw new Error('published pointer carries no path');
   }
   if (typeof held.digest !== 'string' || held.digest === '') {
-    throw new Error('lens pointer carries no digest');
+    throw new Error('published pointer carries no digest');
   }
   if (typeof held.bytes !== 'number') {
-    throw new Error('lens pointer carries no byte count');
+    throw new Error('published pointer carries no byte count');
   }
   return { path: held.path, digest: held.digest, bytes: held.bytes };
 }
@@ -175,7 +187,7 @@ export class ShareStore implements GyldStore {
     }
     const lens = lensKeyOf(path);
     if (lens !== null) {
-      return this.lens(lens);
+      return this.pointed(GyldShareSurface.LENS, lens);
     }
     const inStream = streamFileOf(path);
     if (inStream?.file === 'stream.json') {
@@ -183,6 +195,9 @@ export class ShareStore implements GyldStore {
     }
     if (inStream?.file === 'decide-now.json') {
       return this.required(GyldShareSurface.DECISIONS, inStream.stream, path);
+    }
+    if (inStream !== null && (SHARED_STREAM_FILES as readonly string[]).includes(inStream.file)) {
+      return this.pointed(GyldShareSurface.FILE, `${inStream.stream}/${inStream.file}`);
     }
     // Everything else is a real file of a real build that the supplier does
     // not publish onto a share. Saying so is the honest answer; inventing a
@@ -219,12 +234,16 @@ export class ShareStore implements GyldStore {
     return value;
   }
 
-  private async lens(key: string): Promise<string> {
-    const raw = this.provider.value(GyldShareSurface.LENS, key);
+  /**
+   * One file that travels as a pointer: read the pointer off its surface, fetch
+   * the bytes over grazel's static path, and hand back only what the pointer
+   * promised. The one path for every pointed-at surface, so a projection is
+   * read exactly as carefully as a lens.
+   */
+  private async pointed(surface: GyldShareSurface, key: string): Promise<string> {
+    const raw = this.provider.value(surface, key);
     if (raw === undefined) {
-      throw new NothingPublished(
-        `nothing has landed on ${GyldShareSurface.LENS.gladeId} (${key})`,
-      );
+      throw new NothingPublished(`nothing has landed on ${surface.gladeId} (${key})`);
     }
     const pointer = readPointer(raw);
     return verified(pointer, await this.provider.fetch(pointer.path));

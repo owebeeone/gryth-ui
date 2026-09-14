@@ -10,6 +10,7 @@ import { browserTabTaps } from '../browser/browserTabTaps';
 import { DETAIL_FOCUS_CONTEXT, RecordDetail } from './RecordDetail';
 import { detailTabTaps } from './detailTabTaps';
 import type { GyldRecordView } from '../records/records';
+import { FakeBundle } from '../../test/fakeBundle';
 import { mountDesk, wireSink, type MountedDesk } from '../../test/mount';
 import projection from '../../test/fixtures/bundle/streams/base/projection.json';
 import decideNow from '../../test/fixtures/bundle/streams/base/decide-now.json';
@@ -34,8 +35,8 @@ const settled = async <T,>(read: () => T, done: (value: T) => boolean): Promise<
   return read();
 };
 
-function standalone(tabId: string, ref: string) {
-  const desk = mountDesk();
+function standalone(tabId: string, ref: string, bundle?: FakeBundle) {
+  const desk = mountDesk(undefined, bundle);
   const params = { stream: 'base', ref };
   const tab = desk.tab(tabId, detailTabTaps(tabId, params));
   return {
@@ -88,8 +89,26 @@ describe('gyld.detail renders emitted facts and says so when there are none', ()
     const detail = standalone('detail-missing', 'glade_decisions:GladeDecisions.no_such_question');
     await settled(detail.view, (view) => view?.status === 'absent');
     const markup = detail.render();
+    // the projection WAS read and does not carry it, which is the only case
+    // "no such record" is true of
     expect(markup).toContain('no record of this stream carries that slot or id');
+    expect(markup).not.toContain('not readable on this root');
     expect(markup).not.toContain('data-relation=');
+  });
+
+  it('says the records did not read, not that the record is missing, with no projection', async () => {
+    // The glade-root case before the supplier published `gyld.file`: the
+    // stream record read and the projection did not, so every record of the
+    // stream read as missing when none of them had been looked for.
+    const bundle = new FakeBundle();
+    bundle.remove('streams/base/projection.json');
+    const detail = standalone('detail-unreadable', SCOPE_MODEL, bundle);
+    await settled(detail.view, (view) => view?.status === 'absent');
+    const markup = detail.render();
+    expect(markup).toContain('the records of this stream are not readable on this root');
+    // and why, in the store's own words
+    expect(markup).toContain('streams/base/projection.json');
+    expect(markup).not.toContain('no record of this stream carries that slot or id');
   });
 
   it('renders nothing to look at, and says so, with no record seeded', async () => {

@@ -10,7 +10,7 @@ import { useBrowserFocus } from '../browser/useBrowserFocus';
 import { useKeyedContext } from '../contexts';
 import { FocusDestTap } from './followFocus';
 import type { GyldRecordView, GyldRecords } from '../records/records';
-import type { GyldBundle } from '../store/state';
+import type { GyldBundle, GyldFault } from '../store/state';
 
 // The gyld.detail window (step 1.5): one record, as the bundle emitted it.
 //
@@ -61,12 +61,29 @@ function FollowToggle() {
   );
 }
 
+/**
+ * The store's reason the projection did not read, when it did not.
+ *
+ * A record is looked up IN the projection, so a bundle that has none has not
+ * searched anything: nothing may be reported missing from it. The two facts
+ * read alike in the view (`absent` either way) and are not alike at all, and
+ * saying the record is not there when the records were never readable is the
+ * one thing this window must not do.
+ */
+function unreadableRecords(bundle: GyldBundle | undefined): GyldFault | undefined {
+  if (bundle === undefined || bundle.projection !== undefined) {
+    return undefined;
+  }
+  return (bundle.faults ?? []).find((fault) => fault.path.endsWith('/projection.json'));
+}
+
 function Absent({ view, stream, bundle }: {
   view: GyldRecordView | undefined;
   stream: string;
   bundle: GyldBundle | undefined;
 }) {
   const status = view?.status ?? 'unset';
+  const unreadable = status === 'absent' ? unreadableRecords(bundle) : undefined;
   const reason: Record<string, string> = {
     unset: 'no record on this window yet',
     loading: 'reading the bundle this record lives in',
@@ -78,11 +95,18 @@ function Absent({ view, stream, bundle }: {
       <header className="gyld-detail-head">
         <FollowToggle />
       </header>
-      <p className="gyld-note">{reason[status] ?? status}</p>
+      <p className="gyld-note">
+        {unreadable === undefined
+          ? (reason[status] ?? status)
+          : 'the records of this stream are not readable on this root'}
+      </p>
+      {unreadable !== undefined && (
+        <p className="gyld-fault">{unreadable.message}</p>
+      )}
       {view?.ref !== undefined && view.ref !== '' && (
         <p className="gyld-note">{`asked for ${view.ref} in stream ${stream}`}</p>
       )}
-      {view?.fault !== undefined && (
+      {unreadable === undefined && view?.fault !== undefined && (
         <p className="gyld-fault">{view.fault.message}</p>
       )}
       {bundle !== undefined && bundle.status !== 'ok' && (

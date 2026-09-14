@@ -315,6 +315,7 @@ shares the `glade-gyld` supplier publishes onto after each build
 | `gyld.stream` | stream id | that stream's `stream.json` |
 | `gyld.decisions` | stream id | that stream's `decide-now.json` |
 | `gyld.lens` | `<stream>/<perspective>` | a `{path, digest, bytes}` pointer |
+| `gyld.file` | `<stream>/<file>` | the same pointer, for `projection.json` and `validation.json` |
 
 A lens file is the large one, so it travels as a pointer and the file itself is
 fetched over HTTP from grazel's static path, which is what the pointer's `path`
@@ -333,20 +334,25 @@ manifest therefore lists no perspectives on this root: over a static host the
 store falls back to a directory autoindex, and a share has no directory to
 list.
 
-Two files of a bundle are **not** on any share, because the supplier does not
-publish them: `projection.json` and `validation.json`, and neither is an
-emitted `diffs/<left>..<right>.json`. On a glade root they read as absent,
-which is true, and the windows show absence. They are real files of the build
-the last answer named, on the static path, so the way to see them is to point a
-static root at that build: grazel serves the bundle root at `/gyld/`, so a
-build directory `builds/build-1789247615547` is at
+`projection.json` (the records every record window reads) and `validation.json`
+travel on `gyld.file` as the same kind of pointer, through the same fetch and
+the same digest check. A glade root therefore reads records like any other
+root; before they were published it could read none at all, and the only way in
+was to point a static root at the build directory by hand and re-point it after
+every build.
+
+What is still on no share is an emitted `diffs/<left>..<right>.json`. On a
+glade root it reads as absent, which is true, and the windows show absence. It
+is a real file of the build the last answer named, on the static path, so the
+way to see it is to point a static root at that build: grazel serves the bundle
+root at `/gyld/`, so a build directory `builds/build-1789247615547` is at
 `http://localhost:PORT/gyld/builds/build-1789247615547`. The supplier panel
 offers that root as one press when an answer names a build (below).
 
 ### A root that is there and empty
 
 The supplier's bundle root is app-owned and starts empty: `glade-gyld`
-publishes onto those four shares AFTER a build, so a composition that has never
+publishes onto those five shares AFTER a build, so a composition that has never
 built anything answers every read with "nothing has landed". That used to
 render as `glade node: error (nothing has landed on gyld.streams for
 streams.json)`, which is a lie about a state nothing went wrong in — the node

@@ -31,6 +31,7 @@ export const GYLD_STREAMS_ID = 'gyld.streams';
 export const GYLD_STREAM_ID = 'gyld.stream';
 export const GYLD_DECISIONS_ID = 'gyld.decisions';
 export const GYLD_LENS_ID = 'gyld.lens';
+export const GYLD_FILE_ID = 'gyld.file';
 
 /**
  * The typed argument object. Every field is optional here and validated per

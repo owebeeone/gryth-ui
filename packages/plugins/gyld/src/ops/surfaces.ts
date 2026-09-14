@@ -6,8 +6,8 @@ import type {
 import type { Tap } from '@owebeeone/grip-react';
 import { GYLD_OPS_RUN_ID, GYLD_OPS_STREAM } from '../grips';
 import {
-  GYLD_DECISIONS_ID, GYLD_LENS_ID, GYLD_OUTPUT_ID, GYLD_SHARE, GYLD_STREAMS_ID,
-  GYLD_STREAM_ID,
+  GYLD_DECISIONS_ID, GYLD_FILE_ID, GYLD_LENS_ID, GYLD_OUTPUT_ID, GYLD_SHARE,
+  GYLD_STREAMS_ID, GYLD_STREAM_ID,
 } from './verbs';
 import type { GyldOutputRecord } from './ops';
 
@@ -20,7 +20,7 @@ import type { GyldOutputRecord } from './ops';
 // against: everything here is exercised by the test suite against a local
 // binder with no connectivity at all, and only `src/live.ts` lights the wire.
 
-/** The five surfaces `grazel/apps/gyld-app.glade` declares. Referenced through
+/** The six surfaces `grazel/apps/gyld-app.glade` declares. Referenced through
  *  these handles, never by their id strings (the P0.S5a compile wall). */
 export const GyldSurfaces = defineManifest({
   /** A run's stdout and stderr lines, keyed by run id. */
@@ -42,6 +42,11 @@ export const GyldSurfaces = defineManifest({
   /** A `{path, digest, bytes}` pointer, keyed `<stream>/<perspective>`. */
   lens: {
     id: GYLD_LENS_ID, shape: 'value', share: GYLD_SHARE, domain: 'document', zone: 'commons',
+  },
+  /** The same kind of pointer for one stream's `projection.json` (the records)
+   *  or `validation.json`, keyed `<stream>/<file>`. */
+  file: {
+    id: GYLD_FILE_ID, shape: 'value', share: GYLD_SHARE, domain: 'document', zone: 'commons',
   },
 });
 
