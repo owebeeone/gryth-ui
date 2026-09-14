@@ -3,16 +3,17 @@ import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
 import { readLens, readStream } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM,
-  GYLD_FOCUS, GYLD_LANDING, GYLD_LENS, GYLD_RECORD, GYLD_STREAMS, GYLD_TAB_SEARCH,
-  GYLD_TAB_SEARCH_TAP,
+  GYLD_FOCUS, GYLD_FOCUS_TAP, GYLD_LANDING, GYLD_LENS, GYLD_RECORD, GYLD_STREAMS,
+  GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
-import { NO_FOCUS } from '../focus';
+import { NO_FOCUS, type GyldFocus } from '../focus';
 import { GladePresence, type GyldLanding } from '../landing/landing';
 import { GYLD_BROWSER_TOOL } from '../tools';
 import { GyldBrowser } from '../GyldBrowser';
 import { buildScene } from '../lens/scene';
 import { NODE_FACETS } from '../lens/facets';
-import { NOTHING_DIMMED } from '../lens/camera';
+import { NOTHING_DIMMED, type GyldSelection } from '../lens/camera';
+import { applyPick } from '../lens/pick';
 import { browserTabTaps } from './browserTabTaps';
 import { searchLens } from './search';
 import { neighbourhoodLink, pickOutcome } from './links';
@@ -333,6 +334,52 @@ describe('the wire', () => {
     expect(tab.read(GYLD_FOCUS).get()).toEqual(NO_FOCUS);
     const markup = tab.render(<GyldBrowser tabId="focus" />);
     expect(markup).toContain('no record focused');
+  });
+
+  /**
+   * What a click on a node actually WRITES, through the same function the view
+   * calls (`lens/pick.ts`, from `LensFigure`'s delegated onClick).
+   *
+   * Three assertions in one act, because they are one act: the window's own
+   * ref moves, the plugin-root focus moves with it, and a detail sink wired to
+   * this browser resolves the record with no param copied. The click itself is
+   * not dispatched — this package renders to static markup — so the handles
+   * the handler writes through are resolved from the same tab context the
+   * window renders in.
+   */
+  it('carries a picked node into the tab ref, the shared focus and a wired sink', async () => {
+    const desk = mountDesk();
+    const tab = desk.tab('pick', browserTabTaps('pick', {
+      stream: 'base', perspective: 'decisions',
+    }));
+    const sink = wireSink(tab, 'sink:pick');
+    const drawn = await settled(
+      () => tab.read(GYLD_LENS).get() as GyldLensState,
+      (state) => state?.status === 'ok',
+    );
+    const node = drawn.value!.nodes.find((entry) => entry.slot === SCOPE_MODEL)!;
+    const outcome = applyPick(
+      {
+        selection: tab.read(GYLD_TAB_SELECTION_TAP).get() as AtomTapHandle<GyldSelection>,
+        ref: tab.read(GYLD_DEST_REF_TAP).get() as AtomTapHandle<string>,
+        focus: desk.read(GYLD_FOCUS_TAP).get() as AtomTapHandle<GyldFocus>,
+      },
+      drawn.value!,
+      'base',
+      node.id,
+      false,
+    );
+    expect(outcome.ref).toBe(SCOPE_MODEL);
+    expect(tab.read(GYLD_DEST_REF).get()).toBe(SCOPE_MODEL);
+    expect(tab.read(GYLD_FOCUS).get()).toEqual({ stream: 'base', ref: SCOPE_MODEL });
+    // and the browser says what it is focused on, rather than saying nothing
+    expect(tab.render(<GyldBrowser tabId="pick" />)).toContain(`focus base/${SCOPE_MODEL}`);
+    // the wired sink follows through the graph, with no param copied
+    const view = await settled(
+      () => sink.read(GYLD_RECORD).get() as GyldRecordView,
+      (held) => held?.ref === SCOPE_MODEL && held.status === 'ok',
+    );
+    expect(view.occurrence?.label).toBe('scope_model');
   });
 });
 

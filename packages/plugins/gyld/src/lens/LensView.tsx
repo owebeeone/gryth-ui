@@ -1,6 +1,7 @@
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import type { GyldLensState } from '../store/state';
-import { effectiveSelection, pickOutcome } from '../browser/links';
+import { effectiveSelection } from '../browser/links';
+import { applyPick } from './pick';
 import type { GyldFocus } from '../focus';
 import {
   GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_FOCUS_TAP,
@@ -421,18 +422,15 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
           // One pick, three writes: this window's selection, the record this
           // window is ON (what a wired sink resolves) and the shared focus
           // every gyld window may follow (MDV-5). Each is read back through
-          // its handle, never through the render closure.
+          // its handle, never through the render closure (./pick.ts).
           onPick={(id, additive) => {
-            const outcome = pickOutcome(
+            const outcome = applyPick(
+              { selection: selectionTap, ref: refTap, focus: focusTap },
               lens,
-              effectiveSelection(lens, selectionTap?.get() ?? NO_SELECTION, refTap?.get() ?? ''),
               stream,
               id,
               additive,
             );
-            selectionTap?.set(outcome.selection);
-            refTap?.set(outcome.ref);
-            focusTap?.set(outcome.focus);
             onSlot?.(outcome.ref);
           }}
         />
