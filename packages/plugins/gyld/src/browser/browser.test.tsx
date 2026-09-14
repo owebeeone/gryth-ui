@@ -62,7 +62,10 @@ describe('the browser window seeds from its opening link', () => {
   });
 
   it('leaves every seed empty when the link carries none', async () => {
-    const desk = mountDesk();
+    // On a desk with no root, so nothing is censused and nothing is chosen:
+    // the SEEDS are what this asserts. What a window with a root opens on
+    // instead is ./firstPick.test.tsx.
+    const desk = mountDesk(EMPTY_ROOTS);
     const tab = desk.tab('bare', browserTabTaps('bare'));
     await expect.poll(() => tab.read(GYLD_TAB_SEARCH_TAP).get()).toBeDefined();
     expect(tab.read(GYLD_DEST_STREAM).get()).toBe('');

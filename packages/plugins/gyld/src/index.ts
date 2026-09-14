@@ -141,7 +141,7 @@ export {
   GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_PREVIEW,
   GYLD_OPS, GYLD_OPS_RESULT, GYLD_OPS_RESULT_TAP, GYLD_OPS_RUN_ID,
   GYLD_OPS_RUN_ID_TAP, GYLD_OPS_STREAM, GYLD_OPS_STATUS,
-  GYLD_LANDING, GYLD_NODE,
+  GYLD_LANDING, GYLD_NODE, GYLD_TAB_PICKED,
 } from './grips';
 export * from './ops/verbs';
 export {
@@ -193,6 +193,10 @@ export { GyldBrowser } from './GyldBrowser';
 export { SetPicker } from './browser/SetPicker';
 export { addDirectoryRoot, addShareRoot, addStaticRoot, describeRoot } from './browser/setOps';
 export { browserTabTaps } from './browser/browserTabTaps';
+export { GyldFirstPickTap } from './browser/GyldFirstPickTap';
+export {
+  NOTHING_PICKED, OPENING_PERSPECTIVE, firstPick, type GyldFirstPick,
+} from './browser/firstPick';
 export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
 export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';

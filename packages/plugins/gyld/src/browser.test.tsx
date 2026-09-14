@@ -51,7 +51,11 @@ describe('gyld.browser', () => {
   });
 
   it('shows the destination and the store status when there is no lens', async () => {
-    const window = mount('lens-unset', 'base', '');
+    // A stream this set does not carry: the window keeps it, chooses no
+    // perspective off some other stream's manifest, and says which absence it
+    // is in. (A window on a stream the census DOES carry opens on that
+    // stream's own opening perspective — browser/firstPick.test.tsx.)
+    const window = mount('lens-unset', 'not-a-stream', '');
     await expect.poll(() => window.lens()?.status).toBe('unset');
     const markup = window.render();
     expect(markup).toContain('not set by the opening link');

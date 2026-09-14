@@ -7,6 +7,7 @@ import {
   perspectiveFromParams, previewFromParams, refFromParams, streamFromParams,
 } from '../grips';
 import { lensTabTaps } from '../lens/lensTabTaps';
+import { GyldFirstPickTap } from './GyldFirstPickTap';
 
 // The gyld.browser seeds. The desktop registers these on the tab's chrome-held
 // home context at tab creation and retires them when the tab record leaves the
@@ -44,5 +45,9 @@ export function browserTabTaps(tabId: string, params?: Record<string, unknown>):
     createAtomValueTap(GYLD_PICKER_ERROR, { initial: '', handleGrip: GYLD_PICKER_ERROR_TAP }),
     // The lens view's own state: camera, drag, selection, hover, dim set.
     ...lensTabTaps(),
+    // LAST, so the atoms above are registered before it reads them: the tap
+    // that opens a window on what the census puts first when the link named
+    // nothing. It only ever fills a seed that is empty (./firstPick.ts).
+    new GyldFirstPickTap(),
   ];
 }

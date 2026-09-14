@@ -17,6 +17,7 @@ import {
 } from './lens/camera';
 import { NO_FOCUS, type GyldFocus } from './focus';
 import { LANDING_UNSET, type GyldLanding } from './landing/landing';
+import { NOTHING_PICKED, type GyldFirstPick } from './browser/firstPick';
 import type { GyldOps, GyldOpsResult, GyldOutputRecord } from './ops/ops';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
@@ -427,6 +428,18 @@ export const GYLD_NODE = defineGrip<string>('Gyld.Node', '');
 // ---------------------------------------------------------------------------
 
 export const GYLD_LANDING = defineGrip<GyldLanding>('Gyld.Landing', LANDING_UNSET);
+
+/**
+ * What a browser window chose FOR ITSELF, produced per tab by
+ * `GyldFirstPickTap`: the stream and the perspective it filled in because the
+ * opening link named none and the census did.
+ *
+ * It is a record of an act, not a destination: the destination is still
+ * `Gyld.Dest.Stream` and `Gyld.Dest.Perspective`, which is what the whole
+ * graph resolves from. Empty fields are the ones the window chose nothing
+ * for, because the reader had already chosen or the census named nothing.
+ */
+export const GYLD_TAB_PICKED = defineGrip<GyldFirstPick>('Gyld.Tab.Picked', NOTHING_PICKED);
 
 // The tab id of the window that OWNS this context, seeded by the browser's
 // tabTaps. A sink wired to a browser inherits it through the graph and so
