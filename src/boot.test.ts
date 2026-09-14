@@ -20,6 +20,8 @@ const BOOT = read('./boot.tsx');
 const ENTRIES: Record<string, string> = {
   // the full desktop: index.html -> src/main.tsx -> src/bootstrap.tsx
   'src/bootstrap.tsx': read('./bootstrap.tsx'),
+  // Gyld only: entries/gyld/index.html -> entries/gyld/main.tsx
+  'entries/gyld/main.tsx': read('../entries/gyld/main.tsx'),
 };
 
 describe('the shared boot', () => {

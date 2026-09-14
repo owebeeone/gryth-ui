@@ -30,5 +30,5 @@
     // unused locals/params, and enums remain banned by AGENTS.md. Restore when
     // the glade packages ship built .d.ts (publish-or-member call).
   },
-  "include": ["src", "packages"]
+  "include": ["src", "entries", "packages"]
 }

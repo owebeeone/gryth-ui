@@ -15,7 +15,7 @@ const bannedHookRules = BANNED_HOOKS.flatMap((hook) => [
 ])
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'dist-gyld']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "dev:gyld": "vite --config vite.gyld.config.ts",
+    "build:gyld": "tsc -b && vite build --config vite.gyld.config.ts",
+    "preview:gyld": "vite preview --config vite.gyld.config.ts",
     "lint": "eslint .",
-    "test": "node scripts/no-react-state.test.mjs && vitest run",
-    "preview": "vite preview"
+    "test": "node scripts/no-react-state.test.mjs && vitest run"
   },
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",

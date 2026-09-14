@@ -2,8 +2,14 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { extname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Plugin, type UserConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+/** This repository's root — the directory holding this file. Every path below
+ *  is resolved against it rather than against Vite's `root`, because the
+ *  second target (`vite.gyld.config.ts`) moves `root` into `entries/gyld` and
+ *  a relative `server.fs.allow` entry would move with it. */
+export const REPO_ROOT = fileURLToPath(new URL('.', import.meta.url))
 
 // --------------------------------------------------------------------------
 // gyld-bundle and gyld-evaluator: DEV-ONLY static hosts for emitted Gyld
@@ -107,10 +113,9 @@ function gyldStaticServer(options: {
   fallback: string
   describe: string
 }): Plugin {
-  const here = fileURLToPath(new URL('.', import.meta.url))
   const configured = process.env[options.env]
   const root = resolve(
-    here,
+    REPO_ROOT,
     configured === undefined || configured.trim() === '' ? options.fallback : configured.trim(),
   )
   const MOUNT = options.mount
@@ -176,55 +181,85 @@ function gyldStaticServer(options: {
   }
 }
 
+/**
+ * Everything the gryth TARGETS share.
+ *
+ * There are two entry points into this application and they differ only in
+ * which plugins they import: `index.html` is the full desktop and
+ * `entries/gyld/index.html` is the Gyld-only one (`vite.gyld.config.ts`,
+ * `pnpm dev:gyld`). Their dev servers must behave identically — the same
+ * static mounts, the same singletons, the same `/gyld/` proxy — so those
+ * options are produced here once and spread into both configs, rather than
+ * copied and left to drift.
+ *
+ * A FACTORY rather than a constant: `react()` and the two static-mount
+ * middlewares are stateful plugin instances, and two Vite configs must not
+ * share one.
+ */
+export function grythShared(): UserConfig {
+  return {
+    plugins: [
+      react(),
+      gyldStaticServer({
+        name: 'gyld-bundle-server',
+        mount: GYLD_BUNDLE_MOUNT,
+        env: 'GYLD_BUNDLE_DIR',
+        fallback: GYLD_BUNDLE_DEFAULT,
+        describe: 'gyld bundle',
+      }),
+      gyldStaticServer({
+        name: 'gyld-evaluator-server',
+        mount: GYLD_EVALUATOR_MOUNT,
+        env: 'GYLD_EVALUATOR_DIR',
+        fallback: GYLD_EVALUATOR_DEFAULT,
+        describe: 'gyld evaluator runs',
+      }),
+    ],
+    // dedupe: the wyred test mount links source from the wyred-wz sibling
+    // workspace; these must resolve to THIS app's copies so there is exactly
+    // one GripRegistry / grip-react / react per running app
+    // (wyred-wz/dev-docs/GrythWyredUiDesignPlan.md §3.1).
+    // glial-runtime / glade-decl are pnpm singletons via the `overrides` block
+    // in pnpm-workspace.yaml; dedupe them here too so a future second copy
+    // cannot reach the bundle. Glial is a refcounted kernel: two copies means
+    // two binder/instance registries and silently unshared state.
+    resolve: { dedupe: ['react', 'react-dom', '@grythjs/plugin-api', '@owebeeone/grip-react', '@owebeeone/grip-core', '@owebeeone/glial-runtime', '@owebeeone/glade-decl'] },
+    optimizeDeps: { exclude: ['@owebeeone/grip-react', '@wyredjs/plugin-wyred', '@wyredjs/artifacts'] },
+    server: {
+      // The wyred plugin is link:'d from the wyred-wz sibling workspace and its
+      // store tap imports schema JSON from wyred-contract there; allow the dev
+      // server to serve files from that tree (it resolves through the symlink's
+      // real path). Verification-time only for the test mount.
+      // The Gyld bundle is NOT reached this way: `gyldBundleServer` above reads
+      // it directly, so no fs.allow entry points outside the gwz workspace.
+      fs: { allow: ['..', '../../wyred-wz'] },
+      // `/gyld/` is GRAZEL's static path over the glade-gyld supplier's bundle
+      // root, and it is what a published `gyld.lens` pointer's `path` names. A
+      // page served by grazel reaches it on its own origin; a page served by
+      // this dev server does not, so a glade root would list streams and draw
+      // nothing. Proxying it here is what makes `pnpm dev` a complete write-path
+      // runbook. The key is a REGEX, deliberately: a plain `/gyld` prefix would
+      // also swallow `/gyld-bundle/` and `/gyld-evaluator/` above, which are
+      // this dev server's own mounts and nothing to do with grazel.
+      proxy: { '^/gyld/': { target: process.env.GRAZEL_URL ?? 'http://127.0.0.1:8080' } },
+    },
+  }
+}
+
+/** The FULL desktop target: `index.html` -> `src/main.tsx`, every plugin the
+ *  composition root lists. This config also carries the vitest setup for the
+ *  whole repository. */
 export default defineConfig({
-  plugins: [
-    react(),
-    gyldStaticServer({
-      name: 'gyld-bundle-server',
-      mount: GYLD_BUNDLE_MOUNT,
-      env: 'GYLD_BUNDLE_DIR',
-      fallback: GYLD_BUNDLE_DEFAULT,
-      describe: 'gyld bundle',
-    }),
-    gyldStaticServer({
-      name: 'gyld-evaluator-server',
-      mount: GYLD_EVALUATOR_MOUNT,
-      env: 'GYLD_EVALUATOR_DIR',
-      fallback: GYLD_EVALUATOR_DEFAULT,
-      describe: 'gyld evaluator runs',
-    }),
-  ],
-  // dedupe: the wyred test mount links source from the wyred-wz sibling
-  // workspace; these must resolve to THIS app's copies so there is exactly
-  // one GripRegistry / grip-react / react per running app
-  // (wyred-wz/dev-docs/GrythWyredUiDesignPlan.md §3.1).
-  // glial-runtime / glade-decl are pnpm singletons via the `overrides` block
-  // in pnpm-workspace.yaml; dedupe them here too so a future second copy
-  // cannot reach the bundle. Glial is a refcounted kernel: two copies means
-  // two binder/instance registries and silently unshared state.
-  resolve: { dedupe: ['react', 'react-dom', '@grythjs/plugin-api', '@owebeeone/grip-react', '@owebeeone/grip-core', '@owebeeone/glial-runtime', '@owebeeone/glade-decl'] },
-  optimizeDeps: { exclude: ['@owebeeone/grip-react', '@wyredjs/plugin-wyred', '@wyredjs/artifacts'] },
-  server: {
-    // The wyred plugin is link:'d from the wyred-wz sibling workspace and its
-    // store tap imports schema JSON from wyred-contract there; allow the dev
-    // server to serve files from that tree (it resolves through the symlink's
-    // real path). Verification-time only for the test mount.
-    // The Gyld bundle is NOT reached this way: `gyldBundleServer` above reads
-    // it directly, so no fs.allow entry points outside the gwz workspace.
-    fs: { allow: ['..', '../../wyred-wz'] },
-    // `/gyld/` is GRAZEL's static path over the glade-gyld supplier's bundle
-    // root, and it is what a published `gyld.lens` pointer's `path` names. A
-    // page served by grazel reaches it on its own origin; a page served by
-    // this dev server does not, so a glade root would list streams and draw
-    // nothing. Proxying it here is what makes `pnpm dev` a complete write-path
-    // runbook. The key is a REGEX, deliberately: a plain `/gyld` prefix would
-    // also swallow `/gyld-bundle/` and `/gyld-evaluator/` above, which are
-    // this dev server's own mounts and nothing to do with grazel.
-    proxy: { '^/gyld/': { target: process.env.GRAZEL_URL ?? 'http://127.0.0.1:8080' } },
-  },
+  ...grythShared(),
   // scripts/*.test.mjs are node check scripts (run by `npm test` directly), not vitest suites
   test: {
-    include: ['src/**/*.test.{ts,tsx}', 'packages/**/src/**/*.test.{ts,tsx}'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'packages/**/src/**/*.test.{ts,tsx}',
+      // the targets under entries/ carry their own suites — one per entry,
+      // over the plugin list that entry chooses
+      'entries/**/*.test.{ts,tsx}',
+    ],
     // Several suites wait on an asynchronous store: a tap that reads a bundle
     // of a few dozen files and publishes as each one lands. Vitest's default
     // `expect.poll` deadline is one second and its test deadline five, which

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fails if any banned React hook appears anywhere under src/.
+// Fails if any banned React hook appears anywhere under src/ or entries/.
 // gryth-ui forbids React local state — all state lives in grips (see
 // dev-docs/CodingRules.md). Comments and strings are stripped before scanning
 // so documentation that mentions these names does not trip the check.
@@ -22,6 +22,8 @@ const pkgSrcDirs = (dir) => {
 };
 const srcDirs = [
   join(root, 'src'),
+  // the entry targets (entries/<target>/), which are app source like src/
+  join(root, 'entries'),
   ...pkgSrcDirs(join(root, 'packages')),
   ...pkgSrcDirs(join(root, 'packages', 'plugins')),
 ].filter((d) => { try { return statSync(d).isDirectory(); } catch { return false; } });
@@ -118,4 +120,4 @@ if (violations.length) {
   for (const v of violations) console.error('  ' + v);
   process.exit(1);
 }
-console.log(`OK: no unapproved React hooks found in src/ (${BANNED.length} banned, ${APPROVALS.length} approvals).`);
+console.log(`OK: no unapproved React hooks found in src/ or entries/ (${BANNED.length} banned, ${APPROVALS.length} approvals).`);
