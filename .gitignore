@@ -12,6 +12,10 @@ dist-gyld
 dist-ssr
 *.local
 
+# python bytecode, if anything loads gyld-ui.py by path (its own test
+# suite sets sys.dont_write_bytecode, but an ad-hoc import would not)
+__pycache__/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
