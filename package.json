@@ -11,7 +11,8 @@
     "build:gyld": "tsc -b && vite build --config vite.gyld.config.ts",
     "preview:gyld": "vite preview --config vite.gyld.config.ts",
     "lint": "eslint .",
-    "test": "node scripts/no-react-state.test.mjs && vitest run"
+    "test": "node scripts/no-react-state.test.mjs && vitest run",
+    "test:py": "python3 scripts/gyld_ui_test.py"
   },
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",
