@@ -444,6 +444,25 @@ details Gyld wrote.
 
 ## Running the write path
 
+The short way is `gyld-ui.py` at the root of this repository:
+
+```sh
+python3 gyld-ui.py start          # -> URL: http://localhost:5173/
+python3 gyld-ui.py status         # every check, then working / not working
+python3 gyld-ui.py stop --purge
+```
+
+That is everything below, done and checked: grazel with this leg switched on,
+the bundle root laid and given its first build, `pnpm dev:gyld` in front with
+both proxied paths pointed at THAT grazel, and the URL as the last line. It is
+idempotent, it takes `--port` for a second instance with its own ports and its
+own data, and `--mode built` serves `dist-gyld` from grazel with no dev server
+at all. `gryth-ui/README.md` has the option surface;
+`gryth-wz/dev-docs/GrythGyldDemoRunbook.md` walks the same composition by hand.
+
+The rest of this section is what the script does, for when you want to drive a
+piece of it yourself.
+
 The supplier is a composed child of grazel and the leg is default off
 (`glade-wz/grazel/README.md`, "Composed suppliers"). From the grazel checkout:
 
@@ -466,14 +485,17 @@ its whole plugin list, so the launcher offers the Gyld windows and nothing
 unrelated to them. `pnpm dev` still runs the full desktop and works exactly the
 same way for this path; the two dev servers differ only in the plugin list.
 
-Either way the page has no `/bootstrap.json` in front of it, so
-`@grythjs/glade` falls back to `ws://127.0.0.1:9099`, which is the node grazel
-just started; the status line in the browser chrome says `live` once the socket
-is up. Press `Add glade node` in the set picker and the census arrives on
-`gyld.streams`. The dev server proxies `/gyld/` to grazel (`GRAZEL_URL`,
-default `http://127.0.0.1:8080`), so the lens pointers the shares carry resolve
-and the pictures draw; without that proxy a glade root lists streams and draws
-nothing, because a lens file is fetched over HTTP and only grazel serves it.
+Either way the dev server proxies TWO of grazel's paths onto its own origin, at
+`GRAZEL_URL` (default `http://127.0.0.1:8080`). `/gyld/` is what makes a lens
+pointer resolve and the pictures draw; without it a glade root lists streams and
+draws nothing, because a lens file is fetched over HTTP and only grazel serves
+it. `/bootstrap.json` is what tells the page which node to attach to, so a
+composition on other ports is followed rather than guessed — `gyld-ui.py start
+--port 5180` proves it, its page opening `ws://127.0.0.1:9106` and not the
+default. With no grazel behind the proxy the fetch does not answer and
+`@grythjs/glade` falls back to `ws://127.0.0.1:9099` exactly as it always did.
+The status line in the browser chrome says `live` once the socket is up. Press
+`Add glade node` in the set picker and the census arrives on `gyld.streams`.
 
 Serving the built application from grazel itself needs no proxy at all, because
 then the page and the bundle root are one origin:

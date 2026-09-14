@@ -27,9 +27,50 @@ checkouts managed by gwz.
 ```sh
 pnpm install
 pnpm test        # headless seam tests (vitest)
+pnpm test:py     # gyld-ui.py's own unit tests (stdlib unittest)
 pnpm dev         # vite dev server
 pnpm build       # tsc + vite build
 ```
+
+`pnpm test` is unchanged by `test:py`: the two suites are separate runs, so a
+checkout with no Python 3 still runs the whole TypeScript suite.
+
+## Running the Gyld composition: `gyld-ui.py`
+
+The Gyld write path needs more than a dev server — grazel with the `glade-gyld`
+supplier behind it, a node, a bundle root with a build in it, and the desktop in
+front. `./gyld-ui.py` stands all of that up, checks it, and prints the URL:
+
+```sh
+python3 gyld-ui.py start                    # -> http://localhost:5173/
+python3 gyld-ui.py status                   # ok/FAIL per check, then working / not working
+python3 gyld-ui.py start --port 5180        # a second instance, its own ports and data
+python3 gyld-ui.py restart --port 5180
+python3 gyld-ui.py stop [--purge]           # no --port: every instance
+```
+
+| verb | what it does |
+|---|---|
+| `start` | prerequisites, then grazel, then the bundle root and its first build, then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |
+| `status` | grazel's `/bootstrap.json`, the node's WS port, the supplier serving, the bundle root seeded and how many streams it lists, the page, and in dev mode the two proxied paths. Exit 0 when it works, 1 when it does not. `--json` for a machine. |
+| `stop` | SIGTERM to grazel's process group (which takes the node and both suppliers) and to vite's, SIGKILL what is left, clear a lock the node did not, and confirm nothing of the instance survives. The data stays unless `--purge`. |
+| `restart` | `stop`, then `start` with the options the instance recorded. |
+
+`--mode dev` (the default) is `pnpm dev:gyld` in front of grazel, with `/gyld/`
+and `/bootstrap.json` proxied back to it. `--mode built` is `dist-gyld` handed
+to grazel — one origin, no proxy, and `--port` is then grazel's own HTTP port.
+
+**Where an instance lives.** `~/.gyld-ui/instances/<port>/`, and NOT under
+`/tmp`: a ruling submitted from the UI is written into the bundle root there, so
+the directory has to survive a reboot. `--data` moves it; `stop --purge` deletes
+it. Ports derive from the one port you open (5173 → 8080/9099, which is what the
+runbook prints), so two instances never collide and each page attaches to its
+own node.
+
+The Gyld hosts need Python 3.13 (`--python`, default
+`/opt/homebrew/bin/python3.13`); the script itself runs on the system `python3`.
+The whole composition, and what each piece is, is in
+`../dev-docs/GrythGyldDemoRunbook.md`.
 
 ## Targets
 

@@ -104,9 +104,36 @@ Adopted from grip-lab's AGENTS.md.
 ## Verification commands
 
 - Dev server: `pnpm dev` (full desktop), `pnpm dev:gyld` (Gyld only)
+- Whole Gyld composition: `python3 gyld-ui.py start` (below)
 - Type-check + build: `pnpm build` → `dist/`, `pnpm build:gyld` → `dist-gyld/`
 - Lint (includes the no-React-state ban): `pnpm lint`
 - Tests (no-React-state scan + vitest): `pnpm test`
+- `gyld-ui.py`'s own tests: `pnpm test:py` (stdlib `unittest`; NOT part of
+  `pnpm test`), plus `uvx ruff@0.13.0 check` and `format --check` on
+  `gyld-ui.py` and `scripts/gyld_ui_test.py`
 
 A change to the shared render, to a Vite option or to the plugin lists must be
 checked against BOTH targets — `pnpm build` and `pnpm build:gyld`.
+
+## `gyld-ui.py` — the running composition
+
+The Gyld write path is grazel + a glade node + the `glade-gyld` supplier + a
+seeded bundle root + the desktop. Do not stand that up by hand: `gyld-ui.py` at
+the repository root does it, and `../dev-docs/GrythGyldDemoRunbook.md` explains
+what each piece is.
+
+- Verbs: `start`, `stop`, `restart`, `status`. `start` and `restart` end by
+  running `status`'s checks and printing the URL as their last line; `status`
+  exits 0 when it works and 1 when it does not.
+- `--port` is the port you open. grazel's `--http` and the node's `--node-port`
+  derive from it (5173 → 8080/9099), so two instances never collide.
+- Instances live in `~/.gyld-ui/instances/<port>/` and are kept across a stop:
+  a ruling submitted from the UI is written into the bundle root there. Only
+  `stop --purge` deletes one. Never point `--data` at `/tmp`.
+- Python 3.10 compatible ON PURPOSE — it runs on the system `python3`. Only the
+  Gyld hosts it invokes need 3.13 (`--python`). Stdlib only: no dependency may
+  be added to it.
+- It mirrors two things that live in other repositories: `ensure_stage` from
+  `glade-gyld/src/bundle.rs`, and the stream discovery
+  `manage_decision_streams.py rebuild` does. Both are marked in the source. If
+  either moves, this script moves with it.
