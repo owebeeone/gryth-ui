@@ -192,8 +192,33 @@ span.side-group-label { cursor: default; }
   background:
     radial-gradient(circle at 30% 20%, color-mix(in srgb, currentColor 6%, transparent), transparent 60%),
     color-mix(in srgb, currentColor 3%, transparent);
-  /* wallpaper slice slides when switching desktops */
-  transition: background-position 0.3s ease;
+}
+
+/* The wallpaper. Two boxes, because one cannot both clip and overflow:
+   `.desktop-wallpaper` is the canvas-sized clip, and its layer inside is
+   --wallpaper-width (>100%) wide so there is always a band to pan across,
+   whatever the image's aspect ratio and whatever shape the window is. The
+   canvas's own `cover` had no band at all on a wide window — see
+   wallpaper.ts. First child, so every window still paints over it. */
+.desktop-wallpaper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.desktop-wallpaper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--wallpaper-width, 100%);
+  background-image: var(--wallpaper-image, none);
+  background-size: cover;
+  background-position: center;
+  /* the wallpaper slides with the windows when switching desktops */
+  transform: translateX(var(--wallpaper-shift, 0%));
+  transition: transform 0.3s ease;
 }
 
 .desktop:focus { outline: none; }

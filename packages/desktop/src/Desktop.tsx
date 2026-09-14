@@ -32,6 +32,7 @@ import {
 } from './ops';
 import { resolveTool, toolRoles } from './facets';
 import { SCHEME_WALLPAPERS, THEMES } from './themes';
+import { wallpaperPan } from './wallpaper';
 import { HUB } from './foundations';
 import { observeCanvas } from './canvasGuard';
 import { bleedRect, tickerWidths } from './ticker';
@@ -136,14 +137,20 @@ export default function Desktop() {
   // Wallpaper: cover semantics, so the image's aspect ratio survives any
   // canvas resize. Custom URL wins; otherwise the theme's scheme default
   // (when enabled); otherwise none.
+  //
+  // The desktop-switch pan is the LAYER's, not the image's: `cover` leaves a
+  // pannable band only when the image overflows the canvas, which is zero on
+  // a wide window, so the wallpaper sits on a layer wider than the canvas and
+  // slides by that surplus (wallpaper.ts). Both numbers travel as custom
+  // properties, because the element that reads them is a pseudo-element.
   const effectiveWallpaper = wallpaper || (wallpaperThemed ? SCHEME_WALLPAPERS[theme.scheme] : '');
-  const lastDesk = DESKTOP_IDS[DESKTOP_IDS.length - 1];
+  const pan = wallpaperPan(current, DESKTOP_IDS);
   const wallpaperStyle: CSSProperties | undefined = effectiveWallpaper
     ? {
-      backgroundImage: `url("${effectiveWallpaper.replace(/"/g, '%22')}")`,
-      backgroundSize: 'cover',
-      backgroundPosition: `${((current - 1) / (lastDesk - 1)) * 100}% 50%`,
-    }
+      '--wallpaper-image': `url("${effectiveWallpaper.replace(/"/g, '%22')}")`,
+      '--wallpaper-width': `${pan.width}%`,
+      '--wallpaper-shift': `${pan.shift}%`,
+    } as CSSProperties
     : undefined;
 
   // Effective geometry: foundations maximized, docked frames at their area
@@ -713,10 +720,13 @@ export default function Desktop() {
       )}
       <div
         className={`desktop-canvas${drag?.kind === 'move' ? ' dragging' : ''}`}
-        style={wallpaperStyle}
         ref={observeCanvas}
         onAnimationEnd={(e) => { if (e.animationName.startsWith('desk-')) slideTap?.set(null); }}
       >
+        {/* The wallpaper's own clipping box: the canvas un-clips itself while
+            a frame is dragged over the sidebar, and the panning layer inside
+            here is wider than the canvas, so it needs a box that never does. */}
+        <div className="desktop-wallpaper" style={wallpaperStyle} aria-hidden="true" />
         {exiting.map((w) => (
           <Window key={w.id} win={w} rect={rectOf(w)} focused={false} dropTarget={false} overview={null} deskAnim={deskAnimFor(w)} />
         ))}
