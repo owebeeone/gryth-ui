@@ -162,6 +162,16 @@ than hides; and the `end` record's own exit. A turn that has not ended yet
 says it is still answering, and a turn a refusal closed is still a turn: its
 question, its reason and its exit.
 
+A **`note`** record is a sixth stream on that surface, and the window draws it
+the way it draws any line it was given: something the CALL had to do
+differently, said beside the answer it weakened. An estimated input budget
+because the endpoint has no `count_tokens`, a `strict` or a `cache_control` the
+endpoint rejected, a config file that did not decode — each is a line on the
+turn, before the prose, never a silence
+(`glade-wz/glade-gyld/README.md`, "The compatibility profile"). A consumer that
+has never heard of the stream draws nothing for it, which is the rule this
+surface already follows.
+
 **The conversation is one per window, and it is about a record.** The id is
 minted by the gesture that opens the window (`conv-<tabId>-<slot>-<stamp>`)
 and kept across every turn, so a follow-up is the same verb with the same id
