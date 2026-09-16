@@ -1,11 +1,12 @@
 import { useGrip } from '@owebeeone/grip-react';
 import type { ToolViewProps } from '@grythjs/plugin-api';
 import {
-  GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PREVIEW, GYLD_DEST_STREAM, GYLD_LENS,
-  GYLD_PREVIEW, GYLD_RECORDS, GYLD_SET, GYLD_TAB_SEARCH,
+  GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PREVIEW, GYLD_DEST_STREAM,
+  GYLD_LENS, GYLD_PREVIEW, GYLD_RECORDS, GYLD_SET, GYLD_TAB_SEARCH,
 } from './grips';
 import { BrowserChrome } from './browser/BrowserChrome';
 import { SetPicker } from './browser/SetPicker';
+import { NO_NEXT_UP, nextUpFrom } from './browser/nextUp';
 import { NO_SEARCH, searchLens } from './browser/search';
 import { LensView } from './lens/LensView';
 import type { GyldLensState } from './store/state';
@@ -84,6 +85,10 @@ export function GyldBrowser({ tabId }: ToolViewProps) {
   const question = useGrip(GYLD_DEST_PREVIEW) ?? '';
   const records = useGrip(GYLD_RECORDS);
   const query = useGrip(GYLD_TAB_SEARCH) ?? '';
+  // The stream's own decide-now list, which this window resolves off its own
+  // destination. It is the whole of "where do I look": the rows are joined to
+  // the drawn boxes by qualified slot and nothing is computed from the graph.
+  const decideNow = useGrip(GYLD_DECIDE_NOW);
   // A window that asked for a preview draws the preview; every other window
   // draws the emitted lens its perspective names. The window keeps resolving
   // the emitted lens either way, because the preview is a restriction OF it
@@ -97,15 +102,17 @@ export function GyldBrowser({ tabId }: ToolViewProps) {
   }
   const lens = state?.status === 'ok' ? state.value : undefined;
   const search = lens === undefined ? NO_SEARCH : searchLens(lens, records, query);
+  const nextUp = lens === undefined ? NO_NEXT_UP : nextUpFrom(lens, decideNow);
   return (
     <div className="gyld-browser">
-      <BrowserChrome tabId={tabId} lens={lens} search={search} />
+      <BrowserChrome tabId={tabId} lens={lens} search={search} nextUp={nextUp} />
       {lens === undefined
         ? <NoLens lens={state} />
         : (
           <LensView
             scope={`${tabId}-${lens.perspective}`}
             search={search}
+            nextUp={nextUp}
             state={state}
           />
         )}

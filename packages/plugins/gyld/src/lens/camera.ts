@@ -173,6 +173,12 @@ export const NO_SELECTION: GyldSelection = Object.freeze({ ids: [] });
  * `relations` are the legend's edge entries; the other three lists are the
  * node dimensions of MDV-2, read and written through the NodeFacet objects in
  * `facets.ts` rather than by naming a field here.
+ *
+ * `nextUpOnly` is the odd one out and deliberately so. It is not a dimension
+ * of the picture at all: it dims every box the stream's emitted decide-now
+ * list does not call answerable now, and it DIMS — never hides, whatever
+ * `hide` says (owner ruling U1, 2026-09-16). It lives here because it rides
+ * the same dim path as the rest and is the same kind of per-window choice.
  */
 export interface GyldDimmed {
   relations: string[];
@@ -180,10 +186,11 @@ export interface GyldDimmed {
   statuses: string[];
   classifications: string[];
   hide: boolean;
+  nextUpOnly: boolean;
 }
 
 export const NOTHING_DIMMED: GyldDimmed = Object.freeze({
-  relations: [], kinds: [], statuses: [], classifications: [], hide: false,
+  relations: [], kinds: [], statuses: [], classifications: [], hide: false, nextUpOnly: false,
 });
 
 export function toggleRelation(dimmed: GyldDimmed, relation: string): GyldDimmed {
@@ -194,6 +201,13 @@ export function toggleRelation(dimmed: GyldDimmed, relation: string): GyldDimmed
       ? dimmed.relations.filter((name) => name !== relation)
       : [...dimmed.relations, relation],
   };
+}
+
+/** Turn the next-up filter on or off. A separate verb from `toggleRelation`
+ *  because it turns nothing of the PICTURE off: it reads the emitted
+ *  decide-now list and dims what that list does not call answerable now. */
+export function toggleNextUpOnly(dimmed: GyldDimmed): GyldDimmed {
+  return { ...dimmed, nextUpOnly: !dimmed.nextUpOnly };
 }
 
 export function toggleSelected(selection: GyldSelection, id: string, additive: boolean): GyldSelection {

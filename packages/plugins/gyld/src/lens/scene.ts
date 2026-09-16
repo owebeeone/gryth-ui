@@ -32,6 +32,15 @@ export interface SceneNode {
   hovered: boolean;
   /** True when a search is running and this record matched it. */
   matched: boolean;
+  /** True when the stream's emitted decide-now list joined a row to this box
+   *  by qualified slot and that row's own `answerable_now` is set. Read,
+   *  never computed: a box with no row is not answerable here, it is simply
+   *  not a question this stream lists. */
+  answerable: boolean;
+  /** The joined row's emitted `effective_status`, when a row joined. Absent
+   *  on every box this stream's decide-now list does not list, and on every
+   *  box of a stream that emitted no list at all. */
+  effectiveStatus?: string;
 }
 
 export interface SceneEdge {
@@ -106,13 +115,40 @@ export interface SceneSearch {
   query: string;
 }
 
+/**
+ * The stream's emitted decide-now list, joined to the drawn boxes by
+ * QUALIFIED SLOT. The join itself is a projection over emitted data and lives
+ * in `browser/nextUp.ts`, so the scene depends on the ANSWER and not on the
+ * file it was read from, exactly as it does for a search.
+ *
+ * Nothing here is computed: `ids` are the rows whose own `answerable_now` is
+ * set, and `statuses` are the rows' own `effective_status`
+ * (GyldGrythPlugins.md 3.5 and 6.7).
+ */
+export interface SceneNextUp {
+  /** Whether this stream emitted a decide-now list at all. A stream that did
+   *  not gets no glyphs, no count and no filter, and is told so. */
+  listed: boolean;
+  /** Lens ids of the drawn boxes an answerable row joined. */
+  ids: ReadonlySet<string>;
+  /** Lens id to the joined row's emitted `effective_status`. */
+  statuses: ReadonlyMap<string, string>;
+}
+
 const EMPTY_MATCH: ReadonlySet<string> = new Set<string>();
+
+const NO_JOIN: SceneNextUp = Object.freeze({
+  listed: false,
+  ids: new Set<string>(),
+  statuses: new Map<string, string>(),
+});
 
 export interface SceneInputs {
   selection?: GyldSelection;
   hover?: string;
   dimmed?: GyldDimmed;
   search?: SceneSearch;
+  nextUp?: SceneNextUp;
 }
 
 /** The ids adjacent to the selection, following the EMITTED edges only. */
@@ -152,6 +188,10 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
   const faded = selected.size > 0;
   const searching = inputs.search?.active ?? false;
   const matches = inputs.search?.ids ?? EMPTY_MATCH;
+  const nextUp = inputs.nextUp ?? NO_JOIN;
+  // The filter is only a filter where there is a list to filter by: a stream
+  // that emitted no decide-now list dims nothing, whatever the switch holds.
+  const nextUpOnly = nextUp.listed && dimmed.nextUpOnly;
 
   const edges: SceneEdge[] = [];
   for (const edge of lens.edges) {
@@ -207,6 +247,7 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
     // edge: the box stays in the scene at the emitted position either way.
     const facetOff = facetDims(dimmed, node);
     const matched = searching && matches.has(node.id);
+    const answerable = nextUp.ids.has(node.id);
     const label = labelLayout(box, node);
     const scene: SceneNode = {
       id: node.id,
@@ -219,12 +260,18 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
       lineHeight: label.lineHeight,
       anchor: label.anchor,
       hidden: facetOff && hideOff,
+      // `Next up only` DIMS and never hides, so it is not in `hidden` above
+      // (owner ruling U1). It also dims boxes only: an edge is an emitted
+      // assertion and no decide-now row says anything about one, so fading
+      // the lines would be this window judging what the emitter did not.
       dimmed: (facetOff && !hideOff)
         || (faded && !near.has(node.id))
-        || (searching && !matched),
+        || (searching && !matched)
+        || (nextUpOnly && !answerable),
       selected: selected.has(node.id),
       hovered: hover === node.id,
       matched,
+      answerable,
     };
     const fill = nodeFill(lens, node);
     if (fill !== undefined) {
@@ -232,6 +279,10 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
     }
     if (node.group !== undefined) {
       scene.group = node.group;
+    }
+    const status = nextUp.statuses.get(node.id);
+    if (status !== undefined) {
+      scene.effectiveStatus = status;
     }
     return scene;
   });
@@ -278,6 +329,15 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
     omissions.push({
       text: `${nodes.length - found} of ${nodes.length} boxes dimmed by the search `
         + `for "${inputs.search?.query ?? ''}"`,
+      fromWindow: true,
+    });
+  }
+  if (nextUpOnly) {
+    // A dim is an omission, so the filter says what the reader is no longer
+    // seeing, exactly as the facets and the search already do (MDV-7).
+    const ready = nodes.filter((node) => node.answerable).length;
+    omissions.push({
+      text: `${nodes.length - ready} of ${nodes.length} boxes dimmed by Next up only`,
       fromWindow: true,
     });
   }

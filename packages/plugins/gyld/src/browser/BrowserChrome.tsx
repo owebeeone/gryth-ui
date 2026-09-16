@@ -9,7 +9,7 @@ import {
   GYLD_FOCUS, GYLD_STORE_RELOAD, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_TAB_DIMMED,
   GYLD_TAB_DIMMED_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
 } from '../grips';
-import { NOTHING_DIMMED, type GyldDimmed } from '../lens/camera';
+import { NOTHING_DIMMED, toggleNextUpOnly, type GyldDimmed } from '../lens/camera';
 import { rootLine } from '../store/waiting';
 import { NODE_FACETS } from '../lens/facets';
 import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
@@ -18,6 +18,7 @@ import { RebuildButton } from '../ops/RebuildButton';
 import { neighbourhoodLink } from './links';
 import { pickPerspective, pickStream, type DestinationHandles } from './destination';
 import { labelFor, perspectiveOptions } from './perspectives';
+import type { GyldNextUp } from './nextUp';
 import type { GyldSearchMatch } from './search';
 
 // The browser's chrome: the stream switcher, the perspective picker, the
@@ -28,12 +29,15 @@ import type { GyldSearchMatch } from './search';
 // that emits no manifest, what the store could list), and the facet values are
 // the values the drawn nodes carry.
 
-export function BrowserChrome({ tabId, lens, search }: {
+export function BrowserChrome({ tabId, lens, search, nextUp }: {
   tabId: string;
   /** The lens actually drawn, when one is. The facet toggles are offered for
    *  the values THIS picture carries, so a window with no picture offers none. */
   lens?: GyldLens;
   search: GyldSearchMatch;
+  /** The stream's emitted decide-now list joined to this picture. A stream
+   *  that emitted no list gets no count and no filter, and is told so. */
+  nextUp: GyldNextUp;
 }) {
   const census = useGrip(GYLD_STREAMS);
   const bundle = useGrip(GYLD_BUNDLE);
@@ -121,6 +125,41 @@ export function BrowserChrome({ tabId, lens, search }: {
             {`${search.nodes} of ${search.drawn} drawn records match`}
           </span>
         )}
+      </div>
+      {/* Where to look: the count is the stream's own emitted `answerable_now`
+          rows joined to the boxes this picture draws, and the toggle DIMS the
+          rest (owner ruling U1) over the same geometry (MDV-4). */}
+      <div className="gyld-chrome-row gyld-nextup">
+        {nextUp.listed
+          ? (
+            <>
+              <span className="gyld-note gyld-nextup-count">
+                {`${nextUp.count} answerable now`}
+              </span>
+              {nextUp.rows > nextUp.count && (
+                <span className="gyld-note">
+                  {`${nextUp.rows - nextUp.count} more this picture does not draw`}
+                </span>
+              )}
+              <label className="gyld-nextup-toggle">
+                <input
+                  type="checkbox"
+                  className="gyld-nextup-only"
+                  checked={dimmed.nextUpOnly}
+                  title="dim every box this stream does not list as answerable now"
+                  onChange={() => dimmedTap?.set(
+                    toggleNextUpOnly(dimmedTap.get() ?? NOTHING_DIMMED),
+                  )}
+                />
+                Next up only
+              </label>
+            </>
+          )
+          : (
+            <span className="gyld-note gyld-nextup-none">
+              this stream emitted no decide-now list, so no box is marked
+            </span>
+          )}
       </div>
       <div className="gyld-chrome-row">
         <button

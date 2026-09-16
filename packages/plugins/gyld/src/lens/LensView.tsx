@@ -18,12 +18,13 @@ import {
 } from './camera';
 import { STAGE_CLASS, stageOf, viewportOf } from './stage';
 import { EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent } from './geometry';
+import { GLYPH_INSET, GLYPH_RADIUS, StatusGlyph } from './glyphs';
 import {
   LENS_PALETTE_LIGHT, inkOn, labelOn, lineOn, type GyldLensPalette,
 } from './palette';
 import {
   buildScene, lensKeyOf, recordIdOf, slotOf,
-  type LensScene, type SceneEdge, type SceneNode, type SceneSearch,
+  type LensScene, type SceneEdge, type SceneNextUp, type SceneNode, type SceneSearch,
 } from './scene';
 
 // The lens view: a pure SVG redraw of `gyld.lens.v1`.
@@ -48,7 +49,10 @@ import {
 // change, so MDV-4 still holds.
 
 function classOf(
-  item: { dimmed: boolean; selected: boolean; hovered: boolean; matched: boolean },
+  item: {
+    dimmed: boolean; selected: boolean; hovered: boolean; matched: boolean;
+    answerable?: boolean;
+  },
   base: string,
 ) {
   return [
@@ -57,6 +61,9 @@ function classOf(
     item.selected ? `${base}-selected` : '',
     item.hovered ? `${base}-hover` : '',
     item.matched ? `${base}-match` : '',
+    // The same mechanism a search match is drawn with, on a different
+    // predicate: brighter, ringed, and never moved (MDV-4).
+    item.answerable === true ? `${base}-answerable` : '',
   ].filter((name) => name !== '').join(' ');
 }
 
@@ -94,6 +101,31 @@ function EdgeShape({ edge, marker, palette }: {
   );
 }
 
+/** The emitted status, as a shape as well as a hue, inside the box the host
+ *  emitted. Only Open and Lean carry one (owner ruling U2), and only where the
+ *  stream's decide-now list joined this box a row at all. */
+function NodeGlyph({ node, ink }: { node: SceneNode; ink: string }) {
+  const glyph = StatusGlyph.of(node.effectiveStatus);
+  if (glyph === undefined) {
+    return null;
+  }
+  const at = {
+    x: node.box.x + node.box.width - GLYPH_INSET,
+    y: node.box.y + GLYPH_INSET,
+  };
+  return (
+    <g
+      className="gyld-node-glyph"
+      data-status={glyph.status}
+      transform={`translate(${at.x} ${at.y})`}
+    >
+      <title>{glyph.says}</title>
+      <circle r={GLYPH_RADIUS} fill="none" stroke={ink} />
+      <path d={glyph.path(GLYPH_RADIUS)} fill={ink} />
+    </g>
+  );
+}
+
 function NodeShape({ node, palette }: { node: SceneNode; palette: GyldLensPalette }) {
   if (node.hidden) {
     return null;
@@ -112,6 +144,7 @@ function NodeShape({ node, palette }: { node: SceneNode; palette: GyldLensPalett
         fill={node.fill ?? palette.canvas}
         stroke={palette.stroke}
       />
+      <NodeGlyph node={node} ink={ink} />
       {node.lines.map((line, index) => (
         <text
           key={`${node.id}-line-${index}`}
@@ -288,9 +321,17 @@ export function LensProvenance({ scene }: { scene: LensScene }) {
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
+export function LensView({ scope = 'gyld', search, nextUp, onSlot, state: shown }: {
   scope?: string;
   search?: SceneSearch;
+  /**
+   * The stream's emitted decide-now list, joined to this picture's boxes by
+   * qualified slot. The window around this one resolves it, because the list
+   * is per stream and this view draws whatever picture it is handed; a window
+   * that passes none marks nothing, which is what a stream with no emitted
+   * list gets.
+   */
+  nextUp?: SceneNextUp;
   /**
    * The picture to draw, when the window around this one has already resolved
    * one. A browser window showing a browser PREVIEW passes `Gyld.Preview`
@@ -342,7 +383,9 @@ export function LensView({ scope = 'gyld', search, onSlot, state: shown }: {
   // A window opened on a focus record draws it selected without writing
   // anything: the seeded ref IS the selection until the reader picks.
   const selection = effectiveSelection(lens, held, ref);
-  const scene = buildScene(lens, { selection, hover, dimmed, search });
+  const scene = buildScene(lens, {
+    selection, hover, dimmed, search, nextUp,
+  });
 
   // The fit measures the STAGE — the box that shows the picture — and never
   // the SVG or anything found by tag under the lens root (./stage.ts).

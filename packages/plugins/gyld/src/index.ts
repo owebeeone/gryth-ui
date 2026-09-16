@@ -184,6 +184,7 @@ export * from './lens/palette';
 export * from './lens/camera';
 export * from './lens/facets';
 export * from './lens/geometry';
+export * from './lens/glyphs';
 export * from './lens/scene';
 export { lensTabTaps } from './lens/lensTabTaps';
 export {
@@ -231,6 +232,7 @@ export { DecideNowList } from './decidenow/DecideNowList';
 export { groupQuestions, type Group } from './decidenow/groups';
 export { decideNowTabTaps } from './decidenow/decideNowTabTaps';
 export * from './browser/links';
+export * from './browser/nextUp';
 export * from './browser/perspectives';
 export * from './browser/search';
 export { directoryPicker, isPickerCancel } from './browser/fsAccess';

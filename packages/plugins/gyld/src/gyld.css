@@ -362,6 +362,49 @@
   stroke-width: 2.4;
 }
 
+/* `Next up` is the SAME mechanism on a different predicate: a box the stream's
+   emitted decide-now list calls answerable now gets the bright rect a match
+   gets, plus a ring. Nothing is repositioned and nothing is added to the
+   layout — the ring is the box's own rectangle drawn a second time. */
+.gyld-node-answerable rect {
+  stroke-width: 2.5;
+  paint-order: stroke;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 55%, transparent));
+}
+
+.gyld-node-answerable .gyld-node-line {
+  font-weight: 600;
+}
+
+/* The status glyph inside the emitted box: a hue paired with a shape, which
+   is what closes the colour-blindness gap MDV section 7 names. */
+.gyld-node-glyph {
+  pointer-events: none;
+}
+
+.gyld-node-glyph circle {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.85;
+}
+
+.gyld-node-glyph path {
+  opacity: 0.85;
+}
+
+/* The count and the one filter that read the emitted decide-now list. */
+.gyld-nextup-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.333em;
+  cursor: pointer;
+}
+
+.gyld-nextup-count {
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* The set picker: the empty state of a desk with no bundle root. */
 
 .gyld-picker {
