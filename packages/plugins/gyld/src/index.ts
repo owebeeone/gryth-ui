@@ -35,6 +35,16 @@ import './gyld.css';
 // adds gyld.compare over an emitted evaluator run, which completes the tool
 // set section 2 names. None was ever declared ahead of a window that can
 // render it.
+//
+// THE LABELS ARE PLAIN, the tool IDS are not (GyldUiSimplification.md 2.3,
+// owner ruling U5 of 2026-09-16: everywhere, not only in the Gyld-only
+// target). `Graph`, `Streams`, `Details` and `Next up` are what a launcher
+// shows, because a reader meeting this desk has to hold nine words already
+// and the window names were four more. The ids stay `gyld.browser`,
+// `gyld.streams`, `gyld.detail` and `gyld.decidenow`: they are what a stored
+// layout, a wire and every link written inside this plugin resolve by, so
+// renaming one would strand a desk. The three windows the report names no
+// plain word for — decide, compare and diff — keep the labels they had.
 
 // The plugin-root taps: the set atom, the shared focus atom, the one store tap
 // and the two conversion taps. All are registered at the app's root context,
@@ -57,7 +67,7 @@ grok.registerTap(gyldLandingTap);
 addEntry(GYLD_PLUGIN, {
   tools: {
     [GYLD_BROWSER_TOOL]: {
-      label: 'Gyld browser',
+      label: 'Graph',
       defaultSize: { w: 900, h: 620 },
       role: BROWSER_ROLE,
       windowComponent: GyldBrowser,
@@ -68,7 +78,7 @@ addEntry(GYLD_PLUGIN, {
       tabTaps: browserTabTaps,
     },
     [GYLD_DETAIL_TOOL]: {
-      label: 'Gyld record',
+      label: 'Details',
       defaultSize: { w: 520, h: 620 },
       role: DETAIL_ROLE,
       windowComponent: RecordDetail,
@@ -78,14 +88,14 @@ addEntry(GYLD_PLUGIN, {
       tabTaps: detailTabTaps,
     },
     [GYLD_DECIDE_NOW_TOOL]: {
-      label: 'Gyld decide now',
+      label: 'Next up',
       defaultSize: { w: 560, h: 620 },
       role: DECIDE_NOW_ROLE,
       windowComponent: DecideNowList,
       tabTaps: decideNowTabTaps,
     },
     [GYLD_STREAMS_TOOL]: {
-      label: 'Gyld streams',
+      label: 'Streams',
       defaultSize: { w: 620, h: 640 },
       role: STREAMS_ROLE,
       windowComponent: StreamManager,

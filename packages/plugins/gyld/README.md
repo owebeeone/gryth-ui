@@ -11,6 +11,14 @@ it.
 
 ## The windows
 
+The launcher names them plainly: `gyld.browser` is **Graph**, `gyld.streams`
+is **Streams**, `gyld.detail` is **Details** and `gyld.decidenow` is
+**Next up** (GyldUiSimplification.md 2.3, owner ruling U5 of 2026-09-16 — the
+plugin's own labels, not a Gyld-only-target override). The decide, compare and
+diff windows keep the names they had. The tool IDS are unchanged and are what
+a stored layout, a wire and every link written inside this plugin resolve by,
+so this README goes on calling each window by its id.
+
 `gyld.browser` is the one that draws. It carries a stream switcher, a
 perspective picker, a search box over emitted labels and qualified slots, one
 dim toggle per value each drawn dimension carries, and the emitted picture
@@ -23,7 +31,25 @@ the `neighbourhood` family itself is the disabled entry beside it. Under the pic
 lens omitted and, in the provenance footer, which lineage, revision, snapshot
 digest, relations and layout engine the file was built from. It writes four
 links: a detail window wired to it, a decide-now window wired to it, a decide
-window wired to it, and a neighbourhood window on the focused record. Beside
+window wired to it, and a neighbourhood window on the focused record.
+
+It also says WHERE TO LOOK, and lets a reader act there. The stream's emitted
+`decide-now.json` is joined to the drawn boxes by qualified slot, so each box
+learns its own row: an answerable one is drawn with the bright rect a search
+match gets, an `Open` or `Lean` one carries a glyph inside the box the host
+emitted (a filled dot and a half dot, so the status is a shape as well as a
+hue), and the chrome carries `N answerable now` beside a `Next up only` switch
+that DIMS the rest — never hides it, whatever `hide instead of dim` holds — and
+adds its own line to the omission strip while it is on. Hovering a box shows a
+card over it with that question's own text as the host drew it, its
+alternatives with the recorded lean marked, the one emitted reason it cannot be
+answered, and `Answer`, `Ask a follow-up` and `Details`, each of which moves
+this window onto the question and opens the wired window on it. On a stream
+whose overlay module already declares records the card reads
+`Answer (needs its own stream)`, names the refusal, and offers a `Link` already
+filled in (see "Submitting to the supplier"). None of it is computed: a stream
+that emitted no decide-now list gets no glyph, no count and no filter, and is
+told so. Beside
 `Reload`, which re-reads what is there, it carries `Rebuild`, which asks the
 supplier for a new build of it. With no bundle root on the desk it
 shows the set picker instead of a picture, because the plugin will not invent a
@@ -200,7 +226,7 @@ pnpm dev
 ```
 
 Vite prints the address it is serving on, normally `http://localhost:5173/`.
-Open that, then click `+ Gyld browser` in the launcher down the left side.
+Open that, then click `+ Graph` in the launcher down the left side.
 `pnpm dev` has no grazel behind it, so no glade node answers and the window
 opens on the set picker, which says so.
 
@@ -232,7 +258,7 @@ The status line under the buttons then says `ready` and the stream switcher
 fills in. Choose `base`, then `decisions`, and the graph draws. Clicking a box
 focuses that record, clicking empty canvas clears it, dragging anywhere pans,
 the wheel zooms, and `Fit` puts the whole picture back in view. `Details` and
-`Decide now` open the other two windows already wired to this one.
+`Next up` open the other two windows already wired to this one.
 
 Focus a question and press `Neighbourhood`. `key_custody` is the one the
 committed bundle emitted a member for, so that one opens pinned Gyld geometry;

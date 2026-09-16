@@ -4,6 +4,12 @@ import type { ToolId } from '@grythjs/plugin-api';
 // the tools record in src/index.ts and the `toolId` of every link written from
 // inside the plugin, so they are named once here rather than spelled out at
 // each call site where a typo would open nothing.
+//
+// An id is NOT a label. What a launcher shows is the `label` beside each id in
+// src/index.ts, and those were renamed plain — `Graph`, `Streams`, `Details`,
+// `Next up` (GyldUiSimplification.md 2.3, owner ruling U5 of 2026-09-16). The
+// ids below did not change and must not: a stored desk layout, a wire between
+// two tabs and every link this plugin writes all resolve by them.
 
 export const GYLD_BROWSER_TOOL: ToolId = 'gyld.browser';
 export const GYLD_DETAIL_TOOL: ToolId = 'gyld.detail';

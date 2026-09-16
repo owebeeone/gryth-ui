@@ -56,4 +56,18 @@ describe('the gyld target desk', () => {
       expect(`${toolId} -> ${areaOf(toolId)}`).toBe(`${toolId} -> ${area}`);
     }
   });
+
+  it('names the four windows a reader meets plainly, in the launcher', async () => {
+    // Owner ruling U5 of 2026-09-16: the plugin's OWN labels are the plain
+    // ones, everywhere, so this target's launcher reads Graph / Streams /
+    // Details / Next up rather than four names beginning with the same word.
+    // The tool IDS above are what the preset and every stored layout resolve
+    // by, and they are untouched.
+    await expect.poll(() => Object.keys(allTools(PluginRegistryTap.get())).length).toBe(8);
+    const tools = allTools(PluginRegistryTap.get());
+    expect(tools['gyld.browser'].label).toBe('Graph');
+    expect(tools['gyld.streams'].label).toBe('Streams');
+    expect(tools['gyld.detail'].label).toBe('Details');
+    expect(tools['gyld.decidenow'].label).toBe('Next up');
+  });
 });

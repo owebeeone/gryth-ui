@@ -10,6 +10,9 @@ import {
   GYLD_DEST_STREAM_TAP, GYLD_DEST_PERSPECTIVE_TAP,
   GYLD_TAB_FOLLOW, GYLD_TAB_FOLLOW_TAP,
 } from './grips';
+import {
+  GYLD_BROWSER_TOOL, GYLD_DECIDE_NOW_TOOL, GYLD_DETAIL_TOOL, GYLD_STREAMS_TOOL,
+} from './tools';
 
 grok.registerTap(PluginRegistryTap);
 
@@ -48,7 +51,7 @@ describe('gyld plugin registration', () => {
   it('the chrome finds gyld.browser via allTools', async () => {
     await expect.poll(() => tools()['gyld.browser']).toBeDefined();
     const tool = tools()['gyld.browser'];
-    expect(tool.label).toBe('Gyld browser');
+    expect(tool.label).toBe('Graph');
     expect(tool.defaultSize).toEqual({ w: 900, h: 620 });
     expect(tool.role).toBe('stage');
     expect(typeof tool.windowComponent).toBe('function');
@@ -67,10 +70,36 @@ describe('gyld plugin registration', () => {
 
   it('advertises the record detail and the decide-now list too', async () => {
     await expect.poll(() => tools()['gyld.detail']).toBeDefined();
-    expect(tools()['gyld.detail'].label).toBe('Gyld record');
+    expect(tools()['gyld.detail'].label).toBe('Details');
     expect(tools()['gyld.detail'].role).toBe('inspector');
-    expect(tools()['gyld.decidenow'].label).toBe('Gyld decide now');
+    expect(tools()['gyld.decidenow'].label).toBe('Next up');
     expect(tools()['gyld.decidenow'].role).toBe('pulse');
+  });
+
+  it('names its windows plainly and keeps every tool id (owner ruling U5)', async () => {
+    await expect.poll(() => Object.keys(tools()).length).toBeGreaterThanOrEqual(7);
+    // The labels a launcher shows, everywhere and not only in the Gyld-only
+    // target. Decide, compare and diff keep theirs: the report names no plain
+    // word for them.
+    expect(Object.fromEntries(
+      Object.entries(tools())
+        .filter(([id]) => id.startsWith('gyld.'))
+        .map(([id, tool]) => [id, tool.label]),
+    )).toEqual({
+      'gyld.browser': 'Graph',
+      'gyld.streams': 'Streams',
+      'gyld.detail': 'Details',
+      'gyld.decidenow': 'Next up',
+      'gyld.decide': 'Gyld decide',
+      'gyld.compare': 'Gyld compare',
+      'gyld.diff': 'Gyld diff',
+    });
+    // and the IDS are untouched, because a stored layout, a wire and every
+    // link written inside this plugin resolve by them
+    expect(GYLD_BROWSER_TOOL).toBe('gyld.browser');
+    expect(GYLD_DECIDE_NOW_TOOL).toBe('gyld.decidenow');
+    expect(GYLD_DETAIL_TOOL).toBe('gyld.detail');
+    expect(GYLD_STREAMS_TOOL).toBe('gyld.streams');
   });
 
   it('seeds a sink NOTHING, so a wired window resolves its source', async () => {

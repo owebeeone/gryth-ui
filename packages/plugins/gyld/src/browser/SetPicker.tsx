@@ -110,14 +110,14 @@ export function SetPicker() {
   if (!says.offers) {
     return (
       <div className="gyld-picker gyld-picker-settling">
-        <h3>Gyld browser</h3>
+        <h3>Graph</h3>
         <p className="gyld-lead">{says.lead}</p>
       </div>
     );
   }
   return (
     <div className="gyld-picker">
-      <h3>Gyld browser</h3>
+      <h3>Graph</h3>
       <p className="gyld-lead">{says.lead}</p>
       {says.fix !== '' && <p className="gyld-fix">{says.fix}</p>}
       <div className="gyld-picker-row">

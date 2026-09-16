@@ -186,10 +186,10 @@ export function BrowserChrome({ tabId, lens, search, nextUp }: {
           type="button"
           className="gyld-open-decidenow"
           disabled={openWired === undefined}
-          title="the stream's decide-now list, wired to this browser"
+          title="the stream's decide-now list, grouped by why, wired to this browser"
           onClick={() => openWired?.(tabId, { toolId: GYLD_DECIDE_NOW_TOOL })}
         >
-          Decide now
+          Next up
         </button>
         <button
           type="button"
