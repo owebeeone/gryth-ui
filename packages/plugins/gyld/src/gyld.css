@@ -557,6 +557,40 @@
   resize: vertical;
 }
 
+.gyld-ask-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.417em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-ask-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.583em;
+  padding: 0.333em 0.5em;
+  border-left: 3px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0 5px 5px 0;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+/* An unresolved tag is MARKED, not hidden: the record cites it and this
+   build's index resolves it to nothing, which is the fact the list exists to
+   carry (MDV-7). */
+.gyld-ask-source[data-resolved='no'] {
+  border-left-style: dashed;
+}
+
+.gyld-ask-passage {
+  flex-basis: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.917em;
+  opacity: 0.9;
+}
+
 .gyld-ask-envelope-title {
   margin: 0.333em 0 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

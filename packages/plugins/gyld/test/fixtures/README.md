@@ -1,7 +1,9 @@
 # Gyld contract fixtures
 
 The `bundle/` tree is REAL Gyld output, copied verbatim from
-`gyld/artifacts/decision-streams-v6/` on 2026-09-14. It is not edited here: a
+`gyld/artifacts/decision-streams-v6/` on 2026-09-14, plus `sources.json`
+copied verbatim from `gyld/artifacts/decision-streams-v7/` on 2026-09-16 (the
+first run that emits one). It is not edited here: a
 fixture that is hand adjusted stops being evidence of what Gyld emits. The
 directory layout is the bundle layout of specification section 4.6, so the
 store tests address files by the same relative paths the real stores use. Where
@@ -13,6 +15,22 @@ replaced a `v2` one. What the v5 run added is what the stream, decide and diff
 windows are built against: `fork-a` beside the two links, a `lenses` manifest
 on every record, one member of the parameterised `neighbourhood` family per
 stream, and the three emitted diffs.
+
+`sources.json` is the SOURCE INDEX of GyldAskAgent.md section 5: nine
+documents, forty three resolved tags and twenty one unresolved ones, with
+`cited_by` carrying every question's own `sources` and `matrix` citations —
+the only emitted place those appear at all, since no bundle carries an
+`authoring` sidecar. It is from the v7 run rather than v6 because v6 emitted
+none, and it indexes the SAME streams the rest of this bundle carries, so its
+`cited_by` slots join the v6 records here. Two fields go beyond the design's
+sketch and are read: `resolver` on each tag (which of `table-row-id`,
+`heading-number` or `log-prose` matched it, where `family` is the tag's shape)
+and `truncated` (the emitter capped the passage). Paths in `documents[].path`
+and `tags[].path` are relative to the recorded `root`, whose `name` supplies
+the workzone prefix. `AZ-7` RESOLVES in this index — `GladeAuthzModel.md`
+declares it as a table row — so the unresolved example the tests use is `Q2a`,
+the id a stream minted in the matrix namespace for a row the base matrix does
+not have.
 
 The v6 run is that bundle re-emitted after every overlay module gained the
 `gyld-stream-record:` block Gyld now discovers streams by

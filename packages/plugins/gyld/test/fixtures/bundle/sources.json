@@ -1,0 +1,1387 @@
+{
+  "format": "gyld.sources.v1",
+  "written": "2026-09-16T10:37:26Z",
+  "root": {
+    "option": "--sources-root",
+    "given": "../../glade-wz",
+    "name": "glade-wz",
+    "found": true
+  },
+  "documents": [
+    {
+      "id": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "901a33dfbff6fa04687e9acfaa73090e96450ccdd89569282b233863eab7a4d0",
+      "reason": null
+    },
+    {
+      "id": "GladeDecisionGraph",
+      "path": "dev-docs/GladeDecisionGraph.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "473b88ff635d4a2bc44402437c56a478a2bfea2fd3c19a97c4a3f69e5b0b20ed",
+      "reason": null
+    },
+    {
+      "id": "IrohGladeMapping",
+      "path": "dev-docs/IrohGladeMapping.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "fc8309a0583db72ba91faad9f8bff9bd5aededbd0dda8e70a075683cdbe736f9",
+      "reason": null
+    },
+    {
+      "id": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "keys": [
+        "table-row-id",
+        "heading-number",
+        "log-prose"
+      ],
+      "found": true,
+      "digest": "43806876948b570b1c7459d68d359023f47491eeb31f6671216f4fb1d55ab74d",
+      "reason": null
+    },
+    {
+      "id": "IrohReview",
+      "path": "glade/dev-docs/IrohReview.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "c2cedcb9d064946f37ef5939b1933a13b36d02f60bd04771e7ecc89b9c5edbe1",
+      "reason": null
+    },
+    {
+      "id": "GladeAuthzModel",
+      "path": "dev-docs/glade/GladeAuthzModel.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "1901cfd4a0b855a1d1d393f71598a9e31b63b9a2915641f2ec54251ee6b224e3",
+      "reason": null
+    },
+    {
+      "id": "GladeWorkspaceDirectory",
+      "path": "dev-docs/glade/GladeWorkspaceDirectory.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "ce3311d22492c66d7e1996a696dcb14914b7abf46e83e5d5360b12741a1a5923",
+      "reason": null
+    },
+    {
+      "id": "GladeSubstrateV1",
+      "path": "glade/dev-docs/GladeSubstrateV1.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "201474d911788b3bebd728ca1727759e8750f9a6e875ce367902b0b1829f1a88",
+      "reason": null
+    },
+    {
+      "id": "GladeGrythSecurityModelAnalysis",
+      "path": "glade/dev-docs/glade_sec_model-55/GladeGrythSecurityModelAnalysis.md",
+      "keys": [
+        "table-row-id",
+        "heading-number"
+      ],
+      "found": true,
+      "digest": "03dfcec381ae7386d3b1b4a56c96cd931b83c5cb12f69a300dc62e864e0445f1",
+      "reason": null
+    }
+  ],
+  "tags": [
+    {
+      "tag": "AZ-10",
+      "family": "row-id",
+      "document": "GladeAuthzModel",
+      "path": "dev-docs/glade/GladeAuthzModel.md",
+      "resolver": "table-row-id",
+      "heading": "9. Open questions",
+      "lines": [
+        339,
+        339
+      ],
+      "passage": "| AZ-10 | Blind-relay tier semantics: store-and-forward ciphertext vs pure pipe; what survives of resume/heads | design (later) |",
+      "digest": "d8eb379ebe292c4d07ec73756308cf3317d2839428049ad89ebf511cf752e4eb",
+      "truncated": false
+    },
+    {
+      "tag": "AZ-3",
+      "family": "row-id",
+      "document": "GladeAuthzModel",
+      "path": "dev-docs/glade/GladeAuthzModel.md",
+      "resolver": "table-row-id",
+      "heading": "9. Open questions",
+      "lines": [
+        332,
+        332
+      ],
+      "passage": "| AZ-3 | OIDC/AD bridge in v1, or single-user + manual grants first? (the trust-plug interface exists either way) | Gianni (product) |",
+      "digest": "aefdd5cc4163a178d81644424f803806565f6a390ff3047f3d2aa8c073ae2556",
+      "truncated": false
+    },
+    {
+      "tag": "AZ-7",
+      "family": "row-id",
+      "document": "GladeAuthzModel",
+      "path": "dev-docs/glade/GladeAuthzModel.md",
+      "resolver": "table-row-id",
+      "heading": "9. Open questions",
+      "lines": [
+        336,
+        336
+      ],
+      "passage": "| AZ-7 | Operator/org root custody and rotation (the DC fleet's chain root) \u2014 mirrors WD-1 at org scale | Gianni + design |",
+      "digest": "f3e7c9fa801c862ea05a1956f3873eff3bbbc5f1bcfa1d7fb046fc71994e5601",
+      "truncated": false
+    },
+    {
+      "tag": "GDL-010",
+      "family": "decision-log",
+      "document": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "resolver": "table-row-id",
+      "heading": "Open Decisions",
+      "lines": [
+        28,
+        28
+      ],
+      "passage": "| `GDL-010` | Metadata exposure | Which declaration-envelope fields, workspace ids, share ids, provider claims, and transport topics are allowed to be visible to relay-only peers? | open |",
+      "digest": "fb0127da1dd5796c96ce9ff86b8b8c61327afda659f30cb3b84834aecbd02f1e",
+      "truncated": false
+    },
+    {
+      "tag": "GDL-036",
+      "family": "decision-log",
+      "document": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "resolver": "table-row-id",
+      "heading": "Open Decisions",
+      "lines": [
+        54,
+        54
+      ],
+      "passage": "| `GDL-036` | System-data storage seam | Defer registry/gryth-data storage design behind two seams: RegistryApi (queries-over-fold + record appends with origin attribution \u2014 NEVER get/set-config-object) and StoreApi (whole-state taut-message blob now \u2192 SQLite engine later; SQLite is a store engine, never the replication mechanism \u2014 replication stays ops). Stated by Gianni 2026-07-06; pinned in `glade/GladeSystemDataSeam.md`; the atlas is the regression net (no rung may change a trace). | **ratified 2026-07-07** |",
+      "digest": "1e349a5c145ab4bd74d84941ceeae3b6a14ceeccd23ee148820d2660c315611b",
+      "truncated": false
+    },
+    {
+      "tag": "GDL-037",
+      "family": "decision-log",
+      "document": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "resolver": "table-row-id",
+      "heading": "Open Decisions",
+      "lines": [
+        55,
+        55
+      ],
+      "passage": "| `GDL-037` | App/substrate split + `.glade` re-scope | Base glade is app-agnostic (transport, endpoint discovery, ephemeral endpoint management, ACL enforcement, `~/.glade/sys` persistence \u2014 all runtime-record-driven); applications (grazel = gryth's) declare endpoint productions in `<app>.glade` \u2014 data-only cross-language declarations (glade ids, shapes, key types) + ACL seeds that COMPILE TO grant records (fold stays the only runtime authority). Dynamic grip-context-graph sharing deferred as a glial-grip mechanism (rides BindingDecl-as-record; enables headless AI clients; GDL-004/GDL-030). Stated by Gianni 2026-07-06; pinned in `glade/GladeDeclSurface.md`. | **ratified 2026-07-07** |",
+      "digest": "edc16965dca6934ceea435f5e119fae8faf576a5b6848169980f242f74774e8f",
+      "truncated": false
+    },
+    {
+      "tag": "GDL-041",
+      "family": "decision-log",
+      "document": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "resolver": "table-row-id",
+      "heading": "Open Decisions",
+      "lines": [
+        58,
+        58
+      ],
+      "passage": "| `GDL-041` | Canonical Taut shape catalogue | Adopt the canonical catalogue pinned by `TautShapeCatalogAdoption.md`: engines are `value`, `atom`, `log`, `stream`, `swmr`, and `crdt`; `snapshot_delta` and `text_crdt` are profiles over SWMR and CRDT; `unary` is an interaction kind; Glade `exchange` remains a separate correlated service path; `message` is unsupported; `window` is an application projection over an explicit base shape. Recognition MUST NOT imply runtime support, and unsupported paths MUST fail closed before mutation. This supersedes D8/H-P4 category wording while preserving their file-view and collaborative-editing guarantees. | **ratified 2026-08-28** |",
+      "digest": "57d7ce8838eed21836647cae1d215c3ebe308cf39859f73b882eafe3696734db",
+      "truncated": false
+    },
+    {
+      "tag": "GDL-048",
+      "family": "decision-log",
+      "document": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "resolver": "log-prose",
+      "heading": "Notes",
+      "lines": [
+        88,
+        94
+      ],
+      "passage": "GDL-048 \u2014 Owner selection, 2026-09-09: use **Shaku** for Glade dependency injection\nand record it in the Gyld architecture. Candidate 1 revision 3 adds the assembly-only\nlibrary dependency, with a regression witness that domain components/contracts do\nnot depend on it. This selects the technology, not a production Cargo installation,\npublic-trait change, completed async bridge or automatic lifecycle guarantee.\nThe [reading map](arch1/ReadingMap.md) separates product capabilities from wiring\nand assurance views; its display grouping does not change package boundaries.",
+      "digest": "55760b02748c6f379783416e6e81bce3946f4547c2542acf4693278d12e87c81",
+      "truncated": false
+    },
+    {
+      "tag": "GDL-049",
+      "family": "decision-log",
+      "document": "DecisionLog",
+      "path": "dev-docs/DecisionLog.md",
+      "resolver": "log-prose",
+      "heading": "Notes",
+      "lines": [
+        73,
+        86
+      ],
+      "passage": "GDL-049 \u2014 Owner direction, 2026-09-12: use **sdax-rs** as Glade's async orchestration\nmanager. sdax-rs is the owner's Rust declarative async lifecycle library (crates `sdax`\nstd-only core, `sdax-tokio` runtime adapter, `sdax-testkit`; stages 0\u20133 landed with\nconformance, Monte Carlo and adversarial review; private at github.com/owebeeone/sdax-rs,\nnot yet on crates.io). It sits at the runtime host (Runtime services and NodeAssembly),\nbeside owner-selected Shaku; domain contracts and pure crates stay framework-free (arch1\nA5 is unchanged: no domain API requires it). Consequences: the open async witness\n(DI-E01..E04, AR-08) becomes the sdax-rs plus Shaku witness; the matrix row R28/Q10\nlean \"compose Tokio primitives in-house\" is superseded by this direction; the frozen\nresearch report `Rust Async Lifecycle Orchestration.md` predates sdax-rs and is stale on\nits \"no Rust equivalent exists\" finding, kept unedited as the sdax program's input.\nPublication posture is a shared blocker with garns-rust: Glade can consume it as a Git\ndependency now, from crates.io only after publication. This records a direction, not a\ncompleted integration or a lifecycle conformance result.",
+      "digest": "1fb0b47a125d04cba8f15de6b327c8a7d3423360cd66e12aaa407834e0f97261",
+      "truncated": false
+    },
+    {
+      "tag": "GQ-2",
+      "family": "row-id",
+      "document": "GladeSubstrateV1",
+      "path": "glade/dev-docs/GladeSubstrateV1.md",
+      "resolver": "table-row-id",
+      "heading": "10. Open decisions (gate the build)",
+      "lines": [
+        283,
+        283
+      ],
+      "passage": "| GQ-2 | Transport: **iroh**, node-to-node only. Browser\u2194node is a websocket carrying the same frames. wasm/browser p2p is dead (experiment concluded, not useful); libp2p (GLP-0001) was the proving ground, not the keeper. |",
+      "digest": "e7509f719103cb84285cf5964d68772aecc96e0677c76ad0b97125ba19151a34",
+      "truncated": false
+    },
+    {
+      "tag": "GQ-9",
+      "family": "row-id",
+      "document": "GladeSubstrateV1",
+      "path": "glade/dev-docs/GladeSubstrateV1.md",
+      "resolver": "table-row-id",
+      "heading": "10. Open decisions (gate the build)",
+      "lines": [
+        287,
+        287
+      ],
+      "passage": "| GQ-9 | Causal-ref encoding: **hybrid** \u2014 `(origin, seq)` ids + cross-log `(origin, seq)` refs + per-origin hash chain (`prev-hash`). Version-vector sync, signed checkpoints for compaction; full Merkle content addressing deferred as an additive layer. |",
+      "digest": "a1d4c448c19e255b721f67a4f1ac1f159f9fc0b5e3bba746de1917fd2748361d",
+      "truncated": false
+    },
+    {
+      "tag": "I-2",
+      "family": "iroh-mapping",
+      "document": "IrohGladeMapping",
+      "path": "dev-docs/IrohGladeMapping.md",
+      "resolver": "table-row-id",
+      "heading": "8. Decisions for the owner",
+      "lines": [
+        442,
+        442
+      ],
+      "passage": "| I-2 | Dissemination scope enforcement (S2) | T \u00b7 N \u00b7 C | **N for the fixed-peer slice**; T if GDL-010 forbids id/head exposure to non-granted nodes; C as the AZ-10 tier |",
+      "digest": "69fbb864c27977a43523e351f69524db8c71d42f49c6861c6a478b2b0fb30059",
+      "truncated": false
+    },
+    {
+      "tag": "IrohGladeMapping \u00a74.2",
+      "family": "heading",
+      "document": "IrohGladeMapping",
+      "path": "dev-docs/IrohGladeMapping.md",
+      "resolver": "heading-number",
+      "heading": "4.2 Shape B \u2014 A plus `iroh-gossip` as the dissemination overlay",
+      "lines": [
+        136,
+        175
+      ],
+      "passage": "### 4.2 Shape B \u2014 A plus `iroh-gossip` as the dissemination overlay\n\nUse gossip topics to *announce* directory and home-share changes to all\ninterested trusted nodes; keep Glade's sync round (`SyncStart`/`SyncOps`/`SyncEnd`)\nas the repair path and the only path that moves canonical bytes a peer is missing.\n\n- **Topic per share** (`TopicId = hash(share id)`), or per share class (home\n  shares vs application shares). The directory design's gossip fan-out bound\n  (\u2264 8 per node) becomes HyParView's active view (about five neighbours per\n  topic) and PlumTree's tree.\n- **Payload**: either the exact accepted canonical `SignedOp` bytes (a `DirOp`;\n  records are \u2264 16 KiB, so the 4 KiB default must be raised) or only per-origin\n  heads/digests, with the peer pulling the gap. Heads-only keeps announcements\n  small and turns gossip into a change notification; INV-D5 (gossip only after\n  persist) is satisfied either way because the announcement is emitted after the\n  host's durable commit, exactly as today's `Gossip` effect.\n- **What gossip's weak guarantees cost**: nothing semantic. Absence of author\n  binding is irrelevant (records are B5-signed and chain-verified per origin);\n  absence of ordering or delivery is absorbed by the monotone fold and the sync\n  round (INV-D6 already assumes loss, reorder and duplication); `Lagged` maps to\n  \"schedule a sync round\".\n- **What it costs in trust**: HyParView membership is open to any endpoint that\n  knows the `TopicId` and is accepted on the gossip ALPN. The review records no\n  per-topic admission hook (*unverified*: check `iroh-gossip` for one before\n  relying on this). Per-share dissemination scope therefore has to be enforced\n  either by which peers are accepted at all (\u00a75.2, model T) or by running one\n  `Gossip` instance per share with its own ALPN (`Gossip::builder().alpn(..)`) and\n  rejecting unauthorised peers per ALPN in `EndpointHooks`. The second option\n  multiplies QUIC connections (one per peer per ALPN) and swarms; the first\n  accepts that a node trusted for share A learns *that* share B changed (ids and\n  heads, not payloads) \u2014 a GDL-010 metadata question, not a confidentiality\n  breach of content.\n- **Status risk**: `iroh-gossip` is 0.x and outside the 1.0 wire promise, but it\n  is the most recently pushed protocol repo and Delta Chat runs it on hundreds of\n  thousands of devices. Pin it; keep it behind the carrier port so the pull-based\n  path still works without it.\n\nFit: the kernel stays topology-blind (Discovery Model \u00a75: locality later arrives\nas records and a smarter environment, \"zero kernel change\"); gossip is exactly\nthe \"smarter environment\". GDL-032 holds because the overlay carries Glade",
+      "digest": "7f55df43fcf20acdf8c4a690074d3a6b0840bee3f41a29191f7d4ad05ad97ce0",
+      "truncated": true
+    },
+    {
+      "tag": "IrohGladeMapping \u00a74.3",
+      "family": "heading",
+      "document": "IrohGladeMapping",
+      "path": "dev-docs/IrohGladeMapping.md",
+      "resolver": "heading-number",
+      "heading": "4.3 Shape C \u2014 protocol crates as the replicated substrate",
+      "lines": [
+        180,
+        214
+      ],
+      "passage": "### 4.3 Shape C \u2014 protocol crates as the replicated substrate\n\n**`iroh-docs` for records: rejected on semantics.**\n\n| Glade record model (Substrate \u00a72, Discovery Design \u00a74) | `iroh-docs` | Consequence |\n|---|---|---|\n| Per-origin append log, `(origin, seq)` ids, `prev`-hash chain, equivocation provable | `(namespace, author, key)` \u2192 latest record; last-writer-wins on author timestamp; no chain | Loses replay, equivocation evidence and per-origin sequencing; GQ-9 cannot be expressed |\n| Fold selected by shape (`log`, `value`, `swmr`, `crdt`\u2026); time never enters the fold | One merge rule (LWW by timestamp), future-dated entries accepted up to 10 min | Violates the no-time-in-fold rule; one shape only |\n| Owner-rooted, per-principal, attenuable, revocable grants; revocation wins | Write capability = possession of the namespace secret; read = namespace public key; per namespace only | A leaked secret is an unrevocable, unattributable writer; no attenuation, no per-verb or per-key scope (AZ-1 stays impossible) |\n| Retention and compaction are contract decisions (R2-11 deferred, chain retained) | `delete_prefix` tombstones, GC via blobs tags | Different deletion semantics; no signed checkpoint concept |\n| Cross-language parity (Rust/TS/Python corpus) | Rust crate, excluded from official bindings | Browser folds (GQ-4/GQ-8) impossible |\n\n`iroh-smol-kv` shares the LWW-over-gossip shape with per-writer signatures; it is\ncloser to a presence/hint store than to Glade's records and adds nothing the\nGlade fold does not already do. Neither crate helps with scope: a namespace is\nthe only boundary, and it is coarser than `(share, glade_id, key)` and finer\nthan nothing useful.\n\n**`iroh-blobs` for bulk payloads: viable, gated.** Content-addressed, verified,\nresumable transfer is genuinely absent from Glade and needed by file suppliers,\nsnapshot/checkpoint bootstrap (AZ-12 signed checkpoints; the deferred R2-11\ncompaction), large exchange results and invite bundles. Conditions:\n\n- **Authorization is the provider event handler only.** Any peer may fetch any\n  hash the store holds unless the handler rejects. Glade must map hash \u2192 owning\n  share \u2192 `check()` against the requesting `remote_id()`'s node/principal binding,\n  per request, re-evaluated when grants change. Store scoping (one `FsStore` per\n  share, or tags per share) is a mitigation, not enforcement.\n- **A new port.** The candidate architecture has no bulk-transfer port; it would\n  be a concrete I/O adapter behind a contract with the same admission and\n  budget semantics as the carrier, not a second delivery path that bypasses\n  `Delivery`.\n- **Status.** 0.x, \"not production quality\" per its own docs (possibly stale),\n  memory-store only in wasm (irrelevant under GQ-2). Adopt only when a supplier\n  slice needs it, with the 1.x pin and a real-I/O conformance tier.",
+      "digest": "295950d00828c1c845021c6ebdc64dad13c6c204d4f132ce45a48218945fceba",
+      "truncated": false
+    },
+    {
+      "tag": "IrohGladeMapping \u00a75.2",
+      "family": "heading",
+      "document": "IrohGladeMapping",
+      "path": "dev-docs/IrohGladeMapping.md",
+      "resolver": "heading-number",
+      "heading": "5.2 The undecided S2 decision: how dissemination scope is bounded",
+      "lines": [
+        245,
+        281
+      ],
+      "passage": "### 5.2 The undecided S2 decision: how dissemination scope is bounded\n\nThree enforcement models are consistent with the corpus. They are not exclusive;\nthe decision is which one the first live slice relies on.\n\n| Model | Rule | Iroh support | Glade cost | Trade-off |\n|---|---|---|---|---|\n| **T \u2014 topology-scoped** | A node may connect on the protocol carrying share X only if it is authorised for X | `EndpointHooks` reject per `(key, ALPN)`; one gossip instance/ALPN per share (or per placement class) | Per-share ALPN registry at runtime (`custom-router` pattern); the accept hook needs the current placement fold | One QUIC connection per peer per ALPN; churn on grant change; announcements never reach unauthorised nodes, so GDL-010 is answered by construction for node peers |\n| **N \u2014 node-trust-scoped** (the corpus's current lean) | Any accepted node may receive what its *operator* is granted (`replica.hold`); the serve/fan-out hop enforces per-session grants; INV-5 checks a node carries `replica <share>` only when its operator holds it | Accept by key against the known-node set; everything else at Glade's serve seam | One accept policy; per-share checks in `mesh` before serving or forwarding a zone (the drop-in filter point the peer-sync notes named) | Shared gossip topics leak that share ids changed and their heads to nodes not granted that share; content does not flow without a grant. Simplest to build; matches AZ \u00a77 \"node\u2194node replication is governed by node trust\" |\n| **C \u2014 crypto-scoped** | Per-share payload encryption; nodes without keys route and store ciphertext (AZ-10 blind-relay tier) | Only transport E2E (irrelevant here: the concern is trusted-but-unauthorised *nodes*, not the wire) | Key distribution, rotation, and the forfeit of node-side folds/windows/services on that tier | The only model that bounds a compromised or over-trusted node; explicitly \"named, not built\" in AZ \u00a77a |\n\nRecommendation for the first slice (build entry: one namespace, fixed\nauthorised peers): **N**, because the fixed-peer configuration already is a\nnode-trust set, it needs no new ALPN machinery, and its leak is bounded to ids\nand heads. **T** is the hardening step if Shape B is adopted and GDL-010 rules\nthat share ids and heads must not reach nodes outside a share's placement set.\n**C** stays a tier decision (AZ-10). Whichever is chosen, the metadata table in\nthe security analysis (relay-only vs store-only peers) should list, per model,\nexactly which of `TopicId`, share id, origin ids and head hashes a non-granted\nnode observes; that table is the deliverable GDL-010 needs, and iroh cannot\nproduce it.\n\nTwo things every model needs that do not exist yet:\n\n1. **A transport-key binding record.** The directory identifies nodes by\n   `sha256(node.key)`; iroh authenticates the endpoint key. Nothing replicated\n   binds the two. Address lookup (Shape A), gossip peer identity (Shape B), blobs\n   provider authorisation (Shape C) and accept-time policy (all models) all need\n   \"endpoint key K is transport for Glade node N\", signed by N's chain. The\n   discovery design already has `NodePrincipalBinding` in `KernelConfig`; the\n   security analysis already names `NodeBinding` with an `iroh_node_signature`\n   proof kind. This is a record kind and a fold rule, not an iroh feature.\n2. **The accept-time view.** `EndpointHooks` run before any Glade frame; they\n   need a read-only, revision-identified view of the current node/placement fold\n   (A1/A4: evidence supplied, never fetched from inside the evaluator). That is\n   an `Admission` consumer of a `Directory` projection, wired through\n   `NodeScope`, and it must fail closed while the clock is `Uncertain`.",
+      "digest": "2aab89ba8cf03aaf907176b158f2b13de047f43282db018e129f4c50f1f756d1",
+      "truncated": false
+    },
+    {
+      "tag": "IrohReview \u00a71",
+      "family": "heading",
+      "document": "IrohReview",
+      "path": "glade/dev-docs/IrohReview.md",
+      "resolver": "heading-number",
+      "heading": "1. Summary",
+      "lines": [
+        18,
+        43
+      ],
+      "passage": "## 1. Summary\n\n- **iroh 1.0.0 shipped 2026-06-15.** Point releases since: 1.0.1 (06-29), 1.0.2\n  (07-07, `iroh-relay` security fix), 1.0.3 (07-21), 1.1.0 (09-01, three security\n  fixes), **1.2.0 (09-09, current)**. n0's stated plan is maintenance releases\n  every few weeks, not new features.\n- **Glade is on 1.0.2** (`iroh = \"1\"` in `node/Cargo.toml`; the lockfile resolves\n  1.0.2).\n- **1.0 commits to wire compatibility** across all 1.x minors and across the\n  official language bindings; wire changes only at a major.\n- **The QUIC stack is n0's own `noq`** (a diverged quinn fork carrying multipath,\n  QUIC Address Discovery and NAT-traversal extensions). `iroh-quinn` is legacy\n  and unused by 1.x.\n- **What the core gives you:** dial-by-public-key, mutually authenticated QUIC\n  (TLS 1.3 with raw public keys), hole punching with relay fallback, multipath,\n  ALPN-multiplexed protocols, address lookup (DNS/pkarr, mDNS, DHT), tickets.\n- **What it does not give you:** authorization/ACLs (only accept/reject hooks),\n  reliable broadcast, store-and-forward messaging, a text CRDT. Those are either\n  protocol crates (all still 0.x) or the application's job.\n- **Protocol crates are 0.x and outside the 1.0 promise:** `iroh-blobs` (whose\n  own docs still say it is not production quality), `iroh-gossip`, `iroh-docs`.\n  The official Python/Node/Swift/Kotlin bindings expose only the core endpoint\n  surface.\n- **Hosted infrastructure** is \"Iroh Services\" (formerly n0des): free\n  rate-limited public relays and DNS with no SLA; paid authenticated relays from\n  $19/month; everything self-hostable with the same binaries.",
+      "digest": "b355ac06cc5d44fee3490165e0712d71ff3003eb8b499a66f57b1c0c03400f20",
+      "truncated": false
+    },
+    {
+      "tag": "IrohReview \u00a711",
+      "family": "heading",
+      "document": "IrohReview",
+      "path": "glade/dev-docs/IrohReview.md",
+      "resolver": "heading-number",
+      "heading": "11. Observations for glade (non-normative)",
+      "lines": [
+        570,
+        598
+      ],
+      "passage": "## 11. Observations for glade (non-normative)\n\n- **Current use** (`node/src/iroh_carrier.rs`): `presets::Minimal`, relays and\n  address lookup disabled, direct localhost dial by\n  `EndpointAddr::from_parts(id, [TransportAddr::Ip(sock)])`, ALPN\n  `glade/node/1`, one bidirectional stream per peer link, `Endpoint::accept`\n  driven by hand (no `Router`). The glade node id is derived separately from the\n  iroh key (`GladeDirectoryNotes.md`), so iroh's authentication proves the\n  transport key and the HELLO seam binds it to the directory identity.\n- **Version gap**: the lock resolves 1.0.2; 1.1.0 (2026-09-01) fixed a\n  deserialization panic on crafted `EndpointAddr` `CustomAddr` variants, a relay\n  batch-message CPU pin, and NAT-probe misrouting. The relay and NAT items are\n  moot while `Minimal` stays; the `EndpointAddr` one matters as soon as\n  addresses are parsed from untrusted input (tickets, directory records).\n  `iroh = \"1\"` already admits 1.2.0; nothing was bumped in this review.\n- **Unused capabilities that map onto open design items**: `EndpointHooks`\n  (accept-time rejection before any glade frame is read); `RelayMode::Custom`\n  with a self-hosted `iroh-relay` (the discovery model's \"public iroh relay\"\n  assumption meets n0's \"not suitable for production\" terms for the free tier);\n  `iroh-dns-server` as a private pkarr / DNS origin if node discovery ever\n  moves off the directory; `iroh-tickets` for out-of-band bootstrap strings;\n  `irpc` as an alternative to the hand-framed protocol.\n- **Stale statements in existing docs**: `GLRustiesP2PStory.md` still says iroh\n  is pre-1.0 and that 1.0 slipped; 1.0 shipped 2026-06-15 and 1.2.0 is current.\n  Its browser findings (relay-only, no WebTransport) and its characterization of\n  `iroh-docs` as keyed LWW rather than a text CRDT remain accurate.\n- **Bindings**: the official Python / Node / Swift / Kotlin bindings expose the\n  endpoint surface only, and browser iroh stays relay-only; both are consistent\n  with GQ-2 (browser\u2194node over websocket, iroh node-to-node only).",
+      "digest": "734cf92a0d690c3c5148f84df51637be89de9474c329a164332a8f5c7774e476",
+      "truncated": false
+    },
+    {
+      "tag": "IrohReview \u00a77",
+      "family": "heading",
+      "document": "IrohReview",
+      "path": "glade/dev-docs/IrohReview.md",
+      "resolver": "heading-number",
+      "heading": "7. Hosted services (\"Iroh Services\", formerly n0des)",
+      "lines": [
+        461,
+        488
+      ],
+      "passage": "## 7. Hosted services (\"Iroh Services\", formerly n0des)\n\n- **Community tier, free**: public relays in the US, EU and Singapore; DNS and\n  pkarr relay at `dns.iroh.link`; 7-day metrics. Terms: latest stable iroh only,\n  rate limited, no uptime guarantee, \"not suitable for production\", and n0\n  advises against public relays for sensitive data because connection metadata\n  is visible to the relay operator. Relay access for 0.9x / RC builds ends\n  2026-09-30, for 0.35 on 2026-12-31.\n- **Pro, $19/month**: authenticated shared relays (per-project API key,\n  launched 2026-09-08), 10,000 concurrent connections, 5 MB/s rate limit,\n  100 GB egress, 30-day metrics, support tickets.\n- **Dedicated, $199/month per region** (add-on to Pro): dedicated relays, 60,000\n  concurrent connections, no rate limit, 250 GB egress, version pinning, custom\n  DNS.\n- **Enterprise**: custom; BYOC / on-prem / multi-cloud, SLAs.\n- Overages: $0.003 per endpoint, $0.09 per GB egress, $1.49 per 1k metric data\n  points per minute.\n- **Authenticated relays** (2026-07-30): relays admit only endpoints presenting\n  a signed capability token bound to their key; a leaked relay URL alone is\n  useless. Self-hosted relays get the same via an allowlist or a shared\n  password.\n- **Client crate `iroh-services` 1.0.0**: `iroh_services::preset()` with\n  `.relays([...])` and `.api_secret_from_env()` (`IROH_SERVICES_API_SECRET`);\n  metrics are reported after `endpoint.online().await`, the dashboard updates\n  once a minute. Its predecessor `iroh-n0des` stopped at 0.10.0 (2026-02-11);\n  the n0des name survives only in older material and the metrics host name.\n- Self-hosting everything (relay + DNS server) is supported and free; the\n  binaries are the ones n0 runs.",
+      "digest": "16bc6d9fd1b63ca6e740b9fb1eb37d298b4c0a332a734488adeaebe2ed76d2ae",
+      "truncated": false
+    },
+    {
+      "tag": "Q1",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        148,
+        148
+      ],
+      "passage": "| Q1 | Relay and DNS posture for the first real-route slice: self-host, Iroh Services Pro, or n0 community for development only? | R2, R3 | Self-host both binaries; revise the discovery model's \"public iroh relay\" wording |",
+      "digest": "9beac0f54f45555b41008d77bf16af96bab1d1b027cd39166c5e17565c0bdb14",
+      "truncated": false
+    },
+    {
+      "tag": "Q10",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        157,
+        157
+      ],
+      "passage": "| Q10 | Async lifecycle: **directed to sdax-rs (GDL-049)**; remaining question is the witness and the dependency posture (Git now, crates.io after publication) | R28 | Run the AR-08 and DI-E01..E04 witness on sdax-rs plus Shaku; keep Tokio primitives as the fallback if it fails |",
+      "digest": "e09c625ab5cac6d315ffffc5d3ff6520539f8d189f2660912ebf686440665e6e",
+      "truncated": false
+    },
+    {
+      "tag": "Q11",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        158,
+        158
+      ],
+      "passage": "| Q11 | Key custody and recovery posture (WD-1, AZ-7, SEC-55-D5) | R15 | Product decision first; no library choice is meaningful before it |",
+      "digest": "684e1b42b82cc5a16b19c4e036acc917e67d10e06c143a04a8d83d98c43c02a0",
+      "truncated": false
+    },
+    {
+      "tag": "Q12",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        159,
+        159
+      ],
+      "passage": "| Q12 | Sharded registry and index growth: which parts, if any, ever need ordered coordination, and which library would carry it? | R9 | Trusted mapping only now; reopen with a failure model |",
+      "digest": "a86eda95efc26cb98b89ab5848d8216b03cfad98c1cece272da72c7f0bac37ad",
+      "truncated": false
+    },
+    {
+      "tag": "Q13",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        160,
+        160
+      ],
+      "passage": "| Q13 | Deterministic simulators for adapter tiers (madsim/turmoil) and dependency-policy tooling (cargo-deny and friends): evaluate or not? | R31, R32 | Not before the first real-route slice |",
+      "digest": "71c75778ea8acfbd15c17f3c19ce32053697bef9f93d5cc78a15b809bd529c72",
+      "truncated": false
+    },
+    {
+      "tag": "Q2",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        149,
+        149
+      ],
+      "passage": "| Q2 | Bump iroh to 1.2.0 now and pin protocol crates individually? | R1 | Yes; nothing is parsed from untrusted addresses safely on 1.0.2 |",
+      "digest": "46f4c09042a67089a68e1e8e2f1912041a39bca0233a30f2ddadb62ea2ec7655",
+      "truncated": false
+    },
+    {
+      "tag": "Q3",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        150,
+        150
+      ],
+      "passage": "| Q3 | Transport-key binding: a new record kind under the node chain, or one key for both transport and node identity? | R1, R3 | Record kind; keep the identity split |",
+      "digest": "26082e471cbd3bb98bdc9adc0ead7e3fc3b90a14ccb9a4628afa911f465b33cd",
+      "truncated": false
+    },
+    {
+      "tag": "Q4",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        151,
+        151
+      ],
+      "passage": "| Q4 | Dissemination: keep the Glade sync round only, or adopt `iroh-gossip` behind the carrier port once the scope model (topology, node trust or cryptography) is chosen? | R8, R14 | Sync round for the fixed-peer slice; gossip after the scope decision, pinned |",
+      "digest": "818b725fe11598733da13644c3b40a264704ac11727a657af038d450735ac523",
+      "truncated": false
+    },
+    {
+      "tag": "Q5",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        152,
+        152
+      ],
+      "passage": "| Q5 | Bulk transfer: `iroh-blobs` behind a new port, own chunked streaming, or defer until a supplier needs it? | R23 | Defer; adopt blobs behind a port on the first bulk supplier |",
+      "digest": "106e4c20f5bca39c02e5d1a593560c408b7fecc054e472f7ff6e1b6be49881e5",
+      "truncated": false
+    },
+    {
+      "tag": "Q6",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        153,
+        153
+      ],
+      "passage": "| Q6 | Capability proof family: custom signed taut grants, Biscuit, UCAN, macaroons, CWT or hybrid (SEC-55-D1)? | R12 | Custom taut grants first; foreign families only if an interoperability need appears |",
+      "digest": "08ffe923e99bc7083dc0377dce193926a5467a4da9555ceafba2ef8712608df9",
+      "truncated": false
+    },
+    {
+      "tag": "Q7",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        154,
+        154
+      ],
+      "passage": "| Q7 | Which enterprise identity adapters, if any, in v1 (AZ-3)? | R13 | None in v1; keep the trust-provider interface |",
+      "digest": "47a677451339b89fd60b54b73853fc827a14b2b212624383f1eaa63b28c920b3",
+      "truncated": false
+    },
+    {
+      "tag": "Q8",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        155,
+        155
+      ],
+      "passage": "| Q8 | Store engine sequencing: when does SQLite replace the whole-state blob, and is redb worth an evaluation? | R19 | Blob until query volume or size hurts; evaluate redb only with a measured need |",
+      "digest": "ffb1132c66b7f831698598b25f56b2622afba21e3cfa2e511ee0d9cebb62afef",
+      "truncated": false
+    },
+    {
+      "tag": "Q9",
+      "family": "matrix-row",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "4. The buy/build questions to answer",
+      "lines": [
+        156,
+        156
+      ],
+      "passage": "| Q9 | Text CRDT engine: keep the own `text_crdt` profile, or admit yrs/Yjs or Loro as a second profile engine? | R21 | Keep the own profile; admit a second engine only through a profile with its own conformance rows |",
+      "digest": "35af66ffcf0d053549e685ff1ce4f774c506f35839baebc5cf284f8641ef2648",
+      "truncated": false
+    },
+    {
+      "tag": "R14",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "C. Identity, permission and isolation",
+      "lines": [
+        79,
+        79
+      ],
+      "passage": "| R14 | Scope and isolation: domain/zone/surface tuple, identity-bound private zones, canonical keys, no aliasing (GPI-09; ScopeIsolation; GDL-039; AZ-16/17) | DECIDED vocabulary, OPEN axes | No external component expresses it; iroh offers only accept-by-key-and-ALPN. | `canonicalize_scope` in Binding; zone-key resolver; remaining axis vocabulary (GDL-039 open items) |",
+      "digest": "dc47ecae1247efe0a18e8038a66da0179834c83cbb99a1cab1a95d64d0d1e382",
+      "truncated": false
+    },
+    {
+      "tag": "R27",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "G. Runtime, composition and engineering",
+      "lines": [
+        112,
+        112
+      ],
+      "passage": "| R27 | **Dependency injection**: narrow typed dependencies, explicit sharing scopes, one coordinated fake per test composition, no service locator (ScopedInjection; LBT-003/004/008/009; AR-03) | **DECIDED: Shaku** (GDL-048) | **Shaku**: fits with issues (synchronous construction; a service can outlive container drop via `Arc`; not a lifecycle supervisor; `ManagedResource` is not dyn-compatible, so runtime-polymorphic injection needs a reviewed bridge or generic composition). **Dill** 0.17: does not fit on present evidence (child catalog is not an override layer; parent singleton can capture a child dependency; transaction-cache first creation is not atomic; validation partial and opt-in). **Hand-rolled context bag (GWZ AppContext)**: does not fit (the pattern being escaped). | Assembly-only use; six binding recipes; the still-open async-port/startup/cleanup witness (DI-E01..E04) |",
+      "digest": "e3152eb236082310f43dcfbd39f6e36a9d576485bce90f9431236ea0c300fa25",
+      "truncated": false
+    },
+    {
+      "tag": "R28",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "G. Runtime, composition and engineering",
+      "lines": [
+        113,
+        113
+      ],
+      "passage": "| R28 | Async lifecycle: owned work, admission, drain, reverse-order cleanup, cancellation, truthful shutdown reports (OwnLifecycle; RuntimeStrategy; AR-08; `ManagedResource`) | **OWNER DIRECTION: sdax-rs** (GDL-049, 2026-09-12) | **sdax-rs** (`sdax` std-only core, `sdax-tokio`, `sdax-testkit`; owner's library; stages 0\u20133 landed, conformance + Monte Carlo + adversarial review; private, unpublished): fits with issues (Git dependency until published; `sdax-tokio` pins Tokio; lifecycle conformance against `ManagedResource` and the Shaku bridge still to be witnessed). **Tokio primitives** composed in-house: fits; was the research lean, now the fallback. **tokio-graceful-shutdown** 0.20: fits with issues (untyped signalling; supervisor only). **dagx** 0.3, **dagrs** 0.8: fit with issues (DAG runners, no symmetrical teardown or type-erased). **moro**: does not fit (inactive research crate). **flawless/Temporal**: does not fit (durable execution engine, wasm compilation). **Actor frameworks** (actix, ractor): not selected (A5). | Plan authoring for the node's resources and services, the AR-08 witness on sdax-rs, the async bridge to Shaku-built components |",
+      "digest": "c7789577f2d37e40711837f0d6b309f03974b9d3d77ef2d896a504b22379bfe3",
+      "truncated": false
+    },
+    {
+      "tag": "R31",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "G. Runtime, composition and engineering",
+      "lines": [
+        116,
+        116
+      ],
+      "passage": "| R31 | Deterministic simulation and conformance: scenarios as data, virtual time, fault schedules, corpus parity (FastFeedback; VerifyIntegration; GDL-042) | DECIDED (own) | **glade-discover-sim** and the taut corpora: own. **madsim / turmoil** (deterministic Tokio simulators): not evaluated; would not replace the transport-free kernel oracle. **Graphviz** for rendering models: fits (used by Gyld). | Adapter real-I/O tier, relay-path journeys, wiring suite |",
+      "digest": "00114707e65ef7556aadce45e71ea532764880339126791e2495944bbe796ed1",
+      "truncated": false
+    },
+    {
+      "tag": "R32",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "G. Runtime, composition and engineering",
+      "lines": [
+        117,
+        117
+      ],
+      "passage": "| R32 | Architecture policy gates: classifications, dependency edges, named traits, conformance targets (GDL-042; LBT; AR-09) | DECIDED (own) | **`glade-discover` local gate** and Gyld's `check_architecture`: own. **cargo-deny / cargo-udeps / cargo-modules**: not evaluated; complementary at most. | Wider adoption across repos; measured budgets |",
+      "digest": "de19f53fdc4a017d0fee5a83a5bb729e81f30c6075a62278b0c74289a8c4495a",
+      "truncated": false
+    },
+    {
+      "tag": "R5",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "A. Connectivity and bootstrap",
+      "lines": [
+        60,
+        60
+      ],
+      "passage": "| R5 | Traffic budgets: control, interactive and bulk lanes under pressure; hostile peers (GPI-03; GLA-072; TrafficBudgets) | OPEN quantities | **QUIC per-stream flow control** (iroh): fits with issues (no cross-stream priority). **Relay rate limiting** (`iroh-relay`, off by default): fits as a backstop. **EndpointHooks**: fits as a peer pre-filter. | Priority scheduler (the unit-tested `OutQueue` is not wired), decode budgets, fan-out bounds, budget numbers |",
+      "digest": "48892d3f6c9b7a0c56a96ee8a6b22b2477717425c6728798e6357917be5e1701",
+      "truncated": false
+    },
+    {
+      "tag": "R8",
+      "family": "requirement",
+      "document": "GladeBuyBuildMatrix",
+      "path": "dev-docs/GladeBuyBuildMatrix.md",
+      "resolver": "table-row-id",
+      "heading": "B. Shared knowledge and discovery",
+      "lines": [
+        68,
+        68
+      ],
+      "passage": "| R8 | Dissemination and anti-entropy of records between trusted nodes (GPI-06; MetadataVisibility; INV-D5/D6) | LEAN: build now, gossip later | **Glade sync round** (SyncStart/SyncOps/SyncEnd): fits (built, one pull each way plus best-effort home push). **iroh-gossip** 0.101: fits with issues (0.x outside the wire promise; best effort; 4 KiB default message; no author binding, harmless; no documented per-topic admission, so scope must be enforced at accept or per-ALPN instance). **libp2p pubsub**: does not fit D-02. | Transitive propagation, standing home-share interest, the dissemination-scope model (mapping \u00a75.2) |",
+      "digest": "f64255fd49ec0aab9cae3c593a82440a9629097e3e3851673333d83fde3c9c32",
+      "truncated": false
+    },
+    {
+      "tag": "SEC-55-D1",
+      "family": "row-id",
+      "document": "GladeGrythSecurityModelAnalysis",
+      "path": "glade/dev-docs/glade_sec_model-55/GladeGrythSecurityModelAnalysis.md",
+      "resolver": "table-row-id",
+      "heading": "Decision Log Items To Carry Forward",
+      "lines": [
+        700,
+        700
+      ],
+      "passage": "| SEC-55-D1 | Choose the capability presentation proof family: custom signed taut grant, Biscuit, UCAN, macaroon, JWT/CWT, or hybrid. |",
+      "digest": "c5c9074cca86f1621c5df1dd75a6015c49ce775dabeb3695fd3a23105eb0d390",
+      "truncated": false
+    },
+    {
+      "tag": "SEC-55-D5",
+      "family": "row-id",
+      "document": "GladeGrythSecurityModelAnalysis",
+      "path": "glade/dev-docs/glade_sec_model-55/GladeGrythSecurityModelAnalysis.md",
+      "resolver": "table-row-id",
+      "heading": "Decision Log Items To Carry Forward",
+      "lines": [
+        704,
+        704
+      ],
+      "passage": "| SEC-55-D5 | Define node/provider key storage and rotation requirements. |",
+      "digest": "7a008e6f38e8697bb716d25fbbd5904e288ddee3ce9b41f67ea1c19014ec04ba",
+      "truncated": false
+    },
+    {
+      "tag": "WD-1",
+      "family": "row-id",
+      "document": "GladeWorkspaceDirectory",
+      "path": "dev-docs/glade/GladeWorkspaceDirectory.md",
+      "resolver": "table-row-id",
+      "heading": "8. Open questions (not decided here)",
+      "lines": [
+        267,
+        267
+      ],
+      "passage": "| WD-1 | Root-key custody & recovery: lost-all-devices posture (paper backup? recovery keys? social recovery?) \u2014 determines how scary genesis is | Gianni (product) |",
+      "digest": "4085f6f0295118e10f9da3a8f5837f3493315a8a315eab239049ade8e2125b98",
+      "truncated": false
+    },
+    {
+      "tag": "WD-3",
+      "family": "row-id",
+      "document": "GladeWorkspaceDirectory",
+      "path": "dev-docs/glade/GladeWorkspaceDirectory.md",
+      "resolver": "table-row-id",
+      "heading": "8. Open questions (not decided here)",
+      "lines": [
+        269,
+        269
+      ],
+      "passage": "| WD-3 | Metadata exposure to relay-only peers (GDL-010) \u2014 what the home node sees when it is someone else's infra | security analysis |",
+      "digest": "c44d668dcc2267ce4026e6f2a3f2e609c71bf18add4e500ae55d54276dd1183c",
+      "truncated": false
+    },
+    {
+      "tag": "WD-8",
+      "family": "row-id",
+      "document": "GladeWorkspaceDirectory",
+      "path": "dev-docs/glade/GladeWorkspaceDirectory.md",
+      "resolver": "table-row-id",
+      "heading": "8. Open questions (not decided here)",
+      "lines": [
+        274,
+        274
+      ],
+      "passage": "| WD-8 | ~~Advertisement family + repair owner~~ **RULED 2026-07-05**: ReplicaHint + ServiceInstanceClaim adopted; ServiceDefinition dedup defaults to `per-node` (recompute \u2014 determinism makes duplication correct), expensive services opt into `global`; the under-replication repair loop is owned by the **home-node role**, and any replica MAY run it idempotently as the partition fallback. | ruled |",
+      "digest": "e3a3800bfd3cc976b898e5b9377ab27bee303a2bbbb11077192d95336e77da9c",
+      "truncated": false
+    }
+  ],
+  "cited_by": [
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.async_witness",
+      "field": "matrix",
+      "tags": [
+        "R27"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.async_witness",
+      "field": "sources",
+      "tags": [
+        "DependencyInjectionEvaluation",
+        "GDL-048"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "field": "matrix",
+      "tags": [
+        "R14"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.blind_relay_tier",
+      "field": "sources",
+      "tags": [
+        "AZ-10"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+      "field": "matrix",
+      "tags": [
+        "Q5"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.bulk_transfer",
+      "field": "sources",
+      "tags": [
+        "IrohGladeMapping \u00a74.3"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.discovery_fold",
+      "field": "ruling",
+      "tags": [
+        "WD-8",
+        "GDL-037"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "field": "matrix",
+      "tags": [
+        "Q4"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.dissemination",
+      "field": "sources",
+      "tags": [
+        "IrohGladeMapping \u00a74.2",
+        "INV-D5",
+        "INV-D6"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.grants_as_data",
+      "field": "ruling",
+      "tags": [
+        "AZ \u00a72-\u00a76",
+        "B4",
+        "B5"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.identity_adapters",
+      "field": "matrix",
+      "tags": [
+        "Q7"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.identity_adapters",
+      "field": "sources",
+      "tags": [
+        "AZ-3",
+        "SEC-55 trust providers"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.iroh_transport",
+      "field": "ruling",
+      "tags": [
+        "GQ-2"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "field": "matrix",
+      "tags": [
+        "Q11"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.key_custody",
+      "field": "sources",
+      "tags": [
+        "WD-1",
+        "AZ-7",
+        "SEC-55-D5"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "field": "matrix",
+      "tags": [
+        "Q10"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.lifecycle_composition",
+      "field": "sources",
+      "tags": [
+        "GDL-049",
+        "R28",
+        "AR-08",
+        "A5"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "field": "matrix",
+      "tags": [
+        "R8"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.metadata_exposure",
+      "field": "sources",
+      "tags": [
+        "GDL-010",
+        "WD-3"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "field": "matrix",
+      "tags": [
+        "Q6"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.proof_family",
+      "field": "sources",
+      "tags": [
+        "SEC-55-D1",
+        "AZ \u00a72"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.registry_growth",
+      "field": "matrix",
+      "tags": [
+        "Q12"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.registry_growth",
+      "field": "sources",
+      "tags": [
+        "GAD-04",
+        "GAD-05"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "field": "matrix",
+      "tags": [
+        "Q1"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.relay_posture",
+      "field": "sources",
+      "tags": [
+        "IrohReview \u00a77",
+        "GladeDiscoveryModel \u00a75"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "field": "matrix",
+      "tags": [
+        "I-2"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.scope_model",
+      "field": "sources",
+      "tags": [
+        "IrohGladeMapping \u00a75.2",
+        "GDL-010",
+        "AZ \u00a77a",
+        "INV-5"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.shaku_injector",
+      "field": "ruling",
+      "tags": [
+        "GDL-048"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.shape_catalogue",
+      "field": "ruling",
+      "tags": [
+        "GDL-041"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+      "field": "matrix",
+      "tags": [
+        "Q13"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.simulator_tooling",
+      "field": "sources",
+      "tags": [
+        "R31",
+        "R32"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.store_engine",
+      "field": "matrix",
+      "tags": [
+        "Q8"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.store_engine",
+      "field": "sources",
+      "tags": [
+        "GDL-036",
+        "GladePersistenceReview"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.store_seam",
+      "field": "ruling",
+      "tags": [
+        "GDL-036"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.text_engine",
+      "field": "matrix",
+      "tags": [
+        "Q9"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.text_engine",
+      "field": "sources",
+      "tags": [
+        "GDL-041",
+        "GLResearchConsolidatedFindings"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "field": "matrix",
+      "tags": [
+        "R5"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.traffic_budget_numbers",
+      "field": "sources",
+      "tags": [
+        "GPI-03",
+        "GLA-072"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "field": "matrix",
+      "tags": [
+        "Q3"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.transport_key_binding",
+      "field": "sources",
+      "tags": [
+        "IrohGladeMapping \u00a75.2",
+        "GladeDirectoryNotes ambiguity 2"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "field": "matrix",
+      "tags": [
+        "Q2"
+      ]
+    },
+    {
+      "stream": "base",
+      "slot": "glade_decisions:GladeDecisions.version_pin",
+      "field": "sources",
+      "tags": [
+        "IrohReview \u00a71",
+        "IrohReview \u00a711"
+      ]
+    },
+    {
+      "stream": "fork-a",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.bulk_supplier_arrived",
+      "field": "sources",
+      "tags": [
+        "GQ-9"
+      ]
+    },
+    {
+      "stream": "fork-a",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.lifecycle_composition_ruling",
+      "field": "sources",
+      "tags": [
+        "GDL-049",
+        "R28"
+      ]
+    },
+    {
+      "stream": "fork-a",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
+      "field": "matrix",
+      "tags": [
+        "Q2a"
+      ]
+    },
+    {
+      "stream": "fork-a",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
+      "field": "sources",
+      "tags": [
+        "IrohReview \u00a711"
+      ]
+    },
+    {
+      "stream": "fork-a",
+      "slot": "glade_decisions_fork_a:GladeDecisionsForkA.version_pin_ruling",
+      "field": "sources",
+      "tags": [
+        "IrohReview \u00a71",
+        "IrohReview \u00a711"
+      ]
+    },
+    {
+      "stream": "stream-a",
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.bulk_supplier_arrived",
+      "field": "sources",
+      "tags": [
+        "GQ-9"
+      ]
+    },
+    {
+      "stream": "stream-a",
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling",
+      "field": "sources",
+      "tags": [
+        "GDL-049",
+        "R28"
+      ]
+    },
+    {
+      "stream": "stream-a",
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+      "field": "matrix",
+      "tags": [
+        "Q2a"
+      ]
+    },
+    {
+      "stream": "stream-a",
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit",
+      "field": "sources",
+      "tags": [
+        "IrohReview \u00a711"
+      ]
+    },
+    {
+      "stream": "stream-a",
+      "slot": "glade_decisions_stream_a:GladeDecisionsStreamA.version_pin_ruling",
+      "field": "sources",
+      "tags": [
+        "IrohReview \u00a71",
+        "IrohReview \u00a711"
+      ]
+    },
+    {
+      "stream": "stream-b",
+      "slot": "glade_decisions_stream_b:GladeDecisionsStreamB.lifecycle_reopened",
+      "field": "sources",
+      "tags": [
+        "GDL-049",
+        "AR-08"
+      ]
+    }
+  ],
+  "unresolved": [
+    {
+      "tag": "A5",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.lifecycle_composition"
+      ]
+    },
+    {
+      "tag": "AR-08",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.lifecycle_composition",
+        "glade_decisions_stream_b:GladeDecisionsStreamB.lifecycle_reopened"
+      ]
+    },
+    {
+      "tag": "AZ \u00a72",
+      "family": "heading",
+      "reason": "this index lists no document named AZ",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.proof_family"
+      ]
+    },
+    {
+      "tag": "AZ \u00a72-\u00a76",
+      "family": "free-text",
+      "reason": "a free-text locator names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.grants_as_data"
+      ]
+    },
+    {
+      "tag": "AZ \u00a77a",
+      "family": "free-text",
+      "reason": "a free-text locator names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.scope_model"
+      ]
+    },
+    {
+      "tag": "B4",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.grants_as_data"
+      ]
+    },
+    {
+      "tag": "B5",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.grants_as_data"
+      ]
+    },
+    {
+      "tag": "DependencyInjectionEvaluation",
+      "family": "document-stem",
+      "reason": "a bare document stem names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.async_witness"
+      ]
+    },
+    {
+      "tag": "GAD-04",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.registry_growth"
+      ]
+    },
+    {
+      "tag": "GAD-05",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.registry_growth"
+      ]
+    },
+    {
+      "tag": "GLA-072",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.traffic_budget_numbers"
+      ]
+    },
+    {
+      "tag": "GLResearchConsolidatedFindings",
+      "family": "document-stem",
+      "reason": "a bare document stem names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.text_engine"
+      ]
+    },
+    {
+      "tag": "GPI-03",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.traffic_budget_numbers"
+      ]
+    },
+    {
+      "tag": "GladeDirectoryNotes ambiguity 2",
+      "family": "free-text",
+      "reason": "a free-text locator names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.transport_key_binding"
+      ]
+    },
+    {
+      "tag": "GladeDiscoveryModel \u00a75",
+      "family": "heading",
+      "reason": "this index lists no document named GladeDiscoveryModel",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.relay_posture"
+      ]
+    },
+    {
+      "tag": "GladePersistenceReview",
+      "family": "document-stem",
+      "reason": "a bare document stem names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.store_engine"
+      ]
+    },
+    {
+      "tag": "INV-5",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.scope_model"
+      ]
+    },
+    {
+      "tag": "INV-D5",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.dissemination"
+      ]
+    },
+    {
+      "tag": "INV-D6",
+      "family": "row-id",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.dissemination"
+      ]
+    },
+    {
+      "tag": "Q2a",
+      "family": "matrix-row",
+      "reason": "no document in this index declares it",
+      "cited_by": [
+        "glade_decisions_fork_a:GladeDecisionsForkA.pin_audit",
+        "glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit"
+      ]
+    },
+    {
+      "tag": "SEC-55 trust providers",
+      "family": "free-text",
+      "reason": "a free-text locator names no table row and no numbered heading",
+      "cited_by": [
+        "glade_decisions:GladeDecisions.identity_adapters"
+      ]
+    }
+  ]
+}

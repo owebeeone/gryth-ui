@@ -1,4 +1,5 @@
 import streamsIndex from './fixtures/bundle/streams.json';
+import sourcesIndex from './fixtures/bundle/sources.json';
 import streamRecord from './fixtures/bundle/streams/base/stream.json';
 import projection from './fixtures/bundle/streams/base/projection.json';
 import decideNow from './fixtures/bundle/streams/base/decide-now.json';
@@ -43,6 +44,10 @@ import type {
 
 export const BUNDLE_FILES: Record<string, unknown> = {
   'streams.json': streamsIndex,
+  // The build's SOURCE INDEX, beside the census at the bundle root
+  // (GyldAskAgent.md section 5). One per build, with `cited_by` carrying the
+  // stream on each citation.
+  'sources.json': sourcesIndex,
   'streams/base/stream.json': streamRecord,
   'streams/base/projection.json': projection,
   'streams/base/decide-now.json': decideNow,

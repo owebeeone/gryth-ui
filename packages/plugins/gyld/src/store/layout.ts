@@ -7,6 +7,13 @@
 /** The census of streams, at the root of a bundle. */
 export const STREAMS_INDEX_PATH = 'streams.json';
 
+/**
+ * The SOURCE INDEX, at the root of a bundle beside `streams.json`
+ * (GyldAskAgent.md section 5). One index per BUILD, carrying `cited_by` with
+ * the stream on each citation, rather than one per stream.
+ */
+export const SOURCES_INDEX_PATH = 'sources.json';
+
 /** Files this package reads inside one stream's directory. */
 export const STREAM_FILES = {
   record: 'stream.json',

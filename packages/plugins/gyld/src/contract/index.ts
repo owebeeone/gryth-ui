@@ -53,6 +53,12 @@ export {
 } from './projection';
 
 export {
+  SOURCES_FORMAT, readSources,
+  type GyldSources, type SourceCitation, type SourceDocument, type SourceTag,
+  type SourcesRoot, type UnresolvedTag,
+} from './sources';
+
+export {
   DECIDE_NOW_FORMAT, readDecideNow,
   type DecideNowQuestion, type DecideNowRuling, type GyldDecideNow,
 } from './decideNow';

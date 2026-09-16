@@ -1,18 +1,19 @@
 import { BaseTap, type Grip, type GripContext } from '@owebeeone/grip-react';
 import {
   attempt, readComparison, readDecideNow, readEvaluatorRun, readLens, readProjection,
-  readStream, readStreamDiff, readStreamsIndex, readValidation,
+  readSources, readStream, readStreamDiff, readStreamsIndex, readValidation,
   type ContractResult, type GyldContractError, type GyldEvaluatorRun, type RunProposal,
 } from '../contract';
 import { CompareSide } from '../compare/sides';
 import {
   GYLD_BUNDLE, GYLD_COMPARISON, GYLD_DECIDE_NOW, GYLD_DEST_LEFT, GYLD_DEST_PERSPECTIVE,
   GYLD_DEST_PROPOSAL, GYLD_DEST_RIGHT, GYLD_DEST_RUN, GYLD_DEST_SIDE, GYLD_DEST_STREAM,
-  GYLD_DIFF, GYLD_LENS, GYLD_RUN, GYLD_SET, GYLD_STORE_RELOAD, GYLD_STORE_STATUS,
-  GYLD_STREAMS, GYLD_VALIDATION,
+  GYLD_DIFF, GYLD_LENS, GYLD_RUN, GYLD_SET, GYLD_SOURCES, GYLD_STORE_RELOAD,
+  GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_VALIDATION,
 } from '../grips';
 import {
-  STREAMS_INDEX_PATH, diffPath, lensPath, streamFilePath, type StreamFile,
+  SOURCES_INDEX_PATH, STREAMS_INDEX_PATH, diffPath, lensPath, streamFilePath,
+  type StreamFile,
 } from './layout';
 import {
   DirectoryStore, StaticStore, errorMessage,
@@ -203,7 +204,7 @@ export class GyldStoreTap extends BaseTap {
       provides: [
         GYLD_STREAMS, GYLD_STORE_STATUS, GYLD_STORE_RELOAD,
         GYLD_BUNDLE, GYLD_LENS, GYLD_DECIDE_NOW, GYLD_VALIDATION, GYLD_DIFF,
-        GYLD_RUN, GYLD_COMPARISON,
+        GYLD_RUN, GYLD_COMPARISON, GYLD_SOURCES,
       ],
       destinationParamGrips: [
         GYLD_DEST_STREAM, GYLD_DEST_PERSPECTIVE, GYLD_DEST_LEFT, GYLD_DEST_RIGHT,
@@ -756,6 +757,9 @@ export class GyldStoreTap extends BaseTap {
     if (grip === (GYLD_VALIDATION as unknown as Grip<unknown>)) {
       return this.fileFor(dest, 'validation');
     }
+    if (grip === (GYLD_SOURCES as unknown as Grip<unknown>)) {
+      return this.sourcesFor(dest);
+    }
     if (grip === (GYLD_DIFF as unknown as Grip<unknown>)) {
       return this.diffFor(dest);
     }
@@ -885,6 +889,30 @@ export class GyldStoreTap extends BaseTap {
       return this.once('value-absent', () => ({ status: 'absent' as GyldLoadStatus }));
     }
     return this.load(entry.rootIndex, streamFilePath(stream, file), FILE_READERS[file]);
+  }
+
+  /**
+   * `Gyld.Sources`: the build's source index, from the ROOT that carries this
+   * window's stream.
+   *
+   * The index sits at the root of a bundle beside `streams.json`, so a
+   * destination is resolved to its root exactly as its bundle is. A build that
+   * emitted none publishes as `absent` with the store's reason attached; this
+   * tap never composes an index and never resolves a tag itself.
+   */
+  private sourcesFor(dest: StoreDestination): GyldValue<unknown> {
+    const stream = this.streamParam(dest);
+    if (stream === '') {
+      return VALUE_UNSET;
+    }
+    const entry = this.resolve(dest);
+    if (entry === 'loading') {
+      return VALUE_LOADING;
+    }
+    if (entry === null) {
+      return this.once('value-absent', () => ({ status: 'absent' as GyldLoadStatus }));
+    }
+    return this.load(entry.rootIndex, SOURCES_INDEX_PATH, readSources);
   }
 
   /**

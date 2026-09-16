@@ -1,9 +1,11 @@
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import type { GyldSources } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_STREAM,
-  GYLD_LENS, GYLD_OPS, GYLD_RECORD, GYLD_RECORDS,
+  GYLD_LENS, GYLD_OPS, GYLD_RECORD, GYLD_RECORDS, GYLD_SOURCES,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
 } from '../grips';
+import type { GyldValue } from '../store/state';
 import { askEnvelope, type GyldAskContext } from './envelope';
 
 // The gyld.ask window (GyldAskAgent.md section 6), at step 0.3: the record it
@@ -65,6 +67,7 @@ export function AskWindow() {
   const records = useGrip(GYLD_RECORDS);
   const record = useGrip(GYLD_RECORD);
   const bundle = useGrip(GYLD_BUNDLE);
+  const sources = useGrip(GYLD_SOURCES);
   const ops = useGrip(GYLD_OPS);
   const conversation = useGrip(GYLD_TAB_ASK_CONVERSATION) ?? '';
   const question = useGrip(GYLD_TAB_ASK_DRAFT) ?? '';
@@ -86,6 +89,7 @@ export function AskWindow() {
     records,
     record,
     bundle,
+    sources: sources?.status === 'ok' ? sources.value : undefined,
     principal: ops?.principal,
     conversation,
     question,
@@ -119,8 +123,71 @@ export function AskWindow() {
         Nothing is sent yet: this window shows the context that WOULD go to the
         agent, and the `explain` verb that carries it lands in Phase 1.
       </p>
+      <Sources envelope={envelope} index={sources} />
       <h4 className="gyld-ask-envelope-title">{envelope.format}</h4>
       <pre className="gyld-ask-envelope">{JSON.stringify(envelope, null, 2)}</pre>
     </div>
   );
 }
+
+/**
+ * The tags this record cites, RESOLVED ones beside UNRESOLVED ones.
+ *
+ * An unresolved tag is the point of the list, not an error in it: the record
+ * cites it and this build's index resolves it to nothing, and hiding that
+ * would be the window inventing a Gyld fact by omission (6.7, MDV-7). The
+ * absence of the index itself is said the same way.
+ */
+function Sources({ envelope, index }: {
+  envelope: GyldAskContext;
+  index: GyldValue<GyldSources> | undefined;
+}) {
+  const status = index?.status ?? 'unset';
+  if (envelope.sources.length === 0) {
+    return (
+      <p className="gyld-note gyld-ask-sources-empty">
+        {status === 'ok'
+          ? "this build's source index records no citation for this record"
+          : `${SOURCES_STATE[status] ?? status} — this record's citations cannot be resolved`}
+      </p>
+    );
+  }
+  return (
+    <ul className="gyld-ask-sources">
+      {envelope.sources.map((source) => (
+        <li
+          key={`${source.cites}/${source.stream}/${source.tag}`}
+          className="gyld-ask-source"
+          data-tag={source.tag}
+          data-resolved={source.resolved ? 'yes' : 'no'}
+        >
+          <span className="gyld-chip">{source.tag}</span>
+          <span className="gyld-note">
+            cited by {source.cites} in {source.stream}
+          </span>
+          {source.resolved
+            ? (
+              <>
+                <span className="gyld-note">
+                  {source.root}/{source.path}
+                  {source.heading === '' ? '' : ` · ${source.heading}`}
+                  {source.lines === undefined ? '' : ` · lines ${source.lines[0]}-${source.lines[1]}`}
+                  {source.truncated === true ? ' · passage capped' : ''}
+                </span>
+                <q className="gyld-ask-passage">{source.passage}</q>
+              </>
+            )
+            : <span className="gyld-fault">unresolved: {source.reason}</span>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Why there is no index to resolve against, in the store's own vocabulary. */
+const SOURCES_STATE: Record<string, string> = {
+  unset: 'no stream on this window yet',
+  loading: 'reading the source index',
+  absent: 'this build emitted no source index',
+  invalid: 'the source index did not read',
+};

@@ -1,6 +1,6 @@
 import type {
-  DecideNowQuestion, DecideNowRuling, GyldDecideNow, GyldLens, ProjectionDefinition,
-  SnapshotRef, StreamLens,
+  DecideNowQuestion, DecideNowRuling, GyldDecideNow, GyldLens, GyldSources,
+  ProjectionDefinition, SnapshotRef, StreamLens,
 } from '../contract';
 import { blockedSays } from '../browser/card';
 import { emittedMemberFor, perspectiveOptions } from '../browser/perspectives';
@@ -105,22 +105,33 @@ export interface AskContextRuling {
  */
 export interface AskContextSource {
   tag: string;
-  /** Where the citation came from: the ruling's own `sources`, or the source
-   *  index's `cited_by` for this record. */
+  /** The DECLARATION that cited it, as the index's own `cited_by.field` names
+   *  it: `sources`, `matrix` or `ruling`. A tag taken from the decide-now
+   *  ruling row, which no index was there to account for, is `ruling`. */
   cites: string;
+  /** The stream whose overlay declared the citation. */
+  stream: string;
   resolved: boolean;
+  /** The `id` of the index document that declares it. */
   document?: string;
+  /** That document's path, RELATIVE to `root` below, as the index wrote it. */
+  path?: string;
+  /** The workzone `root.name` those paths are relative to. */
+  root?: string;
   heading?: string;
   lines?: [number, number];
   passage?: string;
   digest?: string;
-  /** Why it resolved to nothing, when it did not. */
+  /** True when the emitter capped the passage, so it is a prefix. */
+  truncated?: boolean;
+  /** Why it resolved to nothing, when it did not — the index's own reason
+   *  where there is an index, and the absence of one where there is not. */
   reason?: string;
 }
 
-/** Which citation list a tag came from. Two names, said once. */
+/** The citation list a tag with no index entry to account for came from: the
+ *  decide-now row's own ruling. Spelled as the index spells that field. */
 export const CITED_BY_RULING = 'ruling';
-export const CITED_BY_RECORD = 'record';
 
 /**
  * The neighbourhood lens, as a POINTER.
@@ -191,6 +202,9 @@ export interface AskEnvelopeInput {
   record?: GyldRecordView;
   /** `Gyld.Bundle`, for the stream's own lens manifest. */
   bundle?: GyldBundle;
+  /** `Gyld.Sources`, the build's source index. Absent means the build emitted
+   *  none, which the envelope says on every citation rather than hiding. */
+  sources?: GyldSources;
   /** `Gyld.Ops` → `wire.principal`. */
   principal?: string;
   /** `Gyld.Tab.Ask.Conversation`. */
@@ -352,15 +366,88 @@ function neighbourhoodFor(
   };
 }
 
-/** The tags a ruling cites, as sources this build's index resolved nothing
- *  for. Step 0.4 fills the resolution in from `Gyld.Sources`. */
-function sourcesOf(ruling: DecideNowRuling | undefined): AskContextSource[] {
-  return (ruling?.sources ?? []).map((tag) => ({
+/** What this build's index made of one tag, or the absence said as one. */
+function resolveTag(
+  index: GyldSources | undefined,
+  tag: string,
+  cites: string,
+  stream: string,
+): AskContextSource {
+  if (index === undefined) {
+    return {
+      tag, cites, stream, resolved: false, reason: NO_INDEX,
+    };
+  }
+  const held = index.tags.find((entry) => entry.tag === tag);
+  if (held !== undefined) {
+    return {
+      tag,
+      cites,
+      stream,
+      resolved: true,
+      document: held.document,
+      path: held.path,
+      root: index.root.name,
+      heading: held.heading,
+      lines: held.lines,
+      passage: held.passage,
+      digest: held.digest,
+      truncated: held.truncated,
+    };
+  }
+  // An unresolved tag is SAID, with the emitter's own sentence where it gave
+  // one. A tag in neither list is the third case and is also said.
+  const missing = index.unresolved.find((entry) => entry.tag === tag);
+  return {
     tag,
-    cites: CITED_BY_RULING,
+    cites,
+    stream,
     resolved: false,
-    reason: 'this build emitted no source index',
-  }));
+    reason: missing?.reason ?? NOT_IN_INDEX,
+  };
+}
+
+/** Said when the build emitted no index at all, which is a different fact from
+ *  a tag the index resolved nothing for. */
+const NO_INDEX = 'this build emitted no source index';
+
+/** Said when the index is there and names the tag in neither list. */
+const NOT_IN_INDEX = "this build's source index does not name it";
+
+/**
+ * The tags this record and its ruling cite, and what the index made of each.
+ *
+ * The index's `cited_by` is the ONLY emitted place a question's own `sources`
+ * and `matrix` citations appear at all — no bundle carries an `authoring`
+ * sidecar — so it is read first, in its own order, and the decide-now ruling
+ * row's own tags follow for anything the index did not already account for.
+ *
+ * The join is by SLOT, not by stream: a citation is about the record, and the
+ * `stream` on each entry says which overlay declared it, so a child stream
+ * asking about a base record still sees the base's citations rather than
+ * losing them. Nothing is merged and nothing is de-duplicated across fields:
+ * one tag cited twice by two declarations is two citations.
+ */
+function sourcesOf(
+  index: GyldSources | undefined,
+  ruling: DecideNowRuling | undefined,
+  slot: string,
+): AskContextSource[] {
+  const out: AskContextSource[] = [];
+  for (const citation of index?.cited_by ?? []) {
+    if (citation.slot !== slot) {
+      continue;
+    }
+    for (const tag of citation.tags) {
+      out.push(resolveTag(index, tag, citation.field, citation.stream));
+    }
+  }
+  for (const tag of ruling?.sources ?? []) {
+    if (!out.some((held) => held.tag === tag && held.cites === CITED_BY_RULING)) {
+      out.push(resolveTag(index, tag, CITED_BY_RULING, ruling?.stream ?? ''));
+    }
+  }
+  return out;
 }
 
 /**
@@ -414,7 +501,7 @@ export function askEnvelope(input: AskEnvelopeInput): GyldAskContext {
       stamp: ruling.stamp ?? '',
       live: ruling.live,
     },
-    sources: sourcesOf(ruling),
+    sources: sourcesOf(input.sources, ruling, slot),
     requires: united(prerequisites, question?.blocked_by ?? []),
     unlocks: united(dependents),
     gates: question?.gated_by ?? [],

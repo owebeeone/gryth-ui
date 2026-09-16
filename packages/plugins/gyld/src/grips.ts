@@ -1,7 +1,8 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
 import { defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
 import type {
-  GyldComparison, GyldDecideNow, GyldEvaluatorRun, GyldStreamDiff, GyldValidation,
+  GyldComparison, GyldDecideNow, GyldEvaluatorRun, GyldSources, GyldStreamDiff,
+  GyldValidation,
 } from './contract';
 import {
   BUNDLE_UNSET, CENSUS_EMPTY, EMPTY_SET, LENS_UNSET, VALUE_UNSET,
@@ -142,6 +143,22 @@ export const GYLD_VALIDATION =
 
 // Class 2 source, per destination from Gyld.Dest.Stream AND .Perspective.
 export const GYLD_LENS = defineGrip<GyldLensState>('Gyld.Lens', LENS_UNSET);
+
+// ---------------------------------------------------------------------------
+// GyldAskAgent.md step 0.4: the SOURCE INDEX.
+//
+// Class 2 source. The index is one file at the ROOT of a build, not inside a
+// stream, so it is read from whichever root of the set carries this window's
+// stream — the same root its bundle came from — and every window of that build
+// sees one index.
+//
+// A build that emitted none publishes as `absent`, which is a RENDERED state:
+// the ask window says the build carries no index rather than showing a record
+// with no citations, because a citation missing is an omission and MDV-7 says
+// an omission is said.
+// ---------------------------------------------------------------------------
+export const GYLD_SOURCES =
+  defineGrip<GyldValue<GyldSources>>('Gyld.Sources', VALUE_UNSET);
 
 // ---------------------------------------------------------------------------
 // Step 2.5: the diff window's destination. A diff is between TWO streams, so

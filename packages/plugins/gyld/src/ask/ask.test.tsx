@@ -341,12 +341,14 @@ describe('the ruling block, joined the way the list joins it', () => {
       {
         tag: 'GDL-049',
         cites: CITED_BY_RULING,
+        stream: 'stream-b',
         resolved: false,
         reason: 'this build emitted no source index',
       },
       {
         tag: 'AR-08',
         cites: CITED_BY_RULING,
+        stream: 'stream-b',
         resolved: false,
         reason: 'this build emitted no source index',
       },

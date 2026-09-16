@@ -47,8 +47,14 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
 
 /** The sibling gwz workspace member that emits the bundle, relative to this
  *  repository's root. A documented default, so `pnpm dev` in the usual
- *  workspace layout needs no environment at all. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v6'
+ *  workspace layout needs no environment at all.
+ *
+ *  v7 is the first run that emits `sources.json`, the source index the ask
+ *  window resolves a record's citations against
+ *  (`gyld-wz/dev-docs/ui/GyldAskAgent.md` section 5), so the default moved
+ *  forward with it: pointed at v6 the window would render its absence, which
+ *  is correct and is not what this default is for. */
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v7'
 
 /** Where the browser reaches the evaluator runs:
  *  `http://localhost:5173/gyld-evaluator`, with one directory per run under
