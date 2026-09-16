@@ -93,6 +93,8 @@ describe('gyld plugin registration', () => {
       'gyld.decide': 'Gyld decide',
       'gyld.compare': 'Gyld compare',
       'gyld.diff': 'Gyld diff',
+      // GyldAskAgent.md section 6: the ask agent's own window, plainly named.
+      'gyld.ask': 'Ask',
     });
     // and the IDS are untouched, because a stored layout, a wire and every
     // link written inside this plugin resolve by them

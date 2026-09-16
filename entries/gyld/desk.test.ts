@@ -21,6 +21,7 @@ const EXPECTED: Record<ToolId, string> = {
   'gyld.decidenow': 'pulse',
   'gyld.detail': 'inspector',
   'gyld.decide': 'inspector',
+  'gyld.ask': 'inspector',    // what the stage's record IS, asked about
   // not a Gyld tool: the desk's appearance editor. Its plugin declares the
   // `crew` role, which this preset has no area for, so the preset designates
   // it rather than letting it fall back onto the stage.
@@ -43,7 +44,7 @@ describe('the gyld target desk', () => {
   });
 
   it('places every tool it lists in the pane its role or the preset names', async () => {
-    await expect.poll(() => Object.keys(allTools(PluginRegistryTap.get())).length).toBe(8);
+    await expect.poll(() => Object.keys(allTools(PluginRegistryTap.get())).length).toBe(9);
     const roles = toolRoles(allTools(PluginRegistryTap.get()));
     let list: WindowRecord[] = [];
     for (const toolId of Object.keys(EXPECTED)) {
@@ -63,7 +64,7 @@ describe('the gyld target desk', () => {
     // Details / Next up rather than four names beginning with the same word.
     // The tool IDS above are what the preset and every stored layout resolve
     // by, and they are untouched.
-    await expect.poll(() => Object.keys(allTools(PluginRegistryTap.get())).length).toBe(8);
+    await expect.poll(() => Object.keys(allTools(PluginRegistryTap.get())).length).toBe(9);
     const tools = allTools(PluginRegistryTap.get());
     expect(tools['gyld.browser'].label).toBe('Graph');
     expect(tools['gyld.streams'].label).toBe('Streams');

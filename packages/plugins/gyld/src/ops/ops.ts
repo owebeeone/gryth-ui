@@ -114,6 +114,10 @@ export function responseFrom(outcome: GyldExchangeOutcome): GyldOpsResponse {
 /** The handle a window holds. One method per allowed verb, each taking the
  *  argument object that verb's row of the supplier's table names. */
 export interface GyldOps {
+  /** The acting principal every request of this handle is stamped with (owner
+   *  ruling O6). Read by the ask envelope, which records who a run would be
+   *  attributed to (GyldAskAgent.md section 3). */
+  readonly principal: string;
   /** The latest build's stream listing. Builds nothing. */
   list(): Promise<GyldOpsResponse>;
   /** Write `overlay` as the stream's overlay module, then rebuild. */
@@ -184,6 +188,7 @@ export function createGyldOps(wire: GyldOpsWire): GyldOps {
   };
 
   return {
+    principal: wire.principal,
     list: () => run(GyldVerb.LIST, {}),
     answer: (args) => run(GyldVerb.ANSWER, { stream: args.stream, overlay: args.overlay }),
     ask: (args) => run(GyldVerb.ASK, {

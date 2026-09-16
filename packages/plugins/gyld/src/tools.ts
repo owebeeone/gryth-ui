@@ -19,6 +19,11 @@ export const GYLD_DECIDE_TOOL: ToolId = 'gyld.decide';
 export const GYLD_DIFF_TOOL: ToolId = 'gyld.diff';
 export const GYLD_COMPARE_TOOL: ToolId = 'gyld.compare';
 
+/** The ask agent's window (GyldAskAgent.md section 6). Its own tool id rather
+ *  than a second pane of the inspector merge, which is open question (i) of
+ *  section 10 and is the owner's to close. */
+export const GYLD_ASK_TOOL: ToolId = 'gyld.ask';
+
 /**
  * The `role` each tool advertises: the KIND of pane it belongs in, named
  * once here and read by the desktop when a desk is locked
@@ -39,3 +44,6 @@ export const DIFF_ROLE = 'stage';
 export const DECIDE_NOW_ROLE = 'pulse';
 export const DETAIL_ROLE = 'inspector';
 export const DECIDE_ROLE = 'inspector';
+// What the stage's record IS, asked about: the ask window belongs beside the
+// record and the ruling being written about it (GyldAskAgent.md section 6).
+export const ASK_ROLE = 'inspector';

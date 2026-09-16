@@ -14,7 +14,8 @@ import {
 import { opensMenu } from './menu';
 import type { BrowserFocus } from './useBrowserFocus';
 import type { GyldLensState, GyldValue } from '../store/state';
-import { mountDesk } from '../../test/mount';
+import { STATIC_SET, mountDesk } from '../../test/mount';
+import { FakeBundle } from '../../test/fakeBundle';
 import decisionsFixture from '../../test/fixtures/bundle/streams/base/lenses/decisions.lens.json';
 import decideNowFixture from '../../test/fixtures/bundle/streams/base/decide-now.json';
 
@@ -59,6 +60,11 @@ function focusOn(overrides: Partial<BrowserFocus> = {}): BrowserFocus & { done: 
     ...overrides,
   };
 }
+
+/** ONE bundle image for the file. Nothing below rewrites a byte of it, and
+ *  re-serializing the fixture set per desk is most of what a mount costs. */
+const image = new FakeBundle();
+const desk = () => mountDesk(STATIC_SET, image);
 
 const settled = async <T,>(read: () => T, done: (value: T) => boolean): Promise<T> => {
   await expect.poll(() => done(read())).toBe(true);
@@ -191,8 +197,7 @@ describe('what the menu offers over one box', () => {
 
 describe('the browser window seeds the menu and draws it', () => {
   it('seeds Gyld.Tab.Menu closed, with a handle to write it', async () => {
-    const desk = mountDesk();
-    const tab = desk.tab('menu-seed', browserTabTaps('menu-seed', {
+    const tab = desk().tab('menu-seed', browserTabTaps('menu-seed', {
       stream: 'base', perspective: 'decisions',
     }));
     await expect.poll(() => tab.read(GYLD_TAB_MENU).get()).toBe(MENU_CLOSED);
@@ -203,8 +208,7 @@ describe('the browser window seeds the menu and draws it', () => {
   });
 
   it('draws the four entries over the box the menu is open on', async () => {
-    const desk = mountDesk();
-    const tab = desk.tab('menu-draw', browserTabTaps('menu-draw', {
+    const tab = desk().tab('menu-draw', browserTabTaps('menu-draw', {
       stream: 'base', perspective: 'decisions',
     }));
     await drawn(tab);
@@ -220,8 +224,7 @@ describe('the browser window seeds the menu and draws it', () => {
   });
 
   it('draws no Answer over a box this stream lists no row for', async () => {
-    const desk = mountDesk();
-    const tab = desk.tab('menu-unlisted', browserTabTaps('menu-unlisted', {
+    const tab = desk().tab('menu-unlisted', browserTabTaps('menu-unlisted', {
       stream: 'base', perspective: 'decisions',
     }));
     await drawn(tab);
@@ -235,8 +238,7 @@ describe('the browser window seeds the menu and draws it', () => {
   });
 
   it('suppresses the hover card while the menu is open, so neither stacks', async () => {
-    const desk = mountDesk();
-    const tab = desk.tab('menu-hover', browserTabTaps('menu-hover', {
+    const tab = desk().tab('menu-hover', browserTabTaps('menu-hover', {
       stream: 'base', perspective: 'decisions',
     }));
     await drawn(tab);
@@ -253,8 +255,7 @@ describe('the browser window seeds the menu and draws it', () => {
   });
 
   it('draws nothing for a slot this picture does not draw', async () => {
-    const desk = mountDesk();
-    const tab = desk.tab('menu-gone', browserTabTaps('menu-gone', {
+    const tab = desk().tab('menu-gone', browserTabTaps('menu-gone', {
       stream: 'base', perspective: 'decisions',
     }));
     await drawn(tab);

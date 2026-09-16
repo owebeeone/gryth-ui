@@ -49,8 +49,8 @@ whose overlay module already declares records the card reads
 `Answer (needs its own stream)`, names the refusal, and offers a `Link` already
 filled in (see "Submitting to the supplier"). A RIGHT-CLICK or a SHIFT-CLICK on
 a box opens a small menu at it with the same acts plus `Ask about this`, which
-is where the ask agent will land (`gyld-wz/dev-docs/ui/GyldAskAgent.md`
-section 2); it is offered disabled until that window exists. One menu per
+opens the `Ask` window on that record (`gyld-wz/dev-docs/ui/GyldAskAgent.md`
+sections 2, 3 and 6). One menu per
 window: opening one over another box replaces it, a click, `Escape` or a pan
 dismisses it, and the hover card is suppressed while it is up so two panels
 never stack over one box. Giving shift-click to the menu narrows the ADDITIVE
@@ -114,6 +114,22 @@ status, the tier, the preference recorded for it, the slots that block or gate
 it, and a Decide button that opens the decide window on that row the same way
 the detail window's does. Like the detail window it is wired when opened from a
 browser and standalone when opened with a stream of its own.
+
+`gyld.ask` (**Ask**) is the ask agent's window, in the `inspector` role
+(GyldAskAgent.md section 6). Opened from a box's menu it is wired to that
+browser and follows the record it is on; opened with `{ stream, perspective,
+ref }` it stands alone. It shows the record's status line, a question box, and
+the whole `gyld.ask-context.v1` ENVELOPE that would be sent — the stream, the
+perspective, the snapshot the list was built from, the question as the host
+drew it, its declared definition, the emitted status block, the alternatives
+with the lean marked, the ruling the row names, the tags it cites, the
+`Requires` adjacency read both ways, the gates, and a POINTER to the
+neighbourhood lens rather than its geometry. Every field is a read of an
+emitted value joined by an emitted id, composed by one pure function
+(`src/ask/envelope.ts`), so an absence is said — a stream with no decide-now
+list, or a list with no row for the record, is stated in the status block
+instead of filled in. **Nothing is sent from it**: there is no submit and no
+verb behind it yet, and the window says so.
 
 `gyld.decide` answers a question or asks a new one. Opened from a browser
 through the Decide button it is wired to that browser, so it answers on the

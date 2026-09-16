@@ -304,6 +304,25 @@ export const GYLD_TAB_MENU = defineGrip<GyldNodeMenu>('Gyld.Tab.Menu', MENU_CLOS
 export const GYLD_TAB_MENU_TAP =
   defineGrip<AtomTapHandle<GyldNodeMenu>>('Gyld.Tab.Menu.Tap');
 
+// ---------------------------------------------------------------------------
+// GyldAskAgent.md step 0.3: the ask window's own state. Class 1 atoms,
+// INSTANCE scope, one set per `gyld.ask` window, seeded by askTabTaps.
+//
+// Both are the READER's, not Gyld's. A conversation id is minted by the window
+// that opened the menu and rides in the envelope, so a follow-up is the same
+// verb with the same id; the draft is what the reader typed and has reached
+// nothing until they press send. Empty is a rendered state for both: a window
+// with no conversation says so rather than inventing one.
+// ---------------------------------------------------------------------------
+
+export const GYLD_TAB_ASK_CONVERSATION = defineGrip<string>('Gyld.Tab.Ask.Conversation', '');
+export const GYLD_TAB_ASK_CONVERSATION_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ask.Conversation.Tap');
+
+export const GYLD_TAB_ASK_DRAFT = defineGrip<string>('Gyld.Tab.Ask.Draft', '');
+export const GYLD_TAB_ASK_DRAFT_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ask.Draft.Tap');
+
 export const GYLD_PICKER_URL = defineGrip<string>('Gyld.Tab.Picker.Url', '');
 export const GYLD_PICKER_URL_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Url.Tap');

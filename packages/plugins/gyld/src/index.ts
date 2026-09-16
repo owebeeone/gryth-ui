@@ -14,14 +14,17 @@ import { DiffWindow } from './diff/DiffWindow';
 import { diffTabTaps } from './diff/diffTabTaps';
 import { CompareWindow } from './compare/CompareWindow';
 import { compareTabTaps } from './compare/compareTabTaps';
+import { AskWindow } from './ask/AskWindow';
+import { askTabTaps } from './ask/askTabTaps';
 import {
   GyldFocusTap, GyldSetTap, gyldIndexTap, gyldLandingTap, gyldLensPaletteTap,
   gyldPreviewLayoutTap, gyldRecordTap, gyldStoreTap,
 } from './rootTaps';
 import {
-  BROWSER_ROLE, COMPARE_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE, DIFF_ROLE,
-  STREAMS_ROLE, GYLD_BROWSER_TOOL, GYLD_COMPARE_TOOL, GYLD_DECIDE_NOW_TOOL,
-  GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL, GYLD_DIFF_TOOL, GYLD_STREAMS_TOOL,
+  ASK_ROLE, BROWSER_ROLE, COMPARE_ROLE, DECIDE_NOW_ROLE, DECIDE_ROLE, DETAIL_ROLE,
+  DIFF_ROLE, STREAMS_ROLE, GYLD_ASK_TOOL, GYLD_BROWSER_TOOL, GYLD_COMPARE_TOOL,
+  GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL, GYLD_DIFF_TOOL,
+  GYLD_STREAMS_TOOL,
 } from './tools';
 import './gyld.css';
 
@@ -123,6 +126,16 @@ addEntry(GYLD_PLUGIN, {
       // state is seeded on its own child context instead.
       tabTaps: compareTabTaps,
     },
+    [GYLD_ASK_TOOL]: {
+      label: 'Ask',
+      defaultSize: { w: 620, h: 760 },
+      role: ASK_ROLE,
+      windowComponent: AskWindow,
+      // The conversation and the draft are always seeded; the destination only
+      // when the opening link carries one, so a window opened wired to a
+      // browser asks about the record that browser is on.
+      tabTaps: askTabTaps,
+    },
     [GYLD_DIFF_TOOL]: {
       label: 'Gyld diff',
       defaultSize: { w: 1100, h: 760 },
@@ -205,6 +218,8 @@ export {
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP, GYLD_TAB_HOVER, GYLD_TAB_HOVER_TAP,
   GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_LENS_PALETTE,
   GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
+  GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP,
+  GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
 } from './grips';
 export { BrowserChrome } from './browser/BrowserChrome';
 export { GyldBrowser } from './GyldBrowser';
@@ -216,11 +231,14 @@ export {
   NOTHING_PICKED, OPENING_PERSPECTIVE, firstPick, type GyldFirstPick,
 } from './browser/firstPick';
 export {
-  decideOn, detailOn, focusOn, useBrowserFocus,
+  askOn, decideOn, detailOn, focusOn, useBrowserFocus,
   type BrowserFocus, type BrowserFocusHandles,
 } from './browser/useBrowserFocus';
 export { NodeCard } from './browser/NodeCard';
 export { NodeMenu } from './browser/NodeMenu';
+export { AskWindow } from './ask/AskWindow';
+export { askTabTaps, conversationFromParams } from './ask/askTabTaps';
+export * from './ask/envelope';
 export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
 export { FocusDestTap } from './detail/followFocus';

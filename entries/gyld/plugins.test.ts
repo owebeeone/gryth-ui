@@ -23,7 +23,7 @@ const tools = () => allTools(registry());
 
 /** Every tool `@grythjs/plugin-gyld` advertises (spec section 2). */
 const GYLD_TOOLS = [
-  'gyld.browser', 'gyld.compare', 'gyld.decide', 'gyld.decidenow',
+  'gyld.ask', 'gyld.browser', 'gyld.compare', 'gyld.decide', 'gyld.decidenow',
   'gyld.detail', 'gyld.diff', 'gyld.streams',
 ];
 

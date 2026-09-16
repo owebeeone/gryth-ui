@@ -520,6 +520,65 @@
   cursor: default;
 }
 
+/* The ask window: the record, the question box and the envelope that would be
+   sent. Nothing is submitted from it in this stage. */
+
+.gyld-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.769em;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 0.867em/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-ask-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.333em 0.667em;
+}
+
+.gyld-ask-question {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.gyld-ask-draft {
+  font: inherit;
+  padding: 0.385em 0.5em;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 6px;
+  background: var(--win, Canvas);
+  color: inherit;
+  resize: vertical;
+}
+
+.gyld-ask-envelope-title {
+  margin: 0.333em 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.917em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.gyld-ask-envelope {
+  margin: 0;
+  padding: 0.5em 0.667em;
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.846em;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
 /* The count and the one filter that read the emitted decide-now list. */
 .gyld-nextup-toggle {
   display: inline-flex;

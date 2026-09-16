@@ -6,7 +6,8 @@ import {
 import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_TAB_ID,
 } from '../grips';
-import { GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
+import { GYLD_ASK_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
+import { conversationId } from '../ask/envelope';
 import { browserLink, questionParams, recordParams } from './links';
 
 // "Show me that record in the browser", "answer that question", and "show me
@@ -87,6 +88,38 @@ export function decideOn(on: BrowserFocusHandles, slot: string): void {
   on.openTool?.({ toolId: GYLD_DECIDE_TOOL, params: questionParams(on.stream, slot) });
 }
 
+/**
+ * Open `gyld.ask` on one record, with a conversation id minted for it
+ * (GyldAskAgent.md sections 2 and 6).
+ *
+ * The same two cases, for the same reasons. WIRED: the browser is moved to the
+ * record first and the ask window is opened wired to that same browser, so it
+ * follows the record the browser is now on with no param copied — only the
+ * CONVERSATION rides in the link, because it is the ask window's own state and
+ * no browser publishes it. STANDALONE: the window is opened on
+ * `{ stream, ref, conversation }` and stands alone on it.
+ */
+export function askOn(on: BrowserFocusHandles, slot: string, conversation: string): void {
+  if (on.wiredTo !== '') {
+    move(on, slot);
+    on.openWired?.(on.wiredTo, { toolId: GYLD_ASK_TOOL, params: { conversation } });
+    return;
+  }
+  on.openTool?.({
+    toolId: GYLD_ASK_TOOL,
+    params: {
+      ...recordParams(on.stream, slot),
+      // The PICTURE this record was asked about from. `gyld.detail` carries
+      // none because it has no picture to name; the envelope names one
+      // (section 3), and its `record.lines` are the box text of that very
+      // lens, so a standalone ask window that did not carry it would compose
+      // an envelope with the drawn text missing.
+      perspective: on.perspective,
+      conversation,
+    },
+  });
+}
+
 /** The same, for `gyld.detail`: the record window this browser already has,
  *  moved onto this record, or a new one when there is no browser to wire to. */
 export function detailOn(on: BrowserFocusHandles, slot: string): void {
@@ -110,14 +143,8 @@ export interface BrowserFocus {
   /** Whether a record window can be opened or retargeted, same reason. */
   detailReady: boolean;
   detail(slot: string): void;
-  /**
-   * Whether the Ask window can be opened at all.
-   *
-   * `gyld.ask` is declared in step 0.3 of GyldAskAgent.md; until it exists
-   * there is nothing to open, so the menu's `Ask about this` is OFFERED and
-   * disabled with that as its reason rather than quietly hidden (MDV-7: an
-   * omission is said, never swallowed).
-   */
+  /** Whether the Ask window can be opened at all, so an entry can say it
+   *  cannot — a desk with no shell intent in reach opens nothing. */
   askReady: boolean;
   ask(slot: string): void;
 }
@@ -149,11 +176,12 @@ export function useBrowserFocus(): BrowserFocus {
     detail(slot: string): void {
       detailOn(handles, slot);
     },
-    askReady: false,
+    askReady: throughWire,
     ask(slot: string): void {
-      // Step 0.3 opens `gyld.ask` here, wired to this browser. Nothing yet:
-      // `askReady` is false, so no entry can reach this.
-      void slot;
+      // The conversation id is minted HERE, in the gesture, because it is the
+      // one field of the envelope that is neither emitted nor typed: a stamp
+      // read at press time, not at render time.
+      askOn(handles, slot, conversationId(wiredTo, slot, Date.now()));
     },
   };
 }
