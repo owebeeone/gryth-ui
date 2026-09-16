@@ -662,6 +662,38 @@
   border-left-style: dashed;
 }
 
+/* A ruling the agent drafted: an OFFER, marked as one and never mistaken for
+   a person's text (section 8). */
+
+.gyld-ask-drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.417em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-ask-draft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.583em;
+  padding: 0.417em 0.583em;
+  border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 6px;
+}
+
+/* A draft this record does not offer an alternative for cannot be taken, and
+   says so where the button is (MDV-7). */
+.gyld-ask-draft[data-resolved='no'] {
+  border-color: color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.gyld-ask-draft .gyld-ask-passage {
+  flex-basis: 100%;
+}
+
 .gyld-ask-answer,
 .gyld-ask-said,
 .gyld-ask-end {
@@ -682,6 +714,17 @@
 
 .gyld-ask-acts {
   align-items: baseline;
+}
+
+/* The tags a taken draft leaned on, offered beside the sources field: the
+   agent never writes that field and the reader takes them (section 8). */
+.gyld-answer-offered {
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.gyld-answer-drafted {
+  margin: 0;
 }
 
 .gyld-ask-envelope-fold {

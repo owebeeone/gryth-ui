@@ -3,9 +3,11 @@ import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_REF, GYLD_DEST_REF_TAP,
   GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
   GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL, GYLD_PICKER_URL_TAP,
-  GYLD_TAB_ID, GYLD_TAB_MENU, GYLD_TAB_MENU_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
+  GYLD_TAB_DRAFT_TAKEN, GYLD_TAB_DRAFT_TAKEN_TAP, GYLD_TAB_ID, GYLD_TAB_MENU,
+  GYLD_TAB_MENU_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
   perspectiveFromParams, previewFromParams, refFromParams, streamFromParams,
 } from '../grips';
+import { NOTHING_TAKEN } from '../decide/drafts';
 import { lensTabTaps } from '../lens/lensTabTaps';
 import { GyldFirstPickTap } from './GyldFirstPickTap';
 import { MENU_CLOSED } from './menu';
@@ -47,6 +49,13 @@ export function browserTabTaps(tabId: string, params?: Record<string, unknown>):
     createAtomValueTap(GYLD_TAB_MENU, { initial: MENU_CLOSED, handleGrip: GYLD_TAB_MENU_TAP }),
     // This window's own address, published so a wired sink can retarget it.
     createAtomValueTap(GYLD_TAB_ID, { initial: tabId }),
+    // The hand-off between two of this browser's sinks: a ruling the agent
+    // drafted in the ask window and a reader took into the decide window
+    // (GyldAskAgent.md section 8). It is seeded HERE, on the source, because
+    // the browser is the only context both sinks resolve.
+    createAtomValueTap(GYLD_TAB_DRAFT_TAKEN, {
+      initial: NOTHING_TAKEN, handleGrip: GYLD_TAB_DRAFT_TAKEN_TAP,
+    }),
     // The set picker's drafts, per window, so two desks pick independently.
     createAtomValueTap(GYLD_PICKER_URL, { initial: '', handleGrip: GYLD_PICKER_URL_TAP }),
     createAtomValueTap(GYLD_PICKER_ERROR, { initial: '', handleGrip: GYLD_PICKER_ERROR_TAP }),

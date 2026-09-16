@@ -151,13 +151,41 @@ run: each turn keeps its own `run_id` on every record, so a conversation is
 one mount and one fold however many turns it takes, and a window folds only
 the records of its own conversation.
 
-What the window draws is that fold and nothing else: the prose as the model's
-`answer` chunks arrived, joined in sequence order and otherwise verbatim; each
-`citation` as the passage the supplier resolved, with its tag and the file and
-heading it came from — and an UNRESOLVED one marked as such with the reason,
-because an answer citing a tag this build resolves to nothing is a fact the
-window says rather than hides; and the `end` record's own exit. A turn that
-has not ended yet says it is still answering.
+What the window draws is that fold and nothing else: one block per TURN, in
+the order the supplier ran them, each with the `question` record the reader's
+own turn was appended as, the prose as the model's `answer` chunks arrived —
+joined in sequence order and otherwise verbatim — each `citation` as the
+passage the supplier resolved, with its tag and the file and heading it came
+from, and an UNRESOLVED one marked as such with the reason, because an answer
+citing a tag this build resolves to nothing is a fact the window says rather
+than hides; and the `end` record's own exit. A turn that has not ended yet
+says it is still answering, and a turn a refusal closed is still a turn: its
+question, its reason and its exit.
+
+**The conversation is one per window, and it is about a record.** The id is
+minted by the gesture that opens the window (`conv-<tabId>-<slot>-<stamp>`)
+and kept across every turn, so a follow-up is the same verb with the same id
+and a new question rather than a second conversation. It is replaced in
+exactly two cases: the window is retargeted onto ANOTHER RECORD — a window
+wired to a browser follows whichever box the reader picks, and the window says
+so before the next press — or the reader presses **Start over**. The
+conversation therefore carries the record it is on beside its id
+(`src/ask/conversation.ts`); nothing is parsed back out of the id. The next
+question is typed UNDER the last reply, and an accepted turn empties the box,
+because what was asked is on the log where the fold draws it; a refused one
+leaves the text where it can be fixed.
+
+**A `draft` record is an OFFER, and it is drawn as one.** It carries the model
+id that made it (`drafted_by`), the alternative the model named verbatim, the
+envelope's own qualified slot for it when the envelope offers it, the ruling
+text and the tags it leaned on. The window resolves it AGAIN against the
+envelope it holds now — a wired window can have been moved since the turn was
+asked — and a draft that resolves to nothing is shown as unresolved with the
+reason and cannot be taken. **Take this draft** hands the offer to the decide
+window wired to the same browser, opening it if there is none: the hand-off
+goes through the browser's own `Gyld.Tab.Draft.Taken`, because the browser is
+the one context both windows resolve. An ask window wired to no browser offers
+the button and refuses it with that as the reason.
 
 **A refusal is data, and is drawn as data** — never a toast. The three that
 come back before a run starts, each in the supplier's own words, are: no model
@@ -190,6 +218,20 @@ that lost it would stop being that stream. Under the header the window prints
 the stream's `validation.json` by code, with the details Gyld wrote, and under
 the forms it prints what the supplier answered and the run's own output lines
 as the log folds them.
+
+A draft taken in the ask window fills FOUR fields of the answer form — the
+question, the alternative, the ruling text, and a `drafted` mark naming the
+model — and not one more. The principal, the stamp and the sources stay the
+reader's: the tags the draft leaned on are OFFERED beside the sources field
+for the reader to take, the shape checks still demand a principal and a stamp,
+and every refusal the window had is the refusal it has. The mark is shown on
+the form, it says what clears it, and it goes the moment the reader changes
+the alternative or the ruling text; a submit that still carries it stamps the
+ruling's own docstring with a line saying which model drafted it and which
+principal accepted it, in the export box and on the wire alike, because there
+is one composition. Each take is applied exactly ONCE, by a tap
+(`src/decide/GyldTakenDraftTap.ts`), so nothing a reader typed afterwards is
+ever reverted.
 
 `gyld.diff` puts one perspective of two streams side by side. Each pane is a
 lens view in its own child context, with its own camera, selection and dim set,

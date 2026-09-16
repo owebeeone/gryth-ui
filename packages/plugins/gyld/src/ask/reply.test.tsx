@@ -373,13 +373,14 @@ describe('the reply folds into what the window draws', () => {
   it('draws nothing for a record it has no line for, and never a blank one', () => {
     const later: GyldAskRecord[] = [
       answerLine('run-7', 1, 'prose'),
-      // Phase 3's record, and a stream no version has ever emitted
+      // A draft, which step 3.2 renders as an OFFER of its own, and a stream
+      // no version has ever emitted, which draws nothing at all.
       {
         run_id: 'run-7',
         seq: 2,
         conversation: CONVERSATION,
         stream: 'draft',
-        record: { tag: '' },
+        record: { alternative: 'recovery_keys', ruling_text: 'hold them' },
       },
       { run_id: 'run-7', seq: 3, conversation: CONVERSATION, stream: 'telemetry' },
       end('run-7', 4, 0),
@@ -388,6 +389,9 @@ describe('the reply folds into what the window draws', () => {
     expect(turn.prose).toBe('prose');
     expect(turn.citations).toEqual([]);
     expect(turn.said).toEqual([]);
+    // the draft is on its own list, never folded into the prose or the
+    // citations: it is an offer, not an answer
+    expect(turn.drafts).toEqual([{ alternative: 'recovery_keys', ruling_text: 'hold them' }]);
     expect(AskStream.byName('draft')).toBe(AskStream.DRAFT);
     expect(AskStream.byName('telemetry')).toBeUndefined();
   });

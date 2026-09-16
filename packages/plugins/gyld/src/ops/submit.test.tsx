@@ -60,6 +60,7 @@ const DRAFT = {
   stamp: '2026-09-13T01:00:00Z',
   sources: 'IrohReview §1',
   text: '2026-09-13, owner: take iroh 1.2.0 now.',
+  drafted: '',
 };
 
 const ASK_DRAFT = {

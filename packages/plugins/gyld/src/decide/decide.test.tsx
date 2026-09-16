@@ -258,6 +258,7 @@ describe('the exported overlay is the section 4.2 shape, to the byte', () => {
         stamp: '2026-09-13T01:00:00Z',
         sources: 'IrohReview §1\n\nIrohReview §11\n',
         text: '2026-09-13, owner: take iroh 1.2.0 now; the 1.1.0 fixes cover untrusted input.',
+        drafted: '',
       },
       question: declaredSymbol(records, VERSION_PIN)!,
       label: 'version_pin',
@@ -551,7 +552,7 @@ describe('the local checks are shape, and only shape', () => {
     ]);
     const full = {
       question: VERSION_PIN, alternative: BUMP, principal: 'gianni',
-      stamp: '2026-09-13T01:00:00Z', sources: '', text: 'ruled',
+      stamp: '2026-09-13T01:00:00Z', sources: '', text: 'ruled', drafted: '',
     };
     expect(answerShapeFaults(full)).toEqual([]);
     // whitespace is not text

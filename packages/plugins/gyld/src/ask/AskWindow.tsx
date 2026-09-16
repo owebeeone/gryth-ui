@@ -5,18 +5,24 @@ import {
   GYLD_DEST_STREAM, GYLD_LENS, GYLD_OPS, GYLD_OPS_STATUS, GYLD_RECORD, GYLD_RECORDS,
   GYLD_SOURCES, GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP, GYLD_TAB_ASK_DRAFT,
-  GYLD_TAB_ASK_DRAFT_TAP, GYLD_TAB_ID,
+  GYLD_TAB_ASK_DRAFT_TAP, GYLD_TAB_DRAFT_TAKEN_TAP, GYLD_TAB_ID,
 } from '../grips';
 import type { GyldOpsResponse } from '../ops/ops';
 import type { GyldValue } from '../store/state';
+import { useBrowserFocus } from '../browser/useBrowserFocus';
+import type { TakenDraft } from '../decide/drafts';
 import {
   NO_CONVERSATION, movedOff, startConversation, turnConversation,
   type AskConversation, type AskConversationOn,
 } from './conversation';
+import {
+  draftOffer, takeDraft, takeRefusal,
+  type DraftOffer, type TakeDraftHandles,
+} from './draft';
 import { askEnvelope, type GyldAskContext } from './envelope';
 import {
   foldAskReply, hasReply,
-  type AskReply, type AskTurn, type GyldAskCitation,
+  type AskReply, type AskTurn, type GyldAskCitation, type GyldAskDraft,
 } from './reply';
 import { explainGate, explainSubmit } from './submit';
 
@@ -100,6 +106,13 @@ export function AskWindow() {
   const answerTap = useGrip(GYLD_TAB_ASK_ANSWER_TAP) as
     AtomTapHandle<GyldOpsResponse | null> | undefined;
   const reply = foldAskReply(useGrip(GYLD_ASK_STREAM), conversation.id);
+  // Taking a draft writes the BROWSER's hand-off atom and opens the decide
+  // window wired to that same browser — the acts this window already has on
+  // it, and the one context both sinks resolve (section 8).
+  const takes: TakeDraftHandles = {
+    taken: useGrip(GYLD_TAB_DRAFT_TAKEN_TAP) as AtomTapHandle<TakenDraft> | undefined,
+    browser: useBrowserFocus(),
+  };
 
   if (ref === '') {
     return (
@@ -167,7 +180,16 @@ export function AskWindow() {
       {/* The conversation as the log carried it, in turn order, and then the
           box the next turn is typed into: a follow-up is asked UNDER the
           reply it follows (section 6). */}
-      <Reply reply={reply} />
+      <Reply
+        reply={reply}
+        acts={{
+          envelope,
+          refusal: takeRefusal(takes),
+          take: (offer: DraftOffer) => {
+            takeDraft(takes, offer);
+          },
+        }}
+      />
       <Answered answer={answer} />
       <label className="gyld-ask-question">
         <span>{answered ? 'your follow-up' : 'your question'}</span>
@@ -259,22 +281,31 @@ function Answered({ answer }: { answer: GyldOpsResponse | null }) {
   );
 }
 
+/** What this window can do with a draft a turn offered: resolve it against
+ *  the envelope this window holds NOW, and take it into the decide form. */
+interface DraftActs {
+  envelope: GyldAskContext;
+  /** Why no draft can be taken from this window at all, or '' when one can. */
+  refusal: string;
+  take(offer: DraftOffer): void;
+}
+
 /** The conversation as the log carried it: one block per turn, in turn order,
  *  each with its own run id. Nothing yet is nothing drawn. */
-function Reply({ reply }: { reply: AskReply }) {
+function Reply({ reply, acts }: { reply: AskReply; acts: DraftActs }) {
   if (reply.turns.length === 0) {
     return null;
   }
   return (
     <section className="gyld-ask-reply">
-      {reply.turns.map((turn) => <Turn key={turn.runId} turn={turn} />)}
+      {reply.turns.map((turn) => <Turn key={turn.runId} turn={turn} acts={acts} />)}
     </section>
   );
 }
 
 /** One turn: the question it was asked with, the prose as it streamed, the
  *  passages it cited, whatever else the supplier said, and the run's close. */
-function Turn({ turn }: { turn: AskTurn }) {
+function Turn({ turn, acts }: { turn: AskTurn; acts: DraftActs }) {
   return (
     <article className="gyld-ask-turn" data-run={turn.runId}>
       {/* The question as the LOG carried it, not as this window's box holds
@@ -290,6 +321,19 @@ function Turn({ turn }: { turn: AskTurn }) {
               // host's drawn lines.
               key={`${turn.runId}-cite-${index}`}
               citation={citation}
+            />
+          ))}
+        </ul>
+      )}
+      {turn.drafts.length > 0 && (
+        <ul className="gyld-ask-drafts">
+          {turn.drafts.map((draft, index) => (
+            <Drafted
+              // A turn can legitimately offer two drafts, so the position in
+              // the fold is the identity, as it is for the citations above.
+              key={`${turn.runId}-draft-${index}`}
+              draft={draft}
+              acts={acts}
             />
           ))}
         </ul>
@@ -350,6 +394,58 @@ function Citation({ citation }: { citation: GyldAskCitation }) {
             unresolved: {citation.reason ?? 'no reason was emitted'}
           </span>
         )}
+    </li>
+  );
+}
+
+/**
+ * One ruling the agent DRAFTED, as an offer (GyldAskAgent.md section 8).
+ *
+ * It is drawn as what it is: a model's proposal, named by the model that made
+ * it, with the alternative it chose and the text it wrote. Taking it fills
+ * the decide form of the window wired to the same browser and nothing else —
+ * no principal, no stamp, no sources, no submit.
+ *
+ * A draft this window cannot take is SHOWN and REFUSED, never dropped: the
+ * button is offered with the reason on it, whether the reason is the
+ * supplier's (this record does not offer that alternative) or this window's
+ * (there is no graph window wired to take it into).
+ */
+function Drafted({ draft, acts }: { draft: GyldAskDraft; acts: DraftActs }) {
+  const offer = draftOffer(draft, acts.envelope);
+  const blocked = offer.takeable ? acts.refusal : offer.reason;
+  return (
+    <li
+      className="gyld-ask-draft"
+      data-alternative={offer.alternative}
+      data-resolved={offer.takeable ? 'yes' : 'no'}
+    >
+      <span className="gyld-chip">{offer.takeable ? offer.label : offer.alternative}</span>
+      <span className="gyld-note">
+        {offer.drafted === '' ? 'drafted by a model it did not name' : `drafted by ${offer.drafted}`}
+      </span>
+      <q className="gyld-ask-passage">{offer.text}</q>
+      {offer.sources.length > 0 && (
+        <span className="gyld-note">{`leaning on ${offer.sources.join(', ')}`}</span>
+      )}
+      <button
+        type="button"
+        className="gyld-ask-take"
+        disabled={blocked !== ''}
+        title={blocked === ''
+          ? 'fill the decide form of the graph window this one is wired to: the '
+            + 'alternative and the ruling text, marked as this model\'s draft'
+          : blocked}
+        onClick={() => acts.take(offer)}
+      >
+        Take this draft
+      </button>
+      {!offer.takeable && (
+        <span className="gyld-fault gyld-ask-unresolved">{`unresolved: ${offer.reason}`}</span>
+      )}
+      {offer.takeable && acts.refusal !== '' && (
+        <span className="gyld-note gyld-ask-untakeable">{acts.refusal}</span>
+      )}
     </li>
   );
 }

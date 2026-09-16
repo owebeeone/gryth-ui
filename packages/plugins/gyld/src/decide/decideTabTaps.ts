@@ -6,6 +6,7 @@ import {
   refFromParams, streamFromParams,
 } from '../grips';
 import { ANSWER_EMPTY, ASK_EMPTY } from './drafts';
+import { GyldTakenDraftTap } from './GyldTakenDraftTap';
 
 // The gyld.decide seeds.
 //
@@ -38,6 +39,12 @@ export function decideTabTaps(_tabId: string, params?: Record<string, unknown>):
       initial: '', handleGrip: GYLD_ANSWER_EXPORT_TAP,
     }),
     createAtomValueTap(GYLD_ASK_EXPORT, { initial: '', handleGrip: GYLD_ASK_EXPORT_TAP }),
+    // LAST of the four, so the answer draft above is registered before it
+    // reads that atom's handle: the tap that fills this window's form from a
+    // draft the reader took in the ask window (GyldAskAgent.md section 8). It
+    // applies each take once and fills four fields; a window wired to no
+    // browser resolves no take and it fills nothing.
+    new GyldTakenDraftTap(),
   ];
   if (stream === '' && ref === '') {
     return seeds;

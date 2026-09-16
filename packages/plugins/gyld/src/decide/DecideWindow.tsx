@@ -4,7 +4,7 @@ import {
   GYLD_ANSWER_DRAFT, GYLD_ANSWER_DRAFT_TAP, GYLD_ANSWER_EXPORT, GYLD_ANSWER_EXPORT_TAP,
   GYLD_ASK_DRAFT, GYLD_ASK_DRAFT_TAP, GYLD_ASK_EXPORT, GYLD_ASK_EXPORT_TAP,
   GYLD_DECIDE_NOW, GYLD_DEST_REF, GYLD_DEST_STREAM, GYLD_OPS, GYLD_OPS_STATUS,
-  GYLD_RECORDS, GYLD_STREAMS, GYLD_TAB_ID, GYLD_VALIDATION,
+  GYLD_RECORDS, GYLD_STREAMS, GYLD_TAB_DRAFT_TOOK, GYLD_TAB_ID, GYLD_VALIDATION,
 } from '../grips';
 import { OpsPanel } from '../ops/OpsPanel';
 import { opsGate } from '../ops/submit';
@@ -12,8 +12,9 @@ import { slotLabel } from '../records/records';
 import type { GyldValue } from '../store/state';
 import { rebuildCommand } from '../streams/operations';
 import {
-  ANSWER_EMPTY, ASK_ALTERNATIVE_EMPTY, ASK_EMPTY, answerShapeFaults, askShapeFaults,
-  filledAlternatives, type AnswerDraft, type AskDraft,
+  ANSWER_EMPTY, ASK_ALTERNATIVE_EMPTY, ASK_EMPTY, NOTHING_TAKEN, answerShapeFaults,
+  askShapeFaults, edited, filledAlternatives, withSources,
+  type AnswerDraft, type AskDraft,
 } from './drafts';
 import {
   askJoin, isRefusal, overlayTarget, type AskFragments, type OverlayTarget,
@@ -133,6 +134,10 @@ function AnswerForm({ target, rows, reason }: {
   const exportTap = useGrip(GYLD_ANSWER_EXPORT_TAP) as AtomTapHandle<string> | undefined;
   const records = useGrip(GYLD_RECORDS);
   const seeded = useGrip(GYLD_DEST_REF) ?? '';
+  // What this window's own tap has filled in from an agent's draft, so the
+  // tags that draft cited can be OFFERED beside the sources field: the agent
+  // never writes that field, and the reader takes them (section 8).
+  const took = useGrip(GYLD_TAB_DRAFT_TOOK) ?? NOTHING_TAKEN;
   const ops = useGrip(GYLD_OPS);
   const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
   // Nothing composes without the projection, so nothing is offered without it.
@@ -166,8 +171,10 @@ function AnswerForm({ target, rows, reason }: {
         <select
           className="gyld-pick-question"
           value={chosen}
-          onChange={(event) => draftTap?.update((held) => ({
-            ...held, question: event.target.value, alternative: '',
+          // Another question is another ruling: the alternative goes, and so
+          // does the mark that says an agent drafted this one (section 8).
+          onChange={(event) => draftTap?.update((held) => edited(held, {
+            question: event.target.value, alternative: '',
           }))}
         >
           <option value="">choose a question</option>
@@ -195,7 +202,7 @@ function AnswerForm({ target, rows, reason }: {
                 name="gyld-alternative"
                 value={offer}
                 checked={draft.alternative === offer}
-                onChange={() => draftTap?.update((held) => ({ ...held, alternative: offer }))}
+                onChange={() => draftTap?.update((held) => edited(held, { alternative: offer }))}
               />
               {slotLabel(records, offer)}
               {question.preferred === offer && (
@@ -243,6 +250,23 @@ function AnswerForm({ target, rows, reason }: {
           }))}
         />
       </label>
+      {took.sources.length > 0 && (
+        <div className="gyld-chrome-row gyld-answer-offered">
+          <span className="gyld-note">
+            {`the draft leans on ${took.sources.join(', ')}`}
+          </span>
+          <button
+            type="button"
+            className="gyld-answer-take-sources"
+            title="add the tags that draft cited to the sources above"
+            onClick={() => draftTap?.update((held) => ({
+              ...held, sources: withSources(held.sources, took.sources),
+            }))}
+          >
+            Take these tags
+          </button>
+        </div>
+      )}
       <label className="gyld-chrome-field gyld-decide-wide">
         ruling
         <textarea
@@ -250,11 +274,24 @@ function AnswerForm({ target, rows, reason }: {
           rows={3}
           placeholder="what was ruled, and on what evidence"
           value={draft.text}
-          onChange={(event) => draftTap?.update((held) => ({
-            ...held, text: event.target.value,
+          // The reader's own words from here on: the mark goes the moment
+          // they change what the agent wrote (section 8).
+          onChange={(event) => draftTap?.update((held) => edited(held, {
+            text: event.target.value,
           }))}
         />
       </label>
+      {/* THE MARK. A draft can never be mistaken for a person's text, in this
+          window or in the log: it names the model, it says what clears it,
+          and it says what a submit that still carries it will record. */}
+      {draft.drafted !== '' && (
+        <p className="gyld-note gyld-answer-drafted" data-drafted={draft.drafted}>
+          {`this alternative and this ruling are a draft by ${draft.drafted}. `
+            + 'Edit either and the mark goes; submit it as it stands and the ruling '
+            + 'records that it was drafted by that model and accepted by the '
+            + 'principal above.'}
+        </p>
+      )}
       <ul className="gyld-omissions">
         {faults.map((fault) => (
           <li key={fault}>{fault}</li>

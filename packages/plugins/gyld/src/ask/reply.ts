@@ -54,16 +54,47 @@ export interface GyldAskCitation {
 }
 
 /**
+ * One ruling the agent DRAFTED, as the `draft` record carries it
+ * (GyldAskAgent.md section 8; `glade-gyld/src/ask.rs`, `AskDraft`).
+ *
+ * It is an OFFER and nothing else. `drafted_by` is the model id, so a draft
+ * can never be mistaken for a person's text; `alternative` is the model's own
+ * string, verbatim and never corrected, and `alternative_slot` is the
+ * envelope's qualified slot for it, which is present only when the envelope
+ * actually offers it. A draft naming an alternative the envelope does not
+ * offer arrives with `resolved: false` and the reason, and is drawn as one.
+ */
+export interface GyldAskDraft {
+  /** The record it rules on: the ENVELOPE's own slot, never a name the model
+   *  chose. */
+  slot?: string;
+  /** The alternative the model named, verbatim. */
+  alternative?: string;
+  /** The envelope's qualified slot for that alternative, when it offers one. */
+  alternative_slot?: string;
+  /** The one-sentence ruling, in the form the overlays use. */
+  ruling_text?: string;
+  /** The source tags the draft leans on, as the model named them. */
+  sources?: string[];
+  /** The model id that drafted it. */
+  drafted_by?: string;
+  /** Whether the envelope offers the alternative it names. */
+  resolved?: boolean;
+  /** Why it does not, when it does not. */
+  reason?: string;
+}
+
+/**
  * One record on the `gyld.ask` log.
  *
  * It is the `gwz.output` field shape plus two fields (section 4, "The reply"),
  * so one consumer folds this surface and `gyld.output`: the CONVERSATION this
  * turn belongs to, which is also the log's key, and the RECORD a `citation`
- * (and, from Phase 3, a `draft`) carries.
+ * or a `draft` carries.
  */
 export interface GyldAskRecord extends GyldOutputRecord {
   conversation?: string;
-  record?: GyldAskCitation;
+  record?: GyldAskCitation | GyldAskDraft;
 }
 
 /**
@@ -96,8 +127,8 @@ export class AskStream {
   /** One resolved (or unresolved) source, in `record`. */
   static readonly CITATION = new AskStream('citation');
 
-  /** A ruling the agent drafted, in `record`. Phase 3 renders it; step 1.5
-   *  draws nothing for it rather than pretending it is prose. */
+  /** A ruling the agent drafted, in `record`: an offer a human takes, edits
+   *  or discards (section 8), never prose and never a ruling. */
   static readonly DRAFT = new AskStream('draft');
 
   /** The turn's close: `done`, the exit, and on a refusal a line saying why. */
@@ -135,6 +166,10 @@ export interface AskTurn {
    *  sequence order, with nothing inserted between them. */
   prose: string;
   citations: GyldAskCitation[];
+  /** The rulings this turn drafted, in the order it proposed them. An OFFER
+   *  each, taken by a human or discarded (section 8); nothing here is a Gyld
+   *  fact and nothing here reaches an overlay on its own. */
+  drafts: GyldAskDraft[];
   said: AskSaid[];
   /** Whether an `end` record has closed this turn. */
   ended: boolean;
@@ -223,8 +258,8 @@ export function foldAskReply(
     const runId = record.run_id ?? '';
     if (turn === undefined || turn.runId !== runId) {
       turn = {
-        runId, principal: '', question: '', prose: '', citations: [], said: [],
-        ended: false,
+        runId, principal: '', question: '', prose: '', citations: [], drafts: [],
+        said: [], ended: false,
       };
       turns.push(turn);
     }
@@ -252,7 +287,10 @@ function fold(turn: AskTurn, record: GyldAskRecord): void {
   }
   if (stream === AskStream.CITATION) {
     if (record.record !== undefined) {
-      turn.citations.push(record.record);
+      // The `record` field carries the citation of a `citation` and the offer
+      // of a `draft`: which it is, is the STREAM's own fact, so it is read
+      // where the stream says and nowhere else.
+      turn.citations.push(record.record as GyldAskCitation);
     }
     return;
   }
@@ -266,8 +304,12 @@ function fold(turn: AskTurn, record: GyldAskRecord): void {
     return;
   }
   if (stream === AskStream.DRAFT) {
-    // Phase 3's record. Nothing is drawn for it here, and nothing is invented:
-    // a consumer that has never heard of a record shows nothing for it.
+    // An OFFER on its turn, whole and uncorrected — including one the
+    // supplier could not resolve, which is drawn as unresolved rather than
+    // dropped (section 8, MDV-7).
+    if (record.record !== undefined) {
+      turn.drafts.push(record.record as GyldAskDraft);
+    }
     return;
   }
   // Every other stream — the supplier's own `stderr`, and whatever a later

@@ -27,7 +27,10 @@ import type {
 import type { GyldAskRecord } from './ask/reply';
 import { NO_CONVERSATION, type AskConversation } from './ask/conversation';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
-import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
+import {
+  ANSWER_EMPTY, ASK_EMPTY, NOTHING_TAKEN,
+  type AnswerDraft, type AskDraft, type TakenDraft,
+} from './decide/drafts';
 
 // @grythjs/plugin-gyld grips. Scope and class follow CodingRules.md and the
 // grip inventory in gyld-wz/dev-docs/ui/GyldGrythPlugins.md section 3.3.
@@ -436,6 +439,29 @@ export const GYLD_ANSWER_DRAFT_TAP =
 export const GYLD_ASK_DRAFT = defineGrip<AskDraft>('Gyld.Tab.Draft.Ask', ASK_EMPTY);
 export const GYLD_ASK_DRAFT_TAP =
   defineGrip<AtomTapHandle<AskDraft>>('Gyld.Tab.Draft.Ask.Tap');
+
+// Class 1 atom; INSTANCE scope, one per BROWSER window, seeded by
+// `browserTabTaps` (GyldAskAgent.md section 8, step 3.2).
+//
+// The ruling an agent drafted and a reader TOOK, on its way from the ask
+// window to the decide window. It is seeded by the browser because that is
+// the one context both of them resolve: each is a SINK wired to the browser,
+// and two sinks of one source see each other's nothing. The ask window writes
+// it through the handle it resolves from the browser; the decide window's own
+// `GyldTakenDraftTap` reads it and fills the form, once per take.
+//
+// `take: 0` is a rendered state — nothing has been taken on this browser —
+// and not a default to fill anything in from.
+export const GYLD_TAB_DRAFT_TAKEN =
+  defineGrip<TakenDraft>('Gyld.Tab.Draft.Taken', NOTHING_TAKEN);
+export const GYLD_TAB_DRAFT_TAKEN_TAP =
+  defineGrip<AtomTapHandle<TakenDraft>>('Gyld.Tab.Draft.Taken.Tap');
+
+/** What the decide window's own tap has APPLIED into its form, so the tags
+ *  that draft cited can be offered beside the sources field (section 8: the
+ *  reader takes them, the agent never writes them). */
+export const GYLD_TAB_DRAFT_TOOK =
+  defineGrip<TakenDraft>('Gyld.Tab.Draft.Took', NOTHING_TAKEN);
 
 export const GYLD_ANSWER_EXPORT = defineGrip<string>('Gyld.Tab.Export.Answer', '');
 export const GYLD_ANSWER_EXPORT_TAP =

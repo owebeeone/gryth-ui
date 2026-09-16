@@ -215,8 +215,42 @@ function tuple(values: readonly string[]): string {
   return values.length === 1 ? `(${items},)` : `(${items})`;
 }
 
+/** The indent a class body's docstring stands at, which a second paragraph of
+ *  one has to stand at too. */
+const BODY_INDENT = '    ';
+
 function docstring(text: string): string {
-  return `    """${text.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"').trim()}"""`;
+  return `${BODY_INDENT}"""${text.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"').trim()}"""`;
+}
+
+/**
+ * The line a ruling still marked as an agent's draft carries into the overlay
+ * (GyldAskAgent.md section 8).
+ *
+ * "Accepted", not "edited": the mark is cleared the moment the reader changes
+ * the alternative or the ruling text (`drafts.ts`, `edited`), so a submit
+ * that still carries one is a submit of the model's own words. The principal
+ * is the reader's field and what the overlay records either way (owner ruling
+ * O6); this line says who accepted them.
+ */
+export function draftedStamp(draft: AnswerDraft): string {
+  return `Drafted by ${draft.drafted.trim()}, accepted by ${draft.principal.trim()}.`;
+}
+
+/**
+ * The ruling's prose as the record will carry it: what the reader wrote, and
+ * the drafting stamp when the text is still an agent's draft.
+ *
+ * ONE composition, as everything else about this text is: the export box and
+ * the wire carry the same bytes, so the stamp is as readable before a submit
+ * as it is in the ruling afterwards.
+ */
+export function rulingProse(draft: AnswerDraft): string {
+  const text = draft.text.trim();
+  if (draft.drafted.trim() === '') {
+    return text;
+  }
+  return `${text}\n\n${BODY_INDENT}${draftedStamp(draft)}`;
 }
 
 /** The class an answer's ruling is declared as, and the member that places it.
@@ -266,7 +300,7 @@ export function answerOverlay(composition: AnswerComposition): string {
     '',
     '',
     `class ${names.symbol}(Ruling):`,
-    docstring(draft.text),
+    docstring(rulingProse(draft)),
     `    principal = ${quoted(draft.principal.trim())}`,
     `    stamp = ${quoted(draft.stamp.trim())}`,
   ];
