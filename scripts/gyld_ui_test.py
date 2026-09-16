@@ -8,7 +8,8 @@ Run them with `pnpm test:py`, or directly:
 They exercise only what can be decided without a running composition — port
 derivation, the state file, the stale-lock decision, readiness detection over
 log text, the supplier's first-build and publication lines, `/bootstrap.json`
-parsing and the status verdict — so the suite needs no grazel, no node and no
+parsing, the ask agent's environment passthrough and endpoint check, and the
+status verdict — so the suite needs no grazel, no node and no
 Python 3.13. It runs on the system `python3` (3.10) exactly as the script does.
 """
 
@@ -459,6 +460,151 @@ class VerdictTest(unittest.TestCase):
             gu.CheckResult("node port", False, "refused").line(),
             "  FAIL  node port — refused",
         )
+
+
+class AgentEnvTest(unittest.TestCase):
+    """The ask agent's configuration reaches the supplier through grazel's
+    environment, because grazel passes it no flags at all."""
+
+    def test_only_the_four_agent_variables_are_carried_and_a_blank_is_not_set(self):
+        carried = gu.agent_env(
+            {
+                "ANTHROPIC_BASE_URL": "http://127.0.0.1:11434",
+                "GYLD_AGENT_MODEL": "qwen3.8-96k",
+                "ANTHROPIC_AUTH_TOKEN": "ollama",
+                "ANTHROPIC_API_KEY": "   ",
+                "PATH": "/usr/bin",
+                "ANTHROPIC_MODEL": "somebody-elses",
+            }
+        )
+        self.assertEqual(
+            carried,
+            {
+                "ANTHROPIC_BASE_URL": "http://127.0.0.1:11434",
+                "GYLD_AGENT_MODEL": "qwen3.8-96k",
+                "ANTHROPIC_AUTH_TOKEN": "ollama",
+            },
+        )
+        self.assertEqual(gu.agent_env({}), {})
+
+    def test_the_spawn_environment_keeps_everything_and_carries_the_four(self):
+        base = {"PATH": "/usr/bin", "ANTHROPIC_BASE_URL": "http://127.0.0.1:11434"}
+        env = gu.grazel_env(base)
+        self.assertEqual(env["PATH"], "/usr/bin", "grazel still gets its own world")
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "http://127.0.0.1:11434")
+        self.assertIsNot(env, base, "the caller's environment is not mutated")
+
+    def test_a_key_is_named_and_never_printed(self):
+        line = gu.agent_env_line(
+            gu.agent_env(
+                {
+                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:11434",
+                    "GYLD_AGENT_MODEL": "qwen3.8-96k",
+                    "ANTHROPIC_AUTH_TOKEN": "s3cret-value",
+                }
+            )
+        )
+        self.assertIn("http://127.0.0.1:11434", line)
+        self.assertIn("qwen3.8-96k", line)
+        self.assertIn("ANTHROPIC_AUTH_TOKEN=<set>", line)
+        self.assertNotIn("s3cret-value", line)
+        self.assertIn("none set", gu.agent_env_line({}))
+
+
+class AgentEndpointTest(unittest.TestCase):
+    """The one status check the endpoint earns — and the two rules it needs,
+    because Anthropic's endpoint will not list its models without a key."""
+
+    def _answer(self, status, error=""):
+        return lambda url: gu.HttpAnswer(status, "", error)
+
+    def test_a_local_endpoint_is_expected_to_answer_v1_models(self):
+        asked = []
+
+        def get(url):
+            asked.append(url)
+            return gu.HttpAnswer(200, '{"object":"list"}')
+
+        check = gu.agent_endpoint_check(
+            "http://127.0.0.1:11434", "environment", get=get
+        )
+        self.assertTrue(check.ok, check.line())
+        self.assertEqual(asked, ["http://127.0.0.1:11434/v1/models"])
+        self.assertIn("environment", check.detail)
+
+        # A trailing slash does not make it //v1/models.
+        asked.clear()
+        gu.agent_endpoint_check("http://127.0.0.1:11434/", "environment", get=get)
+        self.assertEqual(asked, ["http://127.0.0.1:11434/v1/models"])
+
+    def test_a_local_endpoint_that_does_not_answer_fails_with_the_reason(self):
+        check = gu.agent_endpoint_check(
+            "http://127.0.0.1:11434",
+            gu.AGENT_CONFIG_FILE,
+            get=self._answer(0, "Connection refused"),
+        )
+        self.assertFalse(check.ok)
+        self.assertIn("Connection refused", check.detail)
+        self.assertIn(gu.AGENT_CONFIG_FILE, check.detail)
+
+    def test_anthropics_own_endpoint_is_only_checked_for_a_host(self):
+        def never(url):
+            raise AssertionError("Anthropic's endpoint is never asked: {}".format(url))
+
+        check = gu.agent_endpoint_check(
+            "https://api.anthropic.com",
+            "environment",
+            get=never,
+            resolves=lambda h: True,
+        )
+        self.assertTrue(check.ok, check.line())
+        self.assertIn("api.anthropic.com resolves", check.detail)
+
+        gone = gu.agent_endpoint_check(
+            "https://api.anthropic.com",
+            "environment",
+            get=never,
+            resolves=lambda h: False,
+        )
+        self.assertFalse(gone.ok)
+        self.assertIn("does NOT resolve", gone.detail)
+
+    def test_a_host_that_merely_ends_in_the_name_is_not_anthropics(self):
+        self.assertTrue(gu.is_anthropic("https://api.anthropic.com/v1"))
+        self.assertTrue(gu.is_anthropic("https://anthropic.com"))
+        self.assertFalse(gu.is_anthropic("https://api.anthropic.com.example.net"))
+        self.assertFalse(gu.is_anthropic("http://127.0.0.1:11434"))
+
+    def test_the_environment_beats_the_config_file_and_no_endpoint_is_no_check(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            agent = gu.bundle_root(data) / "agent"
+            agent.mkdir(parents=True)
+            self.assertIsNone(gu.effective_base_url(data, {}))
+
+            (agent / "config.json").write_text(
+                '{"base_url": "http://from-file:1", "model": "m"}', encoding="utf-8"
+            )
+            self.assertEqual(
+                gu.effective_base_url(data, {}),
+                ("http://from-file:1", gu.AGENT_CONFIG_FILE),
+            )
+            self.assertEqual(
+                gu.effective_base_url(
+                    data, {"ANTHROPIC_BASE_URL": "http://from-env:2"}
+                ),
+                ("http://from-env:2", "environment"),
+            )
+            # A blank variable is not a value, so the file still answers.
+            self.assertEqual(
+                gu.effective_base_url(data, {"ANTHROPIC_BASE_URL": "  "}),
+                ("http://from-file:1", gu.AGENT_CONFIG_FILE),
+            )
+
+            # A file that does not decode names no endpoint; the supplier says
+            # so on its own log, and this script does not guess.
+            (agent / "config.json").write_text("{,}", encoding="utf-8")
+            self.assertIsNone(gu.effective_base_url(data, {}))
 
 
 class StreamCountTest(unittest.TestCase):

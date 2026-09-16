@@ -47,11 +47,12 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, fields
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 # --------------------------------------------------------------------------
 # The composition's fixed points
@@ -91,6 +92,28 @@ FIRST_BUILD_TICK = 5.0
 BUILT_MODE_BUILD_TIMEOUT = 1800.0
 STOP_GRACE_SECONDS = 15.0
 HTTP_TIMEOUT = 5.0
+
+#: The environment the ask agent is configured through, and the ONE place that
+#: says so. grazel composes `glade-gyld`'s argv itself and passes none of the
+#: supplier's `--agent-*` flags (glade-wz/grazel/src/lib.rs,
+#: `gyld_supplier_argv`), so a desk's endpoint and model reach it only through
+#: this environment or through `<bundle-root>/agent/config.json`. The
+#: environment outranks the file, exactly as the supplier resolves it
+#: (glade-gyld/src/agent.rs).
+AGENT_BASE_URL_ENV = "ANTHROPIC_BASE_URL"
+AGENT_MODEL_ENV = "GYLD_AGENT_MODEL"
+#: Key sources. Named here to be CARRIED, and never printed or logged: the
+#: supplier reads one at the moment of a call and nothing else ever sees it.
+AGENT_KEY_ENVS = ("ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
+AGENT_ENVS = (AGENT_BASE_URL_ENV, AGENT_MODEL_ENV) + AGENT_KEY_ENVS
+
+#: The supplier's own config file, relative to the bundle root.
+AGENT_CONFIG_FILE = "agent/config.json"
+
+#: Anthropic's own endpoint needs a key even to list models, so `status` only
+#: asks whether its host RESOLVES. Everything else is expected to answer.
+ANTHROPIC_HOST = "anthropic.com"
+AGENT_MODELS_PATH = "/v1/models"
 
 _WS_PORT = re.compile(r":(\d+)\s*$")
 
@@ -736,6 +759,147 @@ def now_stamp() -> str:
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def agent_env(base: Dict[str, str]) -> Dict[str, str]:
+    """The agent variables `base` actually sets, blanks dropped.
+
+    PURE, and the only list of names in this script. grazel inherits the whole
+    environment today, so this carries nothing it would not have carried — but
+    it is what makes the passthrough a stated guarantee with a test behind it
+    rather than an accident of `dict(os.environ)`, and a blank variable is
+    treated as unset because `ANTHROPIC_BASE_URL=` in a shell is how one is
+    cleared."""
+    held: Dict[str, str] = {}
+    for name in AGENT_ENVS:
+        value = base.get(name, "")
+        if value is not None and value.strip() != "":
+            held[name] = value
+    return held
+
+
+def grazel_env(base: Dict[str, str]) -> Dict[str, str]:
+    """The environment grazel is spawned with: everything, with the agent
+    variables carried explicitly so a future narrowing of this cannot drop
+    them in silence."""
+    env = dict(base)
+    env.update(agent_env(base))
+    return env
+
+
+def agent_env_line(passed: Dict[str, str]) -> str:
+    """What to PRINT about the agent environment. The endpoint and the model by
+    value; a key by name only, because a key never reaches a log, a record or a
+    terminal."""
+    if not passed:
+        return "agent env: none set — the supplier uses {} or its defaults".format(
+            AGENT_CONFIG_FILE
+        )
+    said = []
+    for name in AGENT_ENVS:
+        if name not in passed:
+            continue
+        if name in AGENT_KEY_ENVS:
+            said.append("{}=<set>".format(name))
+        else:
+            said.append("{}={}".format(name, passed[name]))
+    return "agent env: {}".format(" ".join(said))
+
+
+def config_base_url(data: Path) -> Optional[str]:
+    """The base URL `<bundle-root>/agent/config.json` names, if it names one and
+    decodes at all. A file this script cannot read is not this script's problem
+    to report — the supplier says so on its own log."""
+    try:
+        body = json.loads(
+            (bundle_root(data) / AGENT_CONFIG_FILE).read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError):
+        return None
+    if not isinstance(body, dict):
+        return None
+    held = body.get("base_url")
+    return held if isinstance(held, str) and held.strip() != "" else None
+
+
+def effective_base_url(data: Path, env: Dict[str, str]) -> Optional[Tuple[str, str]]:
+    """The endpoint this instance's supplier will actually call, and where that
+    came from — or `None` when nothing configures one and the supplier is on its
+    own Anthropic default. The environment beats the file, as the supplier
+    resolves it."""
+    from_env = env.get(AGENT_BASE_URL_ENV, "")
+    if from_env is not None and from_env.strip() != "":
+        return (from_env.strip(), "environment")
+    from_file = config_base_url(data)
+    if from_file is not None:
+        return (from_file.strip(), AGENT_CONFIG_FILE)
+    return None
+
+
+def host_of(url: str) -> str:
+    """The host of a base URL, lowercased and without its port."""
+    split = urllib.parse.urlsplit(url if "://" in url else "//" + url)
+    return (split.hostname or "").lower()
+
+
+def is_anthropic(url: str) -> bool:
+    host = host_of(url)
+    return host == ANTHROPIC_HOST or host.endswith("." + ANTHROPIC_HOST)
+
+
+def host_resolves(host: str) -> bool:
+    if host == "":
+        return False
+    try:
+        socket.getaddrinfo(host, None)
+        return True
+    except OSError:
+        return False
+
+
+def agent_endpoint_check(
+    base_url: str,
+    whence: str,
+    get: Callable[[str], HttpAnswer] = http_get,
+    resolves: Callable[[str], bool] = host_resolves,
+) -> CheckResult:
+    """One check for the configured endpoint: is anything there?
+
+    Two rules, because the two endpoints answer differently. Anthropic's needs a
+    key even to list models, so a 401 there would be a PASS dressed as a
+    failure — only the host is checked. A local endpoint (dabeest's patched
+    Ollama, say) lists its models unauthenticated, so 200 is the answer and
+    anything else is worth saying out loud before a reader asks a question and
+    waits for a reply that will never come."""
+    url = base_url.rstrip("/") + AGENT_MODELS_PATH
+    if is_anthropic(base_url):
+        host = host_of(base_url)
+        found = resolves(host)
+        return CheckResult(
+            "agent endpoint",
+            found,
+            "{} ({}) — Anthropic's own, which needs a key to list models, so only "
+            "the host is checked: {}".format(
+                base_url,
+                whence,
+                "{} resolves".format(host)
+                if found
+                else "{} does NOT resolve".format(host),
+            ),
+        )
+    answer = get(url)
+    return CheckResult(
+        "agent endpoint",
+        answer.ok,
+        "{} ({}) — {} {}".format(
+            base_url,
+            whence,
+            url,
+            "answered"
+            if answer.ok
+            else "did not ({})".format(answer.error or answer.status),
+        ),
+    )
+
+
 # --------------------------------------------------------------------------
 # Paths of the workzone
 # --------------------------------------------------------------------------
@@ -994,6 +1158,13 @@ def status_checks(state: InstanceState) -> List[CheckResult]:
                 ),
             )
         )
+
+    # The ask agent's endpoint, when anything configures one. An instance with
+    # no `base_url` anywhere is on the supplier's Anthropic default and adds no
+    # line: a check nobody configured is not a check that failed.
+    endpoint = effective_base_url(data, dict(os.environ))
+    if endpoint is not None:
+        checks.append(agent_endpoint_check(endpoint[0], endpoint[1]))
 
     page_url = mode.url(Ports(state.ui_port, state.http_port, state.node_port))
     page = http_get(page_url)
@@ -1286,12 +1457,17 @@ def start_command(args: argparse.Namespace) -> int:
 
     print("grazel: {}".format(" ".join(argv)))
     print("  log: {}".format(grazel_log))
+    # The supplier is spawned by grazel with a fixed argument list, so this
+    # environment is one of its only two configuration channels. It is carried
+    # explicitly and SAID — by name for a key, by value for the rest.
+    spawn_environment = grazel_env(dict(os.environ))
+    print("  {}".format(agent_env_line(agent_env(spawn_environment))))
     # Everything already in the log belongs to an earlier start of this same
     # instance: grazel appends. Only what follows this offset is this run.
     log_offset = log_size(grazel_log)
     # cwd is the grazel checkout: its --app default (apps/grazel-app.glade) and
     # its --node-bin default are both relative to it.
-    grazel_pid = spawn_detached(argv, layout.grazel_dir, grazel_log, dict(os.environ))
+    grazel_pid = spawn_detached(argv, layout.grazel_dir, grazel_log, spawn_environment)
     print("  pid {}".format(grazel_pid))
 
     state = InstanceState(
