@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createAtomValueTap, type AtomTapHandle } from '@owebeeone/grip-react';
+import { createAtomValueTap, type AtomTapHandle, type Drip } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
 import {
   GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_FOCUS_TAP, GYLD_RECORD, GYLD_TAB_FOLLOW,
@@ -211,14 +211,46 @@ describe('gyld.detail opens the decide window on the record it shows', () => {
 });
 
 describe('gyld.detail following the shared focus', () => {
-  /** The record view inside the window's FOCUS context, which the window
-   *  creates on its first render, exactly as the diff window's panes are. */
-  const followed = (tab: ReturnType<MountedDesk['tab']>) => {
+  /**
+   * The record view inside the window's FOCUS context, which the window
+   * creates on its first render, exactly as the diff window's panes are.
+   *
+   * HELD, one per tab, for the life of this file. The graph holds contexts and
+   * drips by WeakRef (`test/mount.tsx`, "the harness is the holder"), and this
+   * reader is called on every tick of a poll: a consumer only the last tick
+   * knew about can be collected between two ticks, and the poll then reads a
+   * brand new consumer that has not been produced to yet, for ever. Holding it
+   * is what makes the wait a wait rather than a race with the collector.
+   */
+  const heldFocus = new Map<unknown, { context: unknown; drip: Drip<GyldRecordView> }>();
+  const followed = (tab: ReturnType<MountedDesk['tab']>): Drip<GyldRecordView> => {
+    const known = heldFocus.get(tab);
+    if (known !== undefined) {
+      return known.drip;
+    }
     const context = tab.ctx.getGripConsumerContext()
       .getOrCreateMatchingContext(DETAIL_FOCUS_CONTEXT);
-    const drip = context.getGripConsumerContext().getOrCreateConsumer(GYLD_RECORD);
+    const drip = context.getGripConsumerContext()
+      .getOrCreateConsumer(GYLD_RECORD) as Drip<GyldRecordView>;
     drip.subscribe(() => {});
+    heldFocus.set(tab, { context, drip });
     return drip;
+  };
+
+  /**
+   * Turn this window's `follow focus` on, AFTER its seed has published.
+   *
+   * `createAtomValueTap` publishes its initial value on its first produce, and
+   * a write that lands before that produce is overwritten by it. Writing the
+   * handle the instant the tab is built is therefore a race the loaded machine
+   * loses: the window renders with following OFF, reads its own empty ref and
+   * draws the empty state. Waiting for the seeded `false` is waiting for the
+   * tap to have produced, which is the only thing that makes the write stick.
+   */
+  const startFollowing = async (tab: ReturnType<MountedDesk['tab']>): Promise<void> => {
+    await expect.poll(() => tab.read(GYLD_TAB_FOLLOW).get()).toBe(false);
+    (tab.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    expect(tab.read(GYLD_TAB_FOLLOW).get()).toBe(true);
   };
 
   it('offers the toggle on a standalone window, off, with nothing on it', async () => {
@@ -235,16 +267,16 @@ describe('gyld.detail following the shared focus', () => {
   it('shows the record last focused in any browser once it is on', async () => {
     const desk = mountDesk();
     const tab = desk.tab('detail-follow', detailTabTaps('detail-follow'));
-    (tab.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    await startFollowing(tab);
     // what a click in a browser writes: a stream and a qualified slot
     (desk.read(GYLD_FOCUS_TAP).get() as AtomTapHandle<GyldFocus>)
       .set({ stream: 'base', ref: SCOPE_MODEL });
     tab.render(<RecordDetail />);
     const view = await settled(
-      () => followed(tab).get() as GyldRecordView,
+      () => followed(tab).get(),
       (held) => held?.status === 'ok',
     );
-    expect(view.ref).toBe(SCOPE_MODEL);
+    expect(view?.ref).toBe(SCOPE_MODEL);
     const markup = tab.render(<RecordDetail />);
     expect(markup).toContain(emitted.occurrence.label);
     expect(markup).toContain('following the shared focus');
@@ -254,19 +286,19 @@ describe('gyld.detail following the shared focus', () => {
   it('follows the focus onto another stream, not just another record', async () => {
     const desk = mountDesk();
     const tab = desk.tab('detail-follow-stream', detailTabTaps('detail-follow-stream'));
-    (tab.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    await startFollowing(tab);
     const focus = desk.read(GYLD_FOCUS_TAP).get() as AtomTapHandle<GyldFocus>;
     focus.set({ stream: 'base', ref: SCOPE_MODEL });
     tab.render(<RecordDetail />);
     await settled(
-      () => followed(tab).get() as GyldRecordView,
+      () => followed(tab).get(),
       (held) => held?.status === 'ok' && held.ref === SCOPE_MODEL,
     );
     // a question stream A added, which the base does not carry at all
     const PIN_AUDIT = 'glade_decisions_stream_a:GladeDecisionsStreamA.pin_audit';
     focus.set({ stream: 'stream-a', ref: PIN_AUDIT });
     await settled(
-      () => followed(tab).get() as GyldRecordView,
+      () => followed(tab).get(),
       (held) => held?.status === 'ok' && held.ref === PIN_AUDIT,
     );
     expect(tab.render(<RecordDetail />)).toContain('pin_audit');
@@ -278,7 +310,7 @@ describe('gyld.detail following the shared focus', () => {
       stream: 'base', perspective: 'decisions',
     }));
     const sink = wireSink(browser, 'sink:follow', detailTabTaps('sink:follow'));
-    (sink.read(GYLD_TAB_FOLLOW_TAP).get() as AtomTapHandle<boolean>).set(true);
+    await startFollowing(sink);
     (browser.read(GYLD_DEST_REF_TAP).get() as AtomTapHandle<string>).set(SCOPE_MODEL);
     // the shared focus is somewhere else entirely; a wired window follows the
     // browser it is wired to and says which one, and offers no toggle at all
