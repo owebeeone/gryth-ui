@@ -5,6 +5,7 @@ import {
   GYLD_LENS, GYLD_PREVIEW, GYLD_RECORDS, GYLD_SET, GYLD_TAB_SEARCH,
 } from './grips';
 import { BrowserChrome } from './browser/BrowserChrome';
+import { NodeCard } from './browser/NodeCard';
 import { SetPicker } from './browser/SetPicker';
 import { NO_NEXT_UP, nextUpFrom } from './browser/nextUp';
 import { NO_SEARCH, searchLens } from './browser/search';
@@ -114,6 +115,11 @@ export function GyldBrowser({ tabId }: ToolViewProps) {
             search={search}
             nextUp={nextUp}
             state={state}
+            // The act on the object: hovering a box shows the question, its
+            // alternatives and the three windows a reader can open from it.
+            // The card resolves its own emitted data from this window's
+            // context, so nothing about it is passed down as a prop.
+            card={(node) => <NodeCard node={node} />}
           />
         )}
     </div>

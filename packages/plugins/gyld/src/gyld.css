@@ -155,6 +155,9 @@
   min-height: 8.333em;
   overflow: hidden;
   cursor: grab;
+  /* The hover card is positioned against this box, and is INSIDE it so that
+     reaching the card does not end the hover (LensView). */
+  position: relative;
 }
 
 .gyld-lens-svg {
@@ -390,6 +393,75 @@
 
 .gyld-node-glyph path {
   opacity: 0.85;
+}
+
+/* The node card: HTML over the picture, anchored under the hovered box's own
+   emitted rectangle. It adds nothing to the layout and moves nothing — the
+   anchor's `left`/`top` are the emitted box through the camera (MDV-4). */
+.gyld-card-anchor {
+  position: absolute;
+  z-index: 3;
+  cursor: default;
+}
+
+.gyld-node-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.333em;
+  width: 24em;
+  max-width: 90vw;
+  padding: 0.667em 0.833em;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 8px;
+  /* The desk's own window ground, so the card reads on every theme. */
+  background: var(--win, Canvas);
+  color: inherit;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 28%);
+  font: 0.8em/1.45 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-node-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.333em 0.667em;
+}
+
+.gyld-node-card-text,
+.gyld-node-card-offers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.167em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-node-card-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.917em;
+  white-space: pre-wrap;
+  opacity: 0.85;
+}
+
+.gyld-node-card-offers {
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding-top: 0.333em;
+}
+
+.gyld-node-card-offer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.417em;
+}
+
+.gyld-node-card-offer[data-preferred='yes'] {
+  font-weight: 600;
+}
+
+.gyld-node-card-acts {
+  padding-top: 0.333em;
+  gap: 0.333em 0.5em;
 }
 
 /* The count and the one filter that read the emitted decide-now list. */

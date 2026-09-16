@@ -1,15 +1,18 @@
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import {
   DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_RETARGET_TAB,
+  type OpenTool, type OpenWired, type RetargetTab,
 } from '@grythjs/plugin-api';
 import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_TAB_ID,
 } from '../grips';
-import { GYLD_DECIDE_TOOL } from '../tools';
-import { browserLink, questionParams } from './links';
+import { GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
+import { browserLink, questionParams, recordParams } from './links';
 
-// "Show me that record in the browser", and "answer that question", for a
-// window that is not the browser.
+// "Show me that record in the browser", "answer that question", and "show me
+// its record", for any window that can reach a browser — including the browser
+// itself, which seeds its own tab id and so takes the wired path on its own
+// boxes.
 //
 // Two cases, told apart by ONE fact that arrives through the graph: a browser
 // publishes its own tab id, so a window wired to one resolves a non-empty
@@ -27,6 +30,73 @@ import { browserLink, questionParams } from './links';
 //  - STANDALONE: there is no browser to move, so a new one is opened on the
 //    same stream, the same perspective and this record (window policy v1: a
 //    link always opens a new window).
+//
+// The three acts are PURE functions over the handles, and the hook is the
+// thing that resolves the handles: this package renders to static markup and
+// dispatches no click, so what a press does is asserted by calling the act
+// (the shape `streams/useStreamTarget.ts` already uses).
+
+/** Everything one of the acts below writes through, passed whole. */
+export interface BrowserFocusHandles {
+  /** The browser this window can move, or '' when there is none. */
+  wiredTo: string;
+  stream: string;
+  perspective: string;
+  /** That browser's own record handle, resolved through the wire. */
+  ref?: AtomTapHandle<string>;
+  retarget?: RetargetTab;
+  openTool?: OpenTool;
+  openWired?: OpenWired;
+}
+
+/** Move the wired browser onto one record: the live window through its own
+ *  handle, and its tab record so a reload comes back on it. */
+function move(on: BrowserFocusHandles, slot: string): void {
+  on.ref?.set(slot);
+  on.retarget?.(on.wiredTo, {
+    stream: on.stream, perspective: on.perspective, focus: slot,
+  });
+}
+
+export function focusOn(on: BrowserFocusHandles, slot: string): void {
+  if (on.wiredTo !== '') {
+    move(on, slot);
+    return;
+  }
+  on.openTool?.(browserLink({ stream: on.stream, perspective: on.perspective, focus: slot }));
+}
+
+/**
+ * Open `gyld.decide` on one question.
+ *
+ * WIRED: the browser is moved to the question first and the decide window is
+ * opened wired to that same browser, so it answers on the stream the browser
+ * is on and opens on the record it now has focused, with no param copied —
+ * the answer form defaults its question to that `Gyld.Dest.Ref`. A decide
+ * window already wired to that browser is left where it is and follows the
+ * move, which is what `Desktop.OpenWired` does on a repeat.
+ * STANDALONE: there is no browser to move, so the window is opened on the
+ * link spec section 2 writes down, `{ stream, question }`.
+ */
+export function decideOn(on: BrowserFocusHandles, slot: string): void {
+  if (on.wiredTo !== '') {
+    move(on, slot);
+    on.openWired?.(on.wiredTo, { toolId: GYLD_DECIDE_TOOL });
+    return;
+  }
+  on.openTool?.({ toolId: GYLD_DECIDE_TOOL, params: questionParams(on.stream, slot) });
+}
+
+/** The same, for `gyld.detail`: the record window this browser already has,
+ *  moved onto this record, or a new one when there is no browser to wire to. */
+export function detailOn(on: BrowserFocusHandles, slot: string): void {
+  if (on.wiredTo !== '') {
+    move(on, slot);
+    on.openWired?.(on.wiredTo, { toolId: GYLD_DETAIL_TOOL });
+    return;
+  }
+  on.openTool?.({ toolId: GYLD_DETAIL_TOOL, params: recordParams(on.stream, slot) });
+}
 
 export interface BrowserFocus {
   /** The tab id of the browser this window is wired to, or '' when it is not. */
@@ -36,18 +106,10 @@ export interface BrowserFocus {
   focus(slot: string): void;
   /** Whether a decide window can be opened at all, same reason. */
   decideReady: boolean;
-  /**
-   * Open `gyld.decide` on one question.
-   *
-   * WIRED: the browser is moved to the question first and the decide window is
-   * opened wired to that same browser, so it answers on the stream the browser
-   * is on and opens on the record it now has focused, with no param copied. A
-   * decide window already wired to that browser is left where it is and
-   * follows the move, which is what `Desktop.OpenWired` does on a repeat.
-   * STANDALONE: there is no browser to move, so the window is opened on the
-   * link spec section 2 writes down, `{ stream, question }`.
-   */
   decide(slot: string): void;
+  /** Whether a record window can be opened or retargeted, same reason. */
+  detailReady: boolean;
+  detail(slot: string): void;
 }
 
 export function useBrowserFocus(): BrowserFocus {
@@ -59,28 +121,23 @@ export function useBrowserFocus(): BrowserFocus {
   const openTool = useGrip(DESKTOP_OPEN_TOOL);
   const openWired = useGrip(DESKTOP_OPEN_WIRED);
   const wired = wiredTo !== '';
-  const move = (slot: string): void => {
-    refTap?.set(slot);
-    retarget?.(wiredTo, { stream, perspective, focus: slot });
+  const handles: BrowserFocusHandles = {
+    wiredTo, stream, perspective, ref: refTap, retarget, openTool, openWired,
   };
+  const throughWire = wired ? openWired !== undefined : openTool !== undefined && stream !== '';
   return {
     wiredTo,
     ready: wired ? refTap !== undefined : openTool !== undefined,
     focus(slot: string): void {
-      if (wired) {
-        move(slot);
-        return;
-      }
-      openTool?.(browserLink({ stream, perspective, focus: slot }));
+      focusOn(handles, slot);
     },
-    decideReady: wired ? openWired !== undefined : openTool !== undefined && stream !== '',
+    decideReady: throughWire,
     decide(slot: string): void {
-      if (wired) {
-        move(slot);
-        openWired?.(wiredTo, { toolId: GYLD_DECIDE_TOOL });
-        return;
-      }
-      openTool?.({ toolId: GYLD_DECIDE_TOOL, params: questionParams(stream, slot) });
+      decideOn(handles, slot);
+    },
+    detailReady: throughWire,
+    detail(slot: string): void {
+      detailOn(handles, slot);
     },
   };
 }

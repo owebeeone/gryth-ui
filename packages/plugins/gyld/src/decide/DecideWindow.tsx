@@ -8,7 +8,7 @@ import {
 } from '../grips';
 import { OpsPanel } from '../ops/OpsPanel';
 import { opsGate } from '../ops/submit';
-import type { GyldRecords } from '../records/records';
+import { slotLabel } from '../records/records';
 import type { GyldValue } from '../store/state';
 import { rebuildCommand } from '../streams/operations';
 import {
@@ -58,17 +58,6 @@ function questionsOf(value: GyldValue<import('../contract').GyldDecideNow> | und
     invalid: 'the decide-now file did not read',
   };
   return { rows: [], reason: said[status] ?? status };
-}
-
-/** What a slot is called in the picture, when the projection says; the slot
- *  itself when it does not. Never a name spelled out of the slot. */
-function labelOf(records: GyldRecords | undefined, slot: string): string {
-  if (records === undefined) {
-    return slot;
-  }
-  const id = records.occurrenceBySlot.get(slot);
-  const occurrence = id === undefined ? undefined : records.occurrences.get(id);
-  return occurrence?.label ?? slot;
 }
 
 function Finding({ finding }: { finding: ValidationFinding }) {
@@ -208,7 +197,7 @@ function AnswerForm({ target, rows, reason }: {
                 checked={draft.alternative === offer}
                 onChange={() => draftTap?.update((held) => ({ ...held, alternative: offer }))}
               />
-              {labelOf(records, offer)}
+              {slotLabel(records, offer)}
               {question.preferred === offer && (
                 <span className="gyld-chip">the recorded lean</span>
               )}
@@ -424,7 +413,7 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
               checked={draft.gates.includes(slot)}
               onChange={() => toggle('gates', slot)}
             />
-            {labelOf(records, slot)}
+            {slotLabel(records, slot)}
           </label>
         ))}
         {triggers.length === 0 && (

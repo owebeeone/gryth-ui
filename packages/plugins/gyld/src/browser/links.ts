@@ -4,7 +4,8 @@ import { NO_FOCUS, type GyldFocus } from '../focus';
 import { toggleSelected, type GyldSelection } from '../lens/camera';
 import { slotOf } from '../lens/scene';
 import { PreviewPerspective } from '../preview/neighbourhood';
-import { GYLD_BROWSER_TOOL } from '../tools';
+import { StreamOperation, rulingStreamName } from '../streams/operations';
+import { GYLD_BROWSER_TOOL, GYLD_STREAMS_TOOL } from '../tools';
 import { emittedMemberFor, type PerspectiveOption } from './perspectives';
 
 // The links a browser window writes, as PURE functions. A link is the
@@ -85,6 +86,26 @@ export function recordParams(stream: string, ref: string): Record<string, unknow
 
 export function streamParams(stream: string): Record<string, unknown> {
   return { stream };
+}
+
+/**
+ * The link the node card's `Link a stream for this ruling` opens: a stream
+ * manager with the LINK operation, this stream as the parent, and the name
+ * `rulingStreamName` suggests, all three already in the form.
+ *
+ * It is the runbook's step 5 detour said BEFORE the refusal instead of after
+ * it. Nothing is submitted by opening it: the window still composes the
+ * command and the owner still presses it.
+ */
+export function linkForRulingLink(stream: string, label: string): ToolLink {
+  return {
+    toolId: GYLD_STREAMS_TOOL,
+    params: {
+      operation: StreamOperation.LINK.verb,
+      parent: stream,
+      name: rulingStreamName(stream, label),
+    },
+  };
 }
 
 /**

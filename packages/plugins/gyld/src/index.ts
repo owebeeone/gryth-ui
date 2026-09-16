@@ -204,7 +204,11 @@ export { GyldFirstPickTap } from './browser/GyldFirstPickTap';
 export {
   NOTHING_PICKED, OPENING_PERSPECTIVE, firstPick, type GyldFirstPick,
 } from './browser/firstPick';
-export { useBrowserFocus, type BrowserFocus } from './browser/useBrowserFocus';
+export {
+  decideOn, detailOn, focusOn, useBrowserFocus,
+  type BrowserFocus, type BrowserFocusHandles,
+} from './browser/useBrowserFocus';
+export { NodeCard } from './browser/NodeCard';
 export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
 export { FocusDestTap } from './detail/followFocus';
@@ -231,6 +235,7 @@ export { useKeyedContext } from './contexts';
 export { DecideNowList } from './decidenow/DecideNowList';
 export { groupQuestions, type Group } from './decidenow/groups';
 export { decideNowTabTaps } from './decidenow/decideNowTabTaps';
+export * from './browser/card';
 export * from './browser/links';
 export * from './browser/nextUp';
 export * from './browser/perspectives';

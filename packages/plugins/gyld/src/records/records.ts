@@ -366,3 +366,12 @@ export function recordView(
 export const RECORD_UNSET: GyldRecordView = Object.freeze({
   status: 'unset', stream: '', ref: '',
 });
+
+/** What a qualified slot is CALLED, when this destination's projection carries
+ *  the record; the slot itself when it does not. Never a name spelled out of
+ *  the slot: an unindexed slot reads as the slot, which is honest. */
+export function slotLabel(records: GyldRecords | undefined, slot: string): string {
+  const id = records?.occurrenceBySlot.get(slot);
+  const occurrence = id === undefined ? undefined : records?.occurrences.get(id);
+  return occurrence?.label ?? slot;
+}

@@ -136,6 +136,43 @@ export function draftShapeFaults(draft: StreamDraft): string[] {
   return faults;
 }
 
+/**
+ * The draft an opening link carries, as the stream manager's own seed.
+ *
+ * Params are serializable, so the OPERATION travels as its own verb and is
+ * read back through `operationNamed`; a verb that names none leaves the draft
+ * on the empty default rather than guessing at one. Nothing else is invented:
+ * a link with no parent and no name seeds the empty draft, which is exactly
+ * what a window opened from the launcher gets.
+ */
+export function draftFromParams(params?: Record<string, unknown>): StreamDraft {
+  const verb = typeof params?.operation === 'string' ? params.operation : '';
+  const parent = typeof params?.parent === 'string' ? params.parent : '';
+  const name = typeof params?.name === 'string' ? params.name : '';
+  return {
+    operation: operationNamed(verb) ?? DRAFT_EMPTY.operation,
+    parent,
+    name,
+  };
+}
+
+/**
+ * The name to suggest for a stream that carries ONE ruling.
+ *
+ * The supplier writes a stream's overlay module whole, so a ruling wants a
+ * stream of its own (the runbook's step 5 detour, and `compose.ts`
+ * `overwriteRefusal`). Naming it after the QUESTION rather than after the
+ * parent is what makes the second one possible: `demo-keys-key_custody` and
+ * `demo-keys-version_pin` can both exist, where two `demo-keys-ruling` cannot.
+ * It is a SUGGESTION in a form field — the owner renames it or not, and Gyld
+ * is what decides whether the name is legal. `label` is the question's own
+ * EMITTED member name off its decide-now row, never a name spelled out of a
+ * qualified slot.
+ */
+export function rulingStreamName(parent: string, label: string): string {
+  return label === '' ? parent : `${parent}-${label}`;
+}
+
 /** The command for a draft, or the empty string when its shape is not there
  *  yet. Nothing half-composed is ever exported. */
 export function draftCommand(draft: StreamDraft): string {

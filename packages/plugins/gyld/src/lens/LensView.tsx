@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import type { GyldLensState } from '../store/state';
 import { effectiveSelection } from '../browser/links';
@@ -235,7 +236,11 @@ export function LensFigure({
         const group = (event.target as Element).closest?.('g[id]');
         onHover?.(group?.getAttribute('id') ?? '');
       }}
-      onMouseLeave={() => onHover?.('')}
+      // NO mouse-leave clear here. The hover card is HTML over this picture
+      // and a sibling of it, so reaching the card leaves the SVG: clearing at
+      // this boundary took the card away the moment the pointer got to it,
+      // then put it back, for ever. The STAGE is the boundary that clears,
+      // and the card is inside it (see LensView below).
     >
       <Figure scene={scene} camera={camera} markerFor={markerFor} palette={palette} />
     </svg>
@@ -321,7 +326,7 @@ export function LensProvenance({ scene }: { scene: LensScene }) {
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld', search, nextUp, onSlot, state: shown }: {
+export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: shown }: {
   scope?: string;
   search?: SceneSearch;
   /**
@@ -332,6 +337,14 @@ export function LensView({ scope = 'gyld', search, nextUp, onSlot, state: shown 
    * list gets.
    */
   nextUp?: SceneNextUp;
+  /**
+   * The card to draw over the box the pointer is on, when the window around
+   * this one has one to draw. It is HTML over the SVG, anchored under the
+   * node's EMITTED box through the camera, so nothing in the picture moves
+   * and no geometry is added (MDV-4). A window that passes none draws none,
+   * which is every window but the browser.
+   */
+  card?: (node: SceneNode) => ReactNode;
   /**
    * The picture to draw, when the window around this one has already resolved
    * one. A browser window showing a browser PREVIEW passes `Gyld.Preview`
@@ -386,6 +399,9 @@ export function LensView({ scope = 'gyld', search, nextUp, onSlot, state: shown 
   const scene = buildScene(lens, {
     selection, hover, dimmed, search, nextUp,
   });
+  // The box the pointer is on, if it is on one. A hidden box is not on
+  // screen, so nothing is drawn over where it would have been.
+  const hovered = scene.nodes.find((node) => node.hovered && !node.hidden);
 
   // The fit measures the STAGE — the box that shows the picture — and never
   // the SVG or anything found by tag under the lens root (./stage.ts).
@@ -498,6 +514,14 @@ export function LensView({ scope = 'gyld', search, nextUp, onSlot, state: shown 
             dragTap.set(undefined);
           }
         }}
+        // The hover ends at the STAGE's edge, not the picture's: the card is
+        // inside this box, so a pointer that reached the card is still here.
+        onMouseLeave={() => {
+          if ((hoverTap?.get() ?? '') !== '') {
+            hoverTap?.set('');
+            onSlot?.('');
+          }
+        }}
       >
         <LensFigure
           scene={scene}
@@ -525,6 +549,24 @@ export function LensView({ scope = 'gyld', search, nextUp, onSlot, state: shown 
             onSlot?.(outcome.ref);
           }}
         />
+        {/* The card, anchored under the hovered box's own emitted rectangle
+            through the camera: HTML over the picture, not geometry in it, so
+            nothing is repositioned (MDV-4). It is suppressed while a pan is
+            running, because a card under a moving pointer is in the way. */}
+        {card !== undefined && hovered !== undefined && !isPanning(drag) && (
+          <div
+            className="gyld-card-anchor"
+            style={{
+              left: camera.tx + hovered.box.x * camera.k,
+              top: camera.ty + (hovered.box.y + hovered.box.height) * camera.k,
+            }}
+            // A press on the card is a press on the card, not the start of a
+            // pan of the picture underneath it.
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            {card(hovered)}
+          </div>
+        )}
       </div>
       <LensOmissions scene={scene} />
       <LensProvenance scene={scene} />
