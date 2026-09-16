@@ -3,6 +3,7 @@ import type { DecideNowQuestion, GyldDecideNow, GyldValidation } from '../contra
 import {
   GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_STREAM, GYLD_STORE_STATUS, GYLD_VALIDATION,
 } from '../grips';
+import { answerableSays } from '../browser/card';
 import { decideTitle } from '../browser/links';
 import { useBrowserFocus, type BrowserFocus } from '../browser/useBrowserFocus';
 import { groupQuestions } from './groups';
@@ -12,8 +13,9 @@ import { rootLine } from '../store/waiting';
 // The gyld.decidenow window (step 1.5): the stream's emitted decide-now list.
 //
 // Which questions are answerable now is `answerable_now` as Gyld wrote it,
-// what blocks a question is its own `blocked_by`, what gates it is its own
-// `gated_by`, and its tier is its own `tier`. None of that is computed here
+// why one is answerable is its own `answerable_because`, what blocks a
+// question is its own `blocked_by`, what gates it is its own `gated_by`, and
+// its tier is its own `tier`. None of that is computed here
 // (spec section 6.7), and the grouping below is a read of those three emitted
 // fields, not a judgement about them. Every emitted row appears in exactly one
 // group, including the rows that are in none of the first three, so the list
@@ -75,6 +77,11 @@ function Question({ question, browser }: {
         <span className="gyld-note">{`ruled by ${question.ruling}`}</span>
       )}
       <ul className="gyld-question-why">
+        {/* The answerable rows said only that they were answerable; the reason
+            is now one emitted line beside the blocked rows' own lines. */}
+        {answerableSays(question) !== '' && (
+          <li key="answerable">{answerableSays(question)}</li>
+        )}
         {question.blocked_by.map((slot) => (
           <li key={`blocked:${slot}`}>{`blocked by ${slot}`}</li>
         ))}

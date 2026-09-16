@@ -465,6 +465,66 @@ describe('gyld.decide-now.v1', () => {
     expect(leaning !== undefined && 'ruling' in leaning).toBe(false);
   });
 
+  it('reads the reason an answerable row carries, and the null a blocked one does', () => {
+    const now = readDecideNow(decideNowFixture);
+    const rowAt = (slot: string) => now.questions.find((q) => q.slot === slot)!;
+    // A root with no prerequisite at all: the empty list IS the fact.
+    expect(rowAt('glade_decisions:GladeDecisions.key_custody').answerable_because).toEqual({
+      prerequisites: [], gated_by: [], induced_by: [],
+    });
+    // A root with two decided prerequisites, neither settled by a ruling here.
+    expect(rowAt('glade_decisions:GladeDecisions.scope_model').answerable_because).toEqual({
+      prerequisites: [
+        { slot: 'glade_decisions:GladeDecisions.grants_as_data', effective_status: 'Decided' },
+        { slot: 'glade_decisions:GladeDecisions.iroh_transport', effective_status: 'Decided' },
+      ],
+      gated_by: [],
+      induced_by: [],
+    });
+    // A blocked row is untouched: it still says why through its own lists.
+    const blocked = rowAt('glade_decisions:GladeDecisions.proof_family');
+    expect(blocked.answerable_now).toBe(false);
+    expect('answerable_because' in blocked).toBe(false);
+    expect(blocked.blocked_by).toEqual(['glade_decisions:GladeDecisions.key_custody']);
+  });
+
+  it('names the ruling that decided a prerequisite, where the chain records one', () => {
+    const now = readDecideNow(streamADecideNowFixture);
+    const witness = now.questions
+      .find((q) => q.slot === 'glade_decisions:GladeDecisions.async_witness')!;
+    expect(witness.answerable_now).toBe(true);
+    expect(witness.answerable_because).toEqual({
+      prerequisites: [
+        {
+          slot: 'glade_decisions:GladeDecisions.lifecycle_composition',
+          effective_status: 'Decided',
+          ruling: 'glade_decisions_stream_a:GladeDecisionsStreamA.lifecycle_composition_ruling',
+        },
+        { slot: 'glade_decisions:GladeDecisions.shaku_injector', effective_status: 'Decided' },
+      ],
+      gated_by: [],
+      induced_by: [],
+    });
+  });
+
+  it('reads a row that carries no reason at all, as an older bundle emits it', () => {
+    const now = readDecideNow(drop(decideNowFixture, 'questions.8.answerable_because'));
+    const custody = now.questions
+      .find((q) => q.slot === 'glade_decisions:GladeDecisions.key_custody')!;
+    expect(custody.answerable_now).toBe(true);
+    expect('answerable_because' in custody).toBe(false);
+  });
+
+  it('rejects a reason whose prerequisite list is not a list', () => {
+    rejects(
+      () => readDecideNow(mutate(decideNowFixture, 'questions.8.answerable_because', {
+        prerequisites: 'none', gated_by: [], induced_by: [],
+      })),
+      GyldContractViolation.WrongType,
+      'gyld.decide-now.v1.questions[8].answerable_because.prerequisites',
+    );
+  });
+
   it('rejects a wrong format string', () => {
     rejects(
       () => readDecideNow(mutate(decideNowFixture, 'format', 'gyld.decide-now.v2')),

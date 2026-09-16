@@ -7,10 +7,44 @@ import {
 // Spec section 7.4: `decide-now.json`.
 //
 // Every value here is EMITTED by Gyld. The UI folds nothing: `tier`,
-// `answerable_now`, `blocked_by`, `gated_by`, `induced_by` and
-// `effective_status` are read, never computed (spec section 6.7).
+// `answerable_now`, `answerable_because`, `blocked_by`, `gated_by`,
+// `induced_by` and `effective_status` are read, never computed (spec section
+// 6.7). A row says why it carries the flag it carries BOTH ways round: a
+// blocked one through its three lists, an answerable one through
+// `answerable_because`.
 
 export const DECIDE_NOW_FORMAT = 'gyld.decide-now.v1';
+
+/**
+ * One question an answerable question requires, and what clears it.
+ *
+ * `effective_status` is that prerequisite's own emitted status, and `ruling`
+ * the live ruling that set it where the stream records one. A prerequisite an
+ * anchor declares as decided carries no ruling, and that absence is a fact
+ * about the stream rather than a missing field.
+ */
+export interface AnswerablePrerequisite {
+  slot: QualifiedSlot;
+  effective_status: string;
+  ruling?: QualifiedSlot;
+}
+
+/**
+ * Why a row is answerable now, in the shape the blocked reason uses.
+ *
+ * The three facts the emitter tested: every prerequisite with what clears it,
+ * the gates holding the question and the alternatives inducing it. On an
+ * answerable row the last two are empty, which is how the record says no
+ * trigger gates it and no unchosen alternative induced it, and an empty
+ * `prerequisites` list says the question requires nothing at all. Absent on a
+ * row that is not answerable now, and absent on every row of a bundle emitted
+ * before the field existed.
+ */
+export interface AnswerableBecause {
+  prerequisites: AnswerablePrerequisite[];
+  gated_by: QualifiedSlot[];
+  induced_by: QualifiedSlot[];
+}
 
 export interface DecideNowQuestion {
   slot: QualifiedSlot;
@@ -19,6 +53,9 @@ export interface DecideNowQuestion {
   effective_status: string;
   tier: string;
   answerable_now: boolean;
+  /** The emitted reason for that flag. Absent when it is false, and absent on
+   *  a bundle emitted before the field existed. */
+  answerable_because?: AnswerableBecause;
   blocked_by: QualifiedSlot[];
   gated_by: QualifiedSlot[];
   induced_by: QualifiedSlot[];
@@ -73,6 +110,32 @@ export interface GyldDecideNow {
   limits: string[];
 }
 
+function readPrerequisite(value: unknown, path: string): AnswerablePrerequisite {
+  const raw = readObject(value, path);
+  const prerequisite: AnswerablePrerequisite = {
+    slot: readIdentifier(raw.slot, atPath(path, 'slot')),
+    effective_status: readIdentifier(raw.effective_status, atPath(path, 'effective_status')),
+  };
+  // No ruling is the ordinary case for a prerequisite an anchor declares, so
+  // a null reads as absent rather than as a violation.
+  const ruling = readOptionalIdentifier(raw.ruling, atPath(path, 'ruling'));
+  if (ruling !== undefined) {
+    prerequisite.ruling = ruling;
+  }
+  return prerequisite;
+}
+
+function readBecause(value: unknown, path: string): AnswerableBecause {
+  const raw = readObject(value, path);
+  const needs = atPath(path, 'prerequisites');
+  return {
+    prerequisites: readArray(raw.prerequisites, needs)
+      .map((item, i) => readPrerequisite(item, atPath(needs, i))),
+    gated_by: readIdentifiers(raw.gated_by, atPath(path, 'gated_by')),
+    induced_by: readIdentifiers(raw.induced_by, atPath(path, 'induced_by')),
+  };
+}
+
 function readQuestion(value: unknown, path: string): DecideNowQuestion {
   const raw = readObject(value, path);
   const question: DecideNowQuestion = {
@@ -89,6 +152,13 @@ function readQuestion(value: unknown, path: string): DecideNowQuestion {
     // alternative marked by `ruling`, so this list is not emptied on decision.
     offers: readIdentifiers(raw.offers, atPath(path, 'offers')),
   };
+  // Absent, null, or a whole record: the three states an older bundle, a row
+  // that is not answerable, and an answerable row are respectively in.
+  if (raw.answerable_because !== undefined && raw.answerable_because !== null) {
+    question.answerable_because = readBecause(
+      raw.answerable_because, atPath(path, 'answerable_because'),
+    );
+  }
   const preferred = readOptionalIdentifier(raw.preferred, atPath(path, 'preferred'));
   if (preferred !== undefined) {
     question.preferred = preferred;

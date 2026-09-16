@@ -14,6 +14,7 @@
       "effective_status": "Open",
       "tier": "second",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.lifecycle_composition"
       ],
@@ -33,6 +34,7 @@
       "effective_status": "Open",
       "tier": "branch-induced",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [
@@ -49,6 +51,7 @@
       "effective_status": "Lean",
       "tier": "gated",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.version_pin"
       ],
@@ -71,6 +74,7 @@
       "effective_status": "Decided",
       "tier": "anchors",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -85,6 +89,7 @@
       "effective_status": "Lean",
       "tier": "third",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.scope_model",
         "glade_decisions:GladeDecisions.transport_key_binding",
@@ -106,6 +111,7 @@
       "effective_status": "Decided",
       "tier": "anchors",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -120,6 +126,7 @@
       "effective_status": "Lean",
       "tier": "third",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.proof_family"
       ],
@@ -141,6 +148,7 @@
       "effective_status": "Decided",
       "tier": "anchors",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -155,6 +163,11 @@
       "effective_status": "Open",
       "tier": "roots",
       "answerable_now": true,
+      "answerable_because": {
+        "prerequisites": [],
+        "gated_by": [],
+        "induced_by": []
+      },
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -173,6 +186,11 @@
       "effective_status": "Directed",
       "tier": "roots",
       "answerable_now": true,
+      "answerable_because": {
+        "prerequisites": [],
+        "gated_by": [],
+        "induced_by": []
+      },
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -192,6 +210,7 @@
       "effective_status": "Open",
       "tier": "branch-induced",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [
@@ -209,6 +228,7 @@
       "effective_status": "Lean",
       "tier": "second",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.key_custody"
       ],
@@ -230,6 +250,7 @@
       "effective_status": "Lean",
       "tier": "gated",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.dissemination"
       ],
@@ -253,6 +274,7 @@
       "effective_status": "Lean",
       "tier": "branch-induced",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.transport_key_binding",
         "glade_decisions:GladeDecisions.version_pin"
@@ -276,6 +298,22 @@
       "effective_status": "Lean",
       "tier": "roots",
       "answerable_now": true,
+      "answerable_because": {
+        "prerequisites": [
+          {
+            "slot": "glade_decisions:GladeDecisions.grants_as_data",
+            "effective_status": "Decided",
+            "ruling": null
+          },
+          {
+            "slot": "glade_decisions:GladeDecisions.iroh_transport",
+            "effective_status": "Decided",
+            "ruling": null
+          }
+        ],
+        "gated_by": [],
+        "induced_by": []
+      },
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -294,6 +332,7 @@
       "effective_status": "Decided",
       "tier": "anchors",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -308,6 +347,7 @@
       "effective_status": "Decided",
       "tier": "anchors",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -322,6 +362,7 @@
       "effective_status": "Lean",
       "tier": "gated",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [
         "glade_decisions:GladeDecisions.first_real_route_slice"
@@ -342,6 +383,7 @@
       "effective_status": "Lean",
       "tier": "gated",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [
         "glade_decisions:GladeDecisions.store_pressure"
@@ -362,6 +404,7 @@
       "effective_status": "Decided",
       "tier": "anchors",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],
@@ -376,6 +419,7 @@
       "effective_status": "Lean",
       "tier": "gated",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [
         "glade_decisions:GladeDecisions.editing_need"
@@ -397,6 +441,7 @@
       "effective_status": "Open",
       "tier": "branch-induced",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [
@@ -414,6 +459,7 @@
       "effective_status": "Lean",
       "tier": "second",
       "answerable_now": false,
+      "answerable_because": null,
       "blocked_by": [
         "glade_decisions:GladeDecisions.key_custody"
       ],
@@ -433,6 +479,17 @@
       "effective_status": "Lean",
       "tier": "roots",
       "answerable_now": true,
+      "answerable_because": {
+        "prerequisites": [
+          {
+            "slot": "glade_decisions:GladeDecisions.iroh_transport",
+            "effective_status": "Decided",
+            "ruling": null
+          }
+        ],
+        "gated_by": [],
+        "induced_by": []
+      },
       "blocked_by": [],
       "gated_by": [],
       "induced_by": [],

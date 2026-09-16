@@ -2,7 +2,7 @@ import type {
   DecideNowQuestion, DecideNowRuling, GyldDecideNow, GyldLens, GyldSources,
   ProjectionDefinition, SnapshotRef, StreamLens,
 } from '../contract';
-import { blockedSays } from '../browser/card';
+import { answerableBecause, blockedSays } from '../browser/card';
 import { emittedMemberFor, perspectiveOptions } from '../browser/perspectives';
 import { PreviewPerspective } from '../preview/neighbourhood';
 import { slotLabel, type GyldRecordView, type GyldRecords } from '../records/records';
@@ -66,8 +66,11 @@ export interface AskContextStatus {
   effective: string;
   tier: string;
   answerable_now: boolean;
-  /** The ONE emitted reason it is not answerable now, through `blockedSays`.
-   *  Empty when it is answerable, and empty when there is no row to ask. */
+  /** The ONE emitted reason for `answerable_now`, whichever way round it
+   *  runs: `blockedSays` when the flag is false, `answerableBecause` when it
+   *  is true. Empty when there is no row to ask, and empty when the row is
+   *  answerable but carries no reason, which is what every row of a bundle
+   *  emitted before the field looks like. */
   reason: string;
 }
 
@@ -311,7 +314,7 @@ function statusOf(
     effective: question.effective_status,
     tier: question.tier,
     answerable_now: question.answerable_now,
-    reason: blockedSays(question),
+    reason: question.answerable_now ? answerableBecause(question) : blockedSays(question),
   };
 }
 

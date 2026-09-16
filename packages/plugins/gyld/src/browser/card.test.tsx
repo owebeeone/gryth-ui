@@ -21,7 +21,7 @@ import {
 } from '../streams/operations';
 import { GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL, GYLD_STREAMS_TOOL } from '../tools';
 import { buildScene } from '../lens/scene';
-import { blockedSays, cardFor } from './card';
+import { answerableBecause, answerableSays, blockedSays, cardFor } from './card';
 import { browserTabTaps } from './browserTabTaps';
 import { linkForRulingLink } from './links';
 import { nextUpOf } from './nextUp';
@@ -117,6 +117,64 @@ describe('the card says what the row says, and nothing more', () => {
       .toBe('this stream does not list it as answerable now');
   });
 
+  it('says why a question IS answerable, as plainly as why one is not', () => {
+    const custody = cardFor(nodeAt(KEY_CUSTODY), decideNow, undefined);
+    expect(custody.blocked).toBe('');
+    expect(custody.answerableBecause).toBe(
+      'answerable now: no prerequisite at all, nothing gates it, not branch-induced',
+    );
+    const scope = cardFor(nodeAt(SCOPE_MODEL), decideNow, undefined);
+    expect(scope.answerableBecause).toBe(
+      'answerable now: every prerequisite is decided ('
+      + 'glade_decisions:GladeDecisions.grants_as_data, '
+      + 'glade_decisions:GladeDecisions.iroh_transport'
+      + '), nothing gates it, not branch-induced',
+    );
+    // A question that is not answerable says nothing here and keeps its own line.
+    const decided = cardFor(nodeAt(SHAKU), decideNow, undefined);
+    expect(decided.answerableBecause).toBe('');
+    expect(decided.blocked).not.toBe('');
+  });
+
+  it('names the ruling that decided a prerequisite, where the row records one', () => {
+    const row = rowAt(KEY_CUSTODY);
+    const ruled = {
+      ...row,
+      answerable_because: {
+        prerequisites: [
+          { slot: 'a', effective_status: 'Decided', ruling: 'r1' },
+          { slot: 'b', effective_status: 'Decided' },
+        ],
+        gated_by: [],
+        induced_by: [],
+      },
+    };
+    expect(answerableBecause(ruled)).toBe(
+      'every prerequisite is decided (a by ruling r1, b), nothing gates it, not branch-induced',
+    );
+  });
+
+  it('says nothing at all for a row an older bundle emitted without the reason', () => {
+    const older = { ...rowAt(KEY_CUSTODY) };
+    delete older.answerable_because;
+    expect(older.answerable_now).toBe(true);
+    expect(answerableSays(older)).toBe('');
+    expect(answerableBecause(older)).toBe('');
+    expect(blockedSays(older)).toBe('');
+  });
+
+  it('reads the reason rather than assuming it, when the emitted lists disagree', () => {
+    const row = rowAt(KEY_CUSTODY);
+    expect(answerableBecause({
+      ...row,
+      answerable_because: {
+        prerequisites: [{ slot: 'a', effective_status: 'Open' }],
+        gated_by: ['g'],
+        induced_by: ['i'],
+      },
+    })).toBe('its prerequisites are a (Open), gated by g, induced by i');
+  });
+
   it('says a box is not a question this stream lists, rather than unanswerable', () => {
     const unlisted = scene.nodes.find(
       (node) => !decideNow.questions.some((row) => row.slot === node.slot),
@@ -173,6 +231,14 @@ describe('the card is drawn over the box the pointer is on', () => {
     expect(on.markup).not.toContain('gyld-node-card-blocked');
     // anchored UNDER the emitted box, through the camera, and nothing moved
     expect(on.markup).toContain('gyld-card-anchor');
+  });
+
+  it('draws the answerable reason on the card of an answerable box', async () => {
+    const on = await hovering('card-why', 'base', KEY_CUSTODY);
+    expect(on.markup).toContain('gyld-node-card-answerable');
+    expect(on.markup).toContain('answerable now: no prerequisite at all');
+    expect(on.markup).toContain('nothing gates it, not branch-induced');
+    expect(on.markup).not.toContain('gyld-node-card-blocked');
   });
 
   it('shows a Decided box closed, with the ruling that closed it', async () => {

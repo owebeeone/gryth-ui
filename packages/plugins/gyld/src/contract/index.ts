@@ -60,6 +60,7 @@ export {
 
 export {
   DECIDE_NOW_FORMAT, readDecideNow,
+  type AnswerableBecause, type AnswerablePrerequisite,
   type DecideNowQuestion, type DecideNowRuling, type GyldDecideNow,
 } from './decideNow';
 

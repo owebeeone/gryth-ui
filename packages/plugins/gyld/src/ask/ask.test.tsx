@@ -134,7 +134,10 @@ describe('the golden envelope: a question this stream lists', () => {
         effective: 'Open',
         tier: 'roots',
         answerable_now: true,
-        reason: '',
+        // The reason runs both ways round: the row is answerable, so the
+        // envelope carries the emitted reason for THAT rather than an empty
+        // string that read as "no reason was emitted".
+        reason: 'no prerequisite at all, nothing gates it, not branch-induced',
       },
       alternatives: [
         {
@@ -227,6 +230,52 @@ describe('the golden envelope: a question this stream lists', () => {
       path: 'streams/base/lenses/decisions.lens.json',
       member: false,
     });
+  });
+});
+
+describe('the envelope reason, both ways round and with neither', () => {
+  const statusOf = (list: typeof decideNow, slot: string) => askEnvelope({
+    stream: 'base',
+    perspective: 'decisions',
+    slot,
+    lens,
+    decideNow: list,
+    records,
+    record: viewOf(slot, list),
+    bundle: baseBundle,
+  }).status;
+
+  it('carries the blocked reason for a row that is not answerable now', () => {
+    const blocked = statusOf(decideNow, 'glade_decisions:GladeDecisions.proof_family');
+    expect(blocked.answerable_now).toBe(false);
+    expect(blocked.reason).toBe('blocked by glade_decisions:GladeDecisions.key_custody');
+  });
+
+  it('carries the answerable reason for a row that is', () => {
+    const open = statusOf(decideNow, 'glade_decisions:GladeDecisions.scope_model');
+    expect(open.answerable_now).toBe(true);
+    expect(open.reason).toBe(
+      'every prerequisite is decided ('
+      + 'glade_decisions:GladeDecisions.grants_as_data, '
+      + 'glade_decisions:GladeDecisions.iroh_transport'
+      + '), nothing gates it, not branch-induced',
+    );
+  });
+
+  it('carries no reason at all where a bundle emitted none, as before', () => {
+    // An older bundle: the flag is there and the reason is not, which is not
+    // the same as a reason that says nothing.
+    const older = {
+      ...decideNow,
+      questions: decideNow.questions.map((question) => {
+        const row = { ...question };
+        delete row.answerable_because;
+        return row;
+      }),
+    };
+    const open = statusOf(older, KEY_CUSTODY);
+    expect(open.answerable_now).toBe(true);
+    expect(open.reason).toBe('');
   });
 });
 

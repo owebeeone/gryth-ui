@@ -64,6 +64,14 @@ describe('gyld.detail renders emitted facts and says so when there are none', ()
     // the decide-now row, read whole and never recomputed
     expect(markup).toContain(`effective status ${emitted.question.effective_status}`);
     expect(markup).toContain(`tier ${emitted.question.tier}`);
+    // why it is answerable now, and not only that it is
+    expect(emitted.question.answerable_now).toBe(true);
+    expect(markup).toContain(
+      'yes, every prerequisite is decided ('
+      + 'glade_decisions:GladeDecisions.grants_as_data, '
+      + 'glade_decisions:GladeDecisions.iroh_transport'
+      + '), nothing gates it, not branch-induced',
+    );
     expect(markup).toContain(emitted.question.preferred!);
     // the emitted assertions, by relation name and by connected record
     expect(markup).toContain('data-relation="Offers"');

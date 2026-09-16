@@ -21,8 +21,9 @@ import { useBrowserFocus } from './useBrowserFocus';
 //
 // It decides nothing. Every word in it is emitted — the box text is the
 // host's, the alternatives are the row's own `offers`, the lean is its
-// `preferred`, and the reason it cannot be answered is its own `blocked_by`,
-// `gated_by` or `ruling`. The three buttons only open windows.
+// `preferred`, the reason it cannot be answered is its own `blocked_by`,
+// `gated_by` or `ruling` and the reason it can be is its own
+// `answerable_because`. The three buttons only open windows.
 //
 // The hover itself is `Gyld.Tab.Hover`, the atom the picture already writes
 // on a mouse move. There is no React state here and no effect.
@@ -84,6 +85,13 @@ export function NodeCard({ node }: { node: SceneNode }) {
       {card.blocked !== '' && (
         <p className="gyld-note gyld-node-card-blocked">{card.blocked}</p>
       )}
+      {/* The same line, the other way round: a question that CAN be answered
+          says why, so the flag is read rather than taken on trust. Empty on a
+          bundle emitted before the reason existed, and the card then reads
+          exactly as it read then. */}
+      {card.answerableBecause !== '' && (
+        <p className="gyld-note gyld-node-card-answerable">{card.answerableBecause}</p>
+      )}
       {needsItsOwn && (
         <p className="gyld-fault gyld-node-card-refusal">{refusal}</p>
       )}
@@ -94,7 +102,11 @@ export function NodeCard({ node }: { node: SceneNode }) {
             className="gyld-card-answer"
             disabled={!browser.decideReady || !card.answerable}
             title={card.answerable
-              ? (needsItsOwn ? refusal : 'answer this question in the decide window')
+              ? (needsItsOwn
+                ? refusal
+                : (card.answerableBecause === ''
+                  ? 'answer this question in the decide window'
+                  : card.answerableBecause))
               : card.blocked}
             onClick={() => browser.decide(card.slot)}
           >

@@ -5,6 +5,7 @@ import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF, GYLD_DEST_STREAM,
   GYLD_RECORD, GYLD_RECORDS, GYLD_TAB_FOLLOW, GYLD_TAB_FOLLOW_TAP, GYLD_TAB_ID,
 } from '../grips';
+import { answerableBecause } from '../browser/card';
 import { decideTitle } from '../browser/links';
 import { useBrowserFocus } from '../browser/useBrowserFocus';
 import { useKeyedContext } from '../contexts';
@@ -268,6 +269,7 @@ function RecordBody() {
           {question === undefined
             ? 'not emitted'
             : `${question.answerable_now ? 'yes' : 'no'}`
+              + `${answerableBecause(question) === '' ? '' : `, ${answerableBecause(question)}`}`
               + `${question.blocked_by.length === 0 ? '' : `, blocked by ${question.blocked_by.join(', ')}`}`
               + `${question.gated_by.length === 0 ? '' : `, gated by ${question.gated_by.join(', ')}`}`}
         </dd>

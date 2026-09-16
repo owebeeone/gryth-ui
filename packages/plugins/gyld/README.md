@@ -43,7 +43,8 @@ that DIMS the rest — never hides it, whatever `hide instead of dim` holds — 
 adds its own line to the omission strip while it is on. Hovering a box shows a
 card over it with that question's own text as the host drew it, its
 alternatives with the recorded lean marked, the one emitted reason it cannot be
-answered, and `Answer`, `Ask a follow-up` and `Details`, each of which moves
+answered or the one emitted reason it can be, and `Answer`, `Ask a follow-up`
+and `Details`, each of which moves
 this window onto the question and opens the wired window on it. `Answer` is
 the only one withheld on a box this stream's decide-now list carries no row
 for — a follow-up is a NEW question with this one ticked as a prerequisite,
@@ -99,7 +100,8 @@ and only positions.
 
 `gyld.detail` shows one record: its kind, definition, description, record id,
 the place it was declared, its declared and effective status, its tier, whether
-it is answerable now, the lean recorded for it, any ruling, the relations the
+it is answerable now and the emitted reason for that either way round, the lean
+recorded for it, any ruling, the relations the
 record itself carries and its definition closure. Opened from a browser through
 the Details button it is wired to that browser and follows its selection live,
 with no parameter copied. Opened from the launcher with a stream and a record
@@ -115,7 +117,8 @@ is refused with that as its reason.
 host said about them: answerable now, blocked by an open prerequisite, gated,
 induced, and already settled. Each row carries the declared and effective
 status, the tier, the preference recorded for it, the slots that block or gate
-it, and a Decide button that opens the decide window on that row the same way
+it, the emitted reason an answerable row is answerable, and a Decide button
+that opens the decide window on that row the same way
 the detail window's does. Like the detail window it is wired when opened from a
 browser and standalone when opened with a stream of its own.
 

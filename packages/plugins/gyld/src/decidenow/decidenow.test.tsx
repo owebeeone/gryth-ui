@@ -82,6 +82,28 @@ describe('gyld.decidenow lists exactly what the stream emitted', () => {
     }
   });
 
+  it('says why the answerable ones are answerable, not only that they are', async () => {
+    const list = mount('dn-because', 'base');
+    await settled(list.value, (value) => value?.status === 'ok');
+    const markup = list.render();
+    // Every answerable row carries its own emitted reason, and every
+    // prerequisite that reason names is named on the row.
+    for (const question of decideNow.questions.filter((q) => q.answerable_now)) {
+      const because = question.answerable_because!;
+      expect(because).toBeDefined();
+      for (const prerequisite of because.prerequisites) {
+        expect(markup).toContain(prerequisite.slot);
+      }
+    }
+    expect(markup).toContain('answerable now: no prerequisite at all');
+    expect(markup).toContain(
+      'answerable now: every prerequisite is decided ('
+      + 'glade_decisions:GladeDecisions.grants_as_data, '
+      + 'glade_decisions:GladeDecisions.iroh_transport'
+      + '), nothing gates it, not branch-induced',
+    );
+  });
+
   it('shows every emitted row, including the ones in no other group', async () => {
     const list = mount('dn-rest', 'base');
     await settled(list.value, (value) => value?.status === 'ok');

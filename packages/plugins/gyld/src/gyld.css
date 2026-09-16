@@ -459,6 +459,14 @@
   font-weight: 600;
 }
 
+/* The two reason lines, blocked and answerable. Both name qualified slots,
+   which are long unbroken words, so they wrap inside the card rather than
+   pushing it wider than the box it is anchored under. */
+.gyld-node-card-blocked,
+.gyld-node-card-answerable {
+  overflow-wrap: anywhere;
+}
+
 .gyld-node-card-acts {
   padding-top: 0.333em;
   gap: 0.333em 0.5em;

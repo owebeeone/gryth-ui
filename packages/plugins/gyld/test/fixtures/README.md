@@ -3,7 +3,13 @@
 The `bundle/` tree is REAL Gyld output, copied verbatim from
 `gyld/artifacts/decision-streams-v6/` on 2026-09-14, plus `sources.json`
 copied verbatim from `gyld/artifacts/decision-streams-v7/` on 2026-09-16 (the
-first run that emits one). It is not edited here: a
+first run that emits one) and the four `decide-now.json` files copied verbatim
+from `gyld/artifacts/decision-streams-v8/` on 2026-09-16 (the first run whose
+answerable rows carry `answerable_because`, the reason for the flag). Those
+four are the ONLY files that run changes here: each is the v6 file with the
+new field added to the rows whose `answerable_now` is true, which is what a
+strip-and-compare check of the two directories says, so the rest of the tree
+still joins them by the same snapshot identity. It is not edited here: a
 fixture that is hand adjusted stops being evidence of what Gyld emits. The
 directory layout is the bundle layout of specification section 4.6, so the
 store tests address files by the same relative paths the real stores use. Where
