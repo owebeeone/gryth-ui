@@ -4,12 +4,15 @@ import type {
   Fill, GladeDestination, GlialBinder,
 } from '@owebeeone/glial-runtime';
 import type { Tap } from '@owebeeone/grip-react';
-import { GYLD_OPS_RUN_ID, GYLD_OPS_STREAM } from '../grips';
 import {
-  GYLD_DECISIONS_ID, GYLD_FILE_ID, GYLD_LENS_ID, GYLD_OUTPUT_ID, GYLD_SHARE,
-  GYLD_STREAMS_ID, GYLD_STREAM_ID,
+  GYLD_ASK_CONVERSATION, GYLD_ASK_STREAM, GYLD_OPS_RUN_ID, GYLD_OPS_STREAM,
+} from '../grips';
+import {
+  GYLD_ASK_ID, GYLD_DECISIONS_ID, GYLD_FILE_ID, GYLD_LENS_ID, GYLD_OUTPUT_ID,
+  GYLD_SHARE, GYLD_STREAMS_ID, GYLD_STREAM_ID,
 } from './verbs';
 import type { GyldOutputRecord } from './ops';
+import type { GyldAskRecord } from '../ask/reply';
 
 // The glade surfaces this package mounts, as TYPED handles, and the one glial
 // mount the ops path owns (step 4.3).
@@ -20,12 +23,18 @@ import type { GyldOutputRecord } from './ops';
 // against: everything here is exercised by the test suite against a local
 // binder with no connectivity at all, and only `src/live.ts` lights the wire.
 
-/** The six surfaces `grazel/apps/gyld-app.glade` declares. Referenced through
+/** The seven surfaces `grazel/apps/gyld-app.glade` declares. Referenced through
  *  these handles, never by their id strings (the P0.S5a compile wall). */
 export const GyldSurfaces = defineManifest({
   /** A run's stdout and stderr lines, keyed by run id. */
   output: {
     id: GYLD_OUTPUT_ID, shape: 'log', share: GYLD_SHARE, domain: 'document', zone: 'commons',
+  },
+  /** The ask agent's reply, keyed by CONVERSATION rather than by run: one
+   *  deviation from `gyld.output`'s shape, and the one that makes a
+   *  conversation one fold and one mount (GyldAskAgent.md section 6). */
+  ask: {
+    id: GYLD_ASK_ID, shape: 'log', share: GYLD_SHARE, domain: 'document', zone: 'commons',
   },
   /** The build's `streams.json`, unkeyed. */
   streams: {
@@ -74,6 +83,33 @@ export function gyldOutputTap(
     decl: GyldSurfaces.output,
     grip: GYLD_OPS_STREAM,
     fill: { domain: GYLD_DOMAIN, key: { param: GYLD_OPS_RUN_ID } },
+    ...(gladeFor === undefined ? {} : { gladeFor }),
+  }) as unknown as Tap;
+}
+
+/**
+ * The `gyld.ask` log mount, keyed by the conversation being followed.
+ *
+ * The same shape as the output mount above and the same reason for it: the key
+ * is a FILL PARAM (`Gyld.Ask.Conversation`), so pointing the atom at another
+ * conversation is a remount rather than an append to the last one's fold. What
+ * differs is WHAT keys it — each turn keeps its own `run_id` on every record
+ * for the audit trail, and each turn's `end` closes that turn without closing
+ * the conversation, so keying by run id would need one mount per question
+ * asked.
+ *
+ * A window still folds only its OWN conversation (`foldAskReply`): the mount
+ * follows one conversation at a time, and a record naming another is dropped.
+ */
+export function gyldAskTap(
+  binder: GlialBinder,
+  gladeFor?: (fill: Fill) => GladeDestination | undefined,
+): Tap {
+  return glialTap<GyldAskRecord[]>({
+    binder,
+    decl: GyldSurfaces.ask,
+    grip: GYLD_ASK_STREAM,
+    fill: { domain: GYLD_DOMAIN, key: { param: GYLD_ASK_CONVERSATION } },
     ...(gladeFor === undefined ? {} : { gladeFor }),
   }) as unknown as Tap;
 }

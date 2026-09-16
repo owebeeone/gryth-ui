@@ -448,7 +448,7 @@ describe('the gyld.ask window', () => {
       expect(sink.read(GYLD_TAB_ASK_CONVERSATION).get()).toBe('conv-browser-1-key-1');
     });
 
-  it('draws the envelope as pretty JSON beside the question box, with NO submit',
+  it('draws the envelope as pretty JSON beside the question box, with the Ask button',
     async () => {
       const tab = desk().tab('ask-draw', askTabTaps('ask-draw', {
         stream: 'base',
@@ -472,8 +472,13 @@ describe('the gyld.ask window', () => {
       expect(markup).toContain('neighbourhood-key_custody');
       // the question as the host DREW it, out of the lens this window names
       expect(markup).toContain('key_custody [Q11]');
-      expect(markup).toContain('Nothing is sent yet');
-      expect(markup).not.toContain('<button');
+      // Step 1.5: there IS a verb behind the box now. This desk has no glade
+      // node at all, so the one button is offered and disabled with the reason
+      // said — never hidden, and never a press that would do nothing.
+      expect(markup).toContain('gyld-ask-send');
+      expect(/<button[^>]*class="gyld-ask-send"[^>]*disabled/.test(markup)).toBe(true);
+      expect(markup).toContain('no glade node in this desktop');
+      expect(markup).toContain('nothing has been asked from this window yet');
     });
 
   it('says it has no record rather than composing an envelope of nothing', async () => {

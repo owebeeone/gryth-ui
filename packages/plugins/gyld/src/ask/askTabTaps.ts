@@ -2,17 +2,20 @@ import { createAtomValueTap, type Tap } from '@owebeeone/grip-react';
 import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_REF, GYLD_DEST_REF_TAP,
   GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
+  GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP,
   GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
   perspectiveFromParams, refFromParams, streamFromParams,
 } from '../grips';
+import type { GyldOpsResponse } from '../ops/ops';
 
 // The gyld.ask seeds, written against the one rule `gyld.detail` and
 // `gyld.decide` are already written against.
 //
-// The CONVERSATION and the DRAFT are always seeded: they are this window's own,
-// no browser publishes either, so a sink's seed of them shadows nothing the
-// source has. The conversation comes from the opening link because the window
+// The CONVERSATION, the DRAFT and the ANSWER are always seeded: they are this
+// window's own and no browser publishes any of them, so a sink's seed of them
+// shadows nothing the source has. The conversation comes from the opening
+// link because the window
 // that opened the menu minted it (GyldAskAgent.md section 6) — a window opened
 // from the launcher carries none, which is a rendered state, not a default.
 //
@@ -34,6 +37,11 @@ export function askTabTaps(_tabId: string, params?: Record<string, unknown>): Ta
     }),
     createAtomValueTap(GYLD_TAB_ASK_DRAFT, {
       initial: '', handleGrip: GYLD_TAB_ASK_DRAFT_TAP,
+    }),
+    // What the supplier answered THIS window's last `explain` with. `null`
+    // until one has been sent, which is a rendered state and not a default.
+    createAtomValueTap<GyldOpsResponse | null>(GYLD_TAB_ASK_ANSWER, {
+      initial: null, handleGrip: GYLD_TAB_ASK_ANSWER_TAP,
     }),
   ];
   const stream = streamFromParams(params);

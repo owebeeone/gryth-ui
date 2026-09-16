@@ -168,6 +168,7 @@ export {
   GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_PREVIEW,
   GYLD_OPS, GYLD_OPS_RESULT, GYLD_OPS_RESULT_TAP, GYLD_OPS_RUN_ID,
   GYLD_OPS_RUN_ID_TAP, GYLD_OPS_STREAM, GYLD_OPS_STATUS,
+  GYLD_ASK_CONVERSATION, GYLD_ASK_CONVERSATION_TAP, GYLD_ASK_STREAM,
   GYLD_LANDING, GYLD_NODE, GYLD_TAB_PICKED,
 } from './grips';
 export * from './ops/verbs';
@@ -176,7 +177,7 @@ export {
   type GyldExchangeOutcome, type GyldOps, type GyldOpsResponse, type GyldOpsResult,
   type GyldOpsWire, type GyldOutputRecord,
 } from './ops/ops';
-export { GYLD_DOMAIN, GyldSurfaces, gyldOutputTap } from './ops/surfaces';
+export { GYLD_DOMAIN, GyldSurfaces, gyldAskTap, gyldOutputTap } from './ops/surfaces';
 export {
   GYLD_STATIC_BASE, buildUrl, opsGate, retargetToBuild, type OpsGate,
 } from './ops/submit';
@@ -220,6 +221,7 @@ export {
   GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP,
   GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
+  GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
 } from './grips';
 export { BrowserChrome } from './browser/BrowserChrome';
 export { GyldBrowser } from './GyldBrowser';
@@ -239,6 +241,12 @@ export { NodeMenu } from './browser/NodeMenu';
 export { AskWindow } from './ask/AskWindow';
 export { askTabTaps, conversationFromParams } from './ask/askTabTaps';
 export * from './ask/envelope';
+export {
+  AskStream, NO_REPLY, compareRunIds, foldAskReply, hasReply,
+  type AskReply, type AskSaid, type AskTurn,
+  type GyldAskCitation, type GyldAskRecord,
+} from './ask/reply';
+export { explainGate, explainSubmit } from './ask/submit';
 export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
 export { FocusDestTap } from './detail/followFocus';

@@ -184,6 +184,26 @@ describe('the card is drawn over the box the pointer is on', () => {
     expect(/<button[^>]*class="gyld-card-detail"[^>]*disabled/.test(on.markup)).toBe(false);
   });
 
+  it('offers a follow-up on a box with no row, and withholds only Answer', async () => {
+    // The card and the MENU must agree about one box (`menu.ts`,
+    // `MenuAct.needsRow`): a follow-up is a NEW question with this one ticked
+    // as a prerequisite, which any drawn question can take, and only Answer
+    // needs a decide-now row to be answerable at all. A card that withheld the
+    // follow-up here would be the second surface saying something different
+    // about the same box.
+    const unlisted = buildScene(lens, { nextUp: nextUpOf(lens, decideNow) }).nodes.find(
+      (node) => node.slot !== '' && !decideNow.questions.some((row) => row.slot === node.slot),
+    )!;
+    const on = await hovering('card-unlisted', 'base', unlisted.slot);
+    expect(on.markup).toContain('gyld-node-card');
+    expect(on.markup).toContain('not a question this stream lists');
+    expect(on.markup).toContain('gyld-card-ask');
+    expect(on.markup).toContain('Ask a follow-up');
+    expect(on.markup).not.toContain('gyld-card-answer');
+    // Details is offered on every box, listed or not
+    expect(on.markup).toContain('gyld-card-detail');
+  });
+
   it('marks the lean on the card of a Lean box', async () => {
     const on = await hovering('card-lean', 'base', SCOPE_MODEL);
     expect(on.markup).toContain('data-status="Lean"');

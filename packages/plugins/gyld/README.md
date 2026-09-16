@@ -44,7 +44,11 @@ adds its own line to the omission strip while it is on. Hovering a box shows a
 card over it with that question's own text as the host drew it, its
 alternatives with the recorded lean marked, the one emitted reason it cannot be
 answered, and `Answer`, `Ask a follow-up` and `Details`, each of which moves
-this window onto the question and opens the wired window on it. On a stream
+this window onto the question and opens the wired window on it. `Answer` is
+the only one withheld on a box this stream's decide-now list carries no row
+for — a follow-up is a NEW question with this one ticked as a prerequisite,
+which any drawn question can take — and that is exactly the rule the menu
+below follows, so the two surfaces never disagree about one box. On a stream
 whose overlay module already declares records the card reads
 `Answer (needs its own stream)`, names the refusal, and offers a `Link` already
 filled in (see "Submitting to the supplier"). A RIGHT-CLICK or a SHIFT-CLICK on
@@ -133,8 +137,38 @@ nothing is a fact the window says rather than hides. A build that emitted no
 emitted value joined by an emitted id, composed by one pure function
 (`src/ask/envelope.ts`), so an absence is said — a stream with no decide-now
 list, or a list with no row for the record, is stated in the status block
-instead of filled in. **Nothing is sent from it**: there is no submit and no
-verb behind it yet, and the window says so.
+instead of filled in.
+
+Beside the question box is an **Ask** button, and behind it the `explain`
+verb. It is not `ask`: `ask` appends a new QUESTION to a stream's overlay
+module and rebuilds, `explain` writes nothing at all — no overlay, no build,
+no file — and the two are different names on the supplier's allow-list so an
+audit trail can tell them apart. The press sends the envelope WHOLE, with the
+question typed into it, attributed to the desk principal like every other
+verb, and the supplier answers immediately with a run id. The reply streams
+back on the `gyld.ask` log share, keyed by the CONVERSATION rather than by the
+run: each turn keeps its own `run_id` on every record, so a conversation is
+one mount and one fold however many turns it takes, and a window folds only
+the records of its own conversation.
+
+What the window draws is that fold and nothing else: the prose as the model's
+`answer` chunks arrived, joined in sequence order and otherwise verbatim; each
+`citation` as the passage the supplier resolved, with its tag and the file and
+heading it came from — and an UNRESOLVED one marked as such with the reason,
+because an answer citing a tag this build resolves to nothing is a fact the
+window says rather than hides; and the `end` record's own exit. A turn that
+has not ended yet says it is still answering.
+
+**A refusal is data, and is drawn as data** — never a toast. The three that
+come back before a run starts, each in the supplier's own words, are: no model
+key configured, a build that emitted no `sources.json` (grounding was ruled in
+from day one, so an ungrounded answer is refused rather than given), and an
+envelope that did not decode or names a stream the build does not list. One
+that stops a turn mid-stream — an input budget crossed, a transport that broke
+— closes it with a line and a non-zero exit, and whatever prose had already
+arrived is KEPT and said to be partial. The envelope itself stays in the
+window once a reply exists, folded away rather than removed: what was sent is
+as much a fact as what came back.
 
 `gyld.decide` answers a question or asks a new one. Opened from a browser
 through the Decide button it is wired to that browser, so it answers on the
@@ -455,6 +489,7 @@ on the wire.
 | `gyld.streams` | List | `list` | none; it runs no host and builds nothing |
 | `gyld.streams`, `gyld.browser` | Rebuild | `rebuild` | none |
 | `gyld.diff` | Request this diff | `diff` | the pair the window is on, in its own order |
+| `gyld.ask` | Ask | `explain` | the `gyld.ask-context.v1` envelope, whole, with the question typed into it |
 
 `List` is there because an unbuilt bundle root and an absent supplier look
 similar from the outside. A bundle root that has never been built publishes nothing on
@@ -514,6 +549,13 @@ not carry is not shown.
 There is one panel per window and one `Gyld.Ops.Result` per desk, because the
 supplier is one and a run is one: a rebuild started from the stream manager is
 the run the decide window is watching.
+
+`explain` is the one verb that streams and builds nothing, so it is followed
+differently: its reply is keyed by the conversation on `gyld.ask` rather than
+by the run on `gyld.output`, its answer is held on the asking window's own
+`Gyld.Tab.Ask.Answer` rather than on the desk-wide result — a refusal about
+one conversation belongs beside the question that drew it — and nothing is
+asked to be read again when it returns, because it wrote nothing.
 
 ### Where the result is read from
 

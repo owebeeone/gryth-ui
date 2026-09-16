@@ -520,8 +520,8 @@
   cursor: default;
 }
 
-/* The ask window: the record, the question box and the envelope that would be
-   sent. Nothing is submitted from it in this stage. */
+/* The ask window: the record, the question box, the reply as it streams and
+   the envelope that was sent, folded away once an answer exists. */
 
 .gyld-ask {
   display: flex;
@@ -589,6 +589,88 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.917em;
   opacity: 0.9;
+}
+
+/* The reply: one block per turn, each with its own run id. A refusal is drawn
+   here like anything else, because a refusal is data (section 4). */
+
+.gyld-ask-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 0.667em;
+}
+
+.gyld-ask-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.417em;
+  padding: 0.5em 0.667em;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 6px;
+}
+
+.gyld-ask-prose {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gyld-ask-citations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.417em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-ask-citation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.583em;
+  padding: 0.333em 0.5em;
+  border-left: 3px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0 5px 5px 0;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+/* A tag the answer cited and this build's index resolved to nothing is MARKED,
+   never dropped (MDV-7). */
+.gyld-ask-citation[data-resolved='no'] {
+  border-left-style: dashed;
+}
+
+.gyld-ask-answer,
+.gyld-ask-said,
+.gyld-ask-end {
+  overflow-wrap: anywhere;
+}
+
+.gyld-ask-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.333em;
+}
+
+.gyld-ask-answer p,
+.gyld-ask-said,
+.gyld-ask-end {
+  margin: 0;
+}
+
+.gyld-ask-acts {
+  align-items: baseline;
+}
+
+.gyld-ask-envelope-fold {
+  display: flex;
+  flex-direction: column;
+  gap: 0.333em;
+}
+
+.gyld-ask-envelope-fold > summary {
+  cursor: pointer;
 }
 
 .gyld-ask-envelope-title {

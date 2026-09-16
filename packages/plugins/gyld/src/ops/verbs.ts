@@ -9,11 +9,13 @@
 //
 // A verb is an OBJECT, not a string carried around (AGENTS.md, "no magic
 // strings when the concept has semantics). It owns its name, what it is
-// called in a window, whether it builds (and so streams), and which fields of
-// the argument object it carries. A verb the supplier does not allow is not
+// called in a window, whether it builds, whether its reply streams, and which
+// fields of the argument object it carries. A verb the supplier does not allow is not
 // spelled here at all: `occurred`, `lens` and `inspect` are named by spec
 // section 4.7 and the supplier refuses them, because no Gyld host verb exists
 // for them yet.
+
+import type { GyldAskContext } from '../ask/envelope';
 
 /** The workspace share the surfaces live on (`grazel/apps/gyld-app.glade`). */
 export const GYLD_SHARE = 'ws-razel';
@@ -24,6 +26,11 @@ export const GYLD_OPS_ID = 'gyld.ops';
 /** The log surface a streaming run's stdout and stderr lines append to, keyed
  *  by run id, in the `gwz.output` record shape exactly. */
 export const GYLD_OUTPUT_ID = 'gyld.output';
+
+/** The log surface the ask agent's reply appends to, keyed by the CONVERSATION
+ *  rather than the run (GyldAskAgent.md section 6): each turn keeps its own
+ *  `run_id` on every record, and a conversation is one fold and one mount. */
+export const GYLD_ASK_ID = 'gyld.ask';
 
 /** The three value surfaces a successful build publishes onto, and the
  *  pointer surface the large lens files travel on. */
@@ -59,6 +66,10 @@ export interface GyldOpsArgs {
   built?: string;
   /** Overwrite an existing overlay module or diff document. */
   force?: boolean;
+  /** `explain`: the ask context envelope, whole (GyldAskAgent.md section 4).
+   *  A TYPED OBJECT like every other field here, so nothing a window composes
+   *  reaches a command line — and for this verb, no subprocess at all. */
+  context?: GyldAskContext;
 }
 
 /** The JSON envelope the exchange payload carries. */
@@ -84,6 +95,15 @@ export class GyldVerb {
      * README says so in as many words).
      */
     readonly builds: boolean,
+    /**
+     * Whether the reply is STREAMED onto a log surface rather than held on the
+     * exchange until it is finished. Every build is; `explain` is the one verb
+     * that streams and builds nothing at all, because a consultation is model
+     * time and its reply is a stream by nature (GyldAskAgent.md section 4).
+     * Defaulted from `builds`, so the seven verbs that had only that one fact
+     * still state it once.
+     */
+    readonly streams: boolean = builds,
   ) {}
 
   /** Read the latest build's `streams.json`. Runs no host at all. */
@@ -94,6 +114,20 @@ export class GyldVerb {
 
   /** The same, with the new question's fragment appended. */
   static readonly ASK = new GyldVerb('ask', 'Ask', true);
+
+  /**
+   * Ask the agent about one record, with the envelope of section 3.
+   *
+   * It is NOT `ask`, and the collision is not cosmetic: `ask` means append a
+   * new QUESTION to a stream's overlay module and rebuild, and a second
+   * meaning on that name would make the allow-list ambiguous and put a verb
+   * that writes Gyld source behind the same word as one that writes nothing
+   * (GyldAskAgent.md section 4, "Why `explain`, not `ask`").
+   *
+   * It builds nothing — no overlay, no bundle, no file at all — and streams,
+   * so it is the one verb whose two flags differ.
+   */
+  static readonly EXPLAIN = new GyldVerb('explain', 'Ask', false, true);
 
   /** Flatten the parent's overlay chain into one module. */
   static readonly FORK = new GyldVerb('fork', 'Fork', true);
@@ -107,16 +141,28 @@ export class GyldVerb {
   /** Write the ordered pair's diff into the bundle's own `diffs/`. */
   static readonly DIFF = new GyldVerb('diff', 'Diff', true);
 
+  /**
+   * Whether a run of this verb can have changed what the published shares
+   * carry, so the store is asked to read them again when it answers.
+   *
+   * `explain` is the one verb with NO filesystem effect at all — no overlay,
+   * no build, no diff document — so nothing it answers can have moved a
+   * share, and a refresh after it would be a re-read asked for on a guess.
+   */
+  get touchesBundle(): boolean {
+    return this !== GyldVerb.EXPLAIN;
+  }
+
   /** The envelope for this verb with these arguments. `stream_output` is the
-   *  verb's own, never a caller's: which verbs build is the supplier's fact. */
+   *  verb's own, never a caller's: which verbs stream is the supplier's fact. */
   request(args: GyldOpsArgs, principal: string): GyldOpsRequest {
-    return { verb: this.name, args, stream_output: this.builds, principal };
+    return { verb: this.name, args, stream_output: this.streams, principal };
   }
 }
 
 /** The allow-list, in the order the supplier's README tables it. */
 export const GYLD_VERBS: readonly GyldVerb[] = Object.freeze([
-  GyldVerb.LIST, GyldVerb.ANSWER, GyldVerb.ASK, GyldVerb.FORK,
+  GyldVerb.LIST, GyldVerb.ANSWER, GyldVerb.ASK, GyldVerb.EXPLAIN, GyldVerb.FORK,
   GyldVerb.LINK, GyldVerb.REBUILD, GyldVerb.DIFF,
 ]);
 

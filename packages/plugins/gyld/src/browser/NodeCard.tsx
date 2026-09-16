@@ -101,17 +101,22 @@ export function NodeCard({ node }: { node: SceneNode }) {
             {needsItsOwn ? 'Answer (needs its own stream)' : 'Answer'}
           </button>
         )}
-        {card.listed && (
-          <button
-            type="button"
-            className="gyld-card-ask"
-            disabled={!browser.decideReady}
-            title="ask a new question in the decide window, which lists this one to tick as a prerequisite"
-            onClick={() => browser.decide(card.slot)}
-          >
-            Ask a follow-up
-          </button>
-        )}
+        {/* Offered on EVERY box, listed or not: a follow-up is a NEW question
+            with this one ticked as a prerequisite, and what makes that
+            possible is that this box is a question at all — not that this
+            stream's decide-now list carries a row for it. Only Answer needs
+            an answerable row, which is exactly the rule the menu follows
+            (`menu.ts`, `MenuAct.needsRow`), so the two surfaces agree about
+            one box. */}
+        <button
+          type="button"
+          className="gyld-card-ask"
+          disabled={!browser.decideReady}
+          title="ask a new question in the decide window, which lists this one to tick as a prerequisite"
+          onClick={() => browser.decide(card.slot)}
+        >
+          Ask a follow-up
+        </button>
         <button
           type="button"
           className="gyld-card-detail"

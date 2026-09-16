@@ -21,7 +21,10 @@ import { NO_FOCUS, type GyldFocus } from './focus';
 import { LANDING_UNSET, type GyldLanding } from './landing/landing';
 import { NOTHING_PICKED, type GyldFirstPick } from './browser/firstPick';
 import { MENU_CLOSED, type GyldNodeMenu } from './browser/menu';
-import type { GyldOps, GyldOpsResult, GyldOutputRecord } from './ops/ops';
+import type {
+  GyldOps, GyldOpsResponse, GyldOpsResult, GyldOutputRecord,
+} from './ops/ops';
+import type { GyldAskRecord } from './ask/reply';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
 
@@ -340,6 +343,19 @@ export const GYLD_TAB_ASK_DRAFT = defineGrip<string>('Gyld.Tab.Ask.Draft', '');
 export const GYLD_TAB_ASK_DRAFT_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ask.Draft.Tap');
 
+// THIS window's own last answer from the supplier, written when the `explain`
+// it sent comes back. Per tab and not the desk-wide `Gyld.Ops.Result`, because
+// the answer is about this conversation: the three refusals that arrive
+// synchronously — no model key, no source index, an envelope that did not
+// decode — are the run's own words and belong beside the question that drew
+// them, not on a panel shared with the last rebuild.
+//
+// `null` is a rendered state: nothing has been asked from this window yet.
+export const GYLD_TAB_ASK_ANSWER =
+  defineGrip<GyldOpsResponse | null>('Gyld.Tab.Ask.Answer', null);
+export const GYLD_TAB_ASK_ANSWER_TAP =
+  defineGrip<AtomTapHandle<GyldOpsResponse | null>>('Gyld.Tab.Ask.Answer.Tap');
+
 export const GYLD_PICKER_URL = defineGrip<string>('Gyld.Tab.Picker.Url', '');
 export const GYLD_PICKER_URL_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Picker.Url.Tap');
@@ -452,6 +468,25 @@ export const GYLD_OPS_RUN_ID_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Ops.R
 /** The run's stdout and stderr lines as they arrive, in the order the log
  *  folded them. Absent records are absent lines, never blank ones. */
 export const GYLD_OPS_STREAM = defineGrip<GyldOutputRecord[]>('Gyld.Ops.Stream', []);
+
+/**
+ * The conversation whose reply the `gyld.ask` mount follows, and the records
+ * it has folded (GyldAskAgent.md section 6, step 1.5).
+ *
+ * The pair `Gyld.Ops.RunId` / `Gyld.Ops.Stream` is for a BUILD; this is the
+ * same pair for a CONSULTATION, and the one difference is the key: a reply is
+ * keyed by the conversation rather than by the run, so a follow-up is another
+ * turn on one mount and not a second mount. The id is written by the ops
+ * handle when the supplier accepts an `explain`, exactly as the run id is.
+ *
+ * A window reads these and folds only the records of ITS OWN conversation, so
+ * two ask windows on one desk never draw each other's replies.
+ */
+export const GYLD_ASK_CONVERSATION = defineGrip<string>('Gyld.Ask.Conversation', '');
+export const GYLD_ASK_CONVERSATION_TAP =
+  defineGrip<AtomTapHandle<string>>('Gyld.Ask.Conversation.Tap');
+
+export const GYLD_ASK_STREAM = defineGrip<GyldAskRecord[]>('Gyld.Ask.Stream', []);
 
 /**
  * The glade connection's own state, mirrored into this package's vocabulary by

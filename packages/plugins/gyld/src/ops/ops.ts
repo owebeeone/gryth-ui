@@ -1,7 +1,8 @@
 import {
-  GYLD_OPS_ID, GYLD_OUTPUT_ID, GYLD_SHARE, GyldVerb, encodeRequest,
+  GYLD_ASK_ID, GYLD_OPS_ID, GYLD_OUTPUT_ID, GYLD_SHARE, GyldVerb, encodeRequest,
   type GyldOpsArgs,
 } from './verbs';
+import type { GyldAskContext } from '../ask/envelope';
 
 // The operations handle: the one thing a window holds to ask the supplier for
 // something (step 4.3). It is the `Gyld.Ops` grip's value, and it knows
@@ -81,6 +82,11 @@ export interface GyldOpsWire {
   /** The run whose output the log mount should follow (the `Gyld.Ops.RunId`
    *  atom, which is that mount's fill key). */
   onRunId(runId: string): void;
+  /** The conversation whose reply the `gyld.ask` mount should follow (the
+   *  `Gyld.Ask.Conversation` atom, which is THAT mount's fill key). A reply is
+   *  keyed by the conversation and not the run, so one conversation is one
+   *  mount however many turns it takes (GyldAskAgent.md section 6). */
+  onConversation?(conversation: string): void;
   /** A build landed, so whatever reads the shares should read them again.
    *  Optional: a wire with no store behind it supplies none. */
   onBuilt?(response: GyldOpsResponse): void;
@@ -132,6 +138,16 @@ export interface GyldOps {
   }): Promise<GyldOpsResponse>;
   rebuild(args?: { built?: string }): Promise<GyldOpsResponse>;
   diff(args: { left: string; right: string; force?: boolean }): Promise<GyldOpsResponse>;
+  /**
+   * Ask the agent about one record: the envelope whole, with the question the
+   * reader pressed with written into it.
+   *
+   * It builds nothing and writes nothing. The accept answers with a run id,
+   * and the reply arrives on `gyld.ask` keyed by the envelope's own
+   * CONVERSATION, which is subscribed before the mount is pointed at it — the
+   * same order a streaming build's output is followed in, for the same reason.
+   */
+  explain(envelope: GyldAskContext, question: string): Promise<GyldOpsResponse>;
 }
 
 /** Drop the fields a caller did not fill in, so the envelope carries exactly
@@ -146,8 +162,48 @@ function given(args: GyldOpsArgs): GyldOpsArgs {
   return out;
 }
 
+/** Where one streaming run's reply lands, and the atom that points its mount
+ *  at it. A run whose answer named no key to follow has none. */
+interface Following {
+  gladeId: string;
+  key: string;
+  point(): void;
+}
+
 export function createGyldOps(wire: GyldOpsWire): GyldOps {
-  const run = async (verb: GyldVerb, args: GyldOpsArgs): Promise<GyldOpsResponse> => {
+  /**
+   * The surface and key this run's reply is on.
+   *
+   * Two keyings, because the supplier has two: a BUILD streams onto
+   * `gyld.output` keyed by its run id, and a CONSULTATION streams onto
+   * `gyld.ask` keyed by its CONVERSATION, so one conversation is one mount
+   * however many turns it takes (GyldAskAgent.md section 6).
+   */
+  const following = (
+    verb: GyldVerb,
+    response: GyldOpsResponse,
+    conversation: string,
+  ): Following | undefined => {
+    if (verb === GyldVerb.EXPLAIN) {
+      return conversation === '' ? undefined : {
+        gladeId: GYLD_ASK_ID,
+        key: conversation,
+        point: () => wire.onConversation?.(conversation),
+      };
+    }
+    const runId = response.run_id ?? '';
+    return runId === '' ? undefined : {
+      gladeId: GYLD_OUTPUT_ID,
+      key: runId,
+      point: () => wire.onRunId(runId),
+    };
+  };
+
+  const run = async (
+    verb: GyldVerb,
+    args: GyldOpsArgs,
+    conversation = '',
+  ): Promise<GyldOpsResponse> => {
     const request = verb.request(given(args), wire.principal);
     let response: GyldOpsResponse;
     try {
@@ -166,11 +222,14 @@ export function createGyldOps(wire: GyldOpsWire): GyldOps {
     if (!response.ok) {
       return response;
     }
-    if (request.stream_output && response.run_id !== undefined && response.run_id !== '') {
-      // Subscribe BEFORE the mount is pointed at the run, so the node's replay
-      // of the lines already appended is not raced by the first delta.
+    const follow = request.stream_output
+      ? following(verb, response, conversation)
+      : undefined;
+    if (follow !== undefined) {
+      // Subscribe BEFORE the mount is pointed at the key, so the node's replay
+      // of the records already appended is not raced by the first delta.
       try {
-        await wire.subscribe(GYLD_SHARE, GYLD_OUTPUT_ID, response.run_id);
+        await wire.subscribe(GYLD_SHARE, follow.gladeId, follow.key);
       } catch (err) {
         wire.onResult({
           verb: verb.name,
@@ -181,9 +240,11 @@ export function createGyldOps(wire: GyldOpsWire): GyldOps {
           },
         });
       }
-      wire.onRunId(response.run_id);
+      follow.point();
     }
-    wire.onBuilt?.(response);
+    if (verb.touchesBundle) {
+      wire.onBuilt?.(response);
+    }
     return response;
   };
 
@@ -204,5 +265,14 @@ export function createGyldOps(wire: GyldOpsWire): GyldOps {
     diff: (args) => run(GyldVerb.DIFF, {
       left: args.left, right: args.right, force: args.force,
     }),
+    // The envelope travels WHOLE, with the question the reader pressed with
+    // written into it: `question` is a field of the envelope (section 3), so
+    // the document the supplier validates is the document the window composed
+    // and not a second one assembled beside it.
+    explain: (envelope, question) => run(
+      GyldVerb.EXPLAIN,
+      { context: { ...envelope, question } },
+      envelope.conversation,
+    ),
   };
 }
