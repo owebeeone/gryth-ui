@@ -615,6 +615,27 @@
   overflow-wrap: anywhere;
 }
 
+/* What was ASKED, as the log carried it: the reader's half of the turn, set
+   apart from the answer's prose rather than run together with it. */
+.gyld-ask-asked {
+  margin: 0;
+  padding-left: 0.583em;
+  border-left: 3px solid color-mix(in srgb, currentColor 30%, transparent);
+  font-weight: 600;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The conversation this window is in, and the one act on it. */
+.gyld-ask-conversation {
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.gyld-ask-moved {
+  margin: 0;
+}
+
 .gyld-ask-citations {
   display: flex;
   flex-direction: column;

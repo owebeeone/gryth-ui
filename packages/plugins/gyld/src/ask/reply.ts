@@ -77,6 +77,19 @@ export interface GyldAskRecord extends GyldOutputRecord {
 export class AskStream {
   private constructor(readonly name: string) {}
 
+  /**
+   * The reader's own question, as they typed it and before anything is asked
+   * of a model (`glade-gyld/src/envelope.rs`, `ASK_QUESTION`).
+   *
+   * Section 6 says the transcript IS the log share, and this is the half of a
+   * turn the reader wrote: it opens the turn, so a conversation reads as
+   * questions and answers rather than as answers to questions nobody kept —
+   * and a turn the model then refused is still a turn, with its question on
+   * it. The window never draws the question out of its own draft box, because
+   * what a reader typed is not what was asked until the supplier says so.
+   */
+  static readonly QUESTION = new AskStream('question');
+
   /** One text chunk, as the model streamed it. */
   static readonly ANSWER = new AskStream('answer');
 
@@ -91,7 +104,8 @@ export class AskStream {
   static readonly END = new AskStream('end');
 
   static readonly ALL: readonly AskStream[] = Object.freeze([
-    AskStream.ANSWER, AskStream.CITATION, AskStream.DRAFT, AskStream.END,
+    AskStream.QUESTION, AskStream.ANSWER, AskStream.CITATION, AskStream.DRAFT,
+    AskStream.END,
   ]);
 
   static byName(name: string): AskStream | undefined {
@@ -114,6 +128,9 @@ export interface AskTurn {
   runId: string;
   /** Who the run was attributed to, as the records carried it. */
   principal: string;
+  /** What was ASKED, as the `question` record carried it. Empty is an absent
+   *  record and is drawn as nothing, never as a blank line. */
+  question: string;
   /** The answer, as the `answer` records carried it: the chunks joined in
    *  sequence order, with nothing inserted between them. */
   prose: string;
@@ -206,7 +223,8 @@ export function foldAskReply(
     const runId = record.run_id ?? '';
     if (turn === undefined || turn.runId !== runId) {
       turn = {
-        runId, principal: '', prose: '', citations: [], said: [], ended: false,
+        runId, principal: '', question: '', prose: '', citations: [], said: [],
+        ended: false,
       };
       turns.push(turn);
     }
@@ -222,6 +240,12 @@ export function foldAskReply(
  *  the record put it, and a record with nothing to draw draws nothing. */
 function fold(turn: AskTurn, record: GyldAskRecord): void {
   const stream = AskStream.byName(record.stream ?? '');
+  if (stream === AskStream.QUESTION) {
+    // Joined in sequence order, like the prose and for the same reason: two
+    // records are two chunks of one question, and nothing is repaired.
+    turn.question += record.line ?? '';
+    return;
+  }
   if (stream === AskStream.ANSWER) {
     turn.prose += record.line ?? '';
     return;

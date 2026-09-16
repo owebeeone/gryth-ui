@@ -4,10 +4,15 @@ import {
   GYLD_ASK_STREAM, GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF,
   GYLD_DEST_STREAM, GYLD_LENS, GYLD_OPS, GYLD_OPS_STATUS, GYLD_RECORD, GYLD_RECORDS,
   GYLD_SOURCES, GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
-  GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
+  GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP, GYLD_TAB_ASK_DRAFT,
+  GYLD_TAB_ASK_DRAFT_TAP, GYLD_TAB_ID,
 } from '../grips';
 import type { GyldOpsResponse } from '../ops/ops';
 import type { GyldValue } from '../store/state';
+import {
+  NO_CONVERSATION, movedOff, startConversation, turnConversation,
+  type AskConversation, type AskConversationOn,
+} from './conversation';
 import { askEnvelope, type GyldAskContext } from './envelope';
 import {
   foldAskReply, hasReply,
@@ -15,9 +20,10 @@ import {
 } from './reply';
 import { explainGate, explainSubmit } from './submit';
 
-// The gyld.ask window (GyldAskAgent.md section 6), at step 1.5: the record it
-// is on, the question box, the `explain` the Ask button sends, and the reply
-// as it streams back.
+// The gyld.ask window (GyldAskAgent.md section 6), at step 2.1: the record it
+// is on, the conversation it is in, the turns that conversation has taken —
+// each with its own question, run id, prose, citations and close — and the
+// box the next question is typed into, under the last reply.
 //
 // Every line of the envelope is composed by `askEnvelope()`, a pure function
 // over this window's grips, and every line of the REPLY is folded by
@@ -82,13 +88,18 @@ export function AskWindow() {
   const sources = useGrip(GYLD_SOURCES);
   const ops = useGrip(GYLD_OPS);
   const status = useGrip(GYLD_OPS_STATUS) ?? '';
-  const conversation = useGrip(GYLD_TAB_ASK_CONVERSATION) ?? '';
+  const conversation = useGrip(GYLD_TAB_ASK_CONVERSATION) ?? NO_CONVERSATION;
+  const conversationTap = useGrip(GYLD_TAB_ASK_CONVERSATION_TAP) as
+    AtomTapHandle<AskConversation> | undefined;
+  // The browser this window is wired to, which is the tab a conversation id
+  // names — '' on a window that stands alone, exactly as `askOn` mints it.
+  const wiredTo = useGrip(GYLD_TAB_ID) ?? '';
   const question = useGrip(GYLD_TAB_ASK_DRAFT) ?? '';
   const draftTap = useGrip(GYLD_TAB_ASK_DRAFT_TAP) as AtomTapHandle<string> | undefined;
   const answer = useGrip(GYLD_TAB_ASK_ANSWER) ?? null;
   const answerTap = useGrip(GYLD_TAB_ASK_ANSWER_TAP) as
     AtomTapHandle<GyldOpsResponse | null> | undefined;
-  const reply = foldAskReply(useGrip(GYLD_ASK_STREAM), conversation);
+  const reply = foldAskReply(useGrip(GYLD_ASK_STREAM), conversation.id);
 
   if (ref === '') {
     return (
@@ -108,11 +119,17 @@ export function AskWindow() {
     bundle,
     sources: sources?.status === 'ok' ? sources.value : undefined,
     principal: ops?.principal,
-    conversation,
+    conversation: conversation.id,
     question,
   });
-  const gate = explainGate(ops, status, conversation, question);
+  const gate = explainGate(ops, status, conversation.id, question);
   const answered = hasReply(reply);
+  /** What one gesture of this window mints or keeps a conversation ON. The
+   *  stamp is read AT THE PRESS: a clock read in a render is not this
+   *  package's to take. */
+  const on = (): AskConversationOn => (
+    { tabId: wiredTo, slot: ref, stamp: Date.now() }
+  );
   return (
     <div className="gyld-ask">
       <header className="gyld-ask-head">
@@ -120,19 +137,46 @@ export function AskWindow() {
         <StatusLine envelope={envelope} />
       </header>
       <p className="gyld-detail-slot">{envelope.record.slot}</p>
-      <p className="gyld-note gyld-ask-conversation">
-        {conversation === ''
-          ? 'no conversation on this window yet'
-          : `conversation ${conversation}`}
-      </p>
+      <div className="gyld-chrome-row gyld-ask-conversation">
+        <span className="gyld-note">
+          {conversation.id === ''
+            ? 'no conversation on this window yet'
+            : `conversation ${conversation.id}`}
+        </span>
+        {/* Starting over is the reader's, and it is the one other way an id
+            is minted (section 6): the turns already asked stay on the log
+            under the id they were asked in, and this window stops folding
+            them. */}
+        <button
+          type="button"
+          className="gyld-ask-restart"
+          disabled={conversationTap === undefined}
+          title={'start a new conversation on this record; the turns already asked '
+            + 'stay on the log, under the id they were asked in'}
+          onClick={() => startConversation(conversationTap, on())}
+        >
+          {conversation.id === '' ? 'Start a conversation' : 'Start over'}
+        </button>
+      </div>
+      {movedOff(conversation, ref) && (
+        <p className="gyld-note gyld-ask-moved">
+          {`this conversation was opened on ${conversation.slot}, and this window has been `
+            + 'moved since: the next question opens a new conversation on this record'}
+        </p>
+      )}
+      {/* The conversation as the log carried it, in turn order, and then the
+          box the next turn is typed into: a follow-up is asked UNDER the
+          reply it follows (section 6). */}
+      <Reply reply={reply} />
+      <Answered answer={answer} />
       <label className="gyld-ask-question">
-        <span>your question</span>
+        <span>{answered ? 'your follow-up' : 'your question'}</span>
         <textarea
           className="gyld-ask-draft"
           rows={3}
           value={question}
           disabled={draftTap === undefined}
-          placeholder="why is this blocked?"
+          placeholder={answered ? 'and what does that turn on?' : 'why is this blocked?'}
           onChange={(event) => draftTap?.set(event.target.value)}
         />
       </label>
@@ -145,13 +189,24 @@ export function AskWindow() {
             ? 'send this context and this question to the agent, on the gyld.ops exchange'
             : gate.reason}
           // The press sends the envelope this window composed, with the
-          // question it was pressed with, and writes whatever came back into
-          // this window's own atom. Nothing is decided here: a refusal is an
-          // answer, and it is drawn below.
+          // question it was pressed with and in the conversation the turn is
+          // settled into, and writes whatever came back into this window's
+          // own atom. Nothing is decided here: a refusal is an answer, and it
+          // is drawn above.
           onClick={() => {
-            void explainSubmit(ops, envelope, question).then((response) => {
-              if (response !== undefined) {
-                answerTap?.set(response);
+            const inConversation = turnConversation(conversationTap, on(), conversation);
+            void explainSubmit(
+              ops, { ...envelope, conversation: inConversation.id }, question,
+            ).then((response) => {
+              if (response === undefined) {
+                return;
+              }
+              answerTap?.set(response);
+              // An ACCEPTED turn keeps its question on the log, where the
+              // fold draws it, so the box is emptied for the follow-up. A
+              // REFUSED one leaves the text where the reader can fix it.
+              if (response.ok) {
+                draftTap?.set('');
               }
             });
           }}
@@ -160,8 +215,6 @@ export function AskWindow() {
         </button>
         {!gate.ready && <span className="gyld-note gyld-ask-blocked">{gate.reason}</span>}
       </div>
-      <Answered answer={answer} />
-      <Reply reply={reply} />
       <Sources envelope={envelope} index={sources} />
       {/* The envelope STAYS, and folds away once a reply exists: what was sent
           is as much a fact as what came back, and hiding it outright would
@@ -219,11 +272,14 @@ function Reply({ reply }: { reply: AskReply }) {
   );
 }
 
-/** One turn: the prose as it streamed, the passages it cited, whatever else
- *  the supplier said, and the run's close. */
+/** One turn: the question it was asked with, the prose as it streamed, the
+ *  passages it cited, whatever else the supplier said, and the run's close. */
 function Turn({ turn }: { turn: AskTurn }) {
   return (
     <article className="gyld-ask-turn" data-run={turn.runId}>
+      {/* The question as the LOG carried it, not as this window's box holds
+          it: what was asked is what the supplier recorded being asked. */}
+      {turn.question !== '' && <p className="gyld-ask-asked">{turn.question}</p>}
       {turn.prose !== '' && <p className="gyld-ask-prose">{turn.prose}</p>}
       {turn.citations.length > 0 && (
         <ul className="gyld-ask-citations">

@@ -29,7 +29,7 @@ export function explainGate(
     return {
       ready: false,
       reason: 'this window has no conversation to ask in: open one from a box\'s '
-        + 'menu with Ask about this',
+        + 'menu with Ask about this, or start one here',
     };
   }
   if (question.trim() === '') {

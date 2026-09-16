@@ -430,7 +430,8 @@ describe('the gyld.ask window', () => {
       }));
       await expect.poll(() => tab.read(GYLD_DEST_STREAM).get()).toBe('base');
       expect(tab.read(GYLD_DEST_REF).get()).toBe(KEY_CUSTODY);
-      expect(tab.read(GYLD_TAB_ASK_CONVERSATION).get()).toBe('conv-browser-1-key-1');
+      expect(tab.read(GYLD_TAB_ASK_CONVERSATION).get())
+        .toEqual({ id: 'conv-browser-1-key-1', slot: KEY_CUSTODY });
       expect(tab.read(GYLD_TAB_ASK_DRAFT).get()).toBe('');
     });
 
@@ -445,7 +446,10 @@ describe('the gyld.ask window', () => {
       }));
       await expect.poll(() => sink.read(GYLD_DEST_REF).get()).toBe(KEY_CUSTODY);
       expect(sink.read(GYLD_DEST_STREAM).get()).toBe('base');
-      expect(sink.read(GYLD_TAB_ASK_CONVERSATION).get()).toBe('conv-browser-1-key-1');
+      // The wired window's conversation carries NO record: it follows the
+      // browser's, and binds to whichever one its first turn is asked about.
+      expect(sink.read(GYLD_TAB_ASK_CONVERSATION).get())
+        .toEqual({ id: 'conv-browser-1-key-1', slot: '' });
     });
 
   it('draws the envelope as pretty JSON beside the question box, with the Ask button',
@@ -483,7 +487,7 @@ describe('the gyld.ask window', () => {
 
   it('says it has no record rather than composing an envelope of nothing', async () => {
     const tab = desk().tab('ask-bare', askTabTaps('ask-bare'));
-    await expect.poll(() => tab.read(GYLD_TAB_ASK_CONVERSATION).get()).toBe('');
+    await expect.poll(() => tab.read(GYLD_TAB_ASK_CONVERSATION).get()?.id).toBe('');
     const markup = tab.render(<AskWindow />);
     expect(markup).toContain('no record on this window yet');
     expect(markup).not.toContain(ASK_CONTEXT_FORMAT);

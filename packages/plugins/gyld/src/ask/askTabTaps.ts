@@ -8,6 +8,7 @@ import {
   perspectiveFromParams, refFromParams, streamFromParams,
 } from '../grips';
 import type { GyldOpsResponse } from '../ops/ops';
+import { NO_CONVERSATION, type AskConversation } from './conversation';
 
 // The gyld.ask seeds, written against the one rule `gyld.detail` and
 // `gyld.decide` are already written against.
@@ -30,10 +31,23 @@ export function conversationFromParams(params?: Record<string, unknown>): string
   return typeof value === 'string' ? value : '';
 }
 
+/**
+ * The conversation this window opens in (step 2.1).
+ *
+ * The link carries the ID the menu minted; the RECORD it is on is the link's
+ * own `ref` when it has one, and empty when it has not — a WIRED window is
+ * opened with no destination on purpose, so its conversation binds to the
+ * record its first turn is actually asked about (./conversation.ts).
+ */
+export function seededConversation(params?: Record<string, unknown>): AskConversation {
+  const id = conversationFromParams(params);
+  return id === '' ? NO_CONVERSATION : { id, slot: refFromParams(params) };
+}
+
 export function askTabTaps(_tabId: string, params?: Record<string, unknown>): Tap[] {
   const seeds: Tap[] = [
     createAtomValueTap(GYLD_TAB_ASK_CONVERSATION, {
-      initial: conversationFromParams(params), handleGrip: GYLD_TAB_ASK_CONVERSATION_TAP,
+      initial: seededConversation(params), handleGrip: GYLD_TAB_ASK_CONVERSATION_TAP,
     }),
     createAtomValueTap(GYLD_TAB_ASK_DRAFT, {
       initial: '', handleGrip: GYLD_TAB_ASK_DRAFT_TAP,

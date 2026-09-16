@@ -25,6 +25,7 @@ import type {
   GyldOps, GyldOpsResponse, GyldOpsResult, GyldOutputRecord,
 } from './ops/ops';
 import type { GyldAskRecord } from './ask/reply';
+import { NO_CONVERSATION, type AskConversation } from './ask/conversation';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
 
@@ -335,9 +336,14 @@ export const GYLD_TAB_MENU_TAP =
 // with no conversation says so rather than inventing one.
 // ---------------------------------------------------------------------------
 
-export const GYLD_TAB_ASK_CONVERSATION = defineGrip<string>('Gyld.Tab.Ask.Conversation', '');
+// The conversation carries the record it is ON as well as its id (step 2.1):
+// a conversation is ABOUT a record, and a window wired to a browser follows
+// whatever box the reader picks next, so the pair is what says whether the
+// next turn is a follow-up or a new conversation (src/ask/conversation.ts).
+export const GYLD_TAB_ASK_CONVERSATION =
+  defineGrip<AskConversation>('Gyld.Tab.Ask.Conversation', NO_CONVERSATION);
 export const GYLD_TAB_ASK_CONVERSATION_TAP =
-  defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ask.Conversation.Tap');
+  defineGrip<AtomTapHandle<AskConversation>>('Gyld.Tab.Ask.Conversation.Tap');
 
 export const GYLD_TAB_ASK_DRAFT = defineGrip<string>('Gyld.Tab.Ask.Draft', '');
 export const GYLD_TAB_ASK_DRAFT_TAP =
