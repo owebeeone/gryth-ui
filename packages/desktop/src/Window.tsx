@@ -6,7 +6,10 @@ import {
   WINDOW_DRAG_TAP, WINDOW_MENU_TAP, DESKTOP_FONT_SCALE,
   type WindowRecord,
 } from './grips.desktop';
-import { closeTab, minimizeWindow, raiseWindow, type OverviewPlacement, type Rect } from './ops';
+import {
+  attentionClass, closeTab, minimizeWindow, raiseWindow,
+  type OverviewPlacement, type Rect,
+} from './ops';
 import TickerStrip from './TickerStrip';
 import { canvasOrigin } from './tickerDom';
 import { resolveTool } from './facets';
@@ -110,7 +113,7 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
   const place = overview?.placement;
   return (
     <section
-      className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
+      className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attentionClass(win)}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
       style={{
         left: rect.x, top: rect.y, width: rect.w, height: rect.h,
         transform: place
@@ -151,6 +154,14 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
       </div>
       {!docked && (
         <div className="gwin-resize" onMouseDown={(e) => { e.stopPropagation(); startFrameDrag(e, 'resize'); }} />
+      )}
+      {win.attention !== undefined && (
+        // The cue for an act the shell just landed here. KEYED on the mark's
+        // stamp: a repeat of the same act on the same frame mounts a NEW node,
+        // and mounting is what replays a CSS animation — the chrome holds no
+        // timer and no effect (desktop.css owns the motion, ./attention the
+        // clock, and the desk document the fact).
+        <div key={win.attention} className="gwin-attention" aria-hidden="true" />
       )}
     </section>
   );

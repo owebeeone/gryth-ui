@@ -10,7 +10,7 @@ import {
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
   dockOrMerge, probeArea, normalizeFoundations, captureGrid, dockingHome, setTabSource,
-  dragOverlayClass,
+  dragOverlayClass, attentionClass, clearAttention, findWiredTab, revealFrame,
 } from './ops';
 import type { FacetKind, LayoutNode, WindowDrag, WindowRecord } from './grips.desktop';
 
@@ -725,5 +725,110 @@ describe('dragOverlayClass', () => {
         expect(SHELL).not.toContain(token);
       }
     }
+  });
+});
+
+// The one gesture behind "which window did that act go to?" — see
+// ops.revealFrame and ./attention.
+describe('revealing the frame an act landed on', () => {
+  // A LOCKED desk's inspector, which is the shape the defect lives in: two
+  // sinks wired to one browser are TABS of a single docked frame, so only one
+  // of them is on screen at a time.
+  function inspector() {
+    const b = openWindow([], 'browser', SIZE);
+    const browserTab = b.list[0].tabs[0].id;
+    const ask = openWindow(b.list, 'ask', SIZE, 1, undefined, browserTab);
+    const decide = openWindow(ask.list, 'decide', SIZE, 1, undefined, browserTab);
+    // decide's tab moves into ask's frame and is the one showing
+    const list = mergeWindows(decide.list, decide.id, ask.id);
+    const frame = list.find((w) => w.id === ask.id)!;
+    return {
+      list,
+      browser: b.id,
+      browserTab,
+      frame: frame.id,
+      askTab: frame.tabs[0].id,
+      decideTab: frame.tabs[1].id,
+    };
+  }
+
+  it('finds the wired sink by its TAB, not just its frame', () => {
+    const desk = inspector();
+    expect(findWiredTab(desk.list, desk.browserTab, 'ask'))
+      .toEqual({ frameId: desk.frame, tabId: desk.askTab });
+    expect(findWiredTab(desk.list, desk.browserTab, 'welcome')).toBeNull();
+  });
+
+  it('raises a floating frame and marks it', () => {
+    const list = openMany(['chat', 'chat', 'chat']);
+    const target = list[0].id;
+    const next = revealFrame(list, target);
+    expect(next[next.length - 1].id).toBe(target);      // topmost
+    expect(next.find((w) => w.id === target)!.attention).toBe(1);
+    expect(next).toHaveLength(list.length);             // nothing opened
+  });
+
+  it('shows the tab the act landed on, inside a tabbed frame', () => {
+    const desk = inspector();
+    expect(desk.list.find((w) => w.id === desk.frame)!.activeTab).toBe(desk.decideTab);
+    const next = revealFrame(desk.list, desk.frame, desk.askTab);
+    const frame = next.find((w) => w.id === desk.frame)!;
+    expect(frame.activeTab).toBe(desk.askTab);
+    expect(frame.tabs.map((t) => t.id)).toEqual([desk.askTab, desk.decideTab]);
+    // a tab id this frame does not hold leaves the showing tab alone
+    expect(revealFrame(desk.list, desk.frame, 'nope')
+      .find((w) => w.id === desk.frame)!.activeTab).toBe(desk.decideTab);
+  });
+
+  it('leaves an already-visible frame alone but for the mark', () => {
+    const list = openMany(['chat', 'chat']);
+    const top = list[list.length - 1];
+    const next = revealFrame(list, top.id, top.activeTab);
+    expect(next.map((w) => w.id)).toEqual(list.map((w) => w.id)); // z-order held
+    const { attention, ...rest } = next[next.length - 1];
+    expect(rest).toEqual(top);          // geometry, tabs, dock: untouched
+    expect(attention).toBe(1);
+  });
+
+  it('restores a minimized frame — an act that lands unseen has not landed', () => {
+    const list = openMany(['chat']);
+    const hidden = minimizeWindow(list, list[0].id, true);
+    expect(revealFrame(hidden, list[0].id)[0].minimized).toBe(false);
+  });
+
+  it('stamps a new number every time, so a REPEAT plays the cue again', () => {
+    const desk = inspector();
+    const once = revealFrame(desk.list, desk.frame, desk.askTab);
+    const twice = revealFrame(once, desk.frame, desk.askTab);
+    expect(once.find((w) => w.id === desk.frame)!.attention).toBe(1);
+    expect(twice.find((w) => w.id === desk.frame)!.attention).toBe(2);
+  });
+
+  it('marks ONE frame: an act that moves a browser and then opens a sink', () => {
+    const desk = inspector();
+    // exactly what the Gyld node menu does in one turn, in that order
+    const moved = revealFrame(desk.list, desk.browser, desk.browserTab);
+    const asked = revealFrame(moved, desk.frame, desk.askTab);
+    expect(asked.find((w) => w.id === desk.browser)!.attention).toBeUndefined();
+    expect(asked.find((w) => w.id === desk.frame)!.attention).toBe(2);
+    expect(asked.filter((w) => w.attention !== undefined)).toHaveLength(1);
+  });
+
+  it('is the SAME list when there is no such frame', () => {
+    const list = openMany(['chat']);
+    expect(revealFrame(list, 'w99')).toBe(list);
+  });
+
+  it('clears every mark, and notifies nobody when there is none', () => {
+    const list = openMany(['chat', 'chat']);
+    expect(clearAttention(list)).toBe(list);
+    const marked = revealFrame(list, list[0].id);
+    expect(clearAttention(marked).every((w) => w.attention === undefined)).toBe(true);
+  });
+
+  it('names the class the chrome wears while the mark is set', () => {
+    const list = openMany(['chat']);
+    expect(attentionClass(list[0])).toBe('');
+    expect(attentionClass(revealFrame(list, list[0].id)[0])).toBe(' attention');
   });
 });

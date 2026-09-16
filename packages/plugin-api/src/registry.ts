@@ -38,6 +38,12 @@ export interface ToolLink {
 // chrome, plugins, and agents all invoke the SAME surface. Window policy
 // v1: invoking a link ALWAYS opens a new window (find-or-switch an
 // existing view is a later optimization).
+//
+// REVEAL is part of the bargain here and in the two intents below: the
+// window an act lands on is focused, raised, shown (its tab is selected when
+// it shares a frame — on a locked desk the sink is one tab of a docked area)
+// and marked for the shell's brief attention cue. An act whose answer is out
+// of sight has not answered, so a caller never has to focus anything itself.
 export type OpenTool = (link: ToolLink) => void;
 export const DESKTOP_OPEN_TOOL = defineGrip<OpenTool>('Desktop.OpenTool');
 
@@ -61,7 +67,8 @@ export const DESKTOP_TAB_LINKS = defineGrip<TabLinkInfo[]>('Desktop.TabLinks', [
 
 // Shell-provided intent: replace an existing tab's link params (the
 // "send to an EXISTING window" half of link invocation — the view
-// re-resolves against the new params).
+// re-resolves against the new params). A retarget is an ACT, so the window
+// it lands on is revealed exactly as a freshly opened one is.
 export type RetargetTab = (tabId: string, params: Record<string, unknown>) => void;
 export const DESKTOP_RETARGET_TAB = defineGrip<RetargetTab>('Desktop.RetargetTab');
 
@@ -69,7 +76,7 @@ export const DESKTOP_RETARGET_TAB = defineGrip<RetargetTab>('Desktop.RetargetTab
 // The shell makes the source's grip context a parent of the sink's, so the
 // sink reads whatever the source publishes (e.g. the explorer's current
 // WTA) live, through the context graph — no params copied. One sink per
-// (source, toolId): a second call focuses the existing wire instead of
+// (source, toolId): a second call REVEALS the existing wire instead of
 // spawning, which is the IDE "current editor" reuse falling out of the
 // graph. This is the patchbay's connect primitive.
 export type OpenWired = (sourceTabId: string, link: ToolLink) => void;

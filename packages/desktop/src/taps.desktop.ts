@@ -30,8 +30,9 @@ import {
 } from './grips.desktop';
 import {
   findWiredTab, foundationOn, freezeTab, nextTabId,
-  openFoundation, openToolWindow, openWindow, setTabParams, setTabSource,
+  openFoundation, openToolWindow, openWindow, revealFrame, setTabParams, setTabSource,
 } from './ops';
+import { attentionSweep } from './attention';
 
 // Shell chrome taps — the desktop document (environ scope) plus the
 // instance-scope gesture state. These are the desktop itself, NOT plugins
@@ -110,6 +111,24 @@ export const ResetLayoutTap = createAtomValueTap(DESKTOP_RESET_LAYOUT, {
   initial: () => {},
 });
 
+// REVEAL what an act just landed on — the last thing every intent below does,
+// once the document is written.
+//
+// Three facts, one gesture: the frame is focused, it is raised, and the TAB
+// the act landed on is shown. The third is what a floating desk never needed
+// and a LOCKED one cannot do without: the sink is one tab of a tabbed area
+// (the Gyld desk tabs Ask, Details and decide into one inspector), so an act
+// delivered to a hidden tab used to change nothing the reader could see.
+//
+// The transient mark rides along and the sweep clears it a moment later, so
+// the reader is TOLD which window answered rather than being left to find it
+// — the whole point of revealing at all when the window was already open.
+function reveal(frameId: string, tabId?: string): void {
+  DesktopWindowsTap.update((list) => revealFrame(list, frameId, tabId));
+  DesktopFocusedTap.set(frameId);
+  attentionSweep.arm(DesktopWindowsTap);
+}
+
 // The Desktop.OpenTool intent: invoking a LINK opens a new window at the
 // tool's default size (v1 policy — always a new window), docking home on a
 // gridded desktop. Published as a grip value, so the launcher, plugins,
@@ -117,8 +136,13 @@ export const ResetLayoutTap = createAtomValueTap(DESKTOP_RESET_LAYOUT, {
 function openToolAt(link: ToolLink, source?: string): void {
   const defs = allTools(PluginRegistryTap.get());
   const def = resolveTool(defs, link.toolId);
+  const list = DesktopWindowsTap.get();
+  // the tab the new window will land on, read off the list BEFORE it opens —
+  // a window docked into an occupied area MERGES, so the surviving frame's
+  // own active tab is not necessarily the one this link asked for
+  const tabId = nextTabId(list);
   const out = openToolWindow(
-    DesktopWindowsTap.get(),
+    list,
     link.toolId,
     def.defaultSize,
     DesktopCurrentTap.get(),
@@ -127,7 +151,7 @@ function openToolAt(link: ToolLink, source?: string): void {
     toolRoles(defs),
   );
   DesktopWindowsTap.set(out.list);
-  DesktopFocusedTap.set(out.focusId);
+  reveal(out.focusId, tabId);
 }
 
 const openToolIntent = (link: ToolLink) => {
@@ -139,9 +163,15 @@ export const OpenToolTap = createAtomValueTap(DESKTOP_OPEN_TOOL, {
 
 // Desktop.RetargetTab intent: replace an existing tab's link params — the
 // "send to an EXISTING window" half of link invocation.
+// A retarget is always an ACT ("send that to the window I already have"), so
+// the window it lands on is revealed exactly as a freshly opened one is.
 export const RetargetTabTap = createAtomValueTap(DESKTOP_RETARGET_TAB, {
   initial: (tabId: string, params: Record<string, unknown>) => {
     DesktopWindowsTap.update((list) => setTabParams(list, tabId, params));
+    const frame = DesktopWindowsTap.get().find((w) => w.tabs.some((t) => t.id === tabId));
+    if (frame !== undefined) {
+      reveal(frame.id, tabId);
+    }
   },
 });
 
@@ -153,16 +183,25 @@ export const RetargetTabTap = createAtomValueTap(DESKTOP_RETARGET_TAB, {
 const openWiredIntent = (sourceTabId: string, link: ToolLink) => {
   const list = DesktopWindowsTap.get();
   const existing = findWiredTab(list, sourceTabId, link.toolId);
-  // already wired and live: the WTA grip updates it in place — do NOT
-  // raise/refocus on every click (that was the jarring jump).
-  if (existing) return;
+  // Already wired and live: the live grip link has already moved it, so
+  // nothing is opened and nothing is re-parented — but the reader asked for
+  // THAT window, and a reuse that says nothing is indistinguishable from an
+  // act that did not work. (This path used to return here outright, to avoid
+  // a jarring jump; the jump it avoided was the whole answer on a locked
+  // desk, where the sink sits under another tab of the inspector area. The
+  // cue is what makes the reveal readable instead of jarring.)
+  if (existing !== null) {
+    reveal(existing.frameId, existing.tabId);
+    return;
+  }
   const defs = allTools(PluginRegistryTap.get());
   const def = resolveTool(defs, link.toolId);
+  const tabId = nextTabId(list);
   const out = openToolWindow(
     list, link.toolId, def.defaultSize, DesktopCurrentTap.get(), link.params, sourceTabId, toolRoles(defs),
   );
   DesktopWindowsTap.set(out.list);
-  DesktopFocusedTap.set(out.focusId);
+  reveal(out.focusId, tabId);
 };
 export const OpenWiredTap = createAtomValueTap(DESKTOP_OPEN_WIRED, {
   initial: openWiredIntent,
@@ -191,11 +230,13 @@ const openWiredPairIntent = (sourceToolId: ToolId, sinkToolId: ToolId, params?: 
   const a = openToolWindow(
     list, sourceToolId, resolveTool(defs, sourceToolId).defaultSize, desktop, params, undefined, roles,
   );
+  const sinkTabId = nextTabId(a.list);
   const b = openToolWindow(
     a.list, sinkToolId, resolveTool(defs, sinkToolId).defaultSize, desktop, params, srcTabId, roles,
   );
   DesktopWindowsTap.set(b.list);
-  DesktopFocusedTap.set(b.focusId);
+  // the SINK is what the reader asked to see; the source is scaffolding
+  reveal(b.focusId, sinkTabId);
 };
 export const OpenWiredPairTap = createAtomValueTap(DESKTOP_OPEN_WIRED_PAIR, {
   initial: openWiredPairIntent,

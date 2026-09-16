@@ -108,15 +108,21 @@ export function openToolWindow(
 }
 
 // Find an existing SINK wired to `source` showing `facet` — the "current
-// editor" lookup behind Desktop.OpenWired. Returns the frame id (to focus)
-// or null (spawn one).
+// editor" lookup behind Desktop.OpenWired. Returns the frame AND the tab
+// (both are needed to reveal it: on a locked desk the sink is one tab of a
+// tabbed area, so the frame alone does not say what to show), or null when
+// there is none and one must be spawned.
+export interface WiredTab { frameId: string; tabId: string }
 export function findWiredTab(
   list: WindowRecord[],
   source: string,
   facet: FacetKind,
-): string | null {
+): WiredTab | null {
   for (const w of list) {
-    if (w.tabs.some((t) => t.source === source && t.facet === facet)) return w.id;
+    const tab = w.tabs.find((t) => t.source === source && t.facet === facet);
+    if (tab !== undefined) {
+      return { frameId: w.id, tabId: tab.id };
+    }
   }
   return null;
 }
@@ -242,6 +248,60 @@ export function selectTab(list: WindowRecord[], frameId: string, tabId: string):
   return list.map((w) => (w.id === frameId && w.tabs.some((t) => t.id === tabId)
     ? { ...w, activeTab: tabId }
     : w));
+}
+
+// REVEAL the frame an act just landed on — raise it, show the tab it landed
+// on, and mark it for the chrome's cue. Every shell intent that delivers an
+// act to a window ends here (taps.desktop's `reveal`).
+//
+// Showing the TAB is the part a floating desk never needed: on a LOCKED desk
+// the sink sits in a tabbed area (the Gyld desk tabs Ask, Details and decide
+// into one inspector), so retargeting it under a hidden tab changes nothing
+// the reader can see. A minimized frame is restored for the same reason — an
+// act that lands where nobody can see it has not landed.
+//
+// The transient mark is a STAMP (see WindowRecord.attention) and only ONE
+// frame carries one: an act that moves a browser and THEN opens a sink wired
+// to it (the Gyld node menu does exactly that, in one turn) must leave the
+// reader with one cue — the window that answered — not a trail of them.
+//
+// Geometry is untouched, and the SAME list comes back when there is no such
+// frame.
+export function revealFrame(list: WindowRecord[], frameId: string, tabId?: string): WindowRecord[] {
+  if (!list.some((w) => w.id === frameId)) {
+    return list;
+  }
+  const stamp = list.reduce((max, w) => Math.max(max, w.attention ?? 0), 0) + 1;
+  return raiseWindow(list, frameId).map((w) => {
+    if (w.id !== frameId) {
+      return w.attention === undefined ? w : { ...w, attention: undefined };
+    }
+    const shows = tabId !== undefined && w.tabs.some((t) => t.id === tabId);
+    return {
+      ...w,
+      activeTab: shows ? tabId : w.activeTab,
+      minimized: false,
+      attention: stamp,
+    };
+  });
+}
+
+// Drop every attention mark: what ./attention's sweep applies when the cue's
+// interval is up. Returns the SAME list when there is nothing marked, so a
+// sweep over a quiet desk notifies nobody.
+export function clearAttention(list: WindowRecord[]): WindowRecord[] {
+  if (!list.some((w) => w.attention !== undefined)) {
+    return list;
+  }
+  return list.map((w) => (w.attention === undefined ? w : { ...w, attention: undefined }));
+}
+
+// The frame's attention class, ready to concatenate into the chrome's
+// className (leading space, like every other flag there) — `desktop.css`
+// tints the titlebar for as long as the mark is set, which is also the
+// prefers-reduced-motion reader's whole cue.
+export function attentionClass(win: WindowRecord): string {
+  return win.attention === undefined ? '' : ' attention';
 }
 
 export function closeTab(list: WindowRecord[], frameId: string, tabId: string): WindowRecord[] {

@@ -11,6 +11,9 @@ import { HUB } from './foundations';
 import type { GridStash } from './ops';
 import type { ThemeId } from './themes';
 import { foldDocument, seedFrom, type DeskDocument, type DeskState } from './layoutDocument';
+// One injectable clock for the whole desk — the debounce below and the
+// attention sweep are the same shape, and a suite fires either by hand.
+import { timeoutSchedule, type Schedule } from './attention';
 
 // ---------------------------------------------------------------------------
 // INTERIM demo persistence — the storage side. Read ./layoutDocument's header
@@ -32,6 +35,10 @@ import { foldDocument, seedFrom, type DeskDocument, type DeskState } from './lay
 // desk: every read and write is inside a try/catch and a failure leaves the
 // desk exactly as the entry's own defaults built it.
 // ---------------------------------------------------------------------------
+
+/** The desk's clock, re-exported where this module's own callers look for
+ *  it (the `schedule` option below). */
+export type { Schedule };
 
 /** The entry name a target that names none is stored under. */
 export const DEFAULT_ENTRY = 'desktop';
@@ -222,10 +229,6 @@ export function deskPorts(grok: Grok, atoms: DeskAtoms): DeskPorts {
 
 // --- the session -----------------------------------------------------------
 
-/** Run `fn` after `ms`, and return the cancel. Injected by tests so a debounce
- *  is asserted without waiting for one. */
-export type Schedule = (fn: () => void, ms: number) => () => void;
-
 export interface LayoutPersistenceOptions {
   /** The target's name, in the storage key (default `desktop`). */
   entry?: string;
@@ -247,11 +250,6 @@ export interface LayoutPersistence {
 }
 
 const NO_PERSISTENCE: LayoutPersistence = { restored: false, reset: () => {} };
-
-function timeoutSchedule(fn: () => void, ms: number): () => void {
-  const id = setTimeout(fn, ms);
-  return () => clearTimeout(id);
-}
 
 function browserStore(): LayoutStore | null {
   try {

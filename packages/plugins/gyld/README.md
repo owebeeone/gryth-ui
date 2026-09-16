@@ -45,7 +45,10 @@ card over it with that question's own text as the host drew it, its
 alternatives with the recorded lean marked, the one emitted reason it cannot be
 answered or the one emitted reason it can be, and `Answer`, `Ask a follow-up`
 and `Details`, each of which moves
-this window onto the question and opens the wired window on it. `Answer` is
+this window onto the question and opens the wired window on it — and, when
+that window is already open, brings it forward: the shell focuses it, shows
+its tab when it shares a docked area with others, and flashes it briefly so
+the reader can see which window answered. `Answer` is
 the only one withheld on a box this stream's decide-now list carries no row
 for — a follow-up is a NEW question with this one ticked as a prerequisite,
 which any drawn question can take — and that is exactly the rule the menu

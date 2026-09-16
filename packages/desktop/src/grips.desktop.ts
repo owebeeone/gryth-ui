@@ -79,6 +79,13 @@ export interface WindowRecord {
   // Docked frame: rendered geometry is computed from the foundation's area;
   // x/y/w/h above remain the FLOAT memory and are never overwritten.
   dock?: { foundation: string; area: string };
+  // TRANSIENT attention mark: the stamp of the act the shell last REVEALED
+  // this frame for (ops.revealFrame). A STAMP and not a flag, because the
+  // chrome keys its cue on the value: a repeat of the same act on the same
+  // frame is a new number, so the animation plays again instead of sitting
+  // already-applied. At most one frame carries one, and ./attention's sweep
+  // clears it a moment later — including one a restored document carried in.
+  attention?: number;
 }
 
 export const DESKTOP_WINDOWS = defineGrip<WindowRecord[]>('Desktop.Windows', []);
