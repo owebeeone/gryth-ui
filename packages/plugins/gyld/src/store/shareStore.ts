@@ -1,4 +1,4 @@
-import { LENS_SUFFIX, STREAMS_INDEX_PATH } from './layout';
+import { LENS_SUFFIX, SOURCES_INDEX_PATH, STREAMS_INDEX_PATH } from './layout';
 import type { GyldStore } from './stores';
 
 // The THIRD bundle store: a bundle that arrives on glade value shares rather
@@ -18,6 +18,7 @@ import type { GyldStore } from './stores';
 //   gyld.decisions  <stream>         -> streams/<stream>/decide-now.json
 //   gyld.lens       <stream>/<persp> -> a {path, digest, bytes} POINTER
 //   gyld.file       <stream>/<file>  -> a {path, digest, bytes} POINTER
+//   gyld.file       _bundle/<file>   -> a {path, digest, bytes} POINTER
 //
 // A lens file is the large one, so it travels as a pointer and is fetched over
 // HTTP from grazel's static path. The pointer is never trusted: the bytes are
@@ -29,6 +30,13 @@ import type { GyldStore } from './stores';
 // glade root could not read a single record: every Gyld record window reads the
 // projection, and the only way to it was to add the build directory as a static
 // root by hand and re-point it after every build.
+//
+// `sources.json` is the build's own document rather than any stream's — one
+// index per BUILD, beside `streams.json` — so it travels on the same surface
+// under the reserved `_bundle` key, which no stream id can take. Without it the
+// Ask window on a glade root said the build emitted no source index, which was
+// never true of the build: the index was emitted and simply had no pointer to
+// arrive by.
 //
 // Everything else a bundle holds (an emitted diff, say) is NOT on a share. A
 // read of one reports exactly that, and the window shows absence, which is
@@ -78,6 +86,24 @@ export class GyldShareSurface {
 export const SHARED_STREAM_FILES = ['projection.json', 'validation.json'] as const;
 
 /**
+ * The key a BUNDLE-level file arrives under on the `gyld.file` surface, in
+ * place of the stream id a per-stream file carries. The supplier's
+ * `BUNDLE_KEY`; a stream can never be named it, so the one key space holds
+ * both shapes without either having to guess which it is looking at.
+ */
+export const SHARED_BUNDLE_KEY = '_bundle';
+
+/** The bundle-ROOT files that arrive as `gyld.file` pointers, keyed
+ *  `_bundle/<file>`. The supplier's `BUNDLE_FILES`, this side of the wire.
+ *  Each is a path at the root of a bundle, so the name IS the path. */
+export const SHARED_BUNDLE_FILES = [SOURCES_INDEX_PATH] as const;
+
+/** The `gyld.file` key one bundle-root path arrives under. */
+export function bundleFileKey(file: string): string {
+  return `${SHARED_BUNDLE_KEY}/${file}`;
+}
+
+/**
  * What a share-backed root reads through. The live module implements this over
  * glial mounts against the real node; a test implements it over a map.
  *
@@ -94,8 +120,10 @@ export interface GyldShareProvider {
   lensKeys(): readonly string[];
   /** Fetch one pointed-at file over grazel's static path. */
   fetch(path: string): Promise<string>;
-  /** Ask the node to replay the keyed surfaces of these streams. Called with
-   *  the census's own stream ids, so nothing is subscribed speculatively. */
+  /** Ask the node to replay the keyed surfaces the listing implies: the
+   *  bundle's own files, and those of each of these streams. Called with the
+   *  census's own stream ids once the listing has landed, so nothing is
+   *  subscribed speculatively. */
   follow(streams: readonly string[]): void;
   /** Tell the store a published value changed, so it reads the shares again.
    *  Returns the unsubscribe. */
@@ -184,6 +212,11 @@ export class ShareStore implements GyldStore {
   async read(path: string): Promise<string> {
     if (path === STREAMS_INDEX_PATH) {
       return this.required(GyldShareSurface.STREAMS, undefined, path);
+    }
+    if ((SHARED_BUNDLE_FILES as readonly string[]).includes(path)) {
+      // A document of the BUILD, not of a stream: same surface, same
+      // fetch-and-check, under the key no stream id can take.
+      return this.pointed(GyldShareSurface.FILE, bundleFileKey(path));
     }
     const lens = lensKeyOf(path);
     if (lens !== null) {
