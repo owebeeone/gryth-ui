@@ -6,6 +6,7 @@ import {
 } from './grips';
 import { BrowserChrome } from './browser/BrowserChrome';
 import { NodeCard } from './browser/NodeCard';
+import { NodeMenu } from './browser/NodeMenu';
 import { SetPicker } from './browser/SetPicker';
 import { NO_NEXT_UP, nextUpFrom } from './browser/nextUp';
 import { NO_SEARCH, searchLens } from './browser/search';
@@ -120,6 +121,11 @@ export function GyldBrowser({ tabId }: ToolViewProps) {
             // The card resolves its own emitted data from this window's
             // context, so nothing about it is passed down as a prop.
             card={(node) => <NodeCard node={node} />}
+            // The same acts, reached by a right-click or a shift-click on the
+            // box (GyldAskAgent.md section 2). The menu resolves its own
+            // emitted data from this window's context exactly as the card
+            // does, so nothing about it is passed down as a prop either.
+            menu={(node) => <NodeMenu node={node} />}
           />
         )}
     </div>

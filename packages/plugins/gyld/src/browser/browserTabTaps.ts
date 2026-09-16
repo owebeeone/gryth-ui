@@ -3,11 +3,12 @@ import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_REF, GYLD_DEST_REF_TAP,
   GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
   GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL, GYLD_PICKER_URL_TAP,
-  GYLD_TAB_ID, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
+  GYLD_TAB_ID, GYLD_TAB_MENU, GYLD_TAB_MENU_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
   perspectiveFromParams, previewFromParams, refFromParams, streamFromParams,
 } from '../grips';
 import { lensTabTaps } from '../lens/lensTabTaps';
 import { GyldFirstPickTap } from './GyldFirstPickTap';
+import { MENU_CLOSED } from './menu';
 
 // The gyld.browser seeds. The desktop registers these on the tab's chrome-held
 // home context at tab creation and retires them when the tab record leaves the
@@ -38,6 +39,12 @@ export function browserTabTaps(tabId: string, params?: Record<string, unknown>):
       initial: previewFromParams(params), handleGrip: GYLD_DEST_PREVIEW_TAP,
     }),
     createAtomValueTap(GYLD_TAB_SEARCH, { initial: '', handleGrip: GYLD_TAB_SEARCH_TAP }),
+    // The node menu, one per window: a right-click or a shift-click on a box
+    // writes it and every dismissal writes it back. Seeded HERE rather than in
+    // lensTabTaps because the menu is the browser's own act surface — a diff
+    // pane and a compare side draw a picture and offer no acts on it, so they
+    // seed none and read the closed default.
+    createAtomValueTap(GYLD_TAB_MENU, { initial: MENU_CLOSED, handleGrip: GYLD_TAB_MENU_TAP }),
     // This window's own address, published so a wired sink can retarget it.
     createAtomValueTap(GYLD_TAB_ID, { initial: tabId }),
     // The set picker's drafts, per window, so two desks pick independently.

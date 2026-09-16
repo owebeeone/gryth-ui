@@ -204,6 +204,7 @@ export {
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_TAP, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP, GYLD_TAB_HOVER, GYLD_TAB_HOVER_TAP,
   GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_LENS_PALETTE,
+  GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
 } from './grips';
 export { BrowserChrome } from './browser/BrowserChrome';
 export { GyldBrowser } from './GyldBrowser';
@@ -219,6 +220,7 @@ export {
   type BrowserFocus, type BrowserFocusHandles,
 } from './browser/useBrowserFocus';
 export { NodeCard } from './browser/NodeCard';
+export { NodeMenu } from './browser/NodeMenu';
 export { DETAIL_FOCUS_CONTEXT, RecordDetail } from './detail/RecordDetail';
 export { detailTabTaps } from './detail/detailTabTaps';
 export { FocusDestTap } from './detail/followFocus';
@@ -246,6 +248,7 @@ export { DecideNowList } from './decidenow/DecideNowList';
 export { groupQuestions, type Group } from './decidenow/groups';
 export { decideNowTabTaps } from './decidenow/decideNowTabTaps';
 export * from './browser/card';
+export * from './browser/menu';
 export * from './browser/links';
 export * from './browser/nextUp';
 export * from './browser/perspectives';

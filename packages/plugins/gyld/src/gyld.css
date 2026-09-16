@@ -464,6 +464,62 @@
   gap: 0.333em 0.5em;
 }
 
+/* The node menu: the acts on a box, over the card's own anchor because the
+   card is suppressed while this is up. */
+
+.gyld-menu-anchor {
+  position: absolute;
+  z-index: 4;
+  cursor: default;
+  outline: none;
+}
+
+.gyld-node-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.083em;
+  margin: 0;
+  padding: 0.25em;
+  min-width: 13em;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 8px;
+  background: var(--win, Canvas);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 28%);
+  list-style: none;
+  font: 0.8em/1.45 ui-sans-serif, system-ui, sans-serif;
+}
+
+.gyld-node-menu-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.167em;
+  padding: 0.333em 0.5em;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  margin-bottom: 0.167em;
+}
+
+.gyld-node-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.333em 0.5em;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gyld-node-menu-item:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-node-menu-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 /* The count and the one filter that read the emitted decide-now list. */
 .gyld-nextup-toggle {
   display: inline-flex;

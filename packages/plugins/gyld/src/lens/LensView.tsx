@@ -2,6 +2,10 @@ import type { ReactNode } from 'react';
 import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import type { GyldLensState } from '../store/state';
 import { effectiveSelection } from '../browser/links';
+import {
+  MENU_CLOSED, addsToSelection, closeMenu, isMenuOpen, opensMenu, openMenuOn,
+  type GyldNodeMenu,
+} from '../browser/menu';
 import { applyPick } from './pick';
 import type { GyldFocus } from '../focus';
 import {
@@ -9,7 +13,8 @@ import {
   GYLD_LENS, GYLD_LENS_PALETTE,
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_CAMERA_TAP, GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_HOVER,
-  GYLD_TAB_HOVER_TAP, GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
+  GYLD_TAB_HOVER_TAP, GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
+  GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
 import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera,
@@ -208,7 +213,7 @@ function Figure({ scene, camera, markerFor, palette }: {
  *  pure function of a scene. Exported so a test renders it with no grip at
  *  all and the view stays the thin grip-reading wrapper. */
 export function LensFigure({
-  scene, camera, scope, palette = LENS_PALETTE_LIGHT, onPick, onHover,
+  scene, camera, scope, palette = LENS_PALETTE_LIGHT, onPick, onHover, onMenu,
 }: {
   scene: LensScene;
   camera: GyldCamera;
@@ -220,17 +225,39 @@ export function LensFigure({
   palette?: GyldLensPalette;
   onPick?: (lensId: string, additive: boolean) => void;
   onHover?: (lensId: string) => void;
+  /**
+   * The MENU gesture: a right-click or a shift-click on the picture, told the
+   * lens id it resolved (GyldAskAgent.md section 2, owner ruling A1: the
+   * gesture is BOTH). An id that is not a box is reported as it is, and the
+   * window around this one closes its menu rather than opening one on an edge.
+   *
+   * Giving shift-click to the menu means the ADDITIVE SELECTION modifier
+   * narrows to meta or ctrl — the one deliberate change to a documented
+   * gesture this feature makes, and it belongs here beside the gesture that
+   * took the key rather than being discovered later.
+   */
+  onMenu?: (lensId: string) => void;
 }) {
   const markerFor = (edge: SceneEdge) => `${scope}-arrow-${edge.id.replace(/[^A-Za-z0-9_-]/g, '_')}`;
+  const idAt = (target: EventTarget | null) =>
+    (target as Element).closest?.('g[id]')?.getAttribute('id') ?? '';
   return (
     <svg
       className="gyld-lens-svg"
       // Delegated: one handler resolves the nearest drawn group to its id,
       // rather than one handler per node and edge.
       onClick={(event) => {
-        const group = (event.target as Element).closest?.('g[id]');
-        const id = group?.getAttribute('id') ?? '';
-        onPick?.(id, event.shiftKey || event.metaKey);
+        const id = idAt(event.target);
+        if (opensMenu(event)) {
+          onMenu?.(id);
+          return;
+        }
+        onPick?.(id, addsToSelection(event));
+      }}
+      // The picture owns its own context menu, so the browser's does not win.
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onMenu?.(idAt(event.target));
       }}
       onMouseMove={(event) => {
         const group = (event.target as Element).closest?.('g[id]');
@@ -326,7 +353,7 @@ export function LensProvenance({ scene }: { scene: LensScene }) {
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: shown }: {
+export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, state: shown }: {
   scope?: string;
   search?: SceneSearch;
   /**
@@ -345,6 +372,18 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
    * which is every window but the browser.
    */
   card?: (node: SceneNode) => ReactNode;
+  /**
+   * The MENU to draw over the box it is open on, when the window around this
+   * one has one. Anchored the same way the card is — HTML over the picture,
+   * under the node's own emitted rectangle through the camera (MDV-4) — and
+   * the card is suppressed while it is up, so two panels never stack over one
+   * box (GyldAskAgent.md section 2).
+   *
+   * A window that passes none draws none and never opens one, which is every
+   * window but the browser: a diff pane and a compare side show a picture and
+   * offer no acts on it.
+   */
+  menu?: (node: SceneNode) => ReactNode;
   /**
    * The picture to draw, when the window around this one has already resolved
    * one. A browser window showing a browser PREVIEW passes `Gyld.Preview`
@@ -375,6 +414,7 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
   const drag = useGrip(GYLD_TAB_CAMERA_DRAG);
   const held = useGrip(GYLD_TAB_SELECTION) ?? NO_SELECTION;
   const hover = useGrip(GYLD_TAB_HOVER) ?? '';
+  const menuOn = useGrip(GYLD_TAB_MENU) ?? MENU_CLOSED;
   const dimmed = useGrip(GYLD_TAB_DIMMED) ?? NOTHING_DIMMED;
   const palette = useGrip(GYLD_LENS_PALETTE) ?? LENS_PALETTE_LIGHT;
   const stream = useGrip(GYLD_DEST_STREAM) ?? '';
@@ -387,6 +427,16 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
   const dimmedTap = useGrip(GYLD_TAB_DIMMED_TAP) as AtomTapHandle<GyldDimmed> | undefined;
   const refTap = useGrip(GYLD_DEST_REF_TAP) as AtomTapHandle<string> | undefined;
   const focusTap = useGrip(GYLD_FOCUS_TAP) as AtomTapHandle<GyldFocus> | undefined;
+  const menuTap = useGrip(GYLD_TAB_MENU_TAP) as AtomTapHandle<GyldNodeMenu> | undefined;
+
+  /** Every dismissal writes through the same handle, read back through it and
+   *  never through the render closure: a click, a pan and a key can all land
+   *  inside one notification cycle (CodingRules.md). */
+  const dismissMenu = () => {
+    if (isMenuOpen(menuTap?.get())) {
+      menuTap?.set(closeMenu());
+    }
+  };
 
   if (state?.status !== 'ok' || state.value === undefined) {
     return <LensAbsent state={state} />;
@@ -402,6 +452,14 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
   // The box the pointer is on, if it is on one. A hidden box is not on
   // screen, so nothing is drawn over where it would have been.
   const hovered = scene.nodes.find((node) => node.hovered && !node.hidden);
+  // The box the MENU is open over, by qualified slot — the identity that
+  // survives a restream (R1), so a menu opened before a rebuild lands on the
+  // same record after it. A slot this picture no longer draws, or draws
+  // hidden, shows no menu: the atom still holds it, and the next gesture
+  // replaces or dismisses it.
+  const menuNode = menuOn.slot === ''
+    ? undefined
+    : scene.nodes.find((node) => node.slot === menuOn.slot && !node.hidden);
 
   // The fit measures the STAGE — the box that shows the picture — and never
   // the SVG or anything found by tag under the lens root (./stage.ts).
@@ -500,6 +558,9 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
             dragTap?.set(undefined);
             return;
           }
+          // The pan STARTS here, and a menu anchored to a box the reader is
+          // about to move out from under is in the way exactly as the card is.
+          dismissMenu();
           cameraTap?.set(panBy(
             cameraTap.get() ?? CAMERA_UNFITTED,
             event.clientX - held.x,
@@ -539,6 +600,9 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
           // every gyld window may follow (MDV-5). Each is read back through
           // its handle, never through the render closure (./pick.ts).
           onPick={(id, additive) => {
+            // Any click on the picture dismisses the menu, whatever else it
+            // picks: one atom, one menu, and the pick is what replaces it.
+            dismissMenu();
             const outcome = applyPick(
               { selection: selectionTap, ref: refTap, focus: focusTap },
               lens,
@@ -548,12 +612,53 @@ export function LensView({ scope = 'gyld', search, nextUp, card, onSlot, state: 
             );
             onSlot?.(outcome.ref);
           }}
+          // The gesture writes the atom and nothing else: no selection moves,
+          // no focus is written, and a gesture that landed on an edge, a group
+          // or bare canvas DISMISSES rather than opening on something that is
+          // not a box. The anchor is the node's own emitted rectangle.
+          onMenu={(id) => {
+            const node = scene.nodes.find((entry) => entry.id === id && !entry.hidden);
+            menuTap?.set(node === undefined
+              ? closeMenu()
+              : openMenuOn(node.slot, {
+                x: node.box.x,
+                y: node.box.y + node.box.height,
+              }));
+          }}
         />
+        {/* The menu, anchored the same way and drawn over the card's place,
+            because the card is suppressed while it is open. `Escape` closes
+            it, and the panel takes focus through a ref callback keyed on the
+            slot — the sanctioned way to reach the DOM (CodingRules.md) — so
+            the key lands here without a listener on the window. */}
+        {menu !== undefined && menuNode !== undefined && !isPanning(drag) && (
+          <div
+            className="gyld-menu-anchor"
+            key={menuOn.slot}
+            tabIndex={-1}
+            ref={(element) => element?.focus({ preventScroll: true })}
+            style={{
+              left: camera.tx + menuOn.x * camera.k,
+              top: camera.ty + menuOn.y * camera.k,
+            }}
+            onMouseDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                menuTap?.set(closeMenu());
+              }
+            }}
+          >
+            {menu(menuNode)}
+          </div>
+        )}
         {/* The card, anchored under the hovered box's own emitted rectangle
             through the camera: HTML over the picture, not geometry in it, so
             nothing is repositioned (MDV-4). It is suppressed while a pan is
-            running, because a card under a moving pointer is in the way. */}
-        {card !== undefined && hovered !== undefined && !isPanning(drag) && (
+            running, because a card under a moving pointer is in the way, and
+            while this window's MENU is open, so two panels never stack over
+            one box (GyldAskAgent.md section 2). */}
+        {card !== undefined && hovered !== undefined && !isPanning(drag)
+          && !isMenuOpen(menuOn) && (
           <div
             className="gyld-card-anchor"
             style={{

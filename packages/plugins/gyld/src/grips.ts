@@ -19,6 +19,7 @@ import { LENS_PALETTE_LIGHT, type GyldLensPalette } from './lens/palette';
 import { NO_FOCUS, type GyldFocus } from './focus';
 import { LANDING_UNSET, type GyldLanding } from './landing/landing';
 import { NOTHING_PICKED, type GyldFirstPick } from './browser/firstPick';
+import { MENU_CLOSED, type GyldNodeMenu } from './browser/menu';
 import type { GyldOps, GyldOpsResult, GyldOutputRecord } from './ops/ops';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import { ANSWER_EMPTY, ASK_EMPTY, type AnswerDraft, type AskDraft } from './decide/drafts';
@@ -291,6 +292,17 @@ export const GYLD_TAB_SEARCH_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.S
 // it already follows that browser's selection and two sources would race.
 export const GYLD_TAB_FOLLOW = defineGrip<boolean>('Gyld.Tab.Follow', false);
 export const GYLD_TAB_FOLLOW_TAP = defineGrip<AtomTapHandle<boolean>>('Gyld.Tab.Follow.Tap');
+
+// Class 1 atom; INSTANCE scope, one per browser window (GyldAskAgent.md
+// section 2, "Where the state lives"). Which box this window's menu is open
+// over, and where it is anchored, in the lens's own user units.
+//
+// ONE atom means ONE menu per window: opening a menu over another box replaces
+// it rather than stacking a second. The empty slot is a rendered state — no
+// menu, and the hover card drawn instead — and not a default.
+export const GYLD_TAB_MENU = defineGrip<GyldNodeMenu>('Gyld.Tab.Menu', MENU_CLOSED);
+export const GYLD_TAB_MENU_TAP =
+  defineGrip<AtomTapHandle<GyldNodeMenu>>('Gyld.Tab.Menu.Tap');
 
 export const GYLD_PICKER_URL = defineGrip<string>('Gyld.Tab.Picker.Url', '');
 export const GYLD_PICKER_URL_TAP =

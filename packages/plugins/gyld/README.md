@@ -47,7 +47,14 @@ answered, and `Answer`, `Ask a follow-up` and `Details`, each of which moves
 this window onto the question and opens the wired window on it. On a stream
 whose overlay module already declares records the card reads
 `Answer (needs its own stream)`, names the refusal, and offers a `Link` already
-filled in (see "Submitting to the supplier"). None of it is computed: a stream
+filled in (see "Submitting to the supplier"). A RIGHT-CLICK or a SHIFT-CLICK on
+a box opens a small menu at it with the same acts plus `Ask about this`, which
+is where the ask agent will land (`gyld-wz/dev-docs/ui/GyldAskAgent.md`
+section 2); it is offered disabled until that window exists. One menu per
+window: opening one over another box replaces it, a click, `Escape` or a pan
+dismisses it, and the hover card is suppressed while it is up so two panels
+never stack over one box. Giving shift-click to the menu narrows the ADDITIVE
+selection modifier to meta or ctrl. None of it is computed: a stream
 that emitted no decide-now list gets no glyph, no count and no filter, and is
 told so. Beside
 `Reload`, which re-reads what is there, it carries `Rebuild`, which asks the

@@ -110,6 +110,16 @@ export interface BrowserFocus {
   /** Whether a record window can be opened or retargeted, same reason. */
   detailReady: boolean;
   detail(slot: string): void;
+  /**
+   * Whether the Ask window can be opened at all.
+   *
+   * `gyld.ask` is declared in step 0.3 of GyldAskAgent.md; until it exists
+   * there is nothing to open, so the menu's `Ask about this` is OFFERED and
+   * disabled with that as its reason rather than quietly hidden (MDV-7: an
+   * omission is said, never swallowed).
+   */
+  askReady: boolean;
+  ask(slot: string): void;
 }
 
 export function useBrowserFocus(): BrowserFocus {
@@ -138,6 +148,12 @@ export function useBrowserFocus(): BrowserFocus {
     detailReady: throughWire,
     detail(slot: string): void {
       detailOn(handles, slot);
+    },
+    askReady: false,
+    ask(slot: string): void {
+      // Step 0.3 opens `gyld.ask` here, wired to this browser. Nothing yet:
+      // `askReady` is false, so no entry can reach this.
+      void slot;
     },
   };
 }
