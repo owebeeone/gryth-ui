@@ -11,6 +11,9 @@ import type { GyldOpsResponse } from '../ops/ops';
 import type { GyldValue } from '../store/state';
 import { useBrowserFocus } from '../browser/useBrowserFocus';
 import type { TakenDraft } from '../decide/drafts';
+import workingStill from '../assets/working-96-still.png';
+import workingUrl from '../assets/working-96.gif';
+import { AskPhase, conversationBusy } from './busy';
 import {
   NO_CONVERSATION, movedOff, startConversation, turnConversation,
   type AskConversation, type AskConversationOn,
@@ -135,7 +138,12 @@ export function AskWindow() {
     conversation: conversation.id,
     question,
   });
-  const gate = explainGate(ops, status, conversation.id, question);
+  // The turn this window already has in flight, out of the fold and the
+  // accept (`./busy.ts`). Nothing here is timed and nothing here is a hook:
+  // the phase is what has ARRIVED, so it changes when a record lands and goes
+  // away when the `end` record closes the turn.
+  const busy = conversationBusy(reply, answer);
+  const gate = explainGate(ops, status, conversation.id, question, busy);
   const answered = hasReply(reply);
   /** What one gesture of this window mints or keeps a conversation ON. The
    *  stamp is read AT THE PRESS: a clock read in a render is not this
@@ -166,7 +174,14 @@ export function AskWindow() {
           disabled={conversationTap === undefined}
           title={'start a new conversation on this record; the turns already asked '
             + 'stay on the log, under the id they were asked in'}
-          onClick={() => startConversation(conversationTap, on())}
+          onClick={() => {
+            startConversation(conversationTap, on());
+            // The accept belonged to the conversation being left, and the new
+            // one has had nothing asked in it. Clearing it is what makes that
+            // true of the window as well as of the log — and it is what stops
+            // an indicator from waiting on a turn this window no longer folds.
+            answerTap?.set(null);
+          }}
         >
           {conversation.id === '' ? 'Start a conversation' : 'Start over'}
         </button>
@@ -192,7 +207,13 @@ export function AskWindow() {
       />
       <Answered answer={answer} />
       <label className="gyld-ask-question">
-        <span>{answered ? 'your follow-up' : 'your question'}</span>
+        {/* The box says what the button's disabled state means, so a reader
+            who is typing is told why nothing can be sent yet. */}
+        <span>
+          {busy === undefined
+            ? (answered ? 'your follow-up' : 'your question')
+            : `${busy.name}… the next question can be asked once this turn closes`}
+        </span>
         <textarea
           className="gyld-ask-draft"
           rows={3}
@@ -235,6 +256,7 @@ export function AskWindow() {
         >
           Ask
         </button>
+        {busy !== undefined && <Working phase={busy} />}
         {!gate.ready && <span className="gyld-note gyld-ask-blocked">{gate.reason}</span>}
       </div>
       <Sources envelope={envelope} index={sources} />
@@ -246,6 +268,37 @@ export function AskWindow() {
         <pre className="gyld-ask-envelope">{JSON.stringify(envelope, null, 2)}</pre>
       </details>
     </div>
+  );
+}
+
+/**
+ * That a turn is in flight, and what of it has arrived.
+ *
+ * The animation is the visible half and the WORD is the load-bearing half: a
+ * spinner says only that something is happening, and this window's whole
+ * manner is to say what it actually knows (6.7). So the phase comes out of the
+ * fold (`./busy.ts`) and is printed beside the turning gear, and it changes as
+ * records land rather than on a timer.
+ *
+ * REDUCED MOTION is honoured without a hook and without a second code path:
+ * the `<source>` swaps the animation for its own first frame under
+ * `prefers-reduced-motion: reduce`, so a reader who has asked for stillness
+ * gets the same picture, still, with the same words next to it.
+ *
+ * The image is decorative and carries no information the text does not, so its
+ * `alt` is empty and the live region is the text.
+ */
+function Working({ phase }: { phase: AskPhase }) {
+  return (
+    <span className="gyld-ask-working" data-phase={phase.name}>
+      <picture>
+        <source srcSet={workingStill} media="(prefers-reduced-motion: reduce)" />
+        <img className="gyld-ask-working-turn" src={workingUrl} alt="" />
+      </picture>
+      <span className="gyld-note gyld-ask-working-said" role="status" title={phase.means}>
+        {phase.name}
+      </span>
+    </span>
   );
 }
 

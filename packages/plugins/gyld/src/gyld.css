@@ -724,6 +724,28 @@
   align-items: baseline;
 }
 
+/* A turn in flight: the gear, and the word for what has arrived. Sized in em
+   throughout, so the indicator follows the desktop's font scale like every
+   other line of the window rather than sitting at a fixed pixel size. */
+.gyld-ask-working {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.417em;
+}
+
+.gyld-ask-working-turn {
+  display: block;
+  width: 2.167em;
+  height: 2.167em;
+}
+
+.gyld-ask-working-said {
+  font-variant-numeric: tabular-nums;
+  /* The word changes as records land; a fixed inline size keeps the row from
+     reflowing under it on each change. */
+  min-width: 5em;
+}
+
 /* The tags a taken draft leaned on, offered beside the sources field: the
    agent never writes that field and the reader takes them (section 8). */
 .gyld-answer-offered {

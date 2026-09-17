@@ -606,6 +606,86 @@ describe('the ask window submits, and draws what comes back', () => {
     expect(on.markup()).not.toContain('end, exit');
   });
 
+  // A turn in flight is SHOWN to be one: the gear turns beside the word for
+  // what has actually arrived, and the Ask button is closed while it does.
+  // The derivation is `./busy.ts` and is asserted there, over hand-written
+  // records; what is asserted here is that the window draws it.
+  describe('a turn in flight turns, and says what of it has arrived', () => {
+    const asked: GyldAskRecord = {
+      run_id: 'run-7',
+      seq: 0,
+      principal: 'gianni',
+      conversation: CONVERSATION,
+      stream: 'question',
+      line: 'why is this blocked?',
+    };
+    const ACCEPT: GyldOpsResponse = {
+      ok: true, run_id: 'run-7', done: false, attributed_to: 'gianni',
+    };
+
+    /** This window with those records on the log, and the accept a press wrote
+     *  into its own atom. */
+    async function inFlight(name: string, stream: GyldAskRecord[]) {
+      const on = await askWindow(name, { stream });
+      (on.tab.read(GYLD_TAB_ASK_ANSWER_TAP).get() as AtomTapHandle<GyldOpsResponse | null>)
+        .set(ACCEPT);
+      await expect.poll(() => on.tab.read(GYLD_TAB_ASK_ANSWER).get()?.run_id).toBe('run-7');
+      return on;
+    }
+
+    // In the order the supplier writes one turn: the question, then the
+    // sources it grounded on, then the prose (`glade-gyld/src/supplier.rs`).
+    const STEPS: [string, GyldAskRecord[]][] = [
+      ['asking', []],
+      ['thinking', [asked]],
+      ['citing', [asked, citation('run-7', 1, Q11)]],
+      ['answering', [asked, citation('run-7', 1, Q11),
+        answerLine('run-7', 2, 'key_custody is blocked ')]],
+    ];
+
+    it.each(STEPS)('shows the gear and says %s', async (word, stream) => {
+      const markup = (await inFlight(`ask-flight-${word}`, stream)).markup();
+      expect(markup).toContain('class="gyld-ask-working"');
+      expect(markup).toContain(`data-phase="${word}"`);
+      // the animation itself, and its own first frame for a reader who has
+      // asked for stillness — one picture, two ways, no second code path
+      expect(markup).toContain('gyld-ask-working-turn');
+      expect(markup).toContain('working-96.gif');
+      expect(markup).toContain('media="(prefers-reduced-motion: reduce)"');
+      expect(markup).toContain('working-96-still.png');
+      // the word is the load-bearing half, and it is a live region
+      expect(markup).toContain(`role="status"`);
+      expect(markup).toContain(`>${word}</span>`);
+      // nothing can be asked on top of a turn already in flight, and the box
+      // the next question is typed into says why
+      expect(/<button[^>]*class="gyld-ask-send"[^>]*disabled/.test(markup)).toBe(true);
+      expect(markup).toContain('one turn is in flight');
+      expect(markup).toContain(`${word}… the next question can be asked once this turn closes`);
+    });
+
+    it('takes the gear and the word away when the end record lands', async () => {
+      const on = await inFlight('ask-flight-end', [asked, ...TURN]);
+      const markup = on.markup();
+      expect(markup).not.toContain('gyld-ask-working');
+      expect(markup).not.toContain('one turn is in flight');
+      // the turn is drawn, closed, exactly as it was before any of this
+      expect(markup).toContain('end, exit 0');
+      expect(markup).toContain('your follow-up');
+    });
+
+    it('takes them away on a refusal that arrived before any run started', async () => {
+      const on = await askWindow('ask-flight-refused');
+      (on.tab.read(GYLD_TAB_ASK_ANSWER_TAP).get() as AtomTapHandle<GyldOpsResponse | null>)
+        .set({ ok: false, error: 'no model key: set ANTHROPIC_API_KEY' });
+      await expect.poll(() => on.tab.read(GYLD_TAB_ASK_ANSWER).get()?.ok).toBe(false);
+      const markup = on.markup();
+      expect(markup).not.toContain('gyld-ask-working');
+      // and the refusal is drawn as the data it is
+      expect(markup).toContain('explain: refused');
+      expect(markup).toContain('no model key');
+    });
+  });
+
   it('draws no other conversation\'s reply, however the records arrive', async () => {
     const on = await askWindow('ask-mine', {
       stream: [

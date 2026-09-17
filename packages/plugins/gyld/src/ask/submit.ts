@@ -1,5 +1,6 @@
 import type { GyldOps, GyldOpsResponse } from '../ops/ops';
 import { opsGate, type OpsGate } from '../ops/submit';
+import type { AskPhase } from './busy';
 import type { GyldAskContext } from './envelope';
 
 // When the Ask button may be pressed, and what it sends (step 1.5).
@@ -14,16 +15,31 @@ import type { GyldAskContext } from './envelope';
 // supplier and comes back as data, including a refusal: a button that could be
 // pressed and would fail honestly beats one disabled on a guess.
 
-/** Why this window cannot ask yet, in its own words. */
+/**
+ * Why this window cannot ask yet, in its own words.
+ *
+ * `busy` is the turn this window already has in flight (`./busy.ts`), and it
+ * is refused BEFORE the two below it: an accepted turn empties the question
+ * box, so a window that checked the question first would tell a reader waiting
+ * on an answer to type one — which is both untrue and the wrong thing to do.
+ */
 export function explainGate(
   ops: GyldOps | undefined,
   status: string,
   conversation: string,
   question: string,
+  busy: AskPhase | undefined = undefined,
 ): OpsGate {
   const gate = opsGate(ops, status);
   if (!gate.ready) {
     return gate;
+  }
+  if (busy !== undefined) {
+    return {
+      ready: false,
+      reason: `this window is ${busy.name}: one turn is in flight, and the next `
+        + 'question can be asked once it closes',
+    };
   }
   if (conversation === '') {
     return {
