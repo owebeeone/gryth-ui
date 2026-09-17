@@ -355,21 +355,57 @@ describe('the ask window draws the turns and asks the next question under them',
     expect(markup).not.toContain('another window asked this');
   });
 
-  it('puts the follow-up box UNDER the last reply', async () => {
-    const win = await wiredWindow('under', { conversation: CONVERSATION, stream: TURNS });
+  it('puts every turn in the scrolling transcript, and the composer under it',
+    async () => {
+      const win = await wiredWindow('under', { conversation: CONVERSATION, stream: TURNS });
+      const markup = win.markup();
+      // header, then the transcript, then the one composer: the layout every
+      // chat is read in, and the order the markup is in.
+      expect(markup.indexOf('gyld-ask-head'))
+        .toBeLessThan(markup.indexOf('gyld-ask-transcript'));
+      expect(markup.indexOf('gyld-ask-transcript'))
+        .toBeLessThan(markup.indexOf('data-run="run-2"'));
+      expect(markup.lastIndexOf('gyld-ask-turn'))
+        .toBeLessThan(markup.indexOf('gyld-ask-composer'));
+      // and ONE box, for the first question and every follow-up alike
+      expect(markup.match(/<textarea/g)).toHaveLength(1);
+      expect(markup).toContain('ask a follow-up — Enter sends, Shift+Enter for a new line');
+    });
+
+  it('asks the first question from the same box, at the bottom of an empty window',
+    async () => {
+      const win = await wiredWindow('first', { conversation: CONVERSATION });
+      const markup = win.markup();
+      expect(markup).toContain('ask about this record — Enter sends, Shift+Enter for a new line');
+      expect(markup.match(/<textarea/g)).toHaveLength(1);
+      expect(markup).not.toContain('gyld-ask-reply');
+      expect(markup).toContain(`conversation ${CONVERSATION}`);
+      // the transcript is above the composer whether or not it has anything in it
+      expect(markup.indexOf('gyld-ask-transcript'))
+        .toBeLessThan(markup.indexOf('gyld-ask-composer'));
+    });
+
+  it('folds the context away, closed, and keeps the envelope inside it', async () => {
+    const win = await wiredWindow('context', { conversation: CONVERSATION, stream: TURNS });
     const markup = win.markup();
-    expect(markup.lastIndexOf('gyld-ask-turn'))
-      .toBeLessThan(markup.indexOf('gyld-ask-question'));
-    expect(markup).toContain('your follow-up');
-    expect(markup).not.toContain('your question');
+    expect(markup).toContain('<details class="gyld-ask-context">');
+    expect(markup).not.toContain('<details class="gyld-ask-context" open=""');
+    expect(markup).toContain('<summary>context</summary>');
+    expect(markup).toContain('gyld.ask-context.v1');
+    expect(markup.indexOf('gyld-ask-context'))
+      .toBeLessThan(markup.indexOf('gyld-ask-transcript'));
   });
 
-  it('asks for the FIRST question at the top of a window with no reply yet', async () => {
-    const win = await wiredWindow('first', { conversation: CONVERSATION });
+  it('draws each turn as the question and then the reply, in that order', async () => {
+    const win = await wiredWindow('rows', { conversation: CONVERSATION, stream: TURNS });
     const markup = win.markup();
-    expect(markup).toContain('your question');
-    expect(markup).not.toContain('gyld-ask-reply');
-    expect(markup).toContain(`conversation ${CONVERSATION}`);
+    const turn = markup.slice(
+      markup.indexOf('data-run="run-2"'), markup.indexOf('data-run="run-9"'),
+    );
+    expect(turn.indexOf('gyld-ask-row-asked')).toBeLessThan(turn.indexOf('gyld-ask-row-reply'));
+    expect(turn.indexOf('gyld-ask-asked')).toBeLessThan(turn.indexOf('gyld-ask-prose'));
+    // the run's own close is the reply's footer, inside the reply's bubble
+    expect(turn.indexOf('gyld-ask-bubble')).toBeLessThan(turn.indexOf('gyld-ask-end'));
   });
 
   it('offers Start over, and one on a window that has no conversation at all', async () => {

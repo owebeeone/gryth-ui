@@ -528,8 +528,10 @@
   cursor: default;
 }
 
-/* The ask window: the record, the question box, the reply as it streams and
-   the envelope that was sent, folded away once an answer exists. */
+/* The ask window, laid out as a chat: a header that says what the conversation
+   is about and folds the context away, a transcript that scrolls and follows
+   what arrives, and one composer pinned to the bottom. Sized in em throughout,
+   so the desktop's font scale reaches all three. */
 
 .gyld-ask {
   display: flex;
@@ -538,21 +540,123 @@
   padding: 0.769em;
   height: 100%;
   box-sizing: border-box;
-  overflow: auto;
+  /* The TRANSCRIPT scrolls, not the window: the header and the composer stay
+     where the reader left them. */
+  overflow: hidden;
   font: 0.867em/1.5 ui-sans-serif, system-ui, sans-serif;
 }
 
 .gyld-ask-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.333em 0.667em;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.333em;
 }
 
-.gyld-ask-question {
+.gyld-ask-on {
+  align-items: baseline;
+  gap: 0.333em 0.583em;
+}
+
+/* Start over closes the row, away from the record's own line. */
+.gyld-ask-restart {
+  margin-left: auto;
+}
+
+/* The id is an audit fact, not a heading: present, small, and out of the way
+   of the record it is about. */
+.gyld-ask-conversation {
+  font-size: 0.85em;
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+
+/* The envelope and the sources, behind one disclosure and closed by default. */
+.gyld-ask-context {
   display: flex;
   flex-direction: column;
-  gap: 0.25em;
+  gap: 0.333em;
+}
+
+.gyld-ask-context > summary {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+/* The transcript: the flex-grown middle, and the only thing that scrolls. */
+.gyld-ask-transcript {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.667em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.167em;
+}
+
+/* One turn is two rows: the reader's question to the right, the agent's reply
+   to the left, which is the shape every chat is read in. */
+.gyld-ask-row {
+  display: flex;
+}
+
+.gyld-ask-row-asked {
+  justify-content: flex-end;
+}
+
+.gyld-ask-row-reply {
+  justify-content: flex-start;
+}
+
+.gyld-ask-row-system {
+  align-self: center;
+  max-width: 85%;
+  text-align: center;
+}
+
+.gyld-ask-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 0.417em;
+  max-width: 92%;
+  padding: 0.5em 0.667em;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 10px 10px 10px 2px;
+}
+
+.gyld-ask-composer {
+  position: relative;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 0.417em;
+  padding-top: 0.417em;
+  border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.gyld-ask-composer > .gyld-ask-draft {
+  flex: 1;
+  min-width: 6em;
+}
+
+/* The reader has scrolled up and the transcript has stayed put: this is the
+   way back, over the composer and out of the transcript's own flow. */
+.gyld-ask-jump {
+  position: absolute;
+  right: 0.5em;
+  bottom: calc(100% + 0.333em);
+  padding: 0.167em 0.667em;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 999px;
+  background: var(--win, Canvas);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.gyld-ask-blocked {
+  flex-basis: 100%;
 }
 
 .gyld-ask-draft {
@@ -608,13 +712,12 @@
   gap: 0.667em;
 }
 
+/* A turn is not a box: the two bubbles inside it are, and the turn is what
+   holds them together. */
 .gyld-ask-turn {
   display: flex;
   flex-direction: column;
-  gap: 0.417em;
-  padding: 0.5em 0.667em;
-  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
-  border-radius: 6px;
+  gap: 0.333em;
 }
 
 .gyld-ask-prose {
@@ -623,21 +726,16 @@
   overflow-wrap: anywhere;
 }
 
-/* What was ASKED, as the log carried it: the reader's half of the turn, set
-   apart from the answer's prose rather than run together with it. */
+/* What was ASKED, as the log carried it: the reader's own half of the turn, in
+   its own bubble on its own side. */
 .gyld-ask-asked {
+  max-width: 85%;
   margin: 0;
-  padding-left: 0.583em;
-  border-left: 3px solid color-mix(in srgb, currentColor 30%, transparent);
-  font-weight: 600;
+  padding: 0.417em 0.667em;
+  border-radius: 10px 10px 2px 10px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-/* The conversation this window is in, and the one act on it. */
-.gyld-ask-conversation {
-  align-items: baseline;
-  gap: 0.5em;
 }
 
 .gyld-ask-moved {
@@ -720,8 +818,15 @@
   margin: 0;
 }
 
-.gyld-ask-acts {
-  align-items: baseline;
+/* A cited passage is one line until it is asked for. */
+.gyld-ask-passage-fold {
+  flex-basis: 100%;
+}
+
+.gyld-ask-passage-fold > summary {
+  cursor: pointer;
+  font-size: 0.917em;
+  opacity: 0.8;
 }
 
 /* A turn in flight: the gear, and the word for what has arrived. Sized in em
@@ -757,16 +862,6 @@
   margin: 0;
 }
 
-.gyld-ask-envelope-fold {
-  display: flex;
-  flex-direction: column;
-  gap: 0.333em;
-}
-
-.gyld-ask-envelope-fold > summary {
-  cursor: pointer;
-}
-
 .gyld-ask-envelope-title {
   margin: 0.333em 0 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -786,7 +881,10 @@
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
-  overflow-x: auto;
+  /* Opened, it is a document and not a takeover: the header keeps its share of
+     the window and the envelope scrolls inside it. */
+  max-height: 40vh;
+  overflow: auto;
 }
 
 /* The count and the one filter that read the emitted decide-now list. */

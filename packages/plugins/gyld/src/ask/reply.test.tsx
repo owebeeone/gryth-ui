@@ -534,12 +534,12 @@ describe('the ask window submits, and draws what comes back', () => {
     const on = await askWindow('ask-send');
     const markup = on.markup();
     expect(markup).toContain('gyld-ask-send');
-    expect(markup).toContain('your question');
+    expect(markup).toContain('ask about this record');
     // step 0.3's "nothing is sent yet" is gone: there IS a verb behind it now
     expect(markup).not.toContain('gyld-ask-nosubmit');
     expect(markup).toContain('nothing has been asked from this window yet');
-    // the envelope is open while no reply exists
-    expect(markup).toContain('<details class="gyld-ask-envelope-fold" open=""');
+    // the envelope rides in the context fold, closed, beside the sources
+    expect(markup).toContain('<details class="gyld-ask-context">');
     expect(markup).toContain('gyld.ask-context.v1');
   });
 
@@ -594,9 +594,9 @@ describe('the ask window submits, and draws what comes back', () => {
     expect(markup).toContain('data-resolved="no"');
     expect(markup).toContain("this build&#x27;s index does not list this tag");
     expect(markup).toContain('end, exit 0');
-    // and the envelope stays, folded away, now that there is a reply
-    expect(markup).toContain('<details class="gyld-ask-envelope-fold"');
-    expect(markup).not.toContain('<details class="gyld-ask-envelope-fold" open=""');
+    // and the envelope stays, folded away, wherever the conversation is
+    expect(markup).toContain('<details class="gyld-ask-context">');
+    expect(markup).not.toContain('<details class="gyld-ask-context" open=""');
     expect(markup).toContain('gyld.ask-context.v1');
   });
 
@@ -660,7 +660,26 @@ describe('the ask window submits, and draws what comes back', () => {
       // the next question is typed into says why
       expect(/<button[^>]*class="gyld-ask-send"[^>]*disabled/.test(markup)).toBe(true);
       expect(markup).toContain('one turn is in flight');
+      expect(/<textarea[^>]*disabled/.test(markup)).toBe(true);
       expect(markup).toContain(`${word}… the next question can be asked once this turn closes`);
+      // and the gear is the LAST row of the transcript, above the composer
+      expect(markup.indexOf('gyld-ask-working'))
+        .toBeLessThan(markup.indexOf('gyld-ask-composer'));
+      expect(markup.lastIndexOf('gyld-ask-turn'))
+        .toBeLessThan(markup.indexOf('gyld-ask-composer'));
+    });
+
+    it('carries the gear in the open turn`s own reply row once records land', async () => {
+      // 'asking' is the one phase the fold cannot see, and it is the only one
+      // drawn as a row of its own; from 'thinking' on, the gear is in the row
+      // the prose then streams into.
+      const gap = (await inFlight('ask-flight-gap', [])).markup();
+      expect(gap).toContain('gyld-ask-turn-pending');
+      const landed = (await inFlight('ask-flight-landed', [asked])).markup();
+      expect(landed).not.toContain('gyld-ask-turn-pending');
+      const row = landed.slice(landed.indexOf('data-run="run-7"'));
+      expect(row.indexOf('gyld-ask-row-asked')).toBeLessThan(row.indexOf('gyld-ask-row-reply'));
+      expect(row.indexOf('gyld-ask-row-reply')).toBeLessThan(row.indexOf('gyld-ask-working'));
     });
 
     it('takes the gear and the word away when the end record lands', async () => {
@@ -670,7 +689,7 @@ describe('the ask window submits, and draws what comes back', () => {
       expect(markup).not.toContain('one turn is in flight');
       // the turn is drawn, closed, exactly as it was before any of this
       expect(markup).toContain('end, exit 0');
-      expect(markup).toContain('your follow-up');
+      expect(markup).toContain('ask a follow-up');
     });
 
     it('takes them away on a refusal that arrived before any run started', async () => {

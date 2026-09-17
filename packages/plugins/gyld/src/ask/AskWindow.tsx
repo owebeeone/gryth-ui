@@ -4,6 +4,7 @@ import {
   GYLD_ASK_STREAM, GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF,
   GYLD_DEST_STREAM, GYLD_LENS, GYLD_OPS, GYLD_OPS_STATUS, GYLD_RECORD, GYLD_RECORDS,
   GYLD_SOURCES, GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
+  GYLD_TAB_ASK_AT_END, GYLD_TAB_ASK_AT_END_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP, GYLD_TAB_ASK_DRAFT,
   GYLD_TAB_ASK_DRAFT_TAP, GYLD_TAB_DRAFT_TAKEN_TAP, GYLD_TAB_ID,
 } from '../grips';
@@ -27,12 +28,27 @@ import {
   foldAskReply, hasReply,
   type AskReply, type AskTurn, type GyldAskCitation, type GyldAskDraft,
 } from './reply';
-import { explainGate, explainSubmit } from './submit';
+import { explainGate, explainSubmit, sendsOnKey } from './submit';
+import { followScroll, keepAtEnd } from './transcript';
 
-// The gyld.ask window (GyldAskAgent.md section 6), at step 2.1: the record it
-// is on, the conversation it is in, the turns that conversation has taken —
-// each with its own question, run id, prose, citations and close — and the
-// box the next question is typed into, under the last reply.
+// The gyld.ask window (GyldAskAgent.md section 6), at step 2.1, LAID OUT AS A
+// CHAT, which is what a conversation is and what every reader already knows
+// how to read:
+//
+//  - a HEADER: the record this conversation is about, its id, Start over, and
+//    the context it rides in — the envelope and the sources — folded away
+//    behind one disclosure, because what was sent stays auditable (6.7)
+//    without being the first thing in the window;
+//  - a TRANSCRIPT that scrolls and grows: the turns in order, each the
+//    reader's question and then the agent's reply, the open turn last;
+//  - a COMPOSER pinned to the bottom: ONE box for the first question and
+//    every follow-up, Enter to send, Shift+Enter for a newline.
+//
+// The transcript FOLLOWS what arrives while the reader is at its end and stays
+// where they put it once they have scrolled up (./transcript.ts). That fact is
+// an atom written by the scroll handler and read here; the scroll itself is
+// performed in the transcript's ref callback. Neither is a hook
+// (CodingRules.md).
 //
 // Every line of the envelope is composed by `askEnvelope()`, a pure function
 // over this window's grips, and every line of the REPLY is folded by
@@ -108,6 +124,11 @@ export function AskWindow() {
   const answer = useGrip(GYLD_TAB_ASK_ANSWER) ?? null;
   const answerTap = useGrip(GYLD_TAB_ASK_ANSWER_TAP) as
     AtomTapHandle<GyldOpsResponse | null> | undefined;
+  // Whether the transcript is at its end, which is whether it follows what
+  // arrives. The scroll handler writes it and the ref callback acts on it.
+  const following = useGrip(GYLD_TAB_ASK_AT_END) ?? true;
+  const followTap = useGrip(GYLD_TAB_ASK_AT_END_TAP) as
+    AtomTapHandle<boolean> | undefined;
   const reply = foldAskReply(useGrip(GYLD_ASK_STREAM), conversation.id);
   // Taking a draft writes the BROWSER's hand-off atom and opens the decide
   // window wired to that same browser — the acts this window already has on
@@ -144,6 +165,10 @@ export function AskWindow() {
   // away when the `end` record closes the turn.
   const busy = conversationBusy(reply, answer);
   const gate = explainGate(ops, status, conversation.id, question, busy);
+  // The same gate asked AS IF a question were typed, which is what separates
+  // "this window cannot ask at all" — no supplier, no conversation — from an
+  // empty box, which the composer already says by being empty.
+  const standing = explainGate(ops, status, conversation.id, 'a question');
   const answered = hasReply(reply);
   /** What one gesture of this window mints or keeps a conversation ON. The
    *  stamp is read AT THE PRESS: a clock read in a render is not this
@@ -151,79 +176,161 @@ export function AskWindow() {
   const on = (): AskConversationOn => (
     { tabId: wiredTo, slot: ref, stamp: Date.now() }
   );
+  /**
+   * Send what is in the box, in the conversation the turn settles into.
+   *
+   * The button and the Enter key are one act. The question is read through the
+   * DRAFT'S OWN HANDLE and the gate is asked again against it: a keystroke and
+   * the Enter that follows it can land inside one notification cycle, so the
+   * render closure is the last paint's text and not the reader's
+   * (CodingRules.md, "gesture handlers read via tap handles").
+   */
+  const send = (): void => {
+    const typed = draftTap?.get() ?? question;
+    if (!explainGate(ops, status, conversation.id, typed, busy).ready) {
+      return;
+    }
+    const inConversation = turnConversation(conversationTap, on(), conversation);
+    void explainSubmit(
+      ops, { ...envelope, conversation: inConversation.id }, typed,
+    ).then((response) => {
+      if (response === undefined) {
+        return;
+      }
+      answerTap?.set(response);
+      // An ACCEPTED turn keeps its question on the log, where the fold draws
+      // it, so the box is emptied for the follow-up. A REFUSED one leaves the
+      // text where the reader can fix it.
+      if (response.ok) {
+        draftTap?.set('');
+      }
+      // The answer belongs at the end of the transcript, so a send takes the
+      // reader back there whatever they were reading when they pressed.
+      followTap?.set(true);
+    });
+  };
   return (
     <div className="gyld-ask">
       <header className="gyld-ask-head">
-        <span className="gyld-detail-label">{envelope.record.label}</span>
-        <StatusLine envelope={envelope} />
+        <div className="gyld-chrome-row gyld-ask-on">
+          <span className="gyld-detail-label">{envelope.record.label}</span>
+          <span className="gyld-chip">{stream}</span>
+          <StatusLine envelope={envelope} />
+          <span className="gyld-note gyld-ask-conversation">
+            {conversation.id === ''
+              ? 'no conversation on this window yet'
+              : `conversation ${conversation.id}`}
+          </span>
+          {/* Starting over is the reader's, and it is the one other way an id
+              is minted (section 6): the turns already asked stay on the log
+              under the id they were asked in, and this window stops folding
+              them. */}
+          <button
+            type="button"
+            className="gyld-ask-restart"
+            disabled={conversationTap === undefined}
+            title={'start a new conversation on this record; the turns already asked '
+              + 'stay on the log, under the id they were asked in'}
+            onClick={() => {
+              startConversation(conversationTap, on());
+              // The accept belonged to the conversation being left, and the
+              // new one has had nothing asked in it. Clearing it is what makes
+              // that true of the window as well as of the log — and it is what
+              // stops an indicator from waiting on a turn this window no
+              // longer folds.
+              answerTap?.set(null);
+              followTap?.set(true);
+            }}
+          >
+            {conversation.id === '' ? 'Start a conversation' : 'Start over'}
+          </button>
+        </div>
+        {movedOff(conversation, ref) && (
+          <p className="gyld-note gyld-ask-moved">
+            {`this conversation was opened on ${conversation.slot}, and this window has been `
+              + 'moved since: the next question opens a new conversation on this record'}
+          </p>
+        )}
+        {/* What this conversation RIDES IN, folded away: the record's own
+            slot, the sources it cites and the envelope itself. It stays
+            reachable because what was sent is as much a fact as what came
+            back, and it is closed because it is not what a reader reads
+            (6.7). */}
+        <details className="gyld-ask-context">
+          <summary>context</summary>
+          <p className="gyld-detail-slot">{envelope.record.slot}</p>
+          <Sources envelope={envelope} index={sources} />
+          <p className="gyld-ask-envelope-title">{envelope.format}</p>
+          <pre className="gyld-ask-envelope">{JSON.stringify(envelope, null, 2)}</pre>
+        </details>
       </header>
-      <p className="gyld-detail-slot">{envelope.record.slot}</p>
-      <div className="gyld-chrome-row gyld-ask-conversation">
-        <span className="gyld-note">
-          {conversation.id === ''
-            ? 'no conversation on this window yet'
-            : `conversation ${conversation.id}`}
-        </span>
-        {/* Starting over is the reader's, and it is the one other way an id
-            is minted (section 6): the turns already asked stay on the log
-            under the id they were asked in, and this window stops folding
-            them. */}
-        <button
-          type="button"
-          className="gyld-ask-restart"
-          disabled={conversationTap === undefined}
-          title={'start a new conversation on this record; the turns already asked '
-            + 'stay on the log, under the id they were asked in'}
-          onClick={() => {
-            startConversation(conversationTap, on());
-            // The accept belonged to the conversation being left, and the new
-            // one has had nothing asked in it. Clearing it is what makes that
-            // true of the window as well as of the log — and it is what stops
-            // an indicator from waiting on a turn this window no longer folds.
-            answerTap?.set(null);
-          }}
-        >
-          {conversation.id === '' ? 'Start a conversation' : 'Start over'}
-        </button>
-      </div>
-      {movedOff(conversation, ref) && (
-        <p className="gyld-note gyld-ask-moved">
-          {`this conversation was opened on ${conversation.slot}, and this window has been `
-            + 'moved since: the next question opens a new conversation on this record'}
-        </p>
-      )}
-      {/* The conversation as the log carried it, in turn order, and then the
-          box the next turn is typed into: a follow-up is asked UNDER the
-          reply it follows (section 6). */}
-      <Reply
-        reply={reply}
-        acts={{
-          envelope,
-          refusal: takeRefusal(takes),
-          take: (offer: DraftOffer) => {
-            takeDraft(takes, offer);
-          },
+      {/* The conversation as the log carried it, in turn order, the open turn
+          last — and the scroll that follows it, performed where a DOM reach is
+          sanctioned and nowhere else. */}
+      <div
+        className="gyld-ask-transcript"
+        data-following={following ? 'yes' : 'no'}
+        onScroll={(event) => {
+          followScroll(followTap, event.currentTarget);
         }}
-      />
-      <Answered answer={answer} />
-      <label className="gyld-ask-question">
-        {/* The box says what the button's disabled state means, so a reader
-            who is typing is told why nothing can be sent yet. */}
-        <span>
-          {busy === undefined
-            ? (answered ? 'your follow-up' : 'your question')
-            : `${busy.name}… the next question can be asked once this turn closes`}
-        </span>
+        ref={(el) => {
+          keepAtEnd(el, following);
+        }}
+      >
+        <Transcript
+          reply={reply}
+          busy={busy}
+          acts={{
+            envelope,
+            refusal: takeRefusal(takes),
+            take: (offer: DraftOffer) => {
+              takeDraft(takes, offer);
+            },
+          }}
+        />
+        <Answered answer={answer} />
+      </div>
+      <div className="gyld-chrome-row gyld-ask-composer">
+        {/* The reader has scrolled up and the transcript has stayed where they
+            put it. Setting the fact back is the whole of coming back: the ref
+            callback does the scrolling on the render that follows. */}
+        {!following && (
+          <button
+            type="button"
+            className="gyld-ask-jump"
+            title="scroll to the end of this conversation and follow it again"
+            onClick={() => followTap?.set(true)}
+          >
+            jump to latest ↓
+          </button>
+        )}
         <textarea
           className="gyld-ask-draft"
-          rows={3}
+          rows={2}
           value={question}
-          disabled={draftTap === undefined}
-          placeholder={answered ? 'and what does that turn on?' : 'why is this blocked?'}
+          // One box for the first question and every follow-up, and it is shut
+          // while a turn is in flight with the reason where the reader is
+          // looking.
+          disabled={draftTap === undefined || busy !== undefined}
+          placeholder={composerSays(busy, answered)}
           onChange={(event) => draftTap?.set(event.target.value)}
+          onKeyDown={(event) => {
+            const sends = sendsOnKey({
+              key: event.key,
+              shiftKey: event.shiftKey,
+              altKey: event.altKey,
+              ctrlKey: event.ctrlKey,
+              metaKey: event.metaKey,
+              isComposing: event.nativeEvent.isComposing,
+            });
+            if (!sends) {
+              return;
+            }
+            // Never a newline as well as a send.
+            event.preventDefault();
+            send();
+          }}
         />
-      </label>
-      <div className="gyld-chrome-row gyld-ask-acts">
         <button
           type="button"
           className="gyld-ask-send"
@@ -231,44 +338,27 @@ export function AskWindow() {
           title={gate.ready
             ? 'send this context and this question to the agent, on the gyld.ops exchange'
             : gate.reason}
-          // The press sends the envelope this window composed, with the
-          // question it was pressed with and in the conversation the turn is
-          // settled into, and writes whatever came back into this window's
-          // own atom. Nothing is decided here: a refusal is an answer, and it
-          // is drawn above.
-          onClick={() => {
-            const inConversation = turnConversation(conversationTap, on(), conversation);
-            void explainSubmit(
-              ops, { ...envelope, conversation: inConversation.id }, question,
-            ).then((response) => {
-              if (response === undefined) {
-                return;
-              }
-              answerTap?.set(response);
-              // An ACCEPTED turn keeps its question on the log, where the
-              // fold draws it, so the box is emptied for the follow-up. A
-              // REFUSED one leaves the text where the reader can fix it.
-              if (response.ok) {
-                draftTap?.set('');
-              }
-            });
-          }}
+          onClick={send}
         >
-          Ask
+          Send
         </button>
-        {busy !== undefined && <Working phase={busy} />}
-        {!gate.ready && <span className="gyld-note gyld-ask-blocked">{gate.reason}</span>}
+        {!standing.ready && (
+          <span className="gyld-note gyld-ask-blocked">{standing.reason}</span>
+        )}
       </div>
-      <Sources envelope={envelope} index={sources} />
-      {/* The envelope STAYS, and folds away once a reply exists: what was sent
-          is as much a fact as what came back, and hiding it outright would
-          make the answer unauditable (6.7). */}
-      <details className="gyld-ask-envelope-fold" open={!answered}>
-        <summary className="gyld-ask-envelope-title">{envelope.format}</summary>
-        <pre className="gyld-ask-envelope">{JSON.stringify(envelope, null, 2)}</pre>
-      </details>
     </div>
   );
+}
+
+/** What the composer says when it is empty: while a turn is in flight, the
+ *  reason it cannot be typed in; otherwise what it is for and how it sends. */
+function composerSays(busy: AskPhase | undefined, answered: boolean): string {
+  if (busy !== undefined) {
+    return `${busy.name}… the next question can be asked once this turn closes`;
+  }
+  return answered
+    ? 'ask a follow-up — Enter sends, Shift+Enter for a new line'
+    : 'ask about this record — Enter sends, Shift+Enter for a new line';
 }
 
 /**
@@ -314,13 +404,16 @@ function Working({ phase }: { phase: AskPhase }) {
 function Answered({ answer }: { answer: GyldOpsResponse | null }) {
   if (answer === null) {
     return (
-      <p className="gyld-note gyld-ask-unsent">
+      <p className="gyld-note gyld-ask-unsent gyld-ask-row-system">
         nothing has been asked from this window yet
       </p>
     );
   }
   return (
-    <div className="gyld-ask-answer" data-ok={answer.ok ? 'ok' : 'failed'}>
+    <div
+      className="gyld-ask-answer gyld-ask-row-system"
+      data-ok={answer.ok ? 'ok' : 'failed'}
+    >
       <p className={answer.ok ? 'gyld-note' : 'gyld-fault'}>
         {`explain: ${answer.ok ? 'accepted' : 'refused'}`}
         {answer.run_id === undefined ? '' : `, run ${answer.run_id}`}
@@ -343,70 +436,119 @@ interface DraftActs {
   take(offer: DraftOffer): void;
 }
 
-/** The conversation as the log carried it: one block per turn, in turn order,
- *  each with its own run id. Nothing yet is nothing drawn. */
-function Reply({ reply, acts }: { reply: AskReply; acts: DraftActs }) {
-  if (reply.turns.length === 0) {
+/**
+ * The conversation as the log carried it: the turns in order, and the turn in
+ * flight last.
+ *
+ * The IN-FLIGHT TURN is the last reply row and not a bar somewhere else: while
+ * the log has nothing of it, the row is the gear and the phase alone; once
+ * records land, the same row is the turn the fold built and the prose streams
+ * into it. So the gear belongs to the last turn while that turn is open, and
+ * to a row of its own only in the gap between the accept and the first record
+ * — which is the one moment the fold cannot see (./busy.ts).
+ */
+function Transcript({ reply, busy, acts }: {
+  reply: AskReply;
+  busy: AskPhase | undefined;
+  acts: DraftActs;
+}) {
+  const last = reply.turns.length - 1;
+  const open = last >= 0 && !reply.turns[last].ended;
+  if (last < 0 && busy === undefined) {
+    // Nothing asked in this conversation yet: nothing drawn, never a blank
+    // transcript full of empty rows.
     return null;
   }
   return (
     <section className="gyld-ask-reply">
-      {reply.turns.map((turn) => <Turn key={turn.runId} turn={turn} acts={acts} />)}
+      {reply.turns.map((turn, index) => (
+        <Turn
+          key={turn.runId}
+          turn={turn}
+          acts={acts}
+          phase={index === last && open ? busy : undefined}
+        />
+      ))}
+      {busy !== undefined && !open && (
+        <article className="gyld-ask-turn gyld-ask-turn-pending">
+          <div className="gyld-ask-row gyld-ask-row-reply">
+            <div className="gyld-ask-bubble"><Working phase={busy} /></div>
+          </div>
+        </article>
+      )}
     </section>
   );
 }
 
-/** One turn: the question it was asked with, the prose as it streamed, the
- *  passages it cited, whatever else the supplier said, and the run's close. */
-function Turn({ turn, acts }: { turn: AskTurn; acts: DraftActs }) {
+/** One turn, as two rows: the reader's question, and then the agent's reply —
+ *  its prose, the passages it cited, the rulings it drafted, whatever else the
+ *  supplier said, and the run's close as the reply's own footer. */
+function Turn({ turn, acts, phase }: {
+  turn: AskTurn;
+  acts: DraftActs;
+  phase: AskPhase | undefined;
+}) {
   return (
     <article className="gyld-ask-turn" data-run={turn.runId}>
       {/* The question as the LOG carried it, not as this window's box holds
           it: what was asked is what the supplier recorded being asked. */}
-      {turn.question !== '' && <p className="gyld-ask-asked">{turn.question}</p>}
-      {turn.prose !== '' && <p className="gyld-ask-prose">{turn.prose}</p>}
-      {turn.citations.length > 0 && (
-        <ul className="gyld-ask-citations">
-          {turn.citations.map((citation, index) => (
-            <Citation
-              // A conversation can legitimately cite one tag twice, so the
-              // position in the fold is the identity here, as it is for the
-              // host's drawn lines.
-              key={`${turn.runId}-cite-${index}`}
-              citation={citation}
-            />
-          ))}
-        </ul>
+      {turn.question !== '' && (
+        <div className="gyld-ask-row gyld-ask-row-asked">
+          <p className="gyld-ask-asked">{turn.question}</p>
+        </div>
       )}
-      {turn.drafts.length > 0 && (
-        <ul className="gyld-ask-drafts">
-          {turn.drafts.map((draft, index) => (
-            <Drafted
-              // A turn can legitimately offer two drafts, so the position in
-              // the fold is the identity, as it is for the citations above.
-              key={`${turn.runId}-draft-${index}`}
-              draft={draft}
-              acts={acts}
-            />
+      <div className="gyld-ask-row gyld-ask-row-reply">
+        <div className="gyld-ask-bubble">
+          {/* While this turn is the one in flight, the gear and the word for
+              what has arrived stand where its prose will be, and stay above
+              the prose once it starts to stream into this same row. */}
+          {phase !== undefined && <Working phase={phase} />}
+          {turn.prose !== '' && <p className="gyld-ask-prose">{turn.prose}</p>}
+          {turn.citations.length > 0 && (
+            <ul className="gyld-ask-citations">
+              {turn.citations.map((citation, index) => (
+                <Citation
+                  // A conversation can legitimately cite one tag twice, so the
+                  // position in the fold is the identity here, as it is for the
+                  // host's drawn lines.
+                  key={`${turn.runId}-cite-${index}`}
+                  citation={citation}
+                />
+              ))}
+            </ul>
+          )}
+          {turn.drafts.length > 0 && (
+            <ul className="gyld-ask-drafts">
+              {turn.drafts.map((draft, index) => (
+                <Drafted
+                  // A turn can legitimately offer two drafts, so the position
+                  // in the fold is the identity, as it is for the citations
+                  // above.
+                  key={`${turn.runId}-draft-${index}`}
+                  draft={draft}
+                  acts={acts}
+                />
+              ))}
+            </ul>
+          )}
+          {turn.said.map((said, index) => (
+            <p
+              key={`${turn.runId}-said-${index}`}
+              className={said.stream === 'stderr' ? 'gyld-fault gyld-ask-said' : 'gyld-note gyld-ask-said'}
+              data-stream={said.stream}
+            >
+              {said.text}
+            </p>
           ))}
-        </ul>
-      )}
-      {turn.said.map((said, index) => (
-        <p
-          key={`${turn.runId}-said-${index}`}
-          className={said.stream === 'stderr' ? 'gyld-fault gyld-ask-said' : 'gyld-note gyld-ask-said'}
-          data-stream={said.stream}
-        >
-          {said.text}
-        </p>
-      ))}
-      <p className="gyld-note gyld-ask-end" data-exit={turn.exit}>
-        {turn.ended
-          ? `end, exit ${turn.exit ?? 'not emitted'}`
-          : 'answering…'}
-        {turn.principal === '' ? '' : `, attributed to ${turn.principal}`}
-        {` (run ${turn.runId})`}
-      </p>
+          <p className="gyld-note gyld-ask-end" data-exit={turn.exit}>
+            {turn.ended
+              ? `end, exit ${turn.exit ?? 'not emitted'}`
+              : 'answering…'}
+            {turn.principal === '' ? '' : `, attributed to ${turn.principal}`}
+            {` (run ${turn.runId})`}
+          </p>
+        </div>
+      </div>
     </article>
   );
 }
@@ -440,8 +582,15 @@ function Citation({ citation }: { citation: GyldAskCitation }) {
         </span>
       )}
       {resolved
-        ? (citation.passage !== undefined
-          && <q className="gyld-ask-passage">{citation.passage}</q>)
+        ? (citation.passage !== undefined && (
+          // The passage is EXPANDABLE: a transcript of six turns with six
+          // passages open is a wall, and a citation whose passage cannot be
+          // read is not a citation. So it is one line, and one click.
+          <details className="gyld-ask-passage-fold">
+            <summary>passage</summary>
+            <q className="gyld-ask-passage">{citation.passage}</q>
+          </details>
+        ))
         : (
           <span className="gyld-fault">
             unresolved: {citation.reason ?? 'no reason was emitted'}

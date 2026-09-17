@@ -3,7 +3,8 @@ import { opsGate, type OpsGate } from '../ops/submit';
 import type { AskPhase } from './busy';
 import type { GyldAskContext } from './envelope';
 
-// When the Ask button may be pressed, and what it sends (step 1.5).
+// When the composer may be sent from, what sends it, and what it sends
+// (step 1.5).
 //
 // Pure, so the whole rule is asserted without a window: this package renders
 // to static markup and dispatches no click, so what a press does is asserted
@@ -52,6 +53,35 @@ export function explainGate(
     return { ready: false, reason: 'type a question first' };
   }
   return gate;
+}
+
+/** A key press at the composer, as much of one as the rule below reads. */
+export interface ComposerKey {
+  key: string;
+  shiftKey?: boolean;
+  altKey?: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  /** Whether an IME is mid-composition, off the native event. */
+  isComposing?: boolean;
+}
+
+/**
+ * Whether this press sends the question.
+ *
+ * The convention every chat composer keeps: ENTER SENDS and SHIFT+ENTER is a
+ * newline. A modifier-held Enter is somebody else's shortcut and is left
+ * alone, and the Enter that COMMITS AN IME COMPOSITION is the composition's,
+ * not the composer's — sending on it would send half a question in every
+ * language that needs one.
+ */
+export function sendsOnKey(press: ComposerKey): boolean {
+  return press.key === 'Enter'
+    && press.shiftKey !== true
+    && press.altKey !== true
+    && press.ctrlKey !== true
+    && press.metaKey !== true
+    && press.isComposing !== true;
 }
 
 /**

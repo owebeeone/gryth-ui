@@ -3,6 +3,7 @@ import {
   GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_REF, GYLD_DEST_REF_TAP,
   GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
   GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
+  GYLD_TAB_ASK_AT_END, GYLD_TAB_ASK_AT_END_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP,
   GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
   perspectiveFromParams, refFromParams, streamFromParams,
@@ -51,6 +52,11 @@ export function askTabTaps(_tabId: string, params?: Record<string, unknown>): Ta
     }),
     createAtomValueTap(GYLD_TAB_ASK_DRAFT, {
       initial: '', handleGrip: GYLD_TAB_ASK_DRAFT_TAP,
+    }),
+    // A window opens at the END of the conversation it opens on, and follows
+    // what arrives until the reader scrolls up (./transcript.ts).
+    createAtomValueTap(GYLD_TAB_ASK_AT_END, {
+      initial: true, handleGrip: GYLD_TAB_ASK_AT_END_TAP,
     }),
     // What the supplier answered THIS window's last `explain` with. `null`
     // until one has been sent, which is a rendered state and not a default.

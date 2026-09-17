@@ -363,6 +363,17 @@ export const GYLD_TAB_ASK_DRAFT = defineGrip<string>('Gyld.Tab.Ask.Draft', '');
 export const GYLD_TAB_ASK_DRAFT_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ask.Draft.Tap');
 
+// Whether this window's transcript is scrolled to its end, which is what
+// decides whether it FOLLOWS what is arriving or stays where the reader put it
+// (src/ask/transcript.ts). Written by the transcript's own scroll handler and
+// read at render: the scroll itself is performed in the ref callback, and the
+// fact behind it lives in an atom like every other piece of UI state
+// (CodingRules.md). True is the opening state — a window opens at the end of
+// the conversation it opens on.
+export const GYLD_TAB_ASK_AT_END = defineGrip<boolean>('Gyld.Tab.Ask.AtEnd', true);
+export const GYLD_TAB_ASK_AT_END_TAP =
+  defineGrip<AtomTapHandle<boolean>>('Gyld.Tab.Ask.AtEnd.Tap');
+
 // THIS window's own last answer from the supplier, written when the `explain`
 // it sent comes back. Per tab and not the desk-wide `Gyld.Ops.Result`, because
 // the answer is about this conversation: the three refusals that arrive
