@@ -82,28 +82,37 @@ const drawn = async (tab: { read: <T>(grip: Grip<T>) => Drip<T> }): Promise<void
   );
 };
 
+// The box a gesture resolved, in the lens's own user units: the menu records
+// the whole rectangle, because the placement rule puts the panel on whichever
+// EDGE of it leaves the least of the menu off the stage (./placement.ts).
+const BOX = {
+  x: 120, y: 48, width: 96, height: 40,
+};
+const OTHER = {
+  x: 300, y: 210, width: 120, height: 36,
+};
+
 describe('one atom, one menu: the open, dismiss and replace rule', () => {
   it('opens on a box at the anchor the gesture resolved', () => {
-    const menu = openMenuOn(KEY_CUSTODY, { x: 120, y: 48 });
-    expect(menu).toEqual({ slot: KEY_CUSTODY, x: 120, y: 48 });
+    const menu = openMenuOn(KEY_CUSTODY, BOX);
+    expect(menu).toEqual({ slot: KEY_CUSTODY, ...BOX });
     expect(isMenuOpen(menu)).toBe(true);
   });
 
   it('REPLACES rather than stacking when another box is picked', () => {
-    const first = openMenuOn(KEY_CUSTODY, { x: 120, y: 48 });
-    const second = openMenuOn(VERSION_PIN, { x: 300, y: 210 });
+    const first = openMenuOn(KEY_CUSTODY, BOX);
+    const second = openMenuOn(VERSION_PIN, OTHER);
     expect(second.slot).toBe(VERSION_PIN);
     expect(second).not.toEqual(first);
   });
 
   it('re-anchors when the same box is picked again', () => {
-    expect(openMenuOn(KEY_CUSTODY, { x: 300, y: 210 }))
-      .toEqual({ slot: KEY_CUSTODY, x: 300, y: 210 });
+    expect(openMenuOn(KEY_CUSTODY, OTHER)).toEqual({ slot: KEY_CUSTODY, ...OTHER });
   });
 
   it('DISMISSES when the gesture resolved no box', () => {
-    expect(openMenuOn('', { x: 12, y: 12 })).toBe(MENU_CLOSED);
-    expect(isMenuOpen(openMenuOn('', { x: 12, y: 12 }))).toBe(false);
+    expect(openMenuOn('', BOX)).toBe(MENU_CLOSED);
+    expect(isMenuOpen(openMenuOn('', BOX))).toBe(false);
   });
 
   it('closes to the one closed value, which is a rendered state', () => {
@@ -203,7 +212,7 @@ describe('the browser window seeds the menu and draws it', () => {
     await expect.poll(() => tab.read(GYLD_TAB_MENU).get()).toBe(MENU_CLOSED);
     const handle = tab.read(GYLD_TAB_MENU_TAP).get() as AtomTapHandle<GyldNodeMenu>;
     expect(handle).toBeDefined();
-    handle.set(openMenuOn(KEY_CUSTODY, { x: 10, y: 20 }));
+    handle.set(openMenuOn(KEY_CUSTODY, BOX));
     expect(tab.read(GYLD_TAB_MENU).get()?.slot).toBe(KEY_CUSTODY);
   });
 
@@ -213,7 +222,7 @@ describe('the browser window seeds the menu and draws it', () => {
     }));
     await drawn(tab);
     (tab.read(GYLD_TAB_MENU_TAP).get() as AtomTapHandle<GyldNodeMenu>)
-      .set(openMenuOn(KEY_CUSTODY, { x: 10, y: 20 }));
+      .set(openMenuOn(KEY_CUSTODY, BOX));
     const markup = tab.render(<GyldBrowser tabId="menu-draw" />);
     expect(markup).toContain(`<ul class="gyld-node-menu" data-slot="${KEY_CUSTODY}"`);
     for (const act of ['ask', 'answer', 'follow-up', 'details']) {
@@ -229,7 +238,7 @@ describe('the browser window seeds the menu and draws it', () => {
     }));
     await drawn(tab);
     (tab.read(GYLD_TAB_MENU_TAP).get() as AtomTapHandle<GyldNodeMenu>)
-      .set(openMenuOn(unlisted.slot, { x: 10, y: 20 }));
+      .set(openMenuOn(unlisted.slot, BOX));
     const markup = tab.render(<GyldBrowser tabId="menu-unlisted" />);
     expect(markup).toContain('<ul class="gyld-node-menu"');
     expect(markup).not.toContain('data-act="answer"');
@@ -248,7 +257,7 @@ describe('the browser window seeds the menu and draws it', () => {
     expect(tab.render(<GyldBrowser tabId="menu-hover" />)).toContain('gyld-node-card');
 
     (tab.read(GYLD_TAB_MENU_TAP).get() as AtomTapHandle<GyldNodeMenu>)
-      .set(openMenuOn(KEY_CUSTODY, { x: 10, y: 20 }));
+      .set(openMenuOn(KEY_CUSTODY, BOX));
     const withMenu = tab.render(<GyldBrowser tabId="menu-hover" />);
     expect(withMenu).toContain('gyld-node-menu');
     expect(withMenu).not.toContain('gyld-node-card');
@@ -260,7 +269,7 @@ describe('the browser window seeds the menu and draws it', () => {
     }));
     await drawn(tab);
     (tab.read(GYLD_TAB_MENU_TAP).get() as AtomTapHandle<GyldNodeMenu>)
-      .set(openMenuOn('glade_decisions:GladeDecisions.nothing_here', { x: 10, y: 20 }));
+      .set(openMenuOn('glade_decisions:GladeDecisions.nothing_here', BOX));
     expect(tab.render(<GyldBrowser tabId="menu-gone" />)).not.toContain('gyld-node-menu');
   });
 });

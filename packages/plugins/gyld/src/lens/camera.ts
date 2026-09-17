@@ -153,6 +153,25 @@ export function cameraTransform(camera: GyldCamera): string {
   return `translate(${camera.tx} ${camera.ty}) scale(${camera.k})`;
 }
 
+/**
+ * An emitted box as the stage SHOWS it: the same rectangle under this camera,
+ * in the stage's own pixels.
+ *
+ * The panels over the picture — the hover card and the node menu — are HTML
+ * siblings of the SVG positioned against the stage, so this is the box they
+ * anchor on and the box the placement rule measures against the stage's edges
+ * (`browser/placement.ts`). It moves the EYE and not the record: the same
+ * transform `cameraTransform` gives the figure, applied to one box (MDV-4).
+ */
+export function screenBox(camera: GyldCamera, box: Box): Box {
+  return {
+    x: camera.tx + box.x * camera.k,
+    y: camera.ty + box.y * camera.k,
+    width: box.width * camera.k,
+    height: box.height * camera.k,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // The other per-window view state, all of it instance scope.
 // ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import type { Box } from '../lens/geometry';
 import type { NodeCardView } from './card';
 import type { BrowserFocus } from './useBrowserFocus';
 
@@ -17,12 +18,15 @@ import type { BrowserFocus } from './useBrowserFocus';
 // suppresses its card while its menu is open rather than stacking the two.
 
 /**
- * Which box this window's menu is open over, and where it is anchored.
+ * Which box this window's menu is open over, and the box it is anchored ON.
  *
- * `x` and `y` are in the LENS's own user units, taken from the node's emitted
- * `box`, so the view anchors the menu through `cameraTransform` exactly as it
- * anchors the card: HTML over the picture, no geometry added and nothing
- * repositioned (MDV-4).
+ * The rectangle is the node's own emitted `box`, in the LENS's own user units,
+ * so the view anchors the menu through the camera exactly as it anchors the
+ * card: HTML over the picture, no geometry added and nothing repositioned
+ * (MDV-4). It is the whole box and not one corner of it because the placement
+ * rule puts the menu on whichever EDGE of it leaves the least of the menu off
+ * the stage (./placement.ts), and a corner cannot say where the other edges
+ * are.
  *
  * The slot is the QUALIFIED SLOT, because that is the identity that survives a
  * restream (R1) and the one the picture, the decide-now list and every act
@@ -32,11 +36,15 @@ export interface GyldNodeMenu {
   slot: string;
   x: number;
   y: number;
+  width: number;
+  height: number;
 }
 
 /** No menu open. An empty slot is a RENDERED STATE, not a default: a window
  *  with this value draws no menu and draws its hover card instead. */
-export const MENU_CLOSED: GyldNodeMenu = Object.freeze({ slot: '', x: 0, y: 0 });
+export const MENU_CLOSED: GyldNodeMenu = Object.freeze({
+  slot: '', x: 0, y: 0, width: 0, height: 0,
+});
 
 export function isMenuOpen(menu: GyldNodeMenu | undefined): boolean {
   return menu !== undefined && menu.slot !== '';
@@ -50,11 +58,13 @@ export function isMenuOpen(menu: GyldNodeMenu | undefined): boolean {
  * DISMISSES. Re-opening over the same box re-anchors it, which is what a
  * second right-click on a moved picture should do.
  */
-export function openMenuOn(slot: string, at: { x: number; y: number }): GyldNodeMenu {
+export function openMenuOn(slot: string, box: Box): GyldNodeMenu {
   if (slot === '') {
     return MENU_CLOSED;
   }
-  return { slot, x: at.x, y: at.y };
+  return {
+    slot, x: box.x, y: box.y, width: box.width, height: box.height,
+  };
 }
 
 /** The dismissal every path shares: a click on the picture, `Escape`, a pan

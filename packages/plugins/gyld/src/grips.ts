@@ -21,6 +21,7 @@ import { NO_FOCUS, type GyldFocus } from './focus';
 import { LANDING_UNSET, type GyldLanding } from './landing/landing';
 import { NOTHING_PICKED, type GyldFirstPick } from './browser/firstPick';
 import { MENU_CLOSED, type GyldNodeMenu } from './browser/menu';
+import { PANEL_UNMEASURED, type GyldPanelFit } from './browser/placement';
 import type {
   GyldOps, GyldOpsResponse, GyldOpsResult, GyldOutputRecord,
 } from './ops/ops';
@@ -278,6 +279,16 @@ export const GYLD_TAB_HOVER_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ho
 
 export const GYLD_TAB_DIMMED = defineGrip<GyldDimmed>('Gyld.Tab.Dimmed', NOTHING_DIMMED);
 export const GYLD_TAB_DIMMED_TAP = defineGrip<AtomTapHandle<GyldDimmed>>('Gyld.Tab.Dimmed.Tap');
+
+// What the panel over a box measured of itself, and of the stage it has to fit
+// inside. Written by the panel's own ref callback — the sanctioned reach into
+// the DOM (CodingRules.md) — and read by the placement rule, which flips the
+// card to the top of a box near the bottom of the stage rather than letting it
+// be clipped away with its buttons on it (./browser/placement.ts).
+export const GYLD_TAB_CARD_SIZE =
+  defineGrip<GyldPanelFit>('Gyld.Tab.Card.Size', PANEL_UNMEASURED);
+export const GYLD_TAB_CARD_SIZE_TAP =
+  defineGrip<AtomTapHandle<GyldPanelFit>>('Gyld.Tab.Card.Size.Tap');
 
 // The colours the picture is drawn WITH, as against the colours it was
 // emitted with. Class 3 conversion over `Desktop.Theme` and the theme table,

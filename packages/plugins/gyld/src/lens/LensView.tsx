@@ -6,24 +6,31 @@ import {
   MENU_CLOSED, addsToSelection, closeMenu, isMenuOpen, opensMenu, openMenuOn,
   type GyldNodeMenu,
 } from '../browser/menu';
+import {
+  CardPanel, PANEL_UNMEASURED, panelSize, placeCard, sameFit, stageBox,
+  type CardPlacement, type GyldPanelFit,
+} from '../browser/placement';
 import { applyPick } from './pick';
 import type { GyldFocus } from '../focus';
 import {
   GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_FOCUS_TAP,
   GYLD_LENS, GYLD_LENS_PALETTE,
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
-  GYLD_TAB_CAMERA_TAP, GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_HOVER,
+  GYLD_TAB_CAMERA_TAP, GYLD_TAB_CARD_SIZE, GYLD_TAB_CARD_SIZE_TAP,
+  GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_HOVER,
   GYLD_TAB_HOVER_TAP, GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
 import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera,
   isMeasurableViewport, isPanning, needsFit,
-  panBy, panningAt, pressAt, toggleRelation, wheelFactor, zoomAt,
+  panBy, panningAt, pressAt, screenBox, toggleRelation, wheelFactor, zoomAt,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
 import { STAGE_CLASS, stageOf, viewportOf } from './stage';
-import { EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent } from './geometry';
+import {
+  EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent, type Box,
+} from './geometry';
 import { GLYPH_INSET, GLYPH_RADIUS, StatusGlyph } from './glyphs';
 import {
   LENS_PALETTE_LIGHT, inkOn, labelOn, lineOn, type GyldLensPalette,
@@ -428,6 +435,8 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
   const refTap = useGrip(GYLD_DEST_REF_TAP) as AtomTapHandle<string> | undefined;
   const focusTap = useGrip(GYLD_FOCUS_TAP) as AtomTapHandle<GyldFocus> | undefined;
   const menuTap = useGrip(GYLD_TAB_MENU_TAP) as AtomTapHandle<GyldNodeMenu> | undefined;
+  const fit = useGrip(GYLD_TAB_CARD_SIZE) ?? PANEL_UNMEASURED;
+  const fitTap = useGrip(GYLD_TAB_CARD_SIZE_TAP) as AtomTapHandle<GyldPanelFit> | undefined;
 
   /** Every dismissal writes through the same handle, read back through it and
    *  never through the render closure: a click, a pan and a key can all land
@@ -437,6 +446,42 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
       menuTap?.set(closeMenu());
     }
   };
+
+  /**
+   * A panel measures ITSELF and the stage it has to fit inside, in the one
+   * sanctioned reach into the DOM: a ref callback, keyed on the box so it runs
+   * again for every panel that opens (CodingRules.md). Nothing is positioned
+   * here — the measurement goes into the atom and the placement below is a
+   * render over it, so a pan or a zoom re-places what is up without measuring
+   * anything again.
+   */
+  const measure = (panel: CardPanel, element: HTMLElement | null) => {
+    const stage = stageOf(element);
+    if (element === null || stage === null) {
+      return;
+    }
+    const own = viewportOf(element);
+    const view = viewportOf(stage);
+    const taken: GyldPanelFit = {
+      of: panel.name,
+      width: own.width,
+      height: own.height,
+      viewWidth: view.width,
+      viewHeight: view.height,
+    };
+    // Read back through the handle and written only when it says something
+    // new, so a panel that mounts at the size the last one had notifies
+    // nobody and cannot re-enter this callback.
+    if (!sameFit(fitTap?.get() ?? PANEL_UNMEASURED, taken)) {
+      fitTap?.set(taken);
+    }
+  };
+
+  /** Where one panel goes over one box: the owner's edge rule over the box as
+   *  THIS camera shows it and the stage as the panel last measured it. */
+  const placeOn = (panel: CardPanel, box: Box): CardPlacement => placeCard(
+    screenBox(camera, box), panelSize(fit, panel), stageBox(fit), panel.gap,
+  );
 
   if (state?.status !== 'ok' || state.value === undefined) {
     return <LensAbsent state={state} />;
@@ -460,6 +505,11 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
   const menuNode = menuOn.slot === ''
     ? undefined
     : scene.nodes.find((node) => node.slot === menuOn.slot && !node.hidden);
+  // Where each panel goes, decided once per render. The rule is the owner's
+  // (bottom, top, left, right, least clipped) over the box as THIS camera
+  // shows it, so a pan or a zoom that moves the box re-places what is over it.
+  const cardPlace = hovered === undefined ? undefined : placeOn(CardPanel.CARD, hovered.box);
+  const menuPlace = menuNode === undefined ? undefined : placeOn(CardPanel.MENU, menuOn);
 
   // The fit measures the STAGE — the box that shows the picture — and never
   // the SVG or anything found by tag under the lens root (./stage.ts).
@@ -618,29 +668,27 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
           // not a box. The anchor is the node's own emitted rectangle.
           onMenu={(id) => {
             const node = scene.nodes.find((entry) => entry.id === id && !entry.hidden);
-            menuTap?.set(node === undefined
-              ? closeMenu()
-              : openMenuOn(node.slot, {
-                x: node.box.x,
-                y: node.box.y + node.box.height,
-              }));
+            menuTap?.set(node === undefined ? closeMenu() : openMenuOn(node.slot, node.box));
           }}
         />
-        {/* The menu, anchored the same way and drawn over the card's place,
-            because the card is suppressed while it is open. `Escape` closes
-            it, and the panel takes focus through a ref callback keyed on the
-            slot — the sanctioned way to reach the DOM (CodingRules.md) — so
-            the key lands here without a listener on the window. */}
-        {menu !== undefined && menuNode !== undefined && !isPanning(drag) && (
+        {/* The menu, anchored on the same box and by the same rule as the card
+            and drawn in its place, because the card is suppressed while it is
+            open. `Escape` closes it, and the panel takes focus and measures
+            itself through one ref callback keyed on the slot — the sanctioned
+            way to reach the DOM (CodingRules.md) — so the key lands here
+            without a listener on the window. */}
+        {menu !== undefined && menuNode !== undefined && menuPlace !== undefined
+          && !isPanning(drag) && (
           <div
             className="gyld-menu-anchor"
             key={menuOn.slot}
             tabIndex={-1}
-            ref={(element) => element?.focus({ preventScroll: true })}
-            style={{
-              left: camera.tx + menuOn.x * camera.k,
-              top: camera.ty + menuOn.y * camera.k,
+            data-edge={menuPlace.edge.name}
+            ref={(element) => {
+              measure(CardPanel.MENU, element);
+              element?.focus({ preventScroll: true });
             }}
+            style={{ left: menuPlace.left, top: menuPlace.top }}
             onMouseDown={(event) => event.stopPropagation()}
             onKeyDown={(event) => {
               if (event.key === 'Escape') {
@@ -651,20 +699,26 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
             {menu(menuNode)}
           </div>
         )}
-        {/* The card, anchored under the hovered box's own emitted rectangle
+        {/* The card, anchored on the hovered box's own emitted rectangle
             through the camera: HTML over the picture, not geometry in it, so
-            nothing is repositioned (MDV-4). It is suppressed while a pan is
-            running, because a card under a moving pointer is in the way, and
-            while this window's MENU is open, so two panels never stack over
-            one box (GyldAskAgent.md section 2). */}
-        {card !== undefined && hovered !== undefined && !isPanning(drag)
-          && !isMenuOpen(menuOn) && (
+            nothing is repositioned (MDV-4). Under the box where there is room
+            under it and over, beside or slid along it where there is not, so
+            the buttons on it are always on the stage (placement.ts). It is
+            suppressed while a pan is running, because a card under a moving
+            pointer is in the way, and while this window's MENU is open, so two
+            panels never stack over one box (GyldAskAgent.md section 2). */}
+        {card !== undefined && hovered !== undefined && cardPlace !== undefined
+          && !isPanning(drag) && !isMenuOpen(menuOn) && (
           <div
             className="gyld-card-anchor"
-            style={{
-              left: camera.tx + hovered.box.x * camera.k,
-              top: camera.ty + (hovered.box.y + hovered.box.height) * camera.k,
+            // Keyed on the box, so the card of another question RE-MOUNTS and
+            // measures itself rather than being placed at the last one's size.
+            key={hovered.slot}
+            data-edge={cardPlace.edge.name}
+            ref={(element) => {
+              measure(CardPanel.CARD, element);
             }}
+            style={{ left: cardPlace.left, top: cardPlace.top }}
             // A press on the card is a press on the card, not the start of a
             // pan of the picture underneath it.
             onMouseDown={(event) => event.stopPropagation()}
