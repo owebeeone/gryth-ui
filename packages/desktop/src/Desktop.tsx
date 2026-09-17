@@ -22,7 +22,7 @@ import {
 import {
   DESKTOP_IDS,
   areaOccupants, captureGrid, childLeafIds, closeArea, closeFoundation,
-  detachTab, dockOrMerge, foundationOn,
+  detachTab, dockOrMerge, foundationOn, frameStack,
   hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
   moveWindow, moveWindowFree, openFoundation, overviewLayout,
   placeWindows, probeArea, raiseWindow, resizeWindow, selectTab, sendToDesktop,
@@ -166,6 +166,11 @@ export default function Desktop() {
   const shown = visible.filter((w) => !w.minimized);
   const shownFoundations = shown.filter((w) => w.foundation);
   const shownFrames = shown.filter((w) => !w.foundation);
+  // `shownFrames` is the Z-order; `stack` splits it into the order the frames
+  // are RENDERED in (their ids, which never move, so a raise never re-inserts
+  // a frame's node and no scrolled tool inside one is snapped back to the
+  // top) and the z each one wears. See ops.frameStack.
+  const stack = frameStack(shownFrames);
   const menuFrame = menu ? windows.find((w) => w.id === menu.frameId) : undefined;
   const areaMenuFoundation = areaMenu ? windows.find((w) => w.id === areaMenu.foundationId) : undefined;
 
@@ -728,22 +733,27 @@ export default function Desktop() {
             here is wider than the canvas, so it needs a box that never does. */}
         <div className="desktop-wallpaper" style={wallpaperStyle} aria-hidden="true" />
         {exiting.map((w) => (
-          <Window key={w.id} win={w} rect={rectOf(w)} focused={false} dropTarget={false} overview={null} deskAnim={deskAnimFor(w)} />
+          <Window key={w.id} win={w} rect={rectOf(w)} z={0} focused={false} dropTarget={false} overview={null} deskAnim={deskAnimFor(w)} />
         ))}
         {shownFoundations.map((w) => (
           <FoundationWindow key={w.id} win={w} rect={rectOf(w)} />
         ))}
-        {shownFrames.map((w) => (
-          <Window
-            key={w.id}
-            win={w}
-            rect={rectOf(w)}
-            focused={w.id === focused}
-            dropTarget={drag?.dropTarget === w.id && drag.id !== w.id}
-            overview={overview ? { placement: placements?.get(w.id), onPick: () => pick(w.id) } : null}
-            deskAnim={deskAnimFor(w)}
-          />
-        ))}
+        {/* The frames' own stacking layer, in a document order that never
+            moves: the z-order is the z-index inside it (ops.frameStack). */}
+        <div className="gwin-layer">
+          {stack.order.map((w) => (
+            <Window
+              key={w.id}
+              win={w}
+              rect={rectOf(w)}
+              z={stack.z.get(w.id) ?? 1}
+              focused={w.id === focused}
+              dropTarget={drag?.dropTarget === w.id && drag.id !== w.id}
+              overview={overview ? { placement: placements?.get(w.id), onPick: () => pick(w.id) } : null}
+              deskAnim={deskAnimFor(w)}
+            />
+          ))}
+        </div>
         {drag?.kind === 'tab' && drag.moved && (
           <div className="tab-ghost" style={{ left: drag.ghostX, top: drag.ghostY }}>
             {resolveTool(defs, drag.facet).label}

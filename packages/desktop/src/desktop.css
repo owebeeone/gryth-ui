@@ -231,6 +231,23 @@ span.side-group-label { cursor: default; }
   font: inherit;
 }
 
+/* The frames' own stacking layer. Frames render in a STABLE document order
+   (their ids) and wear their z-order as a z-index inside this layer — see
+   ops.frameStack: a frame that changed places in the document would be
+   re-inserted by React, and a re-inserted node loses the scroll position of
+   everything inside it. The layer is what bounds that band: however many
+   frames a desk carries, they all paint above the foundation's areas and
+   below its splitters and split previews, exactly where the document order
+   used to put them. It spans the canvas, so it lets pointer events through
+   to the foundation underneath and each frame takes its own back. */
+.gwin-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.gwin-layer > .gwin { pointer-events: auto; }
+
 /* Window chrome */
 .gwin {
   position: absolute;

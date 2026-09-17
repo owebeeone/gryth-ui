@@ -205,6 +205,38 @@ export function raiseWindow(list: WindowRecord[], id: string): WindowRecord[] {
   return [...list.filter((w) => w.id !== id), win];
 }
 
+/** The frames of one desktop, ready to render: the DOM order and the z. */
+export interface FrameStack {
+  /** Document order — by frame id, so it NEVER changes when the z-order does. */
+  order: WindowRecord[];
+  /** Each frame's place in the z-order, 1 at the bottom. */
+  z: ReadonlyMap<string, number>;
+}
+
+/**
+ * Z-ORDER IS A STYLE, NOT A DOCUMENT ORDER.
+ *
+ * The record list is the z-order — `raiseWindow` moves a record to its end —
+ * and rendering the frames in that order made a raise move the frame's DOM
+ * NODE: React reorders keyed children with `insertBefore`, which takes the
+ * node out of the document and puts it back, and a node that leaves the
+ * document loses the scroll position of everything inside it. One mousedown
+ * on a scrolled tool then snapped it back to the top before the click it
+ * carried had landed — found on the Gyld stream tree, where picking the last
+ * stream in a long list scrolled the list away from the reader.
+ *
+ * So the document order is the frame id, a fact no act moves, and the z-order
+ * rides as an explicit z-index inside the frames' own stacking layer
+ * (`.gwin-layer`, which is what keeps that band under the foundation's
+ * splitters however many frames a desk carries).
+ */
+export function frameStack(frames: readonly WindowRecord[]): FrameStack {
+  return {
+    order: [...frames].sort((a, b) => a.id.localeCompare(b.id)),
+    z: new Map(frames.map((w, index) => [w.id, index + 1])),
+  };
+}
+
 export function minimizeWindow(list: WindowRecord[], id: string, minimized: boolean): WindowRecord[] {
   return list.map((w) => (w.id === id ? { ...w, minimized } : w));
 }

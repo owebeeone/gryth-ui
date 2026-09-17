@@ -30,9 +30,13 @@ export interface WindowOverview {
 // EFFECTIVE geometry (docked windows render at their area's rect; the
 // record's own geometry stays the float memory).
 
-export default function Window({ win, rect, focused, dropTarget, overview, deskAnim }: {
+export default function Window({ win, rect, z, focused, dropTarget, overview, deskAnim }: {
   win: WindowRecord;
   rect: Rect;
+  /** This frame's place in the z-order (ops.frameStack): the document order
+   *  is the frame id, because a frame that MOVED in the document would be
+   *  re-inserted and lose the scroll position of everything inside it. */
+  z: number;
   focused: boolean;
   dropTarget: boolean;
   overview: WindowOverview | null;
@@ -115,7 +119,7 @@ export default function Window({ win, rect, focused, dropTarget, overview, deskA
     <section
       className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attentionClass(win)}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
       style={{
-        left: rect.x, top: rect.y, width: rect.w, height: rect.h,
+        left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex: z,
         transform: place
           ? `translate(${place.x - rect.x}px, ${place.y - rect.y}px) scale(${place.scale})`
           : undefined,

@@ -4,7 +4,7 @@ import {
   DesktopFocusedTap, DesktopWindowsTap, OpenToolTap, OpenWiredTap, RetargetTabTap,
   registerDesktopTaps,
 } from './taps.desktop';
-import { mergeWindows, openWindow } from './ops';
+import { frameStack, mergeWindows, openWindow, raiseWindow } from './ops';
 
 // The DEFECT, at the surface the reader meets it: on a locked desk the sinks
 // a Gyld browser drives (Ask, Details, decide) are TABS of one docked
@@ -116,5 +116,42 @@ describe('an act delivered to a window that is already open', () => {
     expect(opened.activeTab).toBe(opened.tabs[0].id);
     expect(opened.attention).toBe(1);
     expect(DesktopFocusedTap.get()).toBe(opened.id);
+  });
+});
+
+// The frame an act does NOT land on must come out of it untouched — the same
+// element, scrolled where the reader left it. React moves a keyed child whose
+// relative order changed, and a node that leaves the document loses the scroll
+// position of everything inside it, so the guarantee is structural: the
+// document order the desktop renders (ops.frameStack) does not depend on the
+// z-order at all. Found on the Gyld stream tree, where a raise — the mousedown
+// of the very pick being made — scrolled the tree back to the top under the
+// reader's cursor.
+describe('the frames keep their place in the document', () => {
+  it('renders in an order the z-order cannot move', () => {
+    const desk = seed();
+    const before = frameStack(frames()).order.map((w) => w.id);
+
+    DesktopWindowsTap.set(raiseWindow(frames(), desk.inspector));
+
+    const after = frameStack(frames());
+    expect(after.order.map((w) => w.id)).toEqual(before);
+    // raised all the same: the z is where the order used to be
+    expect(after.z.get(desk.inspector)).toBe(frames().length);
+    expect(after.z.get(desk.browser)).toBeLessThan(frames().length);
+  });
+
+  it('keeps that order across a retarget that reveals another frame', () => {
+    const desk = seed();
+    DesktopWindowsTap.set(raiseWindow(frames(), desk.inspector));
+    const before = frameStack(frames()).order.map((w) => w.id);
+
+    RetargetTabTap.get()!(desk.browserTab, { stream: 'architecture', focus: '' });
+
+    const after = frameStack(frames());
+    expect(after.order.map((w) => w.id)).toEqual(before);
+    // the reveal still happened: the browser is on top and wears the mark
+    expect(after.z.get(desk.browser)).toBe(frames().length);
+    expect(frames().find((w) => w.id === desk.browser)!.attention).toBe(1);
   });
 });
