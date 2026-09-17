@@ -1,5 +1,5 @@
 import type { GyldOpsResponse } from '../ops/ops';
-import type { AskReply, AskTurn } from './reply';
+import { openStep, type AskReply, type AskTurn } from './reply';
 
 // WHETHER A TURN IS STILL RUNNING, and what it is doing while it runs
 // (GyldAskAgent.md section 6; step 1.5's reply, `./reply.ts`).
@@ -61,6 +61,28 @@ export class AskPhase {
     'the supplier is resolving the sources the answer leans on',
   );
 
+  /**
+   * A tool call is open: its `tool_call` record has landed and its
+   * `tool_result` has not (GyldAskAgent.md 11.4).
+   *
+   * The only phase whose word is not a constant, because the useful half of it
+   * is WHICH tool: "using" alone says no more than a spinner does, and this
+   * window's whole manner is to say what it actually knows (6.7). It is minted
+   * per call rather than being a member of `ALL` — a phase is a rendered
+   * state, and the set of tools is the supplier's business, not this file's.
+   */
+  static using(tool: string): AskPhase {
+    const named = tool.trim();
+    return new AskPhase(
+      named === '' ? 'using a tool' : `using ${named}`,
+      named === ''
+        ? 'the supplier is running a tool the record did not name'
+        : `the supplier is running \`${named}\` and its result has not come back yet`,
+    );
+  }
+
+  /** The phases whose word is a constant. A `using` phase is not among them:
+   *  it is minted per call and carries the tool's own name. */
   static readonly ALL: readonly AskPhase[] = Object.freeze([
     AskPhase.ASKING, AskPhase.THINKING, AskPhase.ANSWERING, AskPhase.CITING,
   ]);
@@ -161,6 +183,15 @@ export function conversationBusy(
   }
   if (!turnInFlight(turn)) {
     return undefined;
+  }
+  // An OPEN CALL outranks everything. The other phases are read off what has
+  // arrived; this one is read off what has NOT — a `tool_call` with no
+  // `tool_result` after it is the supplier waiting on a tool right now, which
+  // is the truest thing this window can say about the moment, and it stops
+  // being true the instant the result lands (GyldAskAgent.md 11.4).
+  const open = openStep(turn);
+  if (open !== undefined) {
+    return AskPhase.using(open.name);
   }
   // Read in ARRIVAL order, latest first. The supplier sends the citations
   // BEFORE the prose — "the citations first, so a reader sees what the answer

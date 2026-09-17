@@ -840,6 +840,69 @@
   overflow-wrap: anywhere;
 }
 
+/* A tool the agent reached for: one collapsible card per call (section 11.4).
+   Folded it is the name and one line of the input; open it is the input whole
+   and the result the answer was built on. */
+
+.gyld-ask-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gyld-ask-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  padding: 0.25em 0.5em;
+  border-left: 3px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 0 5px 5px 0;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+/* A call still in flight, and one the supplier would not run, are each drawn
+   as what they are rather than as a card that says nothing (MDV-7). */
+.gyld-ask-step[data-state='open-call'] {
+  border-left-style: dashed;
+}
+
+.gyld-ask-step[data-state='refused'] {
+  border-left-color: currentColor;
+}
+
+.gyld-ask-step-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.5em;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gyld-ask-step-said {
+  overflow-wrap: anywhere;
+}
+
+.gyld-ask-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.gyld-ask-step-input,
+.gyld-ask-step-result {
+  max-height: 18em;
+  overflow: auto;
+}
+
 /* A ruling the agent drafted: an OFFER, marked as one and never mistaken for
    a person's text (section 8). */
 

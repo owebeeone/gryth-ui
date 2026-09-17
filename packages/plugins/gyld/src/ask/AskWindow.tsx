@@ -32,8 +32,9 @@ import {
 import { askEnvelope, type GyldAskContext } from './envelope';
 import { markProse, type CitationMark } from './markers';
 import {
-  endLine, foldAskReply, hasReply, latestNote, spoken,
-  type AskReply, type AskTurn, type GyldAskCitation, type GyldAskDraft,
+  endLine, foldAskReply, hasReply, latestNote, spoken, stepOpen, stepSays,
+  type AskReply, type AskToolStep, type AskTurn, type GyldAskCitation,
+  type GyldAskDraft,
 } from './reply';
 import { explainGate, explainSubmit, sendsOnKey } from './submit';
 import { followScroll, keepAtEnd } from './transcript';
@@ -568,6 +569,23 @@ function Turn({ turn, cites, acts, phase }: {
               what has arrived stand where its prose will be, and stay above
               the prose once it starts to stream into this same row. */}
           {phase !== undefined && <Working phase={phase} />}
+          {/* What the turn REACHED FOR, before the answer it reached for it
+              to write — the same order the supplier already puts the
+              citations in, and for the same reason: a reader sees what an
+              answer was built from before they read the answer. */}
+          {turn.steps.length > 0 && (
+            <ul className="gyld-ask-steps">
+              {turn.steps.map((step, index) => (
+                <Step
+                  key={`${turn.runId}-step-${index}`}
+                  runId={turn.runId}
+                  at={index}
+                  step={step}
+                  cites={cites}
+                />
+              ))}
+            </ul>
+          )}
           {turn.prose !== '' && <Prose turn={turn} cites={cites} />}
           {turn.drafts.length > 0 && (
             <ul className="gyld-ask-drafts">
@@ -604,6 +622,100 @@ function Turn({ turn, cites, acts, phase }: {
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * One tool the agent reached for, as a card a reader may open.
+ *
+ * FOLDED it is the name and one line of what the tool was asked — which is
+ * what a reader scanning an answer needs: *it looked up Q11*. OPEN it is the
+ * input whole and the result text, because the result is what the answer was
+ * built on and a reader auditing an answer needs to see it.
+ *
+ * Three things it never does. It does not interpret the result: the text is
+ * the supplier's own `summary`, cut where the supplier cut it and marked as
+ * cut where it says so. It does not hide a refusal — a tool that would not run
+ * is drawn like the window's other system rows, with the supplier's own
+ * sentence. And it does not invent a state for a call still in flight: an open
+ * call says it is open.
+ *
+ * It rides the citations' own atom (`./citations.ts`) rather than an atom of
+ * its own, because "which expandable things has this reader opened" is one
+ * question and one piece of window state (CodingRules.md). A card's key is the
+ * turn's run id and its POSITION, because a turn may call the same tool twice
+ * and each call is its own card.
+ */
+function Step({ runId, at, step, cites }: {
+  runId: string;
+  at: number;
+  step: AskToolStep;
+  cites: CiteActs;
+}) {
+  const tag = `tool-${at}`;
+  const open = boxOpen(cites.open, runId, tag);
+  const said = stepSays(step);
+  const result = step.result;
+  const refused = result !== undefined && result.ok === false;
+  return (
+    <li
+      className="gyld-ask-step"
+      data-tool={step.name}
+      data-state={stepOpen(step) ? 'open-call' : (refused ? 'refused' : 'answered')}
+      onKeyDown={(event) => {
+        if (collapsesOnKey(event)) {
+          closeBox(cites.handle, runId, tag);
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="gyld-ask-step-head"
+        aria-expanded={open}
+        title={
+          stepOpen(step)
+            ? 'this call has not come back yet'
+            : (refused ? 'this tool would not run' : 'what the answer was built from')
+        }
+        onClick={() => toggleBox(cites.handle, runId, tag)}
+      >
+        <span className="gyld-chip">{step.name === '' ? 'a tool' : step.name}</span>
+        {said !== '' && <span className="gyld-note gyld-ask-step-said">{said}</span>}
+        {stepOpen(step) && <span className="gyld-note gyld-ask-step-waiting">…</span>}
+        {refused && <span className="gyld-fault gyld-ask-step-refused">refused</span>}
+      </button>
+      {open && (
+        <div className="gyld-ask-step-body">
+          <pre className="gyld-ask-passage gyld-ask-step-input">
+            {step.call.input === undefined
+              ? 'this record carried no input'
+              : JSON.stringify(step.call.input, null, 2)}
+          </pre>
+          {result === undefined ? (
+            <p className="gyld-note gyld-ask-step-pending">
+              this call has not come back yet
+            </p>
+          ) : (
+            <>
+              <pre
+                className={refused
+                  ? 'gyld-ask-passage gyld-ask-step-result gyld-fault'
+                  : 'gyld-ask-passage gyld-ask-step-result'}
+              >
+                {result.summary ?? ''}
+              </pre>
+              {result.truncated === true && (
+                <p className="gyld-note gyld-ask-step-cut">
+                  {`the supplier cut this result at its byte budget: what is shown is a prefix${
+                    result.bytes === undefined ? '' : ` of ${result.bytes} bytes`
+                  }`}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </li>
   );
 }
 

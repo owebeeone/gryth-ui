@@ -85,6 +85,57 @@ export interface GyldAskDraft {
 }
 
 /**
+ * One tool the agent reached for, as the `tool_call` record carries it
+ * (GyldAskAgent.md 11.4; `glade-gyld/src/tools.rs`, `call_record`).
+ *
+ * `id` is the API's own `tool_use_id`, which is how a result is paired with
+ * its call — by identity and never by position, because one turn may call two
+ * tools at once.
+ */
+export interface GyldAskToolCall {
+  id?: string;
+  name?: string;
+  /** The input the model composed, whole and uninterpreted. */
+  input?: unknown;
+}
+
+/**
+ * What one call answered with, as the `tool_result` record carries it
+ * (`glade-gyld/src/tools.rs`, `ToolAnswer::record`).
+ *
+ * A tool that refused is `ok: false` with the reason in `summary`: a refusal
+ * is data here as everywhere, and it is drawn rather than dropped.
+ */
+export interface GyldAskToolResult {
+  id?: string;
+  name?: string;
+  ok?: boolean;
+  /** The result text, already cut at the supplier's byte budget. */
+  summary?: string;
+  /** What it was BEFORE the cut. */
+  bytes?: number;
+  /** True when the budget cut it, so what is shown is a prefix. */
+  truncated?: boolean;
+}
+
+/**
+ * One tool step of a turn: the call, and the result when it has come back.
+ *
+ * A step with no `result` is a call still in flight, which is exactly what the
+ * status line reads (`./busy.ts`). Nothing is invented for it: an open call is
+ * drawn as an open call.
+ */
+export interface AskToolStep {
+  /** The `tool_use_id` the two records share, or '' when the record carried
+   *  none — in which case the pairing falls back to arrival order. */
+  id: string;
+  /** The tool's name, as the call gave it. */
+  name: string;
+  call: GyldAskToolCall;
+  result?: GyldAskToolResult;
+}
+
+/**
  * One record on the `gyld.ask` log.
  *
  * It is the `gwz.output` field shape plus two fields (section 4, "The reply"),
@@ -94,7 +145,7 @@ export interface GyldAskDraft {
  */
 export interface GyldAskRecord extends GyldOutputRecord {
   conversation?: string;
-  record?: GyldAskCitation | GyldAskDraft;
+  record?: GyldAskCitation | GyldAskDraft | GyldAskToolCall | GyldAskToolResult;
 }
 
 /**
@@ -132,6 +183,19 @@ export class AskStream {
   static readonly DRAFT = new AskStream('draft');
 
   /**
+   * A tool the agent reached for, in `record` (11.4).
+   *
+   * It is appended BEFORE the call is run, so a window that folds it knows
+   * what the turn is waiting on while it waits. A consumer that has never
+   * heard of it draws nothing, which is the rule this surface already follows.
+   */
+  static readonly TOOL_CALL = new AskStream('tool_call');
+
+  /** What that call answered, in `record` — including a refusal, which is
+   *  data and is drawn as one. */
+  static readonly TOOL_RESULT = new AskStream('tool_result');
+
+  /**
    * One thing the call had to do differently, as one line
    * (`glade-gyld/src/envelope.rs`, `ASK_NOTE`).
    *
@@ -147,7 +211,7 @@ export class AskStream {
 
   static readonly ALL: readonly AskStream[] = Object.freeze([
     AskStream.QUESTION, AskStream.ANSWER, AskStream.CITATION, AskStream.DRAFT,
-    AskStream.NOTE, AskStream.END,
+    AskStream.NOTE, AskStream.TOOL_CALL, AskStream.TOOL_RESULT, AskStream.END,
   ]);
 
   static byName(name: string): AskStream | undefined {
@@ -181,6 +245,16 @@ export interface AskTurn {
    *  each, taken by a human or discarded (section 8); nothing here is a Gyld
    *  fact and nothing here reaches an overlay on its own. */
   drafts: GyldAskDraft[];
+  /**
+   * The tools this turn called, in the order it called them, each paired with
+   * what it answered.
+   *
+   * ORDERED, because a turn is a loop (11.1) and what it did second is not
+   * what it did first. Paired by the `tool_use_id` the two records share, so a
+   * turn that called two tools at once still reads as two steps rather than as
+   * four records in a row.
+   */
+  steps: AskToolStep[];
   said: AskSaid[];
   /** Whether an `end` record has closed this turn. */
   ended: boolean;
@@ -270,7 +344,7 @@ export function foldAskReply(
     if (turn === undefined || turn.runId !== runId) {
       turn = {
         runId, principal: '', question: '', prose: '', citations: [], drafts: [],
-        said: [], ended: false,
+        steps: [], said: [], ended: false,
       };
       turns.push(turn);
     }
@@ -314,6 +388,23 @@ function fold(turn: AskTurn, record: GyldAskRecord): void {
     said(turn, record);
     return;
   }
+  if (stream === AskStream.TOOL_CALL) {
+    if (record.record !== undefined) {
+      const call = record.record as GyldAskToolCall;
+      turn.steps.push({
+        id: typeof call.id === 'string' ? call.id : '',
+        name: typeof call.name === 'string' ? call.name : '',
+        call,
+      });
+    }
+    return;
+  }
+  if (stream === AskStream.TOOL_RESULT) {
+    if (record.record !== undefined) {
+      paired(turn, record.record as GyldAskToolResult);
+    }
+    return;
+  }
   if (stream === AskStream.DRAFT) {
     // An OFFER on its turn, whole and uncorrected — including one the
     // supplier could not resolve, which is drawn as unresolved rather than
@@ -328,6 +419,63 @@ function fold(turn: AskTurn, record: GyldAskRecord): void {
   // does not.
   said(turn, record);
 }
+
+/**
+ * One result onto the call it answers.
+ *
+ * By the `tool_use_id` the two records share — that is what the id is for, and
+ * a turn that called two tools at once would otherwise pair them by luck. A
+ * result whose id matches no open call is its own step, drawn with no input:
+ * inventing a call for it would be the window making up a record the supplier
+ * did not send, and dropping it would hide one it did (6.7, MDV-7).
+ */
+function paired(turn: AskTurn, result: GyldAskToolResult): void {
+  const id = typeof result.id === 'string' ? result.id : '';
+  const open = turn.steps.find(
+    (step) => step.result === undefined && (id === '' || step.id === id),
+  );
+  if (open !== undefined) {
+    open.result = result;
+    return;
+  }
+  turn.steps.push({
+    id,
+    name: typeof result.name === 'string' ? result.name : '',
+    call: {},
+    result,
+  });
+}
+
+/** Whether a step's call is still open: it landed and its result has not. */
+export function stepOpen(step: AskToolStep): boolean {
+  return step.result === undefined;
+}
+
+/** The call this turn is waiting on, or undefined when it waits on none. */
+export function openStep(turn: AskTurn): AskToolStep | undefined {
+  return turn.steps.find(stepOpen);
+}
+
+/**
+ * The one line a folded card shows beside the tool's name: what it was asked.
+ *
+ * The input as JSON, on one line and bounded — a card is folded until a reader
+ * opens it, and the whole of a tool's input is what opening it is for.
+ */
+export function stepSays(step: AskToolStep): string {
+  const input = step.call.input;
+  if (input === undefined) {
+    return '';
+  }
+  const said = typeof input === 'string' ? input : JSON.stringify(input) ?? '';
+  const oneLine = said.replace(/\s+/g, ' ').trim();
+  return oneLine.length <= SAYS_CHARS
+    ? oneLine
+    : `${oneLine.slice(0, SAYS_CHARS)}…`;
+}
+
+/** How much of an input a folded card shows. One line of a narrow window. */
+export const SAYS_CHARS = 72;
 
 function said(turn: AskTurn, record: GyldAskRecord): void {
   const text = record.line ?? '';

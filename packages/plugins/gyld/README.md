@@ -178,6 +178,23 @@ turn, before the prose, never a silence
 has never heard of the stream draws nothing for it, which is the rule this
 surface already follows.
 
+**`tool_call` and `tool_result`** are the seventh and eighth, and they are the
+agent LOOP made visible (GyldAskAgent.md section 11.4). A turn may reach for
+`read_source` or `gyld_query` in the supplier — never in the page — and each
+call lands as two records: one before it runs, one after. The window folds them
+into ordered STEPS, pairing a result with its call by the `tool_use_id` the two
+share rather than by position, because one turn may call two tools at once, and
+draws each as a collapsible card above the answer it was used to write — the
+same place, and for the same reason, the citations already sit. Folded, a card
+is the tool's name and one line of what it was asked; opened, it is the input
+whole and the result the answer was built on, cut where the supplier cut it and
+marked as cut where the record says so. A call whose result has not come back
+is drawn as an open call and the in-flight line reads *using read_source*; one
+the supplier refused is drawn as a refusal, with the supplier's own sentence.
+Nothing is interpreted and nothing is repaired: a result whose call never
+arrived is still a card, because dropping it would hide a record the supplier
+sent (6.7, MDV-7).
+
 **The conversation is one per window, and it is about a record.** The id is
 minted by the gesture that opens the window (`conv-<tabId>-<slot>-<stamp>`)
 and kept across every turn, so a follow-up is the same verb with the same id
