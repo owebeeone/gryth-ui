@@ -347,10 +347,12 @@ describe('the ask window draws the turns and asks the next question under them',
     expect(markup).toContain('so who decides it?');
     expect(markup).toContain('which passage says so?');
     expect(markup).toContain('gyld-ask-asked');
-    // the refused turn is a turn, with its reason and its exit
+    // the refused turn is a turn, with its reason and its exit — the exit on
+    // the one muted footer line each reply now carries
     expect(markup).toContain('no model key');
-    expect(markup).toContain('end, exit 1');
-    expect(markup).toContain('end, exit 0');
+    expect(markup).toContain('run-9 · failed');
+    expect(markup).toContain('run-2 · done');
+    expect(markup).toContain('title="exit 1 · attributed to gianni"');
     // and no other conversation's turn is drawn here
     expect(markup).not.toContain('another window asked this');
   });

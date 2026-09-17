@@ -101,6 +101,38 @@ function turnOf(reply: AskReply, runId: string): AskTurn | undefined {
 }
 
 /**
+ * Whether the accept line is drawn at all.
+ *
+ * "explain: accepted, run run-13" is a fact about a PRESS, and it is worth a
+ * line for exactly as long as it is the only thing this window knows: between
+ * the press and the first record of the turn. Once the reply exists, the same
+ * run is named by the reply's own footer line and the phase is named by the
+ * indicator, so the accept line is three ways of saying what the window is
+ * already showing — and it pushed the answer up the screen to say it.
+ *
+ * A REFUSAL is the other half and does not move. The three refusals that
+ * arrive before any run starts (no model key, no source index, an envelope
+ * that did not decode) are this window's only word on the turn, so they stay
+ * the prominent system row they are today (section 4).
+ */
+export function acceptShown(
+  answer: GyldOpsResponse | null, reply: AskReply,
+): boolean {
+  if (answer === null) {
+    return false;
+  }
+  if (!answer.ok) {
+    return true;
+  }
+  if (answer.done === true) {
+    // A verb the supplier answered outright rather than streaming: there is no
+    // turn coming, so there is nothing for this line to be the only word on.
+    return false;
+  }
+  return turnOf(reply, answer.run_id ?? '') === undefined;
+}
+
+/**
  * The phase this conversation is in, or `undefined` when nothing is in flight.
  *
  * It reads the fold AND the accept, because the two answer different halves of

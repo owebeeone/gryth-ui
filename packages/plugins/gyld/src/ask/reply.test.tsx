@@ -575,7 +575,7 @@ describe('the ask window submits, and draws what comes back', () => {
     expect(markup).toContain('explain: accepted, run run-7, attributed to gianni');
   });
 
-  it('draws the prose, the passages it cited and the run\'s close', async () => {
+  it('draws the prose, the sources it leant on and the run\'s close', async () => {
     const on = await askWindow('ask-reply', { stream: TURN });
     const markup = on.markup();
     expect(markup).toContain('gyld-ask-reply');
@@ -583,17 +583,17 @@ describe('the ask window submits, and draws what comes back', () => {
     expect(markup).toContain(
       'key_custody is blocked by scope_model, which this stream has not ruled on.',
     );
-    // the citation: its tag, the file it is in, and the passage itself
-    expect(markup).toContain('data-tag="Q11"');
-    expect(markup).toContain('gyld-wz/dev-docs/GladeBuyBuildMatrix.md');
-    expect(markup).toContain('The matrix');
-    expect(markup).toContain('lines 211-213');
-    expect(markup).toContain('key custody | owner-held keys are the default');
-    // the tag the answer cited and the index resolved to nothing is SAID
-    expect(markup).toContain('data-tag="AZ-7"');
-    expect(markup).toContain('data-resolved="no"');
-    expect(markup).toContain("this build&#x27;s index does not list this tag");
-    expect(markup).toContain('end, exit 0');
+    // This answer's prose names NEITHER tag it was grounded on, so there is no
+    // marker to draw and no passage stacked under the reply either: both
+    // citations are behind the footer chip, one press away (./citations.ts).
+    expect(markup).toContain('>2 sources</button>');
+    expect(markup).not.toContain('data-tag="Q11"');
+    expect(markup).not.toContain('data-tag="AZ-7"');
+    expect(markup).not.toContain('gyld-wz/dev-docs/GladeBuyBuildMatrix.md');
+    expect(markup).not.toContain('key custody | owner-held keys are the default');
+    // one muted footer line for the run, with the exit on its tooltip
+    expect(markup).toContain('run-7 · done');
+    expect(markup).toContain('title="exit 0 · attributed to gianni"');
     // and the envelope stays, folded away, wherever the conversation is
     expect(markup).toContain('<details class="gyld-ask-context">');
     expect(markup).not.toContain('<details class="gyld-ask-context" open=""');
@@ -602,8 +602,8 @@ describe('the ask window submits, and draws what comes back', () => {
 
   it('says a turn is still answering until its end record lands', async () => {
     const on = await askWindow('ask-open', { stream: TURN.slice(0, 2) });
-    expect(on.markup()).toContain('answering');
-    expect(on.markup()).not.toContain('end, exit');
+    expect(on.markup()).toContain('run-7 · answering…');
+    expect(on.markup()).not.toContain('· done');
   });
 
   // A turn in flight is SHOWN to be one: the gear turns beside the word for
@@ -688,7 +688,7 @@ describe('the ask window submits, and draws what comes back', () => {
       expect(markup).not.toContain('gyld-ask-working');
       expect(markup).not.toContain('one turn is in flight');
       // the turn is drawn, closed, exactly as it was before any of this
-      expect(markup).toContain('end, exit 0');
+      expect(markup).toContain('run-7 · done');
       expect(markup).toContain('ask a follow-up');
     });
 
@@ -760,7 +760,7 @@ describe('the ask window submits, and draws what comes back', () => {
     expect(markup).toContain('the ruling turns on');
     expect(markup).toContain('the answer stopped at the output budget');
     expect(markup).toContain('gyld-fault gyld-ask-said');
-    expect(markup).toContain('end, exit 1');
+    expect(markup).toContain('run-7 · failed');
   });
 });
 

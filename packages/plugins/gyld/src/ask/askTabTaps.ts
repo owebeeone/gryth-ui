@@ -4,11 +4,13 @@ import {
   GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
   GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
   GYLD_TAB_ASK_AT_END, GYLD_TAB_ASK_AT_END_TAP,
+  GYLD_TAB_ASK_CITES, GYLD_TAB_ASK_CITES_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP,
   GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,
   perspectiveFromParams, refFromParams, streamFromParams,
 } from '../grips';
 import type { GyldOpsResponse } from '../ops/ops';
+import { NOTHING_OPEN } from './citations';
 import { NO_CONVERSATION, type AskConversation } from './conversation';
 
 // The gyld.ask seeds, written against the one rule `gyld.detail` and
@@ -62,6 +64,12 @@ export function askTabTaps(_tabId: string, params?: Record<string, unknown>): Ta
     // until one has been sent, which is a rendered state and not a default.
     createAtomValueTap<GyldOpsResponse | null>(GYLD_TAB_ASK_ANSWER, {
       initial: null, handleGrip: GYLD_TAB_ASK_ANSWER_TAP,
+    }),
+    // Which citation boxes are open (./citations.ts). Nothing is, on a window
+    // that has just opened: a reply is read first and its sources second, so
+    // every box and every footer chip starts folded away.
+    createAtomValueTap(GYLD_TAB_ASK_CITES, {
+      initial: NOTHING_OPEN, handleGrip: GYLD_TAB_ASK_CITES_TAP,
     }),
   ];
   const stream = streamFromParams(params);

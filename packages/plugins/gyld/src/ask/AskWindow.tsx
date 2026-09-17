@@ -5,6 +5,7 @@ import {
   GYLD_DEST_STREAM, GYLD_LENS, GYLD_OPS, GYLD_OPS_STATUS, GYLD_RECORD, GYLD_RECORDS,
   GYLD_SOURCES, GYLD_TAB_ASK_ANSWER, GYLD_TAB_ASK_ANSWER_TAP,
   GYLD_TAB_ASK_AT_END, GYLD_TAB_ASK_AT_END_TAP,
+  GYLD_TAB_ASK_CITES, GYLD_TAB_ASK_CITES_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP, GYLD_TAB_ASK_DRAFT,
   GYLD_TAB_ASK_DRAFT_TAP, GYLD_TAB_DRAFT_TAKEN_TAP, GYLD_TAB_ID,
 } from '../grips';
@@ -14,7 +15,12 @@ import { useBrowserFocus } from '../browser/useBrowserFocus';
 import type { TakenDraft } from '../decide/drafts';
 import workingStill from '../assets/working-96-still.png';
 import workingUrl from '../assets/working-96.gif';
-import { AskPhase, conversationBusy } from './busy';
+import { AskPhase, acceptShown, conversationBusy } from './busy';
+import {
+  NOTHING_OPEN, boxCopied, boxOpen, boxSaid, browserClipboard, chipOpen,
+  citationWhere, closeBox, collapseAll, collapsesOnKey, copyCitation, toggleBox,
+  toggleChip, type AskCitationsOpen,
+} from './citations';
 import {
   NO_CONVERSATION, movedOff, startConversation, turnConversation,
   type AskConversation, type AskConversationOn,
@@ -24,8 +30,9 @@ import {
   type DraftOffer, type TakeDraftHandles,
 } from './draft';
 import { askEnvelope, type GyldAskContext } from './envelope';
+import { markProse, type CitationMark } from './markers';
 import {
-  foldAskReply, hasReply,
+  endLine, foldAskReply, hasReply, latestNote, spoken,
   type AskReply, type AskTurn, type GyldAskCitation, type GyldAskDraft,
 } from './reply';
 import { explainGate, explainSubmit, sendsOnKey } from './submit';
@@ -56,6 +63,17 @@ import { followScroll, keepAtEnd } from './transcript';
 // carried. The window itself folds nothing and decides nothing: the prose is
 // the model's chunks in sequence order, a citation is the passage the
 // supplier resolved, the exit is the run's own.
+//
+// A CITATION IS A MARKER IN THE PROSE, not a list under it. The supplier sends
+// every citation before the answer, and the answer names the tags it leant on;
+// so the tags the reply itself cited are marked `[n]` where the prose names
+// them (./markers.ts) and each marker opens its passage in a box UNDER ITS OWN
+// PARAGRAPH (./citations.ts), with Copy and Collapse. A footer chip expands
+// every citation of a turn at once, so a source the prose never names is one
+// press away and nothing the supplier sent is lost. The metadata is one muted
+// line per reply — the run and its end state, the exit and the attribution in
+// its tooltip — and the endpoint's own notes sit once under the composer,
+// because they are about the endpoint and repeat on every turn.
 //
 // A REFUSAL IS DATA AND IS DRAWN AS DATA — never a toast, never an alert. The
 // three that arrive before a run starts (no model key, no source index, an
@@ -129,6 +147,12 @@ export function AskWindow() {
   const following = useGrip(GYLD_TAB_ASK_AT_END) ?? true;
   const followTap = useGrip(GYLD_TAB_ASK_AT_END_TAP) as
     AtomTapHandle<boolean> | undefined;
+  // Which citation boxes this reader has open, and what their last Copy did.
+  const cites: CiteActs = {
+    open: useGrip(GYLD_TAB_ASK_CITES) ?? NOTHING_OPEN,
+    handle: useGrip(GYLD_TAB_ASK_CITES_TAP) as
+      AtomTapHandle<AskCitationsOpen> | undefined,
+  };
   const reply = foldAskReply(useGrip(GYLD_ASK_STREAM), conversation.id);
   // Taking a draft writes the BROWSER's hand-off atom and opens the decide
   // window wired to that same browser — the acts this window already has on
@@ -240,6 +264,10 @@ export function AskWindow() {
               // longer folds.
               answerTap?.set(null);
               followTap?.set(true);
+              // The boxes were opened on the turns of the conversation being
+              // left, and this window stops folding those: an open box keyed
+              // to a run it no longer draws is state with nothing behind it.
+              collapseAll(cites.handle);
             }}
           >
             {conversation.id === '' ? 'Start a conversation' : 'Start over'}
@@ -280,6 +308,7 @@ export function AskWindow() {
         <Transcript
           reply={reply}
           busy={busy}
+          cites={cites}
           acts={{
             envelope,
             refusal: takeRefusal(takes),
@@ -288,7 +317,7 @@ export function AskWindow() {
             },
           }}
         />
-        <Answered answer={answer} />
+        <Answered answer={answer} shown={acceptShown(answer, reply)} />
       </div>
       <div className="gyld-chrome-row gyld-ask-composer">
         {/* The reader has scrolled up and the transcript has stayed where they
@@ -346,7 +375,27 @@ export function AskWindow() {
           <span className="gyld-note gyld-ask-blocked">{standing.reason}</span>
         )}
       </div>
+      {/* What the ENDPOINT had to do differently — the output budget a local
+          model was given, a setting nobody has heard of. It comes back on
+          every turn of a conversation, so it is one line here and not the same
+          sentence over every answer in the transcript. The latest, because the
+          answer a reader is looking at is the last turn's. */}
+      <Noted note={latestNote(reply)} />
     </div>
+  );
+}
+
+/** The endpoint's own latest note, under the composer and out of the turns. */
+function Noted({ note }: { note: string }) {
+  if (note === '') {
+    return null;
+  }
+  return (
+    <p className="gyld-note gyld-ask-noted" data-stream="note" title={
+      'what the endpoint had to do differently on this conversation\'s last turn'
+    }>
+      {note}
+    </p>
   );
 }
 
@@ -400,14 +449,25 @@ function Working({ phase }: { phase: AskPhase }) {
  * of section 4 arrive here, before any run started: no model key, no source
  * index, and an envelope that did not decode. Each is rendered AS THE DATA IT
  * IS — the supplier's own sentence, in the window, with the run it belongs to.
+ *
+ * An ACCEPT is drawn only while it is the only thing this window knows — from
+ * the press to the first record of the turn (`./busy.ts`, `acceptShown`).
+ * After that the reply's own footer line names the run and the indicator names
+ * the phase, and a third line saying both would only push the answer up.
  */
-function Answered({ answer }: { answer: GyldOpsResponse | null }) {
+function Answered({ answer, shown }: {
+  answer: GyldOpsResponse | null;
+  shown: boolean;
+}) {
   if (answer === null) {
     return (
       <p className="gyld-note gyld-ask-unsent gyld-ask-row-system">
         nothing has been asked from this window yet
       </p>
     );
+  }
+  if (!shown) {
+    return null;
   }
   return (
     <div
@@ -447,9 +507,10 @@ interface DraftActs {
  * to a row of its own only in the gap between the accept and the first record
  * — which is the one moment the fold cannot see (./busy.ts).
  */
-function Transcript({ reply, busy, acts }: {
+function Transcript({ reply, busy, cites, acts }: {
   reply: AskReply;
   busy: AskPhase | undefined;
+  cites: CiteActs;
   acts: DraftActs;
 }) {
   const last = reply.turns.length - 1;
@@ -465,6 +526,7 @@ function Transcript({ reply, busy, acts }: {
         <Turn
           key={turn.runId}
           turn={turn}
+          cites={cites}
           acts={acts}
           phase={index === last && open ? busy : undefined}
         />
@@ -481,13 +543,16 @@ function Transcript({ reply, busy, acts }: {
 }
 
 /** One turn, as two rows: the reader's question, and then the agent's reply —
- *  its prose, the passages it cited, the rulings it drafted, whatever else the
- *  supplier said, and the run's close as the reply's own footer. */
-function Turn({ turn, acts, phase }: {
+ *  its prose with the sources it names marked in it, the rulings it drafted,
+ *  whatever else the supplier said, the chip that opens every source at once,
+ *  and one muted line for the run and its close. */
+function Turn({ turn, cites, acts, phase }: {
   turn: AskTurn;
+  cites: CiteActs;
   acts: DraftActs;
   phase: AskPhase | undefined;
 }) {
+  const end = endLine(turn);
   return (
     <article className="gyld-ask-turn" data-run={turn.runId}>
       {/* The question as the LOG carried it, not as this window's box holds
@@ -503,20 +568,7 @@ function Turn({ turn, acts, phase }: {
               what has arrived stand where its prose will be, and stay above
               the prose once it starts to stream into this same row. */}
           {phase !== undefined && <Working phase={phase} />}
-          {turn.prose !== '' && <p className="gyld-ask-prose">{turn.prose}</p>}
-          {turn.citations.length > 0 && (
-            <ul className="gyld-ask-citations">
-              {turn.citations.map((citation, index) => (
-                <Citation
-                  // A conversation can legitimately cite one tag twice, so the
-                  // position in the fold is the identity here, as it is for the
-                  // host's drawn lines.
-                  key={`${turn.runId}-cite-${index}`}
-                  citation={citation}
-                />
-              ))}
-            </ul>
-          )}
+          {turn.prose !== '' && <Prose turn={turn} cites={cites} />}
           {turn.drafts.length > 0 && (
             <ul className="gyld-ask-drafts">
               {turn.drafts.map((draft, index) => (
@@ -531,7 +583,9 @@ function Turn({ turn, acts, phase }: {
               ))}
             </ul>
           )}
-          {turn.said.map((said, index) => (
+          {/* Everything the supplier said on this turn EXCEPT its notes,
+              which are about the endpoint and sit under the composer. */}
+          {spoken(turn).map((said, index) => (
             <p
               key={`${turn.runId}-said-${index}`}
               className={said.stream === 'stderr' ? 'gyld-fault gyld-ask-said' : 'gyld-note gyld-ask-said'}
@@ -540,12 +594,12 @@ function Turn({ turn, acts, phase }: {
               {said.text}
             </p>
           ))}
-          <p className="gyld-note gyld-ask-end" data-exit={turn.exit}>
-            {turn.ended
-              ? `end, exit ${turn.exit ?? 'not emitted'}`
-              : 'answering…'}
-            {turn.principal === '' ? '' : `, attributed to ${turn.principal}`}
-            {` (run ${turn.runId})`}
+          <Sourced turn={turn} cites={cites} />
+          {/* The run and its close, in one muted line. The exit and the
+              attribution are still here, on the tooltip: a reader reads the
+              answer, and audits the run. */}
+          <p className="gyld-note gyld-ask-end" data-exit={turn.exit} title={end.title}>
+            {end.text}
           </p>
         </div>
       </div>
@@ -553,50 +607,203 @@ function Turn({ turn, acts, phase }: {
   );
 }
 
+/** The boxes this reader has open, and the atom every press writes through. */
+interface CiteActs {
+  open: AskCitationsOpen;
+  handle?: AtomTapHandle<AskCitationsOpen>;
+}
+
 /**
- * One cited passage: the tag, the file it is in, and the passage itself.
+ * The answer's prose, paragraph by paragraph, with its own citations marked.
+ *
+ * The marked-up prose is the model's text UNCHANGED (./markers.ts): where it
+ * names a tag this reply cited, the mention is kept exactly as written and a
+ * marker follows it. The box a marker opens is rendered HERE, under the
+ * paragraph the mention is in and not at the reply's footer, so the passage
+ * lands beside the sentence that leant on it.
+ */
+function Prose({ turn, cites }: { turn: AskTurn; cites: CiteActs }) {
+  const marked = markProse(turn.prose, turn.citations);
+  return (
+    <>
+      {marked.paragraphs.map((paragraph, index) => (
+        <div className="gyld-ask-para" key={`${turn.runId}-para-${index}`}>
+          <p className="gyld-ask-prose">
+            {paragraph.parts.map((part, at) => (
+              <span
+                key={`${turn.runId}-part-${index}-${at}`}
+                className={part.mark === undefined ? undefined : 'gyld-ask-mention'}
+              >
+                {part.text}
+                {part.mark !== undefined && (
+                  <Marker runId={turn.runId} mark={part.mark} cites={cites} />
+                )}
+              </span>
+            ))}
+          </p>
+          {paragraph.marks
+            .map((number) => turn.citations[number - 1])
+            .filter((citation) => boxOpen(cites.open, turn.runId, citation.tag))
+            .map((citation) => (
+              <CitationBox
+                key={`${turn.runId}-box-${index}-${citation.tag}`}
+                runId={turn.runId}
+                citation={citation}
+                cites={cites}
+              />
+            ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/**
+ * One marker: `[n]`, after the tag the prose named.
+ *
+ * It is a BUTTON and not a link, because it goes nowhere — it opens the
+ * passage under this paragraph and closes it again. The tag is its tooltip, so
+ * a reader who only wants to know which source it is need not open anything,
+ * and Escape closes the box from the marker that opened it without a listener
+ * on the window (CodingRules.md).
+ */
+function Marker({ runId, mark, cites }: {
+  runId: string;
+  mark: CitationMark;
+  cites: CiteActs;
+}) {
+  const open = boxOpen(cites.open, runId, mark.tag);
+  return (
+    <button
+      type="button"
+      className="gyld-ask-mark"
+      data-cite={mark.number}
+      data-tag={mark.tag}
+      aria-expanded={open}
+      title={mark.tag}
+      onClick={() => toggleBox(cites.handle, runId, mark.tag)}
+      onKeyDown={(event) => {
+        if (collapsesOnKey(event)) {
+          closeBox(cites.handle, runId, mark.tag);
+        }
+      }}
+    >
+      {`[${mark.number}]`}
+    </button>
+  );
+}
+
+/**
+ * One cited passage, expanded: the citation line, the passage, and the two
+ * things a reader does with it.
  *
  * An UNRESOLVED citation is rendered as one, with the supplier's reason: the
  * answer cited a tag this build's index resolves to nothing, and dropping it
  * would be the window hiding an omission (MDV-7).
+ *
+ * COPY writes the passage with its citation line first, because a passage
+ * pasted without one is a quote from nowhere. It is `navigator.clipboard` in
+ * the click handler and nothing else; a browser that offers none says so here,
+ * beside the button that could not do it.
  */
-function Citation({ citation }: { citation: GyldAskCitation }) {
+function CitationBox({ runId, citation, cites }: {
+  runId: string;
+  citation: GyldAskCitation;
+  cites: CiteActs;
+}) {
   const resolved = citation.resolved !== false;
+  const copied = boxCopied(cites.open, runId, citation.tag);
+  const said = boxSaid(cites.open, runId, citation.tag);
   return (
-    <li
-      className="gyld-ask-citation"
+    <div
+      className="gyld-ask-cite"
       data-tag={citation.tag}
       data-resolved={resolved ? 'yes' : 'no'}
+      onKeyDown={(event) => {
+        if (collapsesOnKey(event)) {
+          closeBox(cites.handle, runId, citation.tag);
+        }
+      }}
     >
-      <span className="gyld-chip">{citation.tag}</span>
-      {citation.path !== undefined && (
-        <span className="gyld-note">
-          {citation.path}
-          {citation.heading === undefined || citation.heading === ''
-            ? ''
-            : ` · ${citation.heading}`}
-          {citation.lines === undefined || citation.lines.length !== 2
-            ? ''
-            : ` · lines ${citation.lines[0]}-${citation.lines[1]}`}
-          {citation.truncated === true ? ' · passage capped' : ''}
+      <p className="gyld-ask-cite-head">
+        <span className="gyld-chip">{citation.tag}</span>
+        <span className={resolved ? 'gyld-note' : 'gyld-fault'}>
+          {citationWhere(citation)}
         </span>
+      </p>
+      {resolved && citation.passage !== undefined && (
+        <q className="gyld-ask-passage">{citation.passage}</q>
       )}
-      {resolved
-        ? (citation.passage !== undefined && (
-          // The passage is EXPANDABLE: a transcript of six turns with six
-          // passages open is a wall, and a citation whose passage cannot be
-          // read is not a citation. So it is one line, and one click.
-          <details className="gyld-ask-passage-fold">
-            <summary>passage</summary>
-            <q className="gyld-ask-passage">{citation.passage}</q>
-          </details>
-        ))
-        : (
-          <span className="gyld-fault">
-            unresolved: {citation.reason ?? 'no reason was emitted'}
-          </span>
-        )}
-    </li>
+      <p className="gyld-ask-cite-acts">
+        <button
+          type="button"
+          className="gyld-ask-copy"
+          data-copied={copied ? 'yes' : 'no'}
+          title="copy this passage, with its citation line above it"
+          onClick={() => {
+            void copyCitation(
+              { handle: cites.handle, clipboard: browserClipboard() },
+              runId,
+              citation,
+            );
+          }}
+        >
+          {copied ? 'copied' : 'Copy'}
+        </button>
+        <button
+          type="button"
+          className="gyld-ask-collapse"
+          title="fold this passage away again — Escape does the same"
+          onClick={() => closeBox(cites.handle, runId, citation.tag)}
+        >
+          Collapse
+        </button>
+        {said !== '' && <span className="gyld-fault gyld-ask-uncopied">{said}</span>}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Every source the turn leant on, behind one small chip.
+ *
+ * The markers cover the sources the prose NAMES. This is the rest of the
+ * grounding: a citation the model never mentioned is still a citation the
+ * supplier resolved and the answer was grounded on, and hiding it because the
+ * prose forgot it would be the window losing a fact (6.7, MDV-7). So the chip
+ * counts them all, and opens them all, as the same boxes.
+ */
+function Sourced({ turn, cites }: { turn: AskTurn; cites: CiteActs }) {
+  const count = turn.citations.length;
+  if (count === 0) {
+    return null;
+  }
+  const open = chipOpen(cites.open, turn.runId);
+  return (
+    <div className="gyld-ask-sourced" data-open={open ? 'yes' : 'no'}>
+      <button
+        type="button"
+        className="gyld-ask-chip"
+        aria-expanded={open}
+        title={open
+          ? 'fold these sources away again'
+          : 'every source this answer was grounded on, including the ones its '
+            + 'prose does not name'}
+        onClick={() => toggleChip(cites.handle, turn.runId)}
+      >
+        {`${count} source${count === 1 ? '' : 's'}`}
+      </button>
+      {open && turn.citations.map((citation, index) => (
+        <CitationBox
+          // A turn can legitimately cite one tag twice, so the position in the
+          // fold is the identity here, as it is for the host's drawn lines.
+          key={`${turn.runId}-all-${index}`}
+          runId={turn.runId}
+          citation={citation}
+          cites={cites}
+        />
+      ))}
+    </div>
   );
 }
 

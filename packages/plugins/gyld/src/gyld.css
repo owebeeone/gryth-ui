@@ -742,20 +742,44 @@
   margin: 0;
 }
 
-.gyld-ask-citations {
+/* A citation is a MARKER in the prose, and the box it opens sits under the
+   paragraph that names it — never a list stacked under the answer. */
+
+.gyld-ask-para {
   display: flex;
   flex-direction: column;
-  gap: 0.417em;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 0.333em;
 }
 
-.gyld-ask-citation {
+/* The tag as the model wrote it, and the marker after it: one unit, so a line
+   break never falls between them. */
+.gyld-ask-mention {
+  white-space: nowrap;
+}
+
+.gyld-ask-mark {
+  margin-left: 0.15em;
+  padding: 0 0.25em;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0.5em;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 0.8em;
+  line-height: 1.4;
+  vertical-align: 0.15em;
+  cursor: pointer;
+}
+
+.gyld-ask-mark[aria-expanded='true'] {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.gyld-ask-cite {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25em 0.583em;
+  flex-direction: column;
+  gap: 0.25em;
   padding: 0.333em 0.5em;
   border-left: 3px solid color-mix(in srgb, currentColor 30%, transparent);
   border-radius: 0 5px 5px 0;
@@ -764,8 +788,56 @@
 
 /* A tag the answer cited and this build's index resolved to nothing is MARKED,
    never dropped (MDV-7). */
-.gyld-ask-citation[data-resolved='no'] {
+.gyld-ask-cite[data-resolved='no'] {
   border-left-style: dashed;
+}
+
+.gyld-ask-cite-head,
+.gyld-ask-cite-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.583em;
+  margin: 0;
+}
+
+.gyld-ask-copy,
+.gyld-ask-collapse,
+.gyld-ask-chip {
+  padding: 0.083em 0.5em;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 999px;
+  background: var(--win, Canvas);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.gyld-ask-copy[data-copied='yes'] {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+/* Every source of a turn, behind one chip: the ones the prose names and the
+   ones it does not, so nothing the supplier sent is lost. */
+.gyld-ask-sourced {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.333em;
+}
+
+.gyld-ask-sourced > .gyld-ask-cite {
+  align-self: stretch;
+}
+
+/* The endpoint's own latest note, once, under the composer. */
+.gyld-ask-noted {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
 }
 
 /* A ruling the agent drafted: an OFFER, marked as one and never mistaken for
@@ -818,15 +890,10 @@
   margin: 0;
 }
 
-/* A cited passage is one line until it is asked for. */
-.gyld-ask-passage-fold {
-  flex-basis: 100%;
-}
-
-.gyld-ask-passage-fold > summary {
-  cursor: pointer;
-  font-size: 0.917em;
-  opacity: 0.8;
+/* The run and its close: one muted line, smaller than the answer it follows. */
+.gyld-ask-end {
+  font-size: 0.85em;
+  opacity: 0.7;
 }
 
 /* A turn in flight: the gear, and the word for what has arrived. Sized in em

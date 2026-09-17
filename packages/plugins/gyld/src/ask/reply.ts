@@ -131,12 +131,23 @@ export class AskStream {
    *  or discards (section 8), never prose and never a ruling. */
   static readonly DRAFT = new AskStream('draft');
 
+  /**
+   * One thing the call had to do differently, as one line
+   * (`glade-gyld/src/envelope.rs`, `ASK_NOTE`).
+   *
+   * It is about the ENDPOINT, not about this turn: the output budget a local
+   * model was given, a setting nobody has heard of. The same note comes back
+   * on every turn of a conversation, so the window draws the LATEST one under
+   * the composer rather than repeating it inside each reply.
+   */
+  static readonly NOTE = new AskStream('note');
+
   /** The turn's close: `done`, the exit, and on a refusal a line saying why. */
   static readonly END = new AskStream('end');
 
   static readonly ALL: readonly AskStream[] = Object.freeze([
     AskStream.QUESTION, AskStream.ANSWER, AskStream.CITATION, AskStream.DRAFT,
-    AskStream.END,
+    AskStream.NOTE, AskStream.END,
   ]);
 
   static byName(name: string): AskStream | undefined {
@@ -330,4 +341,62 @@ function said(turn: AskTurn, record: GyldAskRecord): void {
  *  the envelope's collapse (section 6: it stays visible, folded away). */
 export function hasReply(reply: AskReply): boolean {
   return reply.records > 0;
+}
+
+/**
+ * What this turn SAID that belongs in the turn.
+ *
+ * Everything but the notes. A note is about the endpoint and repeats on every
+ * turn of a conversation, so drawing it inside each reply is the same sentence
+ * three times over the answer a reader is trying to read; it goes under the
+ * composer instead, once (`latestNote`). Nothing is dropped: the two places
+ * together are the whole of `said`.
+ */
+export function spoken(turn: AskTurn): AskSaid[] {
+  return turn.said.filter((said) => said.stream !== AskStream.NOTE.name);
+}
+
+/**
+ * The LATEST note of this conversation, or '' when it has none.
+ *
+ * The latest and not the first: a note says what the call had to do
+ * differently, and the answer a reader is looking at is the last turn's.
+ */
+export function latestNote(reply: AskReply): string {
+  for (let index = reply.turns.length - 1; index >= 0; index -= 1) {
+    const notes = reply.turns[index].said
+      .filter((said) => said.stream === AskStream.NOTE.name);
+    if (notes.length > 0) {
+      return notes[notes.length - 1].text;
+    }
+  }
+  return '';
+}
+
+/** A turn's close, as the one small footer line the reply carries. */
+export interface AskEndLine {
+  /** What is drawn: the run and the state, and nothing else. */
+  text: string;
+  /** The exit and the attribution, for the reader who hovers it. */
+  title: string;
+}
+
+/**
+ * The run id and the end state, as ONE muted line.
+ *
+ * The whole of the metadata a finished reply carries. It was three lines —
+ * the accept, the end, and the attribution — over every answer in the
+ * transcript; the facts are unchanged and none is dropped, but the exit and
+ * the principal ride the tooltip, because a reader reads the answer and audits
+ * the run.
+ */
+export function endLine(turn: AskTurn): AskEndLine {
+  const state = !turn.ended
+    ? 'answering…'
+    : (turn.exit === undefined || turn.exit === 0 ? 'done' : 'failed');
+  const exit = turn.exit === undefined ? 'exit not emitted' : `exit ${turn.exit}`;
+  return {
+    text: `${turn.runId} · ${state}`,
+    title: turn.principal === '' ? exit : `${exit} · attributed to ${turn.principal}`,
+  };
 }

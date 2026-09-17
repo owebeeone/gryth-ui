@@ -27,6 +27,7 @@ import type {
 } from './ops/ops';
 import type { GyldAskRecord } from './ask/reply';
 import { NO_CONVERSATION, type AskConversation } from './ask/conversation';
+import { NOTHING_OPEN, type AskCitationsOpen } from './ask/citations';
 import { DRAFT_EMPTY, type StreamDraft } from './streams/operations';
 import {
   ANSWER_EMPTY, ASK_EMPTY, NOTHING_TAKEN,
@@ -386,6 +387,19 @@ export const GYLD_TAB_ASK_ANSWER =
   defineGrip<GyldOpsResponse | null>('Gyld.Tab.Ask.Answer', null);
 export const GYLD_TAB_ASK_ANSWER_TAP =
   defineGrip<AtomTapHandle<GyldOpsResponse | null>>('Gyld.Tab.Ask.Answer.Tap');
+
+// Which citation boxes this window has open, which footer chips are expanded,
+// and which Copy last landed (src/ask/citations.ts). Keyed by (run id, tag),
+// because a box belongs to one turn's citation of one tag and two turns citing
+// the same tag are two boxes. Opened by a marker in the prose or by a turn's
+// footer chip, closed by the same press, by Collapse, by Escape — and dropped
+// whole by Start over, since the conversation those boxes belonged to is no
+// longer the one this window folds. UI state, so it is an atom and never a
+// React hook (CodingRules.md).
+export const GYLD_TAB_ASK_CITES =
+  defineGrip<AskCitationsOpen>('Gyld.Tab.Ask.Cites', NOTHING_OPEN);
+export const GYLD_TAB_ASK_CITES_TAP =
+  defineGrip<AtomTapHandle<AskCitationsOpen>>('Gyld.Tab.Ask.Cites.Tap');
 
 export const GYLD_PICKER_URL = defineGrip<string>('Gyld.Tab.Picker.Url', '');
 export const GYLD_PICKER_URL_TAP =
