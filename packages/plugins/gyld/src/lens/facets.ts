@@ -66,28 +66,39 @@ export class NodeFacet {
   omitted(dimmed: GyldDimmed): readonly string[] {
     return this.listOf(dimmed);
   }
-}
 
-export const NODE_FACETS: readonly NodeFacet[] = Object.freeze([
-  new NodeFacet(
+  /** The node's own `kind`, which is the dimension a box class with neither a
+   *  status nor a classification is told apart by — a Trigger, for instance. */
+  static readonly KIND = new NodeFacet(
     'kind',
     (node) => node.kind,
     (dimmed) => dimmed.kinds,
     (dimmed, kinds) => ({ ...dimmed, kinds }),
-  ),
-  new NodeFacet(
+  );
+
+  /** The effective status a Question's fill colour stands for. */
+  static readonly STATUS = new NodeFacet(
     'status',
     (node) => node.status,
     (dimmed) => dimmed.statuses,
     (dimmed, statuses) => ({ ...dimmed, statuses }),
-  ),
-  new NodeFacet(
+  );
+
+  /** The declared classification of a library, for example `IOAdapter`. */
+  static readonly CLASSIFICATION = new NodeFacet(
     'classification',
     (node) => node.classification,
     (dimmed) => dimmed.classifications,
     (dimmed, classifications) => ({ ...dimmed, classifications }),
-  ),
-]);
+  );
+
+  /** The three, in MDV-2's order. */
+  static readonly ALL: readonly NodeFacet[] = Object.freeze([
+    NodeFacet.KIND, NodeFacet.STATUS, NodeFacet.CLASSIFICATION,
+  ]);
+}
+
+export const NODE_FACETS: readonly NodeFacet[] = NodeFacet.ALL;
 
 /** Whether ANY facet of this window turns this node off. */
 export function facetDims(dimmed: GyldDimmed, node: LensNode): boolean {

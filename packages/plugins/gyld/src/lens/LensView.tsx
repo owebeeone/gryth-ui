@@ -32,6 +32,7 @@ import {
   EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent, type Box,
 } from './geometry';
 import { GLYPH_INSET, GLYPH_RADIUS, StatusGlyph } from './glyphs';
+import type { GyldFlash } from './flash';
 import {
   LENS_PALETTE_LIGHT, inkOn, labelOn, lineOn, type GyldLensPalette,
 } from './palette';
@@ -64,7 +65,7 @@ import {
 function classOf(
   item: {
     dimmed: boolean; selected: boolean; hovered: boolean; matched: boolean;
-    answerable?: boolean;
+    answerable?: boolean; flashing?: boolean;
   },
   base: string,
 ) {
@@ -77,7 +78,24 @@ function classOf(
     // The same mechanism a search match is drawn with, on a different
     // predicate: brighter, ringed, and never moved (MDV-4).
     item.answerable === true ? `${base}-answerable` : '',
+    // A legend row was pressed and this shape belongs to it. It goes by
+    // itself a second and a half later, when the sweep clears the stamp
+    // (./flash.ts); the sheet decides what "lit" looks like, and gives a
+    // reader who asked for reduced motion a still highlight for as long.
+    item.flashing === true ? `${base}-flash` : '',
   ].filter((name) => name !== '').join(' ');
+}
+
+/**
+ * What one drawn shape is keyed by.
+ *
+ * A shape that is FLASHING is keyed on the flash as well as on itself, so a
+ * second press on a row that is still lit re-mounts it and the animation runs
+ * again. Keeping the key still would leave the class already on the element,
+ * and an animation that is already running does not restart.
+ */
+function drawnKey(item: { id: string; flashing: boolean }, flash: GyldFlash): string {
+  return item.flashing ? `${item.id}#${flash.seq}` : item.id;
 }
 
 function EdgeShape({ edge, marker, palette }: {
@@ -207,10 +225,15 @@ function Figure({ scene, camera, markerFor, palette }: {
         </g>
       ))}
       {scene.edges.map((edge) => (
-        <EdgeShape key={edge.id} edge={edge} marker={markerFor(edge)} palette={palette} />
+        <EdgeShape
+          key={drawnKey(edge, scene.flash)}
+          edge={edge}
+          marker={markerFor(edge)}
+          palette={palette}
+        />
       ))}
       {scene.nodes.map((node) => (
-        <NodeShape key={node.id} node={node} palette={palette} />
+        <NodeShape key={drawnKey(node, scene.flash)} node={node} palette={palette} />
       ))}
     </g>
   );

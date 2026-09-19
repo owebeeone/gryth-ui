@@ -200,6 +200,38 @@
   stroke-width: 3;
 }
 
+/* THE FLASH: "which ones are these?" — a legend row was pressed and every box
+   or arrow of that class pulses for a second and a half, then lets go
+   (`lens/flash.ts`, FLASH_MS; keep the two in sync). It is a mark on the drawn
+   shape: a glow beside it and a thicker stroke, nothing moved (MDV-4). Two
+   classes, so a lit shape beats the single-class dim above and can be found
+   even inside a class that is switched off. */
+@keyframes gyld-flash-pulse {
+  0%, 100% { stroke-width: 1; filter: none; }
+  25%, 75% { stroke-width: 4; filter: drop-shadow(0 0 6px currentColor); }
+}
+
+.gyld-node.gyld-node-flash,
+.gyld-edge.gyld-edge-flash {
+  opacity: 1;
+}
+
+.gyld-node.gyld-node-flash rect,
+.gyld-edge.gyld-edge-flash path {
+  animation: gyld-flash-pulse 0.5s ease-in-out 3;
+}
+
+/* A reader who asked for less motion gets the same mark for the same time,
+   held still: the stamp and its sweep are the same, only the sheet differs. */
+@media (prefers-reduced-motion: reduce) {
+  .gyld-node.gyld-node-flash rect,
+  .gyld-edge.gyld-edge-flash path {
+    animation: none;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+}
+
 /* MDV-3: declared containment and a reading aid must not look alike. */
 .gyld-group rect {
   fill: color-mix(in srgb, currentColor 4%, transparent);

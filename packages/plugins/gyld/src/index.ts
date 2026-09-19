@@ -211,8 +211,10 @@ export * from './lens/contrast';
 export * from './lens/palette';
 export * from './lens/camera';
 export * from './lens/facets';
+export * from './lens/flash';
 export * from './lens/geometry';
 export * from './lens/glyphs';
+export * from './lens/legend';
 export * from './lens/scene';
 export { lensTabTaps } from './lens/lensTabTaps';
 export {

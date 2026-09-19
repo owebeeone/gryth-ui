@@ -1,6 +1,8 @@
 import type { GyldLens, LensEdge, LensLegendEdge, LensLegendNode, LensNode } from '../contract';
 import { NOTHING_DIMMED, type GyldDimmed, type GyldSelection } from './camera';
 import { NODE_FACETS, facetDims } from './facets';
+import { NOT_FLASHING, type GyldFlash } from './flash';
+import { legendEntriesOf, type LegendEntry } from './legend';
 import {
   cornerRadius, decodeSpline, edgeStyle, groupBox, labelLayout, lensExtent, nodeBox,
   type Box, type Point,
@@ -37,6 +39,10 @@ export interface SceneNode {
    *  never computed: a box with no row is not answerable here, it is simply
    *  not a question this stream lists. */
   answerable: boolean;
+  /** True while a legend row this box belongs to is flashing. A mark on the
+   *  drawn shape and nothing else: the box is where the host put it, lit or
+   *  not (MDV-4). */
+  flashing: boolean;
   /** The joined row's emitted `effective_status`, when a row joined. Absent
    *  on every box this stream's decide-now list does not list, and on every
    *  box of a stream that emitted no list at all. */
@@ -59,6 +65,8 @@ export interface SceneEdge {
   selected: boolean;
   hovered: boolean;
   matched: boolean;
+  /** True while a legend row this arrow belongs to is flashing. */
+  flashing: boolean;
 }
 
 export interface SceneGroup {
@@ -78,11 +86,25 @@ export interface SceneOmission {
   fromWindow: boolean;
 }
 
+/** One row of the legend over THIS picture: the class, how many of it this
+ *  picture draws, and whether this window has switched it off. */
+export interface LegendRow {
+  entry: LegendEntry;
+  /** Matching boxes plus matching arrows, counted over what is drawn. */
+  count: number;
+  off: boolean;
+}
+
 export interface LensScene {
   extent: Box;
   groups: SceneGroup[];
   edges: SceneEdge[];
   nodes: SceneNode[];
+  /** The emitted legend as rows over this picture (./legend.ts). */
+  legend: LegendRow[];
+  /** What this window is flashing, if anything, so the view can give the
+   *  marked shapes a new identity per flash and restart the animation. */
+  flash: GyldFlash;
   legendEdges: LensLegendEdge[];
   legendNodes: LensLegendNode[];
   omissions: SceneOmission[];
@@ -149,6 +171,10 @@ export interface SceneInputs {
   dimmed?: GyldDimmed;
   search?: SceneSearch;
   nextUp?: SceneNextUp;
+  /** The legend row this window is flashing, as the stamp its atom holds
+   *  (./flash.ts). A stamp naming no entry, or an entry this lens has no row
+   *  for, marks nothing. */
+  flash?: GyldFlash;
 }
 
 /** The ids adjacent to the selection, following the EMITTED edges only. */
@@ -192,6 +218,14 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
   // The filter is only a filter where there is a list to filter by: a stream
   // that emitted no decide-now list dims nothing, whatever the switch holds.
   const nextUpOnly = nextUp.listed && dimmed.nextUpOnly;
+  const entries = legendEntriesOf(lens);
+  const flash = inputs.flash ?? NOT_FLASHING;
+  // The one entry being flashed, resolved ONCE. A stamp naming an entry this
+  // lens has no row for — a window that switched perspective while a flash
+  // was running — resolves nothing and marks nothing.
+  const lit = flash.entry === ''
+    ? undefined
+    : entries.find((entry) => entry.key === flash.entry);
 
   const edges: SceneEdge[] = [];
   for (const edge of lens.edges) {
@@ -215,6 +249,7 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
       selected: selected.has(edge.id),
       hovered: hover === edge.id,
       matched,
+      flashing: lit?.matchesEdge(edge) ?? false,
     };
     if (spline.head !== undefined) {
       scene.head = spline.head;
@@ -272,6 +307,7 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
       hovered: hover === node.id,
       matched,
       answerable,
+      flashing: lit?.matchesNode(node) ?? false,
     };
     const fill = nodeFill(lens, node);
     if (fill !== undefined) {
@@ -365,6 +401,17 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
     })),
     edges,
     nodes,
+    // One row per emitted class, counted over what this picture draws: every
+    // box (there is one scene node per emitted node) and every arrow that
+    // could be drawn at all. A row's count and its eye go through the SAME
+    // predicate, so the number a row shows is the number its eye switches off.
+    legend: entries.map((entry) => ({
+      entry,
+      count: lens.nodes.filter((node) => entry.matchesNode(node)).length
+        + edges.filter((edge) => entry.matchesEdge(edge)).length,
+      off: entry.isOff(dimmed),
+    })),
+    flash,
     legendEdges: lens.legend.edges,
     legendNodes: lens.legend.nodes,
     omissions,
