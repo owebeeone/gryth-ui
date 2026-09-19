@@ -3,6 +3,7 @@ import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
 import {
   GYLD_DECIDE_NOW, GYLD_DEST_STREAM, GYLD_RECORDS, GYLD_STREAMS,
 } from '../grips';
+import { statusSays } from '../help/graphHelp';
 import { isRefusal, overlayTarget } from '../decide/overlay';
 import { overwriteRefusal } from '../decide/compose';
 import type { SceneNode } from '../lens/scene';
@@ -58,6 +59,13 @@ export function NodeCard({ node }: { node: SceneNode }) {
           ? <span className="gyld-chip" data-status={card.status}>{card.status}</span>
           : <span className="gyld-note">not a question this stream lists</span>}
       </header>
+      {/* What that status means for the reader, in the app's own words and in
+          the one module the legend and the detail window say it from
+          (`help/graphHelp.ts`). It is not emitted and does not pretend to be:
+          a status this app has no sentence for gets no line at all. */}
+      {statusSays(card.status) !== '' && (
+        <p className="gyld-note gyld-node-card-says">{statusSays(card.status)}</p>
+      )}
       <p className="gyld-detail-slot">{card.slot}</p>
       <ul className="gyld-node-card-text">
         {card.lines.map((line, index) => (

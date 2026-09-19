@@ -2,7 +2,7 @@ import {
   atPath, readArray, readBoolean, readBoundingBox, readCount, readEnvelope,
   readFinite, readIdentifier, readIdentifiers, readObject, readOptionalCount,
   readOptionalFinite, readOptionalIdentifier, readOptionalParameter, readOptionalPoint,
-  readOptionalTexts, readPoint, readSnapshotRef, readTexts,
+  readOptionalText, readOptionalTexts, readPoint, readSnapshotRef, readTexts,
   requireCount, requireKnown, requirePrefix, type SnapshotRef,
 } from './common';
 
@@ -31,6 +31,17 @@ export interface LensLegendEdge {
    *  returns nothing when the relation has no single definition. */
   definition?: string;
   label?: string;
+  /**
+   * The DOCSTRING of the definition this entry stands for, as the host
+   * captured it — for an edge entry, the relation definition's own
+   * `description`.
+   *
+   * Additive to `gyld.lens.v1`: a bundle emitted before it carries none, and
+   * absence is absence. A window shows what the host said and says nothing of
+   * its own in its place (spec 6.7); the app's own reader-facing sentence is a
+   * separate line, authored in `help/graphHelp.ts`.
+   */
+  doc?: string;
 }
 
 export interface LensLegendNode {
@@ -40,6 +51,10 @@ export interface LensLegendNode {
   status?: string;
   classification?: string;
   glyph?: string;
+  /** The same emitted docstring, for a box entry: the status trait's
+   *  definition where the entry carries a status, and the kind's own
+   *  definition where it does not. Absent on a bundle emitted without it. */
+  doc?: string;
 }
 
 export interface LensLegend {
@@ -186,6 +201,10 @@ function readLegend(value: unknown, path: string): LensLegend {
       if (label !== undefined) {
         legendEdge.label = label;
       }
+      const doc = readOptionalText(entry.doc, atPath(at, 'doc'));
+      if (doc !== undefined) {
+        legendEdge.doc = doc;
+      }
       return legendEdge;
     }),
     nodes: readArray(raw.nodes, nodesPath).map((item, i) => {
@@ -207,6 +226,10 @@ function readLegend(value: unknown, path: string): LensLegend {
       const glyph = readOptionalIdentifier(entry.glyph, atPath(at, 'glyph'));
       if (glyph !== undefined) {
         legendNode.glyph = glyph;
+      }
+      const doc = readOptionalText(entry.doc, atPath(at, 'doc'));
+      if (doc !== undefined) {
+        legendNode.doc = doc;
       }
       return legendNode;
     }),

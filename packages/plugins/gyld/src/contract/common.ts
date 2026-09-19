@@ -157,6 +157,20 @@ export function readOptionalIdentifier(value: unknown, path: string): string | u
   return value === null || value === undefined ? undefined : readIdentifier(value, path);
 }
 
+/**
+ * Present and a string, or absent — and, unlike an identifier, ALLOWED to be
+ * empty, because this reads prose rather than a name. An empty one is reported
+ * as absent: a docstring of no words says nothing, and a surface that shows it
+ * would draw an empty line under a heading.
+ */
+export function readOptionalText(value: unknown, path: string): string | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  const text = readText(value, path);
+  return text === '' ? undefined : text;
+}
+
 export function readOptionalPoint(value: unknown, path: string): [number, number] | undefined {
   return value === null || value === undefined ? undefined : readPoint(value, path);
 }

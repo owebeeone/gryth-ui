@@ -203,6 +203,10 @@ export {
 } from './preview/renderer';
 export * from './records/records';
 export { GyldIndexTap, GyldRecordTap } from './records/taps';
+export {
+  GraphNote, HelpSection, HOW_TO_READ, HOW_TO_READ_TITLE,
+  KIND_NOTES, RELATION_NOTES, STATUS_NOTES, kindSays, relationSays, statusSays,
+} from './help/graphHelp';
 export * from './lens/contrast';
 export * from './lens/palette';
 export * from './lens/camera';
