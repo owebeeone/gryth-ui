@@ -215,6 +215,7 @@ export * from './lens/flash';
 export * from './lens/geometry';
 export * from './lens/glyphs';
 export * from './lens/legend';
+export * from './lens/legendPanel';
 export * from './lens/scene';
 export { lensTabTaps } from './lens/lensTabTaps';
 export {
@@ -224,6 +225,7 @@ export {
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_TAP, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP, GYLD_TAB_HOVER, GYLD_TAB_HOVER_TAP,
   GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_LENS_PALETTE,
+  GYLD_TAB_LEGEND, GYLD_TAB_LEGEND_TAP, GYLD_TAB_FLASH, GYLD_TAB_FLASH_TAP,
   GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
   GYLD_TAB_ASK_CONVERSATION, GYLD_TAB_ASK_CONVERSATION_TAP,
   GYLD_TAB_ASK_DRAFT, GYLD_TAB_ASK_DRAFT_TAP,

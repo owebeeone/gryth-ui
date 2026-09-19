@@ -5,7 +5,7 @@ import {
   GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL, GYLD_PICKER_URL_TAP,
   GYLD_TAB_DRAFT_TAKEN, GYLD_TAB_DRAFT_TAKEN_TAP, GYLD_TAB_ID, GYLD_TAB_MENU,
   GYLD_TAB_MENU_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
-  perspectiveFromParams, previewFromParams, refFromParams, streamFromParams,
+  legendFromParams, perspectiveFromParams, previewFromParams, refFromParams, streamFromParams,
 } from '../grips';
 import { NOTHING_TAKEN } from '../decide/drafts';
 import { lensTabTaps } from '../lens/lensTabTaps';
@@ -59,8 +59,9 @@ export function browserTabTaps(tabId: string, params?: Record<string, unknown>):
     // The set picker's drafts, per window, so two desks pick independently.
     createAtomValueTap(GYLD_PICKER_URL, { initial: '', handleGrip: GYLD_PICKER_URL_TAP }),
     createAtomValueTap(GYLD_PICKER_ERROR, { initial: '', handleGrip: GYLD_PICKER_ERROR_TAP }),
-    // The lens view's own state: camera, drag, selection, hover, dim set.
-    ...lensTabTaps(),
+    // The lens view's own state: camera, drag, selection, hover, dim set, and
+    // the legend overlay as the link left it.
+    ...lensTabTaps(legendFromParams(params)),
     // LAST, so the atoms above are registered before it reads them: the tap
     // that opens a window on what the census puts first when the link named
     // nothing. It only ever fills a seed that is empty (./firstPick.ts).

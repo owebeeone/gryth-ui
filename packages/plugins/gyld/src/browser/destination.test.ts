@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { AtomTapHandle } from '@owebeeone/grip-react';
 import { openWindow, setTabParams, type WindowRecord } from '@grythjs/desktop';
-import { perspectiveFromParams, previewFromParams, streamFromParams } from '../grips';
+import {
+  legendFromParams, perspectiveFromParams, previewFromParams, streamFromParams,
+} from '../grips';
+import { LegendPanel } from '../lens/legendPanel';
 import { PreviewPerspective } from '../preview/neighbourhood';
-import { pickPerspective, pickStream, type DestinationHandles } from './destination';
+import {
+  pickPerspective, pickStream, rememberDestination, type DestinationHandles,
+} from './destination';
 import type { PerspectiveOption } from './perspectives';
 
 // A pick in the browser's own chrome moves the window's TAB-CONTEXT atoms, and
@@ -11,7 +16,7 @@ import type { PerspectiveOption } from './perspectives';
 // claim under test is that the two do not drift: what a pick shows is what a
 // restored desk reopens on.
 
-function atom(initial: string): AtomTapHandle<string> {
+function atom<T>(initial: T): AtomTapHandle<T> {
   let held = initial;
   return {
     get: () => held,
@@ -42,6 +47,7 @@ function onDesk(params: Record<string, unknown>) {
     stream: atom(streamFromParams(params)),
     perspective: atom(perspectiveFromParams(params)),
     preview: atom(previewFromParams(params)),
+    legend: atom(legendFromParams(params)),
     retarget: (id, next) => { list = setTabParams(list, id, next); },
   };
   return {
@@ -88,6 +94,38 @@ describe('a pick in the browser chrome', () => {
     const restored = onDesk(win.record());
     expect(restored.handles.stream?.get()).toBe('beta');
     expect(restored.handles.perspective?.get()).toBe('ownership');
+  });
+
+  it('folds the legend overlay into the record, and seeds it back', () => {
+    const win = onDesk(SEEDED);
+    // shrunk until the reader opens it: the panel takes no room by default
+    expect(win.handles.legend?.get()).toBe(LegendPanel.SHRUNK);
+    expect(legendFromParams(win.record())).toBe(LegendPanel.SHRUNK);
+    // the panel writes its own atom, then the window remembers it
+    win.handles.legend?.set(LegendPanel.OPEN);
+    rememberDestination(win.handles);
+    expect(win.record().legend).toBe('open');
+    // and a desk restored from that record comes back with it open
+    expect(legendFromParams(win.record())).toBe(LegendPanel.OPEN);
+    expect(onDesk(win.record()).handles.legend?.get()).toBe(LegendPanel.OPEN);
+    // the help is remembered as its own state, and shrinking is too
+    win.handles.legend?.set(LegendPanel.OPEN.withHelp());
+    rememberDestination(win.handles);
+    expect(onDesk(win.record()).handles.legend?.get()).toBe(LegendPanel.HELP);
+    win.handles.legend?.set(LegendPanel.HELP.toggled());
+    rememberDestination(win.handles);
+    expect(onDesk(win.record()).handles.legend?.get()).toBe(LegendPanel.SHRUNK);
+  });
+
+  it('keeps the legend across a pick, and opens shrunk for an unknown word', () => {
+    const win = onDesk({ ...SEEDED, legend: 'open' });
+    expect(win.handles.legend?.get()).toBe(LegendPanel.OPEN);
+    pickStream(win.handles, 'beta');
+    expect(win.record().legend).toBe('open');
+    // a desk written before the panel existed, and a link with nonsense in it
+    expect(legendFromParams({})).toBe(LegendPanel.SHRUNK);
+    expect(legendFromParams({ legend: 'wide' })).toBe(LegendPanel.SHRUNK);
+    expect(legendFromParams({ legend: 7 })).toBe(LegendPanel.SHRUNK);
   });
 
   it('does not carry the selected record across a reload', () => {

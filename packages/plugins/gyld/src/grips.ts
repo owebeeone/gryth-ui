@@ -16,6 +16,8 @@ import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './lens/camera';
+import { LegendPanel } from './lens/legendPanel';
+import { NOT_FLASHING, type GyldFlash } from './lens/flash';
 import { LENS_PALETTE_LIGHT, type GyldLensPalette } from './lens/palette';
 import { NO_FOCUS, type GyldFocus } from './focus';
 import { LANDING_UNSET, type GyldLanding } from './landing/landing';
@@ -105,6 +107,13 @@ export function perspectiveFromParams(params?: Record<string, unknown>): string 
 export function previewFromParams(params?: Record<string, unknown>): string {
   const value = params?.preview;
   return typeof value === 'string' ? value : '';
+}
+
+/** How the window's legend overlay was left: shrunk, expanded or on the help.
+ *  A link that names none opens it shrunk, which takes no room from the
+ *  picture (`lens/legendPanel.ts`, `LegendPanel.of`). */
+export function legendFromParams(params?: Record<string, unknown>): LegendPanel {
+  return LegendPanel.of(params?.legend);
 }
 
 export function refFromParams(params?: Record<string, unknown>): string {
@@ -280,6 +289,21 @@ export const GYLD_TAB_HOVER_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ho
 
 export const GYLD_TAB_DIMMED = defineGrip<GyldDimmed>('Gyld.Tab.Dimmed', NOTHING_DIMMED);
 export const GYLD_TAB_DIMMED_TAP = defineGrip<AtomTapHandle<GyldDimmed>>('Gyld.Tab.Dimmed.Tap');
+
+// The legend overlay on the picture: shrunk to its tab, expanded, or showing
+// the help. Per window like everything else here, and — unlike everything else
+// here — folded into the window's TAB RECORD as one word, so a reload reopens
+// the legend the way the reader left it (./lens/legendPanel.ts).
+export const GYLD_TAB_LEGEND = defineGrip<LegendPanel>('Gyld.Tab.Legend', LegendPanel.SHRUNK);
+export const GYLD_TAB_LEGEND_TAP =
+  defineGrip<AtomTapHandle<LegendPanel>>('Gyld.Tab.Legend.Tap');
+
+// Which legend row this window is flashing, and which flash it is. Written by
+// a press on a row and cleared a second and a half later by the sweep that
+// owns the clock (./lens/flash.ts). Not persisted: a mark that came back from
+// a reload would say something had just happened when nothing had.
+export const GYLD_TAB_FLASH = defineGrip<GyldFlash>('Gyld.Tab.Flash', NOT_FLASHING);
+export const GYLD_TAB_FLASH_TAP = defineGrip<AtomTapHandle<GyldFlash>>('Gyld.Tab.Flash.Tap');
 
 // What the panel over a box measured of itself, and of the stage it has to fit
 // inside. Written by the panel's own ref callback — the sanctioned reach into

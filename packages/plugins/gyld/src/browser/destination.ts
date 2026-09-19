@@ -1,5 +1,6 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
 import type { RetargetTab } from '@grythjs/plugin-api';
+import { LegendPanel } from '../lens/legendPanel';
 import { PreviewPerspective } from '../preview/neighbourhood';
 import type { PerspectiveOption } from './perspectives';
 
@@ -24,6 +25,10 @@ export interface DestinationHandles {
   stream?: AtomTapHandle<string>;
   perspective?: AtomTapHandle<string>;
   preview?: AtomTapHandle<string>;
+  /** How the picture's legend overlay is left. Not a destination, and folded
+   *  in here all the same: it rides the same record, for the same reason —
+   *  a reader who opened the legend should find it open after a reload. */
+  legend?: AtomTapHandle<LegendPanel>;
   retarget?: RetargetTab;
 }
 
@@ -43,12 +48,28 @@ export function destinationParams(on: DestinationHandles): Record<string, unknow
     stream: on.stream?.get() ?? '',
     perspective: on.perspective?.get() ?? '',
     preview: on.preview?.get() ?? '',
+    legend: (on.legend?.get() ?? LegendPanel.SHRUNK).param,
     focus: '',
   };
 }
 
 function record(on: DestinationHandles): void {
   on.retarget?.(on.tabId, destinationParams(on));
+}
+
+/**
+ * Fold what the window is showing NOW back into its tab record, with nothing
+ * changed by this call.
+ *
+ * The legend overlay is written by the picture's own panel, through the
+ * picture's own handle, exactly as the camera and the dim set are. This is the
+ * other half — the window remembering it — and it is a separate act rather
+ * than a fourth `pick*` because nothing about the DESTINATION moved: the same
+ * params are written back, with the legend's new state among them, read back
+ * through the handle the panel just wrote (CodingRules.md).
+ */
+export function rememberDestination(on: DestinationHandles): void {
+  record(on);
 }
 
 /** Show another stream in THIS window. */
