@@ -1,4 +1,4 @@
-import type { GyldLens, LensEdge, LensLegendEdge, LensLegendNode, LensNode } from '../contract';
+import type { GyldLens, LensEdge, LensNode } from '../contract';
 import { NOTHING_DIMMED, type GyldDimmed, type GyldSelection } from './camera';
 import { NODE_FACETS, facetDims } from './facets';
 import { NOT_FLASHING, type GyldFlash } from './flash';
@@ -105,8 +105,6 @@ export interface LensScene {
   /** What this window is flashing, if anything, so the view can give the
    *  marked shapes a new identity per flash and restart the animation. */
   flash: GyldFlash;
-  legendEdges: LensLegendEdge[];
-  legendNodes: LensLegendNode[];
   omissions: SceneOmission[];
   /** MDV-7: the identity line every window must show. */
   provenance: {
@@ -412,8 +410,6 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
       off: entry.isOff(dimmed),
     })),
     flash,
-    legendEdges: lens.legend.edges,
-    legendNodes: lens.legend.nodes,
     omissions,
     provenance,
     counts: lens.counts,

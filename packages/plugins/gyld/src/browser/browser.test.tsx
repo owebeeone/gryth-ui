@@ -207,20 +207,26 @@ describe('dim toggles change flags, never the emitted set', () => {
     expect(scene.nodes.filter((node) => node.hidden).length).toBe(6);
   });
 
-  it('offers a toggle per emitted facet value and says which are off', async () => {
+  it('offers a toggle per emitted class in the legend, not in the chrome', async () => {
     const desk = mountDesk();
+    // The per-value buttons that used to be in the chrome are gone: the eye on
+    // a legend ROW is the one place a class is switched off now, and it
+    // toggles the same facet (`lens/legend.ts`, `lens/overlay.test.tsx`).
     const tab = desk.tab('facets', browserTabTaps('facets', {
-      stream: 'base', perspective: 'decisions',
+      stream: 'base', perspective: 'decisions', legend: 'open',
     }));
     await settled(
       () => tab.read(GYLD_LENS).get() as GyldLensState,
       (state) => state?.status === 'ok',
     );
     const markup = tab.render(<GyldBrowser tabId="facets" />);
-    expect(markup).toContain('data-facet="kind" data-value="Question"');
-    expect(markup).toContain('data-facet="status" data-value="Decided"');
-    // the decision lenses carry no classification at all, so nothing is offered
-    expect(markup).not.toContain('data-facet="classification"');
+    expect(markup).not.toContain('gyld-facet');
+    expect(markup).not.toContain('data-facet=');
+    expect(markup).toContain('data-entry="node/Question/Decided/"');
+    expect(markup).toContain('data-entry="node/Trigger//"');
+    expect(markup).toContain('data-entry="relation/Requires"');
+    // the decision lenses carry no classification at all, so none is offered
+    expect(markup).not.toContain('/classification');
   });
 });
 

@@ -17,14 +17,15 @@ import {
   GYLD_LENS, GYLD_LENS_PALETTE,
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_CAMERA_TAP, GYLD_TAB_CARD_SIZE, GYLD_TAB_CARD_SIZE_TAP,
-  GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_HOVER,
-  GYLD_TAB_HOVER_TAP, GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
+  GYLD_TAB_DIMMED, GYLD_TAB_DIMMED_TAP, GYLD_TAB_FLASH, GYLD_TAB_FLASH_TAP,
+  GYLD_TAB_HOVER, GYLD_TAB_HOVER_TAP, GYLD_TAB_LEGEND, GYLD_TAB_LEGEND_TAP,
+  GYLD_TAB_MENU, GYLD_TAB_MENU_TAP,
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP,
 } from '../grips';
 import {
   CAMERA_UNFITTED, NOTHING_DIMMED, NO_SELECTION, cameraTransform, fitCamera,
   isMeasurableViewport, isPanning, needsFit,
-  panBy, panningAt, pressAt, screenBox, toggleRelation, wheelFactor, zoomAt,
+  panBy, panningAt, pressAt, screenBox, wheelFactor, zoomAt,
   type GyldCamera, type GyldCameraDrag, type GyldDimmed, type GyldSelection,
 } from './camera';
 import { STAGE_CLASS, stageOf, viewportOf } from './stage';
@@ -32,7 +33,9 @@ import {
   EDGE_LABEL_FONT_SIZE, GROUP_LABEL_FONT_SIZE, lensExtent, type Box,
 } from './geometry';
 import { GLYPH_INSET, GLYPH_RADIUS, StatusGlyph } from './glyphs';
-import type { GyldFlash } from './flash';
+import { NOT_FLASHING, flashOn, flashSweep, type GyldFlash } from './flash';
+import { LegendOverlay } from './LegendOverlay';
+import { LegendPanel } from './legendPanel';
 import {
   LENS_PALETTE_LIGHT, inkOn, labelOn, lineOn, type GyldLensPalette,
 } from './palette';
@@ -304,54 +307,6 @@ export function LensFigure({
   );
 }
 
-export function LensLegend({ scene, dimmed, palette = LENS_PALETTE_LIGHT, onToggle }: {
-  scene: LensScene;
-  dimmed: GyldDimmed;
-  /** The same palette the figure is drawn with, so the legend names the
-   *  colours that are actually ON the picture and not the ones the file was
-   *  emitted with. */
-  palette?: GyldLensPalette;
-  onToggle?: (relation: string) => void;
-}) {
-  return (
-    <div className="gyld-legend">
-      {scene.legendEdges.map((entry) => {
-        const off = dimmed.relations.includes(entry.relation);
-        return (
-          <button
-            key={entry.relation}
-            type="button"
-            className={`gyld-legend-edge${off ? ' gyld-legend-off' : ''}`}
-            onClick={() => onToggle?.(entry.relation)}
-            title={`${entry.style} line${entry.label === undefined ? '' : `, labelled ${entry.label}`}`}
-          >
-            <svg width="26" height="10" aria-hidden="true">
-              <line
-                x1="1" y1="5" x2="25" y2="5"
-                stroke={lineOn(palette, entry.color)}
-                strokeWidth="2"
-                strokeDasharray={entry.style === 'dashed' ? '6 4' : entry.style === 'dotted' ? '2 3' : undefined}
-              />
-            </svg>
-            {entry.relation}
-          </button>
-        );
-      })}
-      {scene.legendNodes.map((entry) => (
-        <span key={`${entry.kind}/${entry.status ?? ''}/${entry.classification ?? ''}`} className="gyld-legend-node">
-          <span
-            className="gyld-swatch"
-            style={{ background: entry.fill, borderColor: palette.stroke }}
-          />
-          {entry.kind}
-          {entry.status === undefined ? '' : ` · ${entry.status}`}
-          {entry.classification === undefined ? '' : ` · ${entry.classification}`}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function LensOmissions({ scene }: { scene: LensScene }) {
   return (
     <ul className="gyld-omissions">
@@ -383,7 +338,9 @@ export function LensProvenance({ scene }: { scene: LensScene }) {
  * on the SVG, which is the sanctioned way to reach the DOM (CodingRules.md);
  * panning runs through a full-window overlay while the drag atom is set.
  */
-export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, state: shown }: {
+export function LensView({
+  scope = 'gyld', search, nextUp, card, menu, onSlot, onPanel, state: shown,
+}: {
   scope?: string;
   search?: SceneSearch;
   /**
@@ -437,6 +394,17 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
    * survive a restream and so could not correspond to anything.
    */
   onSlot?: (slot: string) => void;
+  /**
+   * Told that the legend overlay was expanded, shrunk or turned to the help,
+   * AFTER this view has written the window's own atom.
+   *
+   * The browser window is the one that listens: it folds the panel's state
+   * into its tab record beside its destination, so a reload reopens the
+   * legend the way the reader left it (`browser/destination.ts`). A window
+   * that passes none still has a working panel — the atom is per tab either
+   * way — it simply does not remember it across a reload.
+   */
+  onPanel?: () => void;
 }) {
   const resolved = useGrip(GYLD_LENS);
   const state = shown ?? resolved;
@@ -446,6 +414,8 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
   const hover = useGrip(GYLD_TAB_HOVER) ?? '';
   const menuOn = useGrip(GYLD_TAB_MENU) ?? MENU_CLOSED;
   const dimmed = useGrip(GYLD_TAB_DIMMED) ?? NOTHING_DIMMED;
+  const panel = useGrip(GYLD_TAB_LEGEND) ?? LegendPanel.SHRUNK;
+  const flash = useGrip(GYLD_TAB_FLASH) ?? NOT_FLASHING;
   const palette = useGrip(GYLD_LENS_PALETTE) ?? LENS_PALETTE_LIGHT;
   const stream = useGrip(GYLD_DEST_STREAM) ?? '';
   const ref = useGrip(GYLD_DEST_REF) ?? '';
@@ -455,6 +425,8 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
   const selectionTap = useGrip(GYLD_TAB_SELECTION_TAP) as AtomTapHandle<GyldSelection> | undefined;
   const hoverTap = useGrip(GYLD_TAB_HOVER_TAP) as AtomTapHandle<string> | undefined;
   const dimmedTap = useGrip(GYLD_TAB_DIMMED_TAP) as AtomTapHandle<GyldDimmed> | undefined;
+  const panelTap = useGrip(GYLD_TAB_LEGEND_TAP) as AtomTapHandle<LegendPanel> | undefined;
+  const flashTap = useGrip(GYLD_TAB_FLASH_TAP) as AtomTapHandle<GyldFlash> | undefined;
   const refTap = useGrip(GYLD_DEST_REF_TAP) as AtomTapHandle<string> | undefined;
   const focusTap = useGrip(GYLD_FOCUS_TAP) as AtomTapHandle<GyldFocus> | undefined;
   const menuTap = useGrip(GYLD_TAB_MENU_TAP) as AtomTapHandle<GyldNodeMenu> | undefined;
@@ -515,7 +487,7 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
   // anything: the seeded ref IS the selection until the reader picks.
   const selection = effectiveSelection(lens, held, ref);
   const scene = buildScene(lens, {
-    selection, hover, dimmed, search, nextUp,
+    selection, hover, dimmed, search, nextUp, flash,
   });
   // The box the pointer is on, if it is on one. A hidden box is not on
   // screen, so nothing is drawn over where it would have been.
@@ -558,6 +530,9 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
 
   return (
     <div className="gyld-lens">
+      {/* The bar carries the title and Fit, and nothing else: the legend and
+          the switch that governs it are over the picture now, where they cost
+          the picture no height (owner's ask 3). */}
       <div className="gyld-lens-bar">
         <span className="gyld-lens-title">{lens.title}</span>
         <button
@@ -568,26 +543,7 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
         >
           Fit
         </button>
-        <label className="gyld-hide-toggle">
-          <input
-            type="checkbox"
-            checked={dimmed.hide}
-            onChange={() => {
-              const held = dimmedTap?.get() ?? NOTHING_DIMMED;
-              dimmedTap?.set({ ...held, hide: !held.hide });
-            }}
-          />
-          hide instead of dim
-        </label>
       </div>
-      <LensLegend
-        scene={scene}
-        dimmed={dimmed}
-        palette={palette}
-        onToggle={(relation) => {
-          dimmedTap?.set(toggleRelation(dimmedTap.get() ?? NOTHING_DIMMED, relation));
-        }}
-      />
       <div
         className={STAGE_CLASS}
         // The ref callback fits the camera once per lens. Keyed on the lens so
@@ -692,6 +648,40 @@ export function LensView({ scope = 'gyld', search, nextUp, card, menu, onSlot, s
           onMenu={(id) => {
             const node = scene.nodes.find((entry) => entry.id === id && !entry.hidden);
             menuTap?.set(node === undefined ? closeMenu() : openMenuOn(node.slot, node.box));
+          }}
+        />
+        {/* The legend, OVER the picture and inside the stage: an absolutely
+            positioned child takes no room from the box the camera is fitted
+            to, so Fit still fits the whole lens with this expanded (MDV-4).
+            It is drawn before the menu and the card, so those two are over it
+            when they land on the same corner. */}
+        <LegendOverlay
+          scene={scene}
+          panel={panel}
+          dimmed={dimmed}
+          palette={palette}
+          // The atom first, through the handle, and the window's record
+          // after: both read back what was just written rather than the
+          // render closure (CodingRules.md).
+          onPanel={(next) => {
+            panelTap?.set(next);
+            onPanel?.();
+          }}
+          // One press, two writes: the stamp this window is flashing, and the
+          // sweep that takes it off again a second and a half later.
+          onFlash={(entry) => {
+            flashTap?.set(flashOn(flashTap.get() ?? NOT_FLASHING, entry.key));
+            flashSweep.arm(flashTap);
+          }}
+          // The eye: the entry decides what switching it off means, which is
+          // the relation for an arrow row and the emitted facet for a box row
+          // (./legend.ts). The omission strip follows from the dim set.
+          onEye={(entry) => {
+            dimmedTap?.set(entry.toggle(dimmedTap.get() ?? NOTHING_DIMMED));
+          }}
+          onHide={() => {
+            const held = dimmedTap?.get() ?? NOTHING_DIMMED;
+            dimmedTap?.set({ ...held, hide: !held.hide });
           }}
         />
         {/* The menu, anchored on the same box and by the same rule as the card

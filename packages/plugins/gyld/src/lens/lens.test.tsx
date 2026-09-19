@@ -12,7 +12,9 @@ import {
   groupBox, lensExtent, nodeBox, toSvg,
 } from './geometry';
 import { buildScene, lensKeyOf, recordIdOf, slotOf } from './scene';
-import { LensFigure, LensLegend, LensOmissions, LensProvenance } from './LensView';
+import { LensFigure, LensOmissions, LensProvenance } from './LensView';
+import { LegendOverlay } from './LegendOverlay';
+import { LegendPanel } from './legendPanel';
 import decisionsFixture from '../../test/fixtures/bundle/streams/base/lenses/decisions.lens.json';
 import branchFixture from '../../test/fixtures/bundle/streams/base/lenses/branch.lens.json';
 import allocationFixture from '../../test/fixtures/bundle/streams/architecture/lenses/allocation.lens.json';
@@ -235,8 +237,19 @@ describe('fitting to the box that shows the picture', () => {
   });
 
   it('draws the legend with svg line samples, which is what `svg` found', () => {
+    // The legend still draws `<svg>` line samples — it is over the picture
+    // now rather than above it, and `stageOf` still asks for the stage BY
+    // NAME so the samples cannot be measured as the picture again.
     const markup = renderToStaticMarkup(
-      <LensLegend scene={buildScene(lens)} dimmed={NOTHING_DIMMED} />,
+      <LegendOverlay
+        scene={buildScene(lens)}
+        panel={LegendPanel.OPEN}
+        dimmed={NOTHING_DIMMED}
+        onPanel={() => {}}
+        onFlash={() => {}}
+        onEye={() => {}}
+        onHide={() => {}}
+      />,
     );
     expect(markup).toContain('<svg');
   });
@@ -460,8 +473,17 @@ describe('rendering the lens', () => {
   });
 
   it('renders the emitted legend, the omission strip and the provenance footer', () => {
+    const off = { ...NOTHING_DIMMED, relations: ['Implies'], hide: false };
     const legend = renderToStaticMarkup(
-      <LensLegend scene={scene} dimmed={{ ...NOTHING_DIMMED, relations: ['Implies'], hide: false }} />,
+      <LegendOverlay
+        scene={buildScene(lens, { dimmed: off })}
+        panel={LegendPanel.OPEN}
+        dimmed={off}
+        onPanel={() => {}}
+        onFlash={() => {}}
+        onEye={() => {}}
+        onHide={() => {}}
+      />,
     );
     for (const entry of lens.legend.edges) {
       expect(legend).toContain(entry.relation);

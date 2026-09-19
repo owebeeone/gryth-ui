@@ -102,38 +102,199 @@
   opacity: 0.8;
 }
 
-.gyld-legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5em 1em;
-  padding: 0.5em 0.833em;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+/* The `hide instead of dim` switch is unusable until an eye has switched
+   something off, because until then it governs nothing at all. It says why in
+   its own title and in the line beside it (owner's ask 4). */
+.gyld-hide-toggle:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-.gyld-legend-edge {
-  display: inline-flex;
+/* THE LEGEND OVERLAY (owner's ask 3): over the picture, down its left edge,
+   inside the stage. `position: absolute` inside the stage's own
+   `position: relative` is what keeps it out of the layout — the stage is the
+   box the camera is fitted to, so Fit is unaffected by it at any size — and
+   `max-height` plus its own scrolling keep a long legend inside the picture
+   instead of growing past it. The hover card and the node menu come after it
+   in the stage, so they paint over it. */
+.gyld-legend-panel {
+  position: absolute;
+  left: 0.5em;
+  top: 0.5em;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - 1em);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--win, Canvas) 92%, transparent);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  overflow: hidden;
+}
+
+.gyld-legend-panel.gyld-legend-open {
+  width: 20em;
+  max-width: calc(100% - 1em);
+}
+
+.gyld-legend-toggle {
+  display: flex;
+  flex: none;
   align-items: center;
   gap: 0.417em;
-  padding: 0.167em 0.5em;
+  padding: 0.333em 0.5em;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Shrunk: a slim tab, the word and the samples, and no vertical space taken
+   from the picture. It wraps rather than running off a narrow window. */
+.gyld-legend-tab .gyld-legend-toggle {
+  flex-wrap: wrap;
+  max-width: 13em;
+}
+
+/* ONE scroll area, and the tab above it pinned. The panel is bounded by the
+   stage, and the rows, the help and the `hide instead of dim` footer can
+   together be taller than a short window's picture; scrolling them as one
+   body keeps every part of them REACHABLE. Giving each part its own scroll
+   box instead lets a squeezed flex column clip whichever part it decided to
+   shrink, which is how the footer ended up off the bottom. */
+.gyld-legend-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-legend-how,
+.gyld-legend-back {
+  flex: none;
+  margin: 0.333em 0.5em;
+  padding: 0.25em 0.5em;
   border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
   border-radius: 5px;
   background: none;
   color: inherit;
   font: inherit;
   cursor: pointer;
+  text-align: left;
 }
 
-.gyld-legend-off {
-  opacity: 0.4;
+.gyld-legend-how[aria-pressed='true'] {
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+  font-weight: 600;
+}
+
+.gyld-legend-rows,
+.gyld-legend-help {
+  flex: none;
+  margin: 0;
+  padding: 0 0.5em 0.333em;
+  list-style: none;
+}
+
+.gyld-legend-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.167em 0.333em;
+  padding: 0.333em 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.gyld-legend-flash {
+  display: flex;
+  align-items: center;
+  gap: 0.417em;
+  padding: 0.167em 0.25em;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.gyld-legend-flash:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.gyld-legend-name {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.gyld-legend-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.gyld-legend-eye {
+  display: flex;
+  align-items: center;
+  padding: 0.167em;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.gyld-legend-eye:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+/* The description under a row: the emitting declaration's own docstring
+   first, where the host emitted one, then what it means for the reader. */
+.gyld-legend-doc,
+.gyld-legend-says {
+  grid-column: 1 / -1;
+  margin: 0 0 0 1.5em;
+  font-size: 0.917em;
+  opacity: 0.75;
+}
+
+.gyld-legend-doc {
+  font-style: italic;
+}
+
+/* A class switched off reads as switched off, and its description stays
+   legible: the strike-through is on the name alone. */
+.gyld-legend-off .gyld-legend-name {
+  opacity: 0.55;
   text-decoration: line-through;
 }
 
-.gyld-legend-node {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.417em;
+.gyld-legend-help h5 {
+  margin: 0.667em 0 0.25em;
+}
+
+.gyld-legend-help p {
+  margin: 0 0 0.417em;
   opacity: 0.85;
+}
+
+.gyld-legend-foot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.25em;
+  padding: 0.417em 0.667em 0.5em;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gyld-hide-says {
+  font-size: 0.917em;
 }
 
 .gyld-swatch {
@@ -367,21 +528,6 @@
 .gyld-focus-line {
   margin-left: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.gyld-facet {
-  padding: 0.167em 0.5em;
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  border-radius: 5px;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.gyld-facet-off {
-  opacity: 0.4;
-  text-decoration: line-through;
 }
 
 /* A search match is drawn brighter, not moved (MDV-4). */
@@ -1645,12 +1791,12 @@
   overflow-wrap: anywhere;
 }
 
-/* Two lens views side by side have two omission strips and two legends, and
-   between them they can starve the pictures. Both scroll inside a bounded
-   box here; neither is hidden, because a window that hides an omission is
-   the one thing section 6.7 forbids outright. */
-.gyld-diff-pane .gyld-omissions,
-.gyld-diff-pane .gyld-legend {
+/* Two lens views side by side have two omission strips, and between them they
+   can starve the pictures. Each scrolls inside a bounded box here; neither is
+   hidden, because a window that hides an omission is the one thing section 6.7
+   forbids outright. The legends no longer take part: they are over their own
+   pictures now, and take no height from either pane. */
+.gyld-diff-pane .gyld-omissions {
   max-height: 4.5em;
   overflow: auto;
 }

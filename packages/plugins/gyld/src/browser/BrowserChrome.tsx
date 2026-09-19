@@ -2,7 +2,6 @@ import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import {
   DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_RETARGET_TAB,
 } from '@grythjs/plugin-api';
-import type { GyldLens } from '../contract';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_PREVIEW,
   GYLD_DEST_PREVIEW_TAP, GYLD_DEST_REF, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
@@ -11,7 +10,6 @@ import {
 } from '../grips';
 import { NOTHING_DIMMED, toggleNextUpOnly, type GyldDimmed } from '../lens/camera';
 import { rootLine } from '../store/waiting';
-import { NODE_FACETS } from '../lens/facets';
 import { GYLD_DECIDE_NOW_TOOL, GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL } from '../tools';
 import { PreviewPerspective } from '../preview/neighbourhood';
 import { RebuildButton } from '../ops/RebuildButton';
@@ -22,18 +20,21 @@ import type { GyldNextUp } from './nextUp';
 import type { GyldSearchMatch } from './search';
 
 // The browser's chrome: the stream switcher, the perspective picker, the
-// search box, the node dim toggles and the four links a browser writes.
+// search box, the "where do I look" count and its filter, and the links a
+// browser writes.
 //
-// Nothing here is derived. The stream list is the census, the perspective list
-// is the stream's own lens manifest read by ./perspectives (or, for a stream
-// that emits no manifest, what the store could list), and the facet values are
-// the values the drawn nodes carry.
+// What a class of box or arrow LOOKS like, how many of them this picture
+// draws, and switching one off, are the legend's — and the legend is over the
+// picture now (`lens/LegendOverlay.tsx`). The per-value buttons that used to
+// be here named a dimension the reader never met in the picture and duplicated
+// the legend's own relation toggles; one surface does it now.
+//
+// Nothing here is derived. The stream list is the census and the perspective
+// list is the stream's own lens manifest read by ./perspectives (or, for a
+// stream that emits no manifest, what the store could list).
 
-export function BrowserChrome({ tabId, lens, search, nextUp }: {
+export function BrowserChrome({ tabId, search, nextUp }: {
   tabId: string;
-  /** The lens actually drawn, when one is. The facet toggles are offered for
-   *  the values THIS picture carries, so a window with no picture offers none. */
-  lens?: GyldLens;
   search: GyldSearchMatch;
   /** The stream's emitted decide-now list joined to this picture. A stream
    *  that emitted no list gets no count and no filter, and is told so. */
@@ -210,26 +211,12 @@ export function BrowserChrome({ tabId, lens, search, nextUp }: {
             : `focus ${focus.stream}/${focus.ref}`}
         </span>
       </div>
-      {lens !== undefined && (
-        <div className="gyld-chrome-row gyld-facets">
-          {NODE_FACETS.flatMap((facet) => facet.values(lens).map((value) => {
-            const off = facet.isOff(dimmed, value);
-            return (
-              <button
-                key={`${facet.name}/${value}`}
-                type="button"
-                className={`gyld-facet${off ? ' gyld-facet-off' : ''}`}
-                data-facet={facet.name}
-                data-value={value}
-                title={`${facet.name} ${value}: ${off ? 'off' : 'on'} in this window`}
-                onClick={() => dimmedTap?.set(facet.toggle(dimmedTap.get() ?? NOTHING_DIMMED, value))}
-              >
-                {`${facet.name} ${value}`}
-              </button>
-            );
-          }))}
-        </div>
-      )}
+      {/* The per-value dim buttons that used to sit here are gone: every class
+          this picture draws now has a ROW in the legend over the picture, with
+          its count, its description and an eye that switches it off
+          (`lens/LegendOverlay.tsx`). Two surfaces for one act, one of them
+          naming a dimension the reader never saw in the picture, was one too
+          many. */}
       <div className="gyld-status">
         {roots.map((root) => (
           <span key={root.describe}>{rootLine(root)}</span>

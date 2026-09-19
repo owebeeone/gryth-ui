@@ -219,8 +219,9 @@ export * from './lens/legendPanel';
 export * from './lens/scene';
 export { lensTabTaps } from './lens/lensTabTaps';
 export {
-  LensFigure, LensLegend, LensOmissions, LensProvenance, LensView,
+  LensFigure, LensOmissions, LensProvenance, LensView,
 } from './lens/LensView';
+export { LegendOverlay } from './lens/LegendOverlay';
 export {
   GYLD_TAB_CAMERA, GYLD_TAB_CAMERA_TAP, GYLD_TAB_CAMERA_DRAG, GYLD_TAB_CAMERA_DRAG_TAP,
   GYLD_TAB_SELECTION, GYLD_TAB_SELECTION_TAP, GYLD_TAB_HOVER, GYLD_TAB_HOVER_TAP,
