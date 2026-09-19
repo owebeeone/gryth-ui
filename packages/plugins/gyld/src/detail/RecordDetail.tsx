@@ -10,7 +10,7 @@ import { decideTitle } from '../browser/links';
 import { useBrowserFocus } from '../browser/useBrowserFocus';
 import { useKeyedContext } from '../contexts';
 import { FocusDestTap } from './followFocus';
-import type { GyldRecordView, GyldRecords } from '../records/records';
+import { definitionTitle, type GyldRecordView, type GyldRecords } from '../records/records';
 import type { GyldBundle, GyldFault } from '../store/state';
 
 // The gyld.detail window (step 1.5): one record, as the bundle emitted it.
@@ -208,8 +208,16 @@ function RecordBody() {
   const question = view.question;
   const snapshot = bundle?.record?.snapshot;
 
+  // The record's own question, as one line: the first paragraph of the emitted
+  // description. A definition with none gives '', and the window then opens on
+  // the identifier exactly as it did before the field existed.
+  const title = definitionTitle(definition?.description);
+
   return (
     <div className="gyld-detail">
+      {title !== '' && (
+        <p className="gyld-detail-title">{title}</p>
+      )}
       <header className="gyld-detail-head">
         <span className="gyld-detail-label">{occurrence?.label ?? definition?.label ?? view.ref}</span>
         <span className="gyld-chip">{view.sort}</span>

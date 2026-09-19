@@ -53,10 +53,12 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
  *  window resolves a record's citations against
  *  (`gyld-wz/dev-docs/ui/GyldAskAgent.md` section 5), and v8 the first whose
  *  decide-now rows say WHY a question is answerable now and not only that it
- *  is (`answerable_because`). The default moves forward with each: pointed at
- *  an older run the windows would render those absences, which is correct and
- *  is not what this default is for. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v8'
+ *  is (`answerable_because`), and v9 the first built from revision 2 of the
+ *  decision declaration, whose docstrings ask their decision outright and
+ *  whose lens nodes carry that question as `title`. The default moves forward
+ *  with each: pointed at an older run the windows would render those absences,
+ *  which is correct and is not what this default is for. */
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v9'
 
 /** Where the browser reaches the evaluator runs:
  *  `http://localhost:5173/gyld-evaluator`, with one directory per run under

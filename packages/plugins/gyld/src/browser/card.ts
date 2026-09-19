@@ -1,7 +1,7 @@
 import type {
   AnswerablePrerequisite, DecideNowQuestion, GyldDecideNow,
 } from '../contract';
-import { slotLabel, type GyldRecords } from '../records/records';
+import { slotLabel, slotTitle, type GyldRecords } from '../records/records';
 import type { SceneNode } from '../lens/scene';
 
 // What the node card SAYS, as a pure projection over emitted data.
@@ -31,6 +31,13 @@ export interface NodeCardView {
   slot: string;
   /** The row's own emitted member name, or the slot when there is no row. */
   label: string;
+  /**
+   * The question this box asks, as one line: the emitted node `title` when the
+   * lens carries one, else the first paragraph of the record's own emitted
+   * docstring. Empty when neither carries it, which is what a bundle emitted
+   * before the field looks like, and the card then reads as it read then.
+   */
+  title: string;
   /** The question's text: the lines the host drew inside the box. */
   lines: string[];
   /** Whether this stream's decide-now list carries a row for this box. */
@@ -126,11 +133,16 @@ export function cardFor(
   // The join is by QUALIFIED SLOT, which is the identity that survives a
   // restream (R1) and the one the picture and the list share.
   const question = decideNow?.questions.find((row) => row.slot === node.slot);
+  // The lens's own `title` first, because that is what the picture drew; the
+  // record's docstring behind it, so a window over a lens emitted before the
+  // field still leads with the question. Neither is composed here.
+  const title = node.title ?? slotTitle(records, node.slot);
   if (question === undefined) {
     return {
       id: node.id,
       slot: node.slot,
       label: slotLabel(records, node.slot),
+      title,
       lines: node.lines,
       listed: false,
       status: '',
@@ -144,6 +156,7 @@ export function cardFor(
     id: node.id,
     slot: node.slot,
     label: question.label,
+    title,
     lines: node.lines,
     listed: true,
     status: question.effective_status,

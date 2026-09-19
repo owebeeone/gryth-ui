@@ -605,6 +605,18 @@
   gap: 0.333em 0.667em;
 }
 
+/* The question a record asks, led with wherever a record is shown: the card,
+   the detail window and each Next up row. It is the emitted first line, so it
+   is given the weight of a heading and nothing else. */
+.gyld-node-card-title,
+.gyld-detail-title,
+.gyld-question-title {
+  margin: 0 0 0.25em;
+  font-size: 1.083em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .gyld-node-card-text,
 .gyld-node-card-offers {
   display: flex;

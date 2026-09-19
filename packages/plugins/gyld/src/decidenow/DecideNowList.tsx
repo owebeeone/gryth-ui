@@ -1,8 +1,10 @@
 import { useGrip } from '@owebeeone/grip-react';
 import type { DecideNowQuestion, GyldDecideNow, GyldValidation } from '../contract';
 import {
-  GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_STREAM, GYLD_STORE_STATUS, GYLD_VALIDATION,
+  GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_STREAM, GYLD_RECORDS, GYLD_STORE_STATUS,
+  GYLD_VALIDATION,
 } from '../grips';
+import { slotTitle } from '../records/records';
 import { answerableSays } from '../browser/card';
 import { decideTitle } from '../browser/links';
 import { useBrowserFocus, type BrowserFocus } from '../browser/useBrowserFocus';
@@ -42,12 +44,19 @@ function validationLine(validation: GyldValue<GyldValidation> | undefined): stri
     : `validation invalid: ${value.code ?? 'no code'} ${value.message ?? ''}`.trim();
 }
 
-function Question({ question, browser }: {
+function Question({ question, browser, title }: {
   question: DecideNowQuestion;
   browser: BrowserFocus;
+  /** The question this row asks, as the declaration wrote it. Empty when the
+   *  projection did not read or carries no docstring for it, and the row then
+   *  reads exactly as it read before the field existed. */
+  title: string;
 }) {
   return (
     <li className="gyld-question" data-slot={question.slot}>
+      {title !== '' && (
+        <p className="gyld-question-title">{title}</p>
+      )}
       <button
         type="button"
         className="gyld-question-open"
@@ -134,6 +143,9 @@ export function DecideNowList() {
   const value = useGrip(GYLD_DECIDE_NOW);
   const bundle = useGrip(GYLD_BUNDLE);
   const validation = useGrip(GYLD_VALIDATION);
+  // The projection index, read for one thing only: what each listed question
+  // ASKS, in the declaration's own words. Nothing else of it reaches this list.
+  const records = useGrip(GYLD_RECORDS);
   const stream = useGrip(GYLD_DEST_STREAM) ?? '';
   const browser = useBrowserFocus();
 
@@ -164,7 +176,12 @@ export function DecideNowList() {
           <h4>{`${group.title} (${group.questions.length})`}</h4>
           <ul className="gyld-questions">
             {group.questions.map((question) => (
-              <Question key={question.slot} question={question} browser={browser} />
+              <Question
+                key={question.slot}
+                question={question}
+                browser={browser}
+                title={slotTitle(records, question.slot)}
+              />
             ))}
           </ul>
         </section>

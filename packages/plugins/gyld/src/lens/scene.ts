@@ -19,6 +19,10 @@ export interface SceneNode {
   box: Box;
   radius: number;
   fill?: string;
+  /** The emitted node `title`: the question this box asks, as one line.
+   *  Absent on a lens emitted before the field and on a record whose
+   *  declaration has no docstring; carried here and never composed. */
+  title?: string;
   lines: string[];
   labelAt: Point;
   /** The typography the host drew this node with: the point size and the
@@ -307,6 +311,9 @@ export function buildScene(lens: GyldLens, inputs: SceneInputs = {}): LensScene 
       answerable,
       flashing: lit?.matchesNode(node) ?? false,
     };
+    if (node.title !== undefined) {
+      scene.title = node.title;
+    }
     const fill = nodeFill(lens, node);
     if (fill !== undefined) {
       scene.fill = fill;

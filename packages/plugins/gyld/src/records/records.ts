@@ -375,3 +375,28 @@ export function slotLabel(records: GyldRecords | undefined, slot: string): strin
   const occurrence = id === undefined ? undefined : records?.occurrences.get(id);
   return occurrence?.label ?? slot;
 }
+
+/**
+ * The first paragraph of a declaration's own docstring, as one line.
+ *
+ * Gyld writes a decision as a question in that first paragraph and what is at
+ * stake in the paragraphs after it, so the first is the record's TITLE and the
+ * one the emitted lens carries per node. Reading it here is indexing in the
+ * same sense as `slotLabel`: the text is the emitted `description` of the
+ * definition behind the occurrence at that slot, folded to one line and
+ * nothing else. A record with no description, a slot this projection does not
+ * carry, and records that did not read all return '', which every caller
+ * renders as absence rather than substituting the label for it.
+ */
+export function definitionTitle(description: string | undefined): string {
+  return (description ?? '').split('\n\n', 1)[0].split(/\s+/).filter(Boolean).join(' ');
+}
+
+export function slotTitle(records: GyldRecords | undefined, slot: string): string {
+  const id = records?.occurrenceBySlot.get(slot);
+  const occurrence = id === undefined ? undefined : records?.occurrences.get(id);
+  const definition = occurrence === undefined
+    ? undefined
+    : records?.definitions.get(occurrence.definition);
+  return definitionTitle(definition?.description);
+}

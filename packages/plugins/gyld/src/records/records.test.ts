@@ -10,7 +10,8 @@ import { GyldStoreTap } from '../store/GyldStoreTap';
 import type { GyldSet } from '../store/state';
 import { GyldIndexTap, GyldRecordTap } from './taps';
 import {
-  definitionClosure, indexProjection, recordView, recordsOf, referencedOccurrences,
+  definitionClosure, definitionTitle, indexProjection, recordView, recordsOf,
+  referencedOccurrences, slotTitle,
   type GyldRecordView, type GyldRecords,
 } from './records';
 import { FakeBundle, fakeFetch } from '../../test/fakeBundle';
@@ -95,6 +96,31 @@ describe('indexing the emitted projection', () => {
     const absent = recordsOf({ status: 'absent', stream: 'ghost' });
     expect(absent.status).toBe('absent');
     expect(absent.stream).toBe('ghost');
+  });
+});
+
+describe('the question a record asks, read out of its own docstring', () => {
+  it('is the docstring first paragraph of the definition behind the slot', () => {
+    const id = index.occurrenceBySlot.get(SCOPE_MODEL)!;
+    const definition = index.definitions.get(index.occurrences.get(id)!.definition)!;
+    expect(slotTitle(index, SCOPE_MODEL)).toBe(definitionTitle(definition.description));
+    // Whatever the emitted description is, the title is its first paragraph and
+    // the description starts with it; nothing is composed out of the label.
+    expect(definition.description.startsWith(slotTitle(index, SCOPE_MODEL))).toBe(true);
+  });
+
+  it('folds the first paragraph to one line and drops the ones after it', () => {
+    expect(definitionTitle('Who holds the keys?\n\nIt decides how scary genesis is.'))
+      .toBe('Who holds the keys?');
+    expect(definitionTitle('What stops a record reaching a node\nthat should not see it?'))
+      .toBe('What stops a record reaching a node that should not see it?');
+  });
+
+  it('is empty rather than substituted where nothing carries one', () => {
+    expect(definitionTitle(undefined)).toBe('');
+    expect(definitionTitle('')).toBe('');
+    expect(slotTitle(index, 'glade_decisions:GladeDecisions.no_such_record')).toBe('');
+    expect(slotTitle(undefined, SCOPE_MODEL)).toBe('');
   });
 });
 

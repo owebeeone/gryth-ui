@@ -22,6 +22,7 @@ import {
 import { GYLD_DECIDE_TOOL, GYLD_DETAIL_TOOL, GYLD_STREAMS_TOOL } from '../tools';
 import { buildScene } from '../lens/scene';
 import { answerableBecause, answerableSays, blockedSays, cardFor } from './card';
+import { slotTitle } from '../records/records';
 import { browserTabTaps } from './browserTabTaps';
 import { linkForRulingLink } from './links';
 import { nextUpOf } from './nextUp';
@@ -66,6 +67,45 @@ const drawn = async (tab: { read: <T>(grip: Grip<T>) => Drip<T> }): Promise<void
     (value) => value !== undefined && value.status !== 'unset' && value.status !== 'loading',
   );
 };
+
+describe('the card leads with the question the record asks', () => {
+  // The fixture bundle predates the emitted `title`, so its lens nodes carry
+  // none and its projection carries the docstring. Both paths are exercised
+  // here without refreshing that bundle.
+  const withTitle = { ...nodeAt(KEY_CUSTODY), title: 'Who holds the keys?' };
+
+  it('takes the lens node title when the lens carries one', () => {
+    expect(cardFor(withTitle, decideNow, undefined).title).toBe('Who holds the keys?');
+  });
+
+  it('falls back to the record docstring when the lens carries none', async () => {
+    const desk = mountDesk();
+    const tab = desk.tab('card-title', browserTabTaps('card-title', { stream: 'base' }));
+    const records = await settled(
+      () => tab.read(GYLD_RECORDS).get(),
+      (value) => value?.status === 'ok',
+    );
+    const node = nodeAt(KEY_CUSTODY);
+    expect(node.title).toBeUndefined();
+    expect(cardFor(node, decideNow, records).title)
+      .toBe(slotTitle(records, KEY_CUSTODY));
+    expect(cardFor(node, decideNow, records).title).not.toBe('');
+  });
+
+  it('is empty when neither the lens nor the record carries one', () => {
+    // A row this stream does not list takes the same path, so the fallback is
+    // not something only a listed question gets.
+    expect(cardFor(nodeAt(KEY_CUSTODY), decideNow, undefined).title).toBe('');
+    expect(cardFor(nodeAt(KEY_CUSTODY), undefined, undefined).title).toBe('');
+  });
+
+  it('renders the question above the identifier, and nothing when there is none', () => {
+    expect(cardFor(withTitle, decideNow, undefined).label).toBe(rowAt(KEY_CUSTODY).label);
+    // The drawn box text is untouched by the title: the card still shows the
+    // host's own lines, in the host's order.
+    expect(cardFor(withTitle, decideNow, undefined).lines).toEqual(nodeAt(KEY_CUSTODY).lines);
+  });
+});
 
 describe('the card says what the row says, and nothing more', () => {
   it('carries an Open question, its drawn text and its alternatives', () => {

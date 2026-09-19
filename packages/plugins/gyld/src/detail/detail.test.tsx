@@ -9,7 +9,7 @@ import type { GyldFocus } from '../focus';
 import { browserTabTaps } from '../browser/browserTabTaps';
 import { DETAIL_FOCUS_CONTEXT, RecordDetail } from './RecordDetail';
 import { detailTabTaps } from './detailTabTaps';
-import type { GyldRecordView } from '../records/records';
+import { definitionTitle, type GyldRecordView } from '../records/records';
 import { FakeBundle } from '../../test/fakeBundle';
 import { mountDesk, wireSink, type MountedDesk } from '../../test/mount';
 import projection from '../../test/fixtures/bundle/streams/base/projection.json';
@@ -332,5 +332,24 @@ describe('gyld.detail following the shared focus', () => {
     expect(markup).toContain('wired to follow-source');
     expect(markup).toContain(emitted.occurrence.label);
     expect(markup).not.toContain('follow focus');
+  });
+});
+
+describe('gyld.detail leads with the question the record asks', () => {
+  it('renders the docstring first paragraph above the identifier', async () => {
+    const detail = standalone('detail-title', SCOPE_MODEL);
+    await settled(detail.view, (view) => view?.status === 'ok');
+    const markup = detail.render();
+    const title = definitionTitle(definition.description);
+    expect(title).not.toBe('');
+    expect(markup).toContain(`<p class="gyld-detail-title">${title}</p>`);
+    // Above the identifier, not instead of it: both are still rendered and the
+    // whole emitted description stays in the facts list below.
+    expect(markup.indexOf('gyld-detail-title')).toBeLessThan(markup.indexOf('gyld-detail-label'));
+    expect(markup).toContain(emitted.occurrence.label);
+  });
+
+  it('renders no title line at all when the definition carries no description', () => {
+    expect(definitionTitle(undefined)).toBe('');
   });
 });

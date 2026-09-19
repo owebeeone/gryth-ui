@@ -1,16 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { createAtomValueTap } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED } from '@grythjs/plugin-api';
-import { GYLD_BUNDLE, GYLD_DECIDE_NOW } from '../grips';
+import { GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_RECORDS } from '../grips';
 import { browserTabTaps } from '../browser/browserTabTaps';
 import { questionParams } from '../browser/links';
 import { DecideNowList } from './DecideNowList';
 import { decideNowTabTaps } from './decideNowTabTaps';
-import type { GyldDecideNow } from '../contract';
+import { readProjection, type GyldDecideNow } from '../contract';
+import { indexProjection, slotTitle, type GyldRecords } from '../records/records';
 import type { GyldBundle, GyldValue } from '../store/state';
 import { mountDesk, wireSink } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import decideNow from '../../test/fixtures/bundle/streams/base/decide-now.json';
+import projection from '../../test/fixtures/bundle/streams/base/projection.json';
 import streamRecord from '../../test/fixtures/bundle/streams/base/stream.json';
 import validation from '../../test/fixtures/bundle/streams/base/validation.json';
 
@@ -43,6 +45,9 @@ function mount(tabId: string, stream: string, bundle = new FakeBundle()) {
   return {
     value: () => tab.read(GYLD_DECIDE_NOW).get() as GyldValue<GyldDecideNow>,
     bundle: () => tab.read(GYLD_BUNDLE).get() as GyldBundle,
+    // The projection index, read only so a test can wait for the titles the
+    // list leads its rows with; the list itself reads the same grip.
+    records: () => tab.read(GYLD_RECORDS).get() as GyldRecords | undefined,
     render: () => tab.render(<DecideNowList />),
   };
 }
@@ -216,5 +221,22 @@ describe('a row opens the decide window on that question', () => {
     expect(markup).toContain('wired to dn-source');
     expect(markup).toContain('answer this question in the decide window wired to dn-source');
     expect(/<button[^>]*class="gyld-open-decide"[^>]*disabled/.test(markup)).toBe(false);
+  });
+});
+
+describe('gyld.decidenow leads each row with the question it asks', () => {
+  it('renders the emitted docstring first paragraph above the identifier', async () => {
+    const list = mount('dn-title', 'base');
+    await settled(list.value, (value) => value?.status === 'ok');
+    await settled(list.records, (value) => value?.status === 'ok');
+    const markup = list.render();
+    const index = indexProjection(readProjection(projection), 'base');
+    const slot = streamRecord.roots[0];
+    const title = slotTitle(index, slot);
+    expect(title).not.toBe('');
+    expect(markup).toContain(`<p class="gyld-question-title">${title}</p>`);
+    // The identifier and tier line the list already had is still there.
+    const question = decideNow.questions.find((q) => q.slot === slot)!;
+    expect(markup).toContain(`${question.label} \u00b7 ${question.tier}`);
   });
 });

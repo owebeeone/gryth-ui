@@ -87,6 +87,17 @@ export interface LensNode {
   id: string;
   slot: string;
   label: string;
+  /**
+   * The first paragraph of the declaration's own docstring, as one line: the
+   * question this box asks, which the host also draws as the first lines of
+   * `text`.
+   *
+   * Additive to `gyld.lens.v1`, beside the `label` and `slot` a reader joins
+   * on rather than in place of either. A lens emitted before it carries none,
+   * and a node whose declaration has no docstring carries an empty string, so
+   * absence is absence and a window shows what it showed before.
+   */
+  title?: string;
   kind: string;
   shape: string;
   pos: [number, number];
@@ -258,6 +269,10 @@ function readNode(value: unknown, path: string): LensNode {
   // A status applies to a Question; other record kinds legitimately have none,
   // so absence is absence rather than a substituted value. The same holds for
   // the two presentational fields the host carries per node.
+  const title = readOptionalText(raw.title, atPath(path, 'title'));
+  if (title !== undefined) {
+    node.title = title;
+  }
   const status = readOptionalIdentifier(raw.status, atPath(path, 'status'));
   if (status !== undefined) {
     node.status = status;

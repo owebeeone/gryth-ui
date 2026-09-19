@@ -53,6 +53,13 @@ export function NodeCard({ node }: { node: SceneNode }) {
 
   return (
     <div className="gyld-node-card" data-slot={card.slot}>
+      {/* The question first, as the declaration asks it, because that is what a
+          reader hovering a box wants to know. Emitted: the lens node's own
+          `title`, or the record's own docstring where the lens carries none.
+          A card with neither opens on the identifier exactly as it did. */}
+      {card.title !== '' && (
+        <p className="gyld-node-card-title">{card.title}</p>
+      )}
       <header className="gyld-node-card-head">
         <span className="gyld-detail-label">{card.label}</span>
         {card.listed
