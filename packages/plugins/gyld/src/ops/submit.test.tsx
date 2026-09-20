@@ -414,6 +414,33 @@ describe('the decide window offers Submit beside Export', () => {
     expect(markup).toContain(`${GYLD_STATIC_BASE}/builds/build-1789247615547`);
     expect(/<button[^>]*class="gyld-ops-retarget"/.test(markup)).toBe(true);
   });
+
+  it('names the file the ruling was left in, and that it is not committed yet', async () => {
+    const { ops } = fakeOps();
+    const notebook = '/w/glade-wz/decisions/glade-decisions-stream-a.gyld.py';
+    const desk = deskWith({
+      ops,
+      result: {
+        verb: 'answer',
+        response: { ok: true, run_id: 'run-6', overlay_file: notebook },
+      },
+    });
+    const tab = desk.tab('sub-saved', decideTabTaps('sub-saved', { stream: 'stream-a' }));
+    await settled(() => tab.read(GYLD_STREAMS).get(), (value) => value?.status === 'ready');
+    const markup = tab.render(<DecideWindow />);
+    expect(markup).toContain(`Saved to ${notebook}. Not committed.`);
+  });
+
+  it('names no file when the answer carried none', async () => {
+    const { ops } = fakeOps();
+    const desk = deskWith({
+      ops,
+      result: { verb: 'rebuild', response: { ok: true, run_id: 'run-7' } },
+    });
+    const tab = desk.tab('sub-unsaved', decideTabTaps('sub-unsaved', { stream: 'stream-a' }));
+    await settled(() => tab.read(GYLD_STREAMS).get(), (value) => value?.status === 'ready');
+    expect(tab.render(<DecideWindow />)).not.toContain('Saved to');
+  });
 });
 
 describe('the diff window asks for a comparison the bundle does not carry', () => {

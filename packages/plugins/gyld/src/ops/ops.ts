@@ -36,6 +36,11 @@ export interface GyldOpsResponse {
   /** `false` on a streaming accept; the `done` marker lands on the log. */
   done?: boolean;
   attributed_to?: string;
+  /** The overlay module file a writing verb left behind — the NOTEBOOK, in the
+   *  owner's decisions folder when one is configured. Absolute, and only when
+   *  the file is really there: a streamed `fork` answers before its host has
+   *  run and names none. */
+  overlay_file?: string;
 }
 
 /** One record on the `gyld.output` log for a streaming run. The `gwz.output`

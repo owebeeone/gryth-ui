@@ -43,6 +43,15 @@ function Answer() {
       {response.stdout !== undefined && response.stdout !== '' && (
         <pre className="gyld-ops-stdout">{response.stdout}</pre>
       )}
+      {/* The file the ruling was left in, as the supplier named it. "Not
+          committed" is the supplier's contract and not a reading of this
+          answer: it writes files and never runs git, so a notebook it names is
+          always one the owner still has to commit. */}
+      {response.overlay_file !== undefined && (
+        <p className="gyld-note gyld-ops-saved">
+          {`Saved to ${response.overlay_file}. Not committed.`}
+        </p>
+      )}
       {response.output_dir !== undefined && (
         <p className="gyld-note gyld-ops-built">
           {`built ${response.output_dir}`}
