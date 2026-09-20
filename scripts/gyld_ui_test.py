@@ -639,5 +639,108 @@ class StreamCountTest(unittest.TestCase):
             self.assertEqual(gu.count_streams(real), 0)
 
 
+class DecisionsRootTest(unittest.TestCase):
+    """The owner's ruling: a notebook the desk writes lives in a git-tracked
+    folder, not in the running instance's scratch directory."""
+
+    def test_the_default_is_the_decisions_folder_of_the_glade_workzone(self):
+        self.assertEqual(
+            gu.default_decisions_root(Path("/w/glade-wz")),
+            Path("/w/glade-wz/decisions"),
+        )
+
+    def test_a_layout_carries_the_decisions_root_beside_the_gyld_checkout(self):
+        layout = gu.Layout(
+            gryth_ui=Path("/w/gryth-wz/gryth-ui"),
+            glade_wz=Path("/w/glade-wz"),
+            gyld_root=Path("/w/gyld-wz/gyld"),
+            decisions_root=Path("/w/glade-wz/decisions"),
+            python=Path(gu.SUPPLIER_PYTHON),
+        )
+        self.assertEqual(layout.decisions_root, Path("/w/glade-wz/decisions"))
+
+    def test_start_hands_grazel_the_decisions_root_by_its_own_flag_name(self):
+        # The argv `start` composes, as far as the flags this test is about. The
+        # supplier knows the folder as `--decisions-root`; grazel, which spawns
+        # it, takes `--gyld-decisions-root` and passes it on.
+        parser = gu.build_parser()
+        args = parser.parse_args(
+            ["start", "--port", "5190", "--decisions-root", "/w/mine/decisions"]
+        )
+        self.assertEqual(args.decisions_root, "/w/mine/decisions")
+        args = parser.parse_args(["start", "--port", "5190"])
+        self.assertIsNone(args.decisions_root, "unset means the default is worked out")
+
+    def test_the_state_round_trips_the_decisions_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            state = gu.InstanceState(
+                mode="built",
+                ui_port=5190,
+                http_port=8190,
+                node_port=9190,
+                grazel_pid=1,
+                vite_pid=None,
+                data=str(data),
+                gyld_root="/w/gyld-wz/gyld",
+                decisions_root="/w/glade-wz/decisions",
+                glade_wz="/w/glade-wz",
+                gryth_ui="/w/gryth-wz/gryth-ui",
+                python=gu.SUPPLIER_PYTHON,
+                grazel_log=str(data / "logs" / "grazel.log"),
+                vite_log=str(data / "logs" / "vite.log"),
+                started_at="2026-09-21T00:00:00Z",
+                url="http://localhost:8190/",
+            )
+            gu.write_state(data, state)
+            read_back = gu.read_state(data)
+            self.assertEqual(read_back, state)
+            self.assertEqual(read_back.decisions_root, "/w/glade-wz/decisions")
+
+    def test_a_state_file_written_before_this_field_existed_still_loads(self):
+        # Instances were already running when the decisions root arrived, and an
+        # instance this script cannot read is one it cannot stop.
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            body = {
+                "mode": "dev",
+                "ui_port": 5173,
+                "http_port": 8080,
+                "node_port": 9099,
+                "grazel_pid": 7,
+                "vite_pid": 8,
+                "data": str(data),
+                "gyld_root": "/w/gyld-wz/gyld",
+                "glade_wz": "/w/glade-wz",
+                "gryth_ui": "/w/gryth-wz/gryth-ui",
+                "python": gu.SUPPLIER_PYTHON,
+                "grazel_log": str(data / "logs" / "grazel.log"),
+                "vite_log": str(data / "logs" / "vite.log"),
+                "started_at": "2026-09-14T00:00:00Z",
+                "url": "http://localhost:5173/",
+            }
+            (data / gu.STATE_FILENAME).write_text(json.dumps(body), encoding="utf-8")
+            read_back = gu.read_state(data)
+            self.assertIsNotNone(read_back)
+            self.assertEqual(read_back.decisions_root, "")
+            self.assertEqual(read_back.grazel_pid, 7)
+
+    def test_the_status_line_says_the_folder_and_counts_the_notebooks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            decisions = Path(tmp) / "decisions"
+            self.assertIn("not there yet", gu.notebooks_line(str(decisions)))
+            decisions.mkdir()
+            self.assertIn("(0 notebooks)", gu.notebooks_line(str(decisions)))
+            (decisions / "glade-decisions-stream-a.gyld.py").write_text(
+                "# ruled\n", encoding="utf-8"
+            )
+            (decisions / "README.md").write_text("# not a notebook\n", encoding="utf-8")
+            line = gu.notebooks_line(str(decisions))
+            self.assertIn(str(decisions), line)
+            self.assertIn("(1 notebooks)", line)
+            # An older instance recorded none at all.
+            self.assertIn("no decisions root", gu.notebooks_line(""))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2, argv=[sys.argv[0]] + sys.argv[1:])

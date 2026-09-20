@@ -49,7 +49,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, fields
+from dataclasses import MISSING, dataclass, fields
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
@@ -258,6 +258,11 @@ class InstanceState:
     vite_log: str
     started_at: str
     url: str
+    # The git-tracked folder the desk leaves a ruling in. Last only because a
+    # dataclass field with a default has to be; it belongs beside `gyld_root`,
+    # and the file is written sorted anyway. Defaulted because instances were
+    # already running when it arrived — see `from_dict`.
+    decisions_root: str = ""
 
     def to_dict(self) -> Dict[str, object]:
         return {field.name: getattr(self, field.name) for field in fields(self)}
@@ -265,10 +270,18 @@ class InstanceState:
     @classmethod
     def from_dict(cls, body: Dict[str, object]) -> "InstanceState":
         known = {field.name for field in fields(cls)}
-        missing = known - set(body)
+        # A field with a DEFAULT is one an older state file may not carry, and a
+        # file written before that field existed must still load: an instance
+        # this script cannot read is one it cannot stop.
+        required = {
+            field.name
+            for field in fields(cls)
+            if field.default is MISSING and field.default_factory is MISSING
+        }
+        missing = required - set(body)
         if missing:
             raise ValueError("state is missing {}".format(", ".join(sorted(missing))))
-        return cls(**{name: body[name] for name in known})
+        return cls(**{name: body[name] for name in known if name in body})
 
     def run_mode(self) -> RunMode:
         mode = RunMode.named(self.mode)
@@ -920,15 +933,28 @@ def default_gyld_root() -> Path:
     return (SCRIPT_DIR / ".." / ".." / "gyld-wz" / "gyld").resolve()
 
 
+def default_decisions_root(glade_wz: Path) -> Path:
+    """Where the desk leaves a ruling: a git-tracked folder in the glade
+    workzone, not the instance's data directory. The owner commits it when he
+    chooses; nothing here ever runs git."""
+    return glade_wz / "decisions"
+
+
 class Layout:
-    """The four roots one run needs, resolved once."""
+    """The roots one run needs, resolved once."""
 
     def __init__(
-        self, gryth_ui: Path, glade_wz: Path, gyld_root: Path, python: Path
+        self,
+        gryth_ui: Path,
+        glade_wz: Path,
+        gyld_root: Path,
+        decisions_root: Path,
+        python: Path,
     ) -> None:
         self.gryth_ui = gryth_ui
         self.glade_wz = glade_wz
         self.gyld_root = gyld_root
+        self.decisions_root = decisions_root
         self.python = python
 
     @property
@@ -1203,6 +1229,21 @@ def status_checks(state: InstanceState) -> List[CheckResult]:
     return checks
 
 
+def notebooks_line(decisions_root: str) -> str:
+    """The decisions folder and how many notebooks are in it.
+
+    One line, because it answers the one question: rulings are files, and this
+    says where they land and whether any have. An older instance recorded none,
+    and then its rulings are in its own data directory.
+    """
+    if not decisions_root:
+        return "no decisions root (rulings stay in the instance data directory)"
+    root = Path(decisions_root)
+    if not root.is_dir():
+        return "{} (not there yet)".format(root)
+    return "{} ({} notebooks)".format(root, len(list(root.glob("*.gyld.py"))))
+
+
 def report_instance(state: InstanceState, checks: Sequence[CheckResult]) -> Verdict:
     mode = state.run_mode()
     verdict = Verdict(checks)
@@ -1214,6 +1255,7 @@ def report_instance(state: InstanceState, checks: Sequence[CheckResult]) -> Verd
     for check in checks:
         print(check.line())
     print("  data: {}".format(state.data))
+    print("  rulings: {}".format(notebooks_line(state.decisions_root)))
     print("  logs: {}".format(Path(state.grazel_log).parent))
     print("  {}".format(verdict.line()))
     print("URL: {}".format(state.url))
@@ -1353,12 +1395,16 @@ def start_command(args: argparse.Namespace) -> int:
         if args.data
         else default_data_dir(ports.ui)
     )
+    glade_wz = Path(args.glade_wz).resolve() if args.glade_wz else default_glade_wz()
     layout = Layout(
         gryth_ui=Path(args.gryth_ui).resolve() if args.gryth_ui else default_gryth_ui(),
-        glade_wz=Path(args.glade_wz).resolve() if args.glade_wz else default_glade_wz(),
+        glade_wz=glade_wz,
         gyld_root=Path(args.gyld_root).resolve()
         if args.gyld_root
         else default_gyld_root(),
+        decisions_root=Path(args.decisions_root).expanduser().resolve()
+        if args.decisions_root
+        else default_decisions_root(glade_wz),
         python=supplier_python(),
     )
 
@@ -1451,6 +1497,8 @@ def start_command(args: argparse.Namespace) -> int:
         str(layout.gyld_supplier_bin),
         "--gyld-root",
         str(layout.gyld_root),
+        "--gyld-decisions-root",
+        str(layout.decisions_root),
     ]
     if not mode.runs_vite:
         argv += ["--ui", str(layout.dist_gyld)]
@@ -1479,6 +1527,7 @@ def start_command(args: argparse.Namespace) -> int:
         vite_pid=None,
         data=str(data),
         gyld_root=str(layout.gyld_root),
+        decisions_root=str(layout.decisions_root),
         glade_wz=str(layout.glade_wz),
         gryth_ui=str(layout.gryth_ui),
         python=str(layout.python),
@@ -1738,6 +1787,12 @@ def restart_command(args: argparse.Namespace) -> int:
         again.gyld_root = (
             args.gyld_root if args.gyld_root is not None else state.gyld_root
         )
+        again.decisions_root = (
+            args.decisions_root
+            if args.decisions_root is not None
+            # An older state file carries none, and then the default stands.
+            else (state.decisions_root or None)
+        )
         again.glade_wz = args.glade_wz if args.glade_wz is not None else state.glade_wz
         again.gryth_ui = args.gryth_ui if args.gryth_ui is not None else state.gryth_ui
         print("")
@@ -1784,10 +1839,16 @@ def add_common(parser: argparse.ArgumentParser, with_port_default: bool) -> None
     parser.add_argument(
         "--data",
         default=None,
-        help="the instance data directory — rulings made in the UI live here "
-        "(default: ~/.gyld-ui/instances/<port>)",
+        help="the instance data directory — builds and scratch live here; "
+        "rulings go to --decisions-root (default: ~/.gyld-ui/instances/<port>)",
     )
     parser.add_argument("--gyld-root", default=None, help="the READ-ONLY Gyld checkout")
+    parser.add_argument(
+        "--decisions-root",
+        default=None,
+        help="the git-tracked folder the desk leaves a ruling in; nothing here "
+        "ever runs git (default: <glade-wz>/decisions)",
+    )
     parser.add_argument("--glade-wz", default=None, help="the glade workzone")
     parser.add_argument("--gryth-ui", default=None, help="this repository")
 
