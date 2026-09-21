@@ -3,6 +3,7 @@ import {
   type GyldOpsArgs,
 } from './verbs';
 import type { GyldAskContext } from '../ask/envelope';
+import type { OverlayFragment } from '../decide/overlay';
 
 // The operations handle: the one thing a window holds to ask the supplier for
 // something (step 4.3). It is the `Gyld.Ops` grip's value, and it knows
@@ -150,6 +151,37 @@ export function responseFrom(outcome: GyldExchangeOutcome): GyldOpsResponse {
   }
 }
 
+/**
+ * The one source a writing verb carries for the module it leaves behind.
+ *
+ * A UNION, not two optional fields, because the supplier takes exactly one of
+ * them and refuses a request carrying both or neither: what each one means about
+ * the notebook that is already there is different, and a type that allowed both
+ * would put that refusal off until the wire.
+ */
+export type GyldWrite = { overlay: string } | { fragment: OverlayFragment };
+
+/** The same for `ask`, whose whole-module form needs the added question's own
+ *  fragment of module text beside it. */
+export type GyldAsk =
+  | { overlay: string; question: string }
+  | { fragment: OverlayFragment };
+
+/** Whichever source a writing verb was given, as the request's argument object.
+ *  `given` then drops the fields nobody filled in, so no `undefined` reaches the
+ *  wire and the envelope carries exactly the operands its row names. */
+function written(
+  stream: string,
+  args: { overlay?: string; question?: string; fragment?: OverlayFragment },
+): GyldOpsArgs {
+  return {
+    stream,
+    overlay: args.overlay,
+    question: args.question,
+    fragment: args.fragment,
+  };
+}
+
 /** The handle a window holds. One method per allowed verb, each taking the
  *  argument object that verb's row of the supplier's table names. */
 export interface GyldOps {
@@ -159,10 +191,18 @@ export interface GyldOps {
   readonly principal: string;
   /** The latest build's stream listing. Builds nothing. */
   list(): Promise<GyldOpsResponse>;
-  /** Write `overlay` as the stream's overlay module, then rebuild. */
-  answer(args: { stream: string; overlay: string }): Promise<GyldOpsResponse>;
-  /** The same, with the new question's fragment appended. */
-  ask(args: { stream: string; overlay: string; question: string }): Promise<GyldOpsResponse>;
+  /**
+   * Add a ruling to a stream, then rebuild — one of the two ways in, and never
+   * both (the supplier refuses a request carrying both or neither).
+   *
+   * `fragment` is what this desk sends: the records to FOLD into the notebook
+   * that is already there, so a stream's notebook holds as many answers as the
+   * owner makes. `overlay` is the whole-module write, which the supplier still
+   * takes and which replaces everything the notebook held.
+   */
+  answer(args: { stream: string } & GyldWrite): Promise<GyldOpsResponse>;
+  /** The same two ways in for a new question. */
+  ask(args: { stream: string } & GyldAsk): Promise<GyldOpsResponse>;
   fork(args: {
     parent: string; stream: string; note?: string; force?: boolean;
   }): Promise<GyldOpsResponse>;
@@ -284,10 +324,8 @@ export function createGyldOps(wire: GyldOpsWire): GyldOps {
   return {
     principal: wire.principal,
     list: () => run(GyldVerb.LIST, {}),
-    answer: (args) => run(GyldVerb.ANSWER, { stream: args.stream, overlay: args.overlay }),
-    ask: (args) => run(GyldVerb.ASK, {
-      stream: args.stream, overlay: args.overlay, question: args.question,
-    }),
+    answer: (args) => run(GyldVerb.ANSWER, written(args.stream, args)),
+    ask: (args) => run(GyldVerb.ASK, written(args.stream, args)),
     fork: (args) => run(GyldVerb.FORK, {
       parent: args.parent, stream: args.stream, note: args.note, force: args.force,
     }),

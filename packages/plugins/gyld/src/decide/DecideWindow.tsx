@@ -20,8 +20,9 @@ import {
   askJoin, isRefusal, overlayTarget, type AskFragments, type OverlayTarget,
 } from './overlay';
 import {
-  answerSubmit, askSubmit, composeAnswer, composeAsk, composeRefusal,
-  overwriteRefusal,
+  answerSubmit, askSubmit, composeAnswer, composeAnswerFragment, composeAsk,
+  composeAskFragment, composeRefusal, overwriteRefusal, type AnswerInput,
+  type AskInput,
 } from './compose';
 
 // The gyld.decide window (step 2.4): answer a question, or ask a new one, and
@@ -142,8 +143,8 @@ function AnswerForm({ target, rows, reason }: {
   const gate = opsGate(ops, useGrip(GYLD_OPS_STATUS) ?? '');
   // Nothing composes without the projection, so nothing is offered without it.
   const uncomposable = composeRefusal(records);
-  // And nothing is SENT over a module that already declares records: a submit
-  // writes the module whole, and this one holds the draft's record alone.
+  // A submit sends a FRAGMENT, folded into the root the stream registered, so a
+  // module declaring its root under another name has nowhere to place it.
   const unsendable = uncomposable === '' ? overwriteRefusal(records, target) : '';
 
   // A window opened on a record answers THAT question until the reader picks
@@ -156,10 +157,13 @@ function AnswerForm({ target, rows, reason }: {
   // Read through the HANDLE, never the render closure: a press straight after
   // the last keystroke would otherwise compose the draft before it
   // (CodingRules.md, "Gesture handlers read via tap handles").
-  const compose = (): string => {
+  //
+  // ONE resolution per press, and both readers are built from it: the module the
+  // export box holds and the fragment the submit sends.
+  const pressed = (): AnswerInput => {
     const held = { ...(draftTap?.get() ?? draft) };
     held.question = held.question === '' ? chosen : held.question;
-    return composeAnswer({ target, draft: held, rows, records });
+    return { target, draft: held, rows, records };
   };
 
   return (
@@ -303,7 +307,7 @@ function AnswerForm({ target, rows, reason }: {
           className="gyld-answer-export"
           disabled={faults.length > 0 || target === undefined || uncomposable !== ''}
           title={uncomposable}
-          onClick={() => exportTap?.set(compose())}
+          onClick={() => exportTap?.set(composeAnswer(pressed()))}
         >
           Export overlay
         </button>
@@ -314,12 +318,13 @@ function AnswerForm({ target, rows, reason }: {
             || uncomposable !== '' || unsendable !== '' || !gate.ready}
           title={[uncomposable, unsendable, gate.reason].find((said) => said !== '') ?? ''}
           onClick={() => {
-            // The text is exported AND sent: what the reader can read is what
-            // went, and a refusal leaves it there to fix.
-            const text = compose();
-            exportTap?.set(text);
+            // The module is exported and the FRAGMENT is sent, both from the one
+            // draft: what the reader can read is what the notebook ends up
+            // carrying, and a refusal leaves the text there to fix.
+            const input = pressed();
+            exportTap?.set(composeAnswer(input));
             if (ops !== undefined) {
-              void answerSubmit(ops, target, text);
+              void answerSubmit(ops, target, composeAnswerFragment(input));
             }
           }}
         >
@@ -360,11 +365,15 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
   // already name, and nothing else: a trigger this bundle never mentioned is
   // not offered, because the window does not know it exists.
   const triggers = [...new Set(rows.flatMap((row) => row.gated_by))].sort();
-  // The composition is the supplier's two operands; the box holds the join of
-  // them, which is the module the supplier writes, byte for byte.
-  const compose = (): AskFragments | undefined => composeAsk({
+  // One resolution per press: the box holds the join of the supplier's two
+  // whole-module operands, and the wire carries the fragment.
+  const pressed = (): AskInput => ({
     target, draft: draftTap?.get() ?? draft, records,
   });
+  const exportText = (input: AskInput): string => {
+    const parts: AskFragments | undefined = composeAsk(input);
+    return parts === undefined ? '' : askJoin(parts);
+  };
   const toggle = (list: 'requires' | 'gates', slot: string) => {
     draftTap?.update((held) => {
       const chosen = held[list];
@@ -522,10 +531,7 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
           className="gyld-ask-export"
           disabled={faults.length > 0 || target === undefined || uncomposable !== ''}
           title={uncomposable}
-          onClick={() => {
-            const parts = compose();
-            exportTap?.set(parts === undefined ? '' : askJoin(parts));
-          }}
+          onClick={() => exportTap?.set(exportText(pressed()))}
         >
           Export overlay
         </button>
@@ -536,12 +542,13 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
             || uncomposable !== '' || unsendable !== '' || !gate.ready}
           title={[uncomposable, unsendable, gate.reason].find((said) => said !== '') ?? ''}
           onClick={() => {
-            // The text is exported AND sent: what the reader can read is what
-            // went, and a refusal leaves it there to fix.
-            const parts = compose();
-            exportTap?.set(parts === undefined ? '' : askJoin(parts));
+            // The module is exported and the FRAGMENT is sent, both from the one
+            // draft: what the reader can read is what the notebook ends up
+            // carrying, and a refusal leaves the text there to fix.
+            const input = pressed();
+            exportTap?.set(exportText(input));
             if (ops !== undefined) {
-              void askSubmit(ops, target, parts);
+              void askSubmit(ops, target, composeAskFragment(input));
             }
           }}
         >
@@ -594,11 +601,14 @@ export function DecideWindow() {
         ? <p className="gyld-fault gyld-decide-refusal">{(resolved as { reason: string }).reason}</p>
         : (
           <p className="gyld-note">
-            The text below is the overlay module for this one record. Submit
-            sends it to the supplier, which writes it as the stream&apos;s
-            overlay module and rebuilds; the run&apos;s output and its answer
-            appear below. Export puts the same text in the box instead, to
-            merge by hand and rebuild with
+            Submit sends this record — its class and the member that places it —
+            to the supplier, and a Gyld host folds it into this stream&apos;s
+            notebook beside whatever it already holds, then rebuilds; the
+            run&apos;s output and its answer appear below. One notebook can hold
+            as many answers as you make; answering the same question twice in one
+            notebook is refused, and to change an answer you edit the file and
+            press Rebuild. Export puts a whole single-record module in the box
+            instead, to merge by hand and rebuild with
             {' '}
             <code className="gyld-decide-command">{rebuildCommand()}</code>
             . Either way Gyld captures and validates it, and what comes back is

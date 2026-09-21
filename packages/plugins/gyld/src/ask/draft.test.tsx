@@ -495,28 +495,30 @@ describe('Submit`s refusals are exactly the refusals it had', () => {
       .toEqual(answerShapeFaults(ANSWER_EMPTY));
   });
 
-  it('still refuses a module that already declares records, drafted or not', () => {
-    expect(overwriteRefusal(streamA, target)).toContain('already declares');
+  it('still refuses what the window refused, and no longer what it does not', () => {
+    // A notebook that already declares records is the ordinary case now: a
+    // submit sends a fragment and a Gyld host folds it in beside them. A draft
+    // changes neither that nor the projection the window needs to compose at all.
+    expect(overwriteRefusal(streamA, target)).toBe('');
     expect(composeRefusal(RECORDS_UNSET as unknown as GyldRecords))
       .toContain('has not been read yet');
   });
 
-  it('draws the same disabled Submit, for the same reason, with a draft taken',
-    async () => {
-      const on = wiredDesk('take-refusal', 'stream-a');
-      await settled(
-        () => on.decide.read(GYLD_RECORDS).get() as GyldRecords,
-        (value) => value?.status === 'ok',
-      );
-      on.taken().set(TAKE);
-      await expect.poll(() => on.draft()?.drafted).toBe(MODEL);
-      const markup = on.render();
-      // stream-a's own overlay module already declares records, so a submit
-      // would drop them: the refusal a taken draft does not touch
-      expect(markup).toContain('gyld-decide-unsendable');
-      expect(markup).toContain('already declares');
-      expect(/<button[^>]*class="gyld-answer-submit"[^>]*disabled/.test(markup)).toBe(true);
-    });
+  it('draws no refusal of its own with a draft taken', async () => {
+    const on = wiredDesk('take-refusal', 'stream-a');
+    await settled(
+      () => on.decide.read(GYLD_RECORDS).get() as GyldRecords,
+      (value) => value?.status === 'ok',
+    );
+    on.taken().set(TAKE);
+    await expect.poll(() => on.draft()?.drafted).toBe(MODEL);
+    const markup = on.render();
+    // The mark is drawn and nothing about it makes the submit unreachable;
+    // what stands in the way is the shape check alone.
+    expect(markup).toContain('gyld-answer-drafted');
+    expect(markup).not.toContain('gyld-decide-unsendable');
+    expect(markup).not.toContain('already declares');
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -43,9 +43,13 @@ export function NodeCard({ node }: { node: SceneNode }) {
     records,
   );
   // Why a submit on THIS stream would be refused, in the decide window's own
-  // words: the supplier writes an overlay module whole, so a stream whose
-  // module already declares records needs a stream of its own for the ruling.
-  // Said here, before the refusal, instead of after it (2.2).
+  // words, said here BEFORE the refusal instead of after it (2.2).
+  //
+  // A notebook that already declares records is no longer one of those reasons:
+  // a submit sends a fragment and a Gyld host folds it in beside them. What is
+  // left is a module whose root class is not the root the stream registered,
+  // which has nowhere to place the new member — so the card offers a stream of
+  // its own for the ruling.
   const resolved = overlayTarget(census, stream);
   const target = isRefusal(resolved) ? undefined : resolved;
   const refusal = overwriteRefusal(records, target);

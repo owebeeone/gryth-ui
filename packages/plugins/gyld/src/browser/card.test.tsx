@@ -414,13 +414,15 @@ describe('Answer and Ask open the decide window on this question', () => {
 });
 
 describe('a stream that cannot take the ruling says so, and offers the link', () => {
-  it('names the refusal on the card and offers a pre-filled Link', async () => {
+  it('offers a plain Answer on a stream whose notebook already holds rulings', async () => {
     const desk = mountDesk();
     const home = desk.ctx.getGripHomeContext();
     home.registerTap(createAtomValueTap(DESKTOP_OPEN_WIRED, { initial: () => {} }));
     home.registerTap(createAtomValueTap(DESKTOP_OPEN_TOOL, { initial: () => {} }));
-    // stream-a's own overlay module already declares six placed records, so
-    // the supplier's whole-module write would drop them.
+    // stream-a's own module declares six placed records. A submit sends a
+    // fragment now and a Gyld host folds it in beside them, so this is the
+    // ORDINARY case: no refusal on the card and no stream of its own needed.
+    // Until that landed the card said "Answer (needs its own stream)" here.
     const tab = desk.tab('card-refused', browserTabTaps('card-refused', {
       stream: 'stream-a', perspective: 'decisions',
     }));
@@ -434,11 +436,10 @@ describe('a stream that cannot take the ruling says so, and offers the link', ()
     (tab.read(GYLD_TAB_HOVER_TAP).get() as AtomTapHandle<string>).set(node.id);
     await expect.poll(() => tab.read(GYLD_TAB_HOVER).get()).toBe(node.id);
     const markup = tab.render(<GyldBrowser tabId="card-refused" />);
-    expect(markup).toContain('Answer (needs its own stream)');
-    expect(markup).toContain('gyld-node-card-refusal');
-    expect(markup).toContain('already declares 6 records');
-    expect(markup).toContain('Link a stream for this ruling');
-    expect(/<button[^>]*class="gyld-card-link"[^>]*disabled/.test(markup)).toBe(false);
+    expect(markup).toContain('>Answer<');
+    expect(markup).not.toContain('needs its own stream');
+    expect(markup).not.toContain('gyld-node-card-refusal');
+    expect(markup).not.toContain('gyld-card-link');
   });
 
   it('offers no such button on a stream whose module declares nothing yet', async () => {

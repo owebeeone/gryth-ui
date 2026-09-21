@@ -14,7 +14,10 @@ import {
   type OverlayTarget,
 } from '../decide/overlay';
 import { declaredSymbol } from '../decide/symbols';
-import { answerSubmit, askSubmit, composeAnswer, composeAsk } from '../decide/compose';
+import {
+  answerSubmit, askSubmit, composeAnswer, composeAnswerFragment, composeAsk,
+  composeAskFragment,
+} from '../decide/compose';
 import { DiffWindow } from '../diff/DiffWindow';
 import { diffTabTaps } from '../diff/diffTabTaps';
 import { StreamManager } from '../streams/StreamManager';
@@ -32,10 +35,12 @@ import streamsFixture from '../../test/fixtures/bundle/streams.json';
 
 // Step 4.4: submit instead of export.
 //
-// The export path stays exactly as it was, and the submit beside it sends the
-// SAME text. Nothing about a submission is composed twice: one function makes
-// the overlay, the Export button puts it in the box and the Submit button puts
-// it on the wire, so a test that pins one pins the other.
+// The export path stays exactly as it was: a whole single-record module in the
+// box, to merge by hand. The submit beside it sends a FRAGMENT of the same
+// composition — the classes and the members alone — for a Gyld host to fold into
+// the notebook that is already there (spec section 4.8). Nothing is composed
+// twice: one function makes the pieces and each button reads them its own way, so
+// a test that pins one pins the other.
 //
 // Every window renders to static markup here, as every window test in this
 // package does, so what is asserted is the composed call and the rendered
@@ -192,19 +197,38 @@ describe('a submit sends exactly the text the export writes', () => {
     }));
     expect(composed).toContain('class VersionPinRuling(Ruling):');
 
+    // What is SENT is the fragment of that same composition: the class, the
+    // member, and the names both need — with `use` among them, because a
+    // link-generated notebook imports `model` alone.
+    const fragment = composeAnswerFragment({ target, draft: DRAFT, rows, records });
+    expect(fragment).toBeDefined();
+    expect(fragment!.classes).toContain('class VersionPinRuling(Ruling):');
+    expect(fragment!.classes).not.toContain(REGISTRATION_MARKER);
+    expect(fragment!.classes).not.toContain('@model');
+    expect(fragment!.members).toEqual(['version_pin_ruling = use(VersionPinRuling)']);
+    expect(fragment!.imports).toEqual({
+      decision_stream_concepts: ['Decides', 'Ruling', 'Selects'],
+      glade_decisions: ['BumpToCurrent', 'VersionPin'],
+      gyld: ['use'],
+    });
+    // The whole module imports the root it subclasses; the fragment does not,
+    // because the module it is folded into already declares it.
+    expect(composed).toContain('GladeDecisions,');
+    expect(fragment!.imports.glade_decisions).not.toContain('GladeDecisions');
+
     const { ops, calls } = fakeOps();
-    await answerSubmit(ops, target, composed);
+    await answerSubmit(ops, target, fragment);
     expect(calls).toEqual([{
-      verb: 'answer', args: { stream: 'stream-a', overlay: composed },
+      verb: 'answer', args: { stream: 'stream-a', fragment },
     }]);
   });
 
   it('composes nothing when the shape check is not met, and submits nothing', async () => {
     const { ops, calls } = fakeOps();
-    expect(composeAnswer({
-      target, draft: { ...DRAFT, alternative: '' }, rows: [], records: undefined,
-    })).toBe('');
-    await answerSubmit(ops, target, '');
+    const input = { target, draft: { ...DRAFT, alternative: '' }, rows: [], records: undefined };
+    expect(composeAnswer(input)).toBe('');
+    expect(composeAnswerFragment(input)).toBeUndefined();
+    await answerSubmit(ops, target, undefined);
     expect(calls).toEqual([]);
   });
 
@@ -224,17 +248,33 @@ describe('a submit sends exactly the text the export writes', () => {
     expect(parts!.question).toContain('class PinAudit(Question):');
     expect(parts!.question).not.toContain(REGISTRATION_MARKER);
 
+    // And what is SENT is the fragment: the question, its alternatives and the
+    // members that place them all, with no root class and no registration block.
+    const fragment = composeAskFragment({ target, draft: ASK_DRAFT, records });
+    expect(fragment).toBeDefined();
+    expect(fragment!.classes).toContain('class PinAudit(Question):');
+    expect(fragment!.classes).toContain('class AuditOnBump(Alternative):');
+    expect(fragment!.classes).not.toContain('@model');
+    expect(fragment!.members).toEqual([
+      'pin_audit = use(PinAudit)',
+      'audit_on_bump = use(AuditOnBump)',
+      'audit_at_slice = use(AuditAtSlice)',
+    ]);
+    expect(fragment!.imports.gyld).toEqual(['use']);
+    expect(fragment!.imports.glade_decision_concepts)
+      .toEqual(['Alternative', 'Offers', 'Open', 'Question']);
+
     const { ops, calls } = fakeOps();
-    await askSubmit(ops, target, parts);
+    await askSubmit(ops, target, fragment);
     expect(calls).toEqual([{
-      verb: 'ask',
-      args: { stream: 'stream-a', overlay: parts!.overlay, question: parts!.question },
+      verb: 'ask', args: { stream: 'stream-a', fragment },
     }]);
   });
 
   it('asks nothing at all when the draft does not compose', async () => {
     const { ops, calls } = fakeOps();
     expect(composeAsk({ target, draft: ASK_DRAFT, records: undefined })).toBeUndefined();
+    expect(composeAskFragment({ target, draft: ASK_DRAFT, records: undefined })).toBeUndefined();
     await askSubmit(ops, target, undefined);
     expect(calls).toEqual([]);
   });
@@ -302,9 +342,11 @@ describe('the decide window offers Submit beside Export', () => {
     expect(markup).toContain('gyld-answer-export');
   });
 
-  it('keeps Export and refuses Submit over a module that already has records', async () => {
-    // stream-a's own overlay declares its rulings and its added question, and
-    // a submit writes the module whole. The export path is untouched.
+  it('keeps Submit over a module that already has records, and says what it does', async () => {
+    // stream-a's own overlay declares its rulings and its added question, and a
+    // submit now sends a FRAGMENT for a Gyld host to fold in beside them. So
+    // nothing on this window is refused for it: only the shape check (no
+    // alternative chosen yet) stands in the way, on both buttons alike.
     const { ops } = fakeOps();
     const desk = deskWith({ ops });
     const tab = desk.tab('sub-overwrite', decideTabTaps('sub-overwrite', {
@@ -315,14 +357,15 @@ describe('the decide window offers Submit beside Export', () => {
       (value) => value?.status === 'ok',
     );
     const markup = tab.render(<DecideWindow />);
-    expect(markup).toContain('gyld-decide-unsendable');
-    expect(markup).toContain('already declares');
-    expect(/<button[^>]*class="gyld-answer-submit"[^>]*disabled/.test(markup)).toBe(true);
-    expect(/<button[^>]*class="gyld-ask-submit"[^>]*disabled/.test(markup)).toBe(true);
-    // the export is refused only by its own shape check (no alternative
-    // chosen yet), never by this: merging by hand is what it is for
+    expect(markup).not.toContain('gyld-decide-unsendable');
+    expect(markup).not.toContain('already declares');
+    // Neither button carries a reason of its own beyond its shape check.
+    expect(/<button[^>]*class="gyld-answer-submit"[^>]*title=""/.test(markup)).toBe(true);
     expect(/<button[^>]*class="gyld-answer-export"[^>]*title=""/.test(markup)).toBe(true);
     expect(markup).toContain('choose one offered alternative');
+    // And the window says what a submit does to a notebook that holds records.
+    expect(markup).toContain('as many answers as you make');
+    expect(markup).toContain('answering the same question twice in one notebook is refused');
   });
 
   it('disables them while the connection is offline, and says so', async () => {

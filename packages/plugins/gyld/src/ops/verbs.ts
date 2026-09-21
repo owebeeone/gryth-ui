@@ -16,6 +16,7 @@
 // for them yet.
 
 import type { GyldAskContext } from '../ask/envelope';
+import type { OverlayFragment } from '../decide/overlay';
 
 /** The workspace share the surfaces live on (`grazel/apps/gyld-app.glade`). */
 export const GYLD_SHARE = 'ws-razel';
@@ -60,6 +61,16 @@ export interface GyldOpsArgs {
   overlay?: string;
   /** `ask`: the added question's module fragment, appended to `overlay`. */
   question?: string;
+  /**
+   * `answer` and `ask`: the records to FOLD into the notebook that is already
+   * there, rather than the whole module to write over it (spec section 4.8).
+   *
+   * The alternative to `overlay`, never its companion: the supplier refuses a
+   * request carrying both or neither. A Gyld host — `manage_decision_streams.py
+   * merge` — does the folding, so one notebook holds as many answers as the owner
+   * makes and no merge logic lives here.
+   */
+  fragment?: OverlayFragment;
   /** One line of provenance recorded on a generated stream record. */
   note?: string;
   /** `rebuild`: an explicit build stamp; the host defaults it to now. */

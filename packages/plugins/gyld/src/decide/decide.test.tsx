@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readProjection, readStreamsIndex } from '../contract';
+import { readProjection, readStreamsIndex, type DecideNowQuestion } from '../contract';
 import { GYLD_DECIDE_NOW, GYLD_RECORDS, GYLD_STREAMS, GYLD_VALIDATION } from '../grips';
 import type { GyldStreamsCensus } from '../store/state';
 import { RECORDS_UNSET, indexProjection, type GyldRecords } from '../records/records';
@@ -15,7 +15,9 @@ import {
   registrationBlock, rulingNames, type OverlayTarget,
 } from './overlay';
 import { declaredSymbol, declaredSymbols } from './symbols';
-import { composeRefusal, overwriteRefusal } from './compose';
+import {
+  composeAnswer, composeAnswerFragment, composeRefusal, overwriteRefusal,
+} from './compose';
 import { mountDesk } from '../../test/mount';
 import { FakeBundle } from '../../test/fakeBundle';
 import streamsFixture from '../../test/fixtures/bundle/streams.json';
@@ -191,33 +193,74 @@ function freshOverlay(root: string): GyldRecords {
   return indexProjection({ ...projection, occurrences, assertions }, target.stream);
 }
 
-describe('a submit never drops what the stream\'s overlay already declares', () => {
-  it('refuses to submit over a module that already carries records', async () => {
-    // The supplier's `answer` writes the whole overlay MODULE and this window
-    // composes a module holding the ONE record the draft adds, so submitting
-    // on a stream whose overlay already declares records would delete them.
-    // Found running the real composition: a fork of stream-a went from three
-    // rulings to one. The export path is untouched, because merging by hand is
-    // exactly what it is for.
+describe('a submit adds to what the stream\'s notebook already declares', () => {
+  it('allows a submit on a module that already carries records', async () => {
+    // What a submit sends is a FRAGMENT, and a Gyld host folds it into the
+    // notebook beside whatever it holds (spec section 4.8). So a stream whose
+    // module already declares six records is the ORDINARY case and refuses
+    // nothing — which is the point: the owner has several questions to answer
+    // and wants them in one notebook. Until this landed a submit wrote the
+    // module whole and was refused here with "already declares 6 records",
+    // which left him one ruling per notebook.
     const records = await streamARecords();
-    const reason = overwriteRefusal(records, target);
-    // SIX, not seven: stream A's module owns seven slots in this projection
-    // and one of them is the root class itself, which the composed module
-    // declares again. What a submit would drop is the six placed records.
     expect([...records.occurrenceBySlot.keys()]
       .filter((slot) => slot.startsWith(`${target.module}:`))).toHaveLength(7);
-    expect(reason).toContain('already declares 6 records');
-    expect(reason).toContain('glade_decisions_stream_a');
-    expect(reason).toContain('Export');
+    expect(overwriteRefusal(records, target)).toBe('');
   });
 
-  it('does not count the root class every generated module declares', () => {
-    // A stream linked or forked for one ruling, which is what the refusal
-    // above advises. Its module declares exactly the root class, and the
-    // composed module regenerates that class under the very same name, so
-    // nothing is lost and the submit is allowed. Live on 2026-09-14 this was
-    // refused with "already declares 1 record", which put every fork and every
-    // link in the same place and made the submit unreachable.
+  it('sends the records alone, with no root class and no registration block', async () => {
+    // The fragment is the classes and the members, and nothing that would
+    // rewrite what the notebook already says about itself: no `@model` root and
+    // no `gyld-stream-record` block. The whole module — the EXPORT text — still
+    // carries both, because it is a module to merge by hand.
+    const records = await streamARecords();
+    const input = {
+      target,
+      draft: {
+        question: VERSION_PIN,
+        alternative: BUMP,
+        principal: 'gianni',
+        stamp: '2026-09-13T01:00:00Z',
+        sources: '',
+        text: 'ruled',
+        drafted: '',
+      },
+      rows: [{ slot: VERSION_PIN, label: 'version_pin' } as DecideNowQuestion],
+      records,
+    };
+    const fragment = composeAnswerFragment(input)!;
+    expect(fragment.classes).toBe(`class VersionPinRuling(Ruling):
+    """ruled"""
+    principal = "gianni"
+    stamp = "2026-09-13T01:00:00Z"
+    decides = Decides[VersionPin]
+    selects = Selects[BumpToCurrent]
+`);
+    expect(fragment.members).toEqual(['version_pin_ruling = use(VersionPinRuling)']);
+    expect(fragment.imports).toEqual({
+      decision_stream_concepts: ['Decides', 'Ruling', 'Selects'],
+      glade_decisions: ['BumpToCurrent', 'VersionPin'],
+      gyld: ['use'],
+    });
+    // And the module the export box holds is still the whole thing.
+    expect(composeAnswer(input)).toContain(REGISTRATION_MARKER);
+    expect(composeAnswer(input)).toContain('@model');
+  });
+
+  it('refuses a module whose root class is not the root the stream registered', () => {
+    // A fragment's members are folded into the top-level class the stream
+    // REGISTERED as its root, so a module declaring its root under any other
+    // name has nowhere for them to go. The two disagreeing is the stream
+    // manager's to settle, and the window says which is which.
+    const reason = overwriteRefusal(freshOverlay('GladeDecisionsElsewhere'), target);
+    expect(reason).toContain('GladeDecisionsElsewhere');
+    expect(reason).toContain('GladeDecisionsStreamA');
+    expect(reason).toContain('nowhere to place');
+  });
+
+  it('allows a module that declares only the root the stream registered', () => {
+    // The shape a stream linked for its first ruling has: one memberless slot,
+    // its own root class, under the registered name.
     const records = freshOverlay(target.root);
     expect([...records.occurrenceBySlot.keys()]
       .filter((slot) => slot.startsWith(`${target.module}:`)))
@@ -225,20 +268,8 @@ describe('a submit never drops what the stream\'s overlay already declares', () 
     expect(overwriteRefusal(records, target)).toBe('');
   });
 
-  it('refuses a module whose root class is not the root the stream registered', () => {
-    // The composed module writes `class <the registered root>`, so a module
-    // declaring its root under any other name would lose that class. The two
-    // disagreeing is the stream manager's to settle and the window says which
-    // is which rather than overwriting one with the other.
-    const reason = overwriteRefusal(freshOverlay('GladeDecisionsElsewhere'), target);
-    expect(reason).toContain('GladeDecisionsElsewhere');
-    expect(reason).toContain('GladeDecisionsStreamA');
-    expect(reason).not.toContain('already declares');
-  });
-
   it('allows a stream whose own module declares nothing yet', () => {
-    // The module of a stream whose build carries no slot of it at all: there
-    // is nothing to drop, so there is nothing to refuse.
+    // The module of a stream whose build carries no slot of it at all.
     expect(overwriteRefusal({ ...RECORDS_UNSET, status: 'ok' as const }, target)).toBe('');
     // and it says nothing at all when there is no index to read
     expect(overwriteRefusal(undefined, target)).toBe('');
@@ -618,7 +649,9 @@ describe('the window', () => {
     expect(markup).toContain(`value="${VERSION_PIN}"`);
     expect(markup).toContain('answerable now');
     expect(markup).toContain(rebuildCommand());
-    expect(markup).toContain('Export puts the same text in the box');
+    expect(markup).toContain('folds it into this stream');
+    expect(markup).toContain('as many answers as you make');
+    expect(markup).toContain('Export puts a whole single-record module in the box');
     // no question chosen yet, so the export is refused and nothing is composed
     expect(/<button[^>]*class="gyld-answer-export"[^>]*disabled/.test(markup)).toBe(true);
     expect(markup).toContain('choose the question this answers');

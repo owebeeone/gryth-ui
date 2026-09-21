@@ -3,7 +3,9 @@ import type { GyldOps, GyldOpsResponse } from '../ops/ops';
 import type { GyldRecords } from '../records/records';
 import { answerShapeFaults, askShapeFaults, type AnswerDraft, type AskDraft } from './drafts';
 import {
-  answerOverlay, askFragments, type AskFragments, type OverlayTarget,
+  answerFragment, answerOverlay, askFragment, askFragments,
+  type AnswerComposition, type AskComposition, type AskFragments,
+  type OverlayFragment, type OverlayTarget,
 } from './overlay';
 import { declaredSymbol, declaredSymbols } from './symbols';
 
@@ -53,33 +55,26 @@ export function composeRefusal(records: GyldRecords | undefined): string {
  * Why this draft may be EXPORTED but not SUBMITTED, or the empty string when
  * it may be both.
  *
- * The supplier's `answer` and `ask` write the overlay MODULE, whole
- * (`glade-gyld/src/verbs.rs`: the text is written as the stream's overlay
- * module and the stream is rebuilt). This window composes a module holding the
- * one record the draft adds, which is right for the export path, because
- * merging it into a module that already holds others is the owner's. Sent
- * instead of merged, that same text would DELETE every other record the module
- * declares, which a live run showed: a fork of stream-a went from three
- * rulings to one.
+ * A submit no longer writes the module whole. It sends a FRAGMENT — the records
+ * this draft adds, as imports, class text and member lines — and a Gyld host
+ * folds them into the notebook that is already there
+ * (`gyld/scripts/manage_decision_streams.py merge`, spec section 4.8). So a
+ * stream whose module already declares records is the ORDINARY case now and
+ * refuses nothing: that is the whole point, because the owner has several
+ * questions to answer and wants them in one notebook. Answering the SAME
+ * question twice is refused by that host as `NOTEBOOK_ALREADY_HAS`, which is the
+ * one place that can read the file and see it.
  *
- * So a stream whose own overlay module already declares records refuses the
- * submit and says which module and how many. What it declares is read, not
- * guessed: a placed record's qualified slot is `<module>:<Root>.<member>`, and
- * the ones whose module is this stream's are the records this stream's overlay
- * wrote.
+ * What is left here is the ROOT NAME. A fragment's member lines are folded into
+ * the top-level class the stream REGISTERED as its root, so a module declaring
+ * its root under any other name has nowhere for them to go. The window says
+ * which two names disagree rather than sending a fragment that cannot land:
+ * which of them is right is the stream manager's to settle.
  *
- * The module's own ROOT CLASS is not one of them. Its slot is `<module>:<Root>`
- * with no `.member` after the module prefix - the one memberless occurrence
- * slot a module contributes, and every generated overlay declares it, so
- * counting it refused every fork and every link ever made for one ruling,
- * which is exactly the flow this refusal advises (live, 2026-09-14: the link
- * `demo-keys-ruling` owned one slot,
- * `glade_decisions_demo_keys_ruling:GladeDecisionsDemoKeysRuling`, and was
- * refused with "already declares 1 record"). Nothing is lost by rewriting that
- * class, because the composed module declares it again - PROVIDED it declares
- * it under the same name. So a module whose declared root is not the root the
- * stream registered is refused too, naming both: that class would be dropped,
- * and which of the two names is right is the stream manager's to settle.
+ * What a module declares is read, not guessed: a placed record's qualified slot
+ * is `<module>:<Root>.<member>`, so the slot whose module is this stream's and
+ * which has no `.member` after the module prefix is its root class — the one
+ * memberless occurrence slot a module contributes.
  */
 export function overwriteRefusal(
   records: GyldRecords | undefined,
@@ -89,25 +84,16 @@ export function overwriteRefusal(
     return '';
   }
   const prefix = `${target.module}:`;
-  const owned = [...records.occurrenceBySlot.keys()]
-    .filter((slot) => slot.startsWith(prefix));
   // After the module prefix, so a dotted module name is not read as a member.
-  const declared = owned.filter((slot) => slot.slice(prefix.length).includes('.'));
-  if (declared.length > 0) {
-    return `${target.module} already declares ${declared.length} `
-      + `record${declared.length === 1 ? '' : 's'}, and a submit writes this module `
-      + 'whole, so it would drop them. Export this text and merge it into the '
-      + 'stream\'s own overlay module instead, or answer on a stream forked or '
-      + 'linked for this ruling';
-  }
-  const foreign = owned
+  const foreign = [...records.occurrenceBySlot.keys()]
+    .filter((slot) => slot.startsWith(prefix))
     .filter((slot) => !slot.slice(prefix.length).includes('.') && slot !== `${prefix}${target.root}`)
     .map((slot) => slot.slice(prefix.length));
   if (foreign.length > 0) {
     return `${target.module} declares its root class as ${foreign.join(', ')} and `
-      + `${target.stream} registers ${target.root}, so a submit would write the `
-      + 'registered root and drop that class. Settle the two in the stream '
-      + 'manager, or export this text and merge it by hand';
+      + `${target.stream} registers ${target.root}, so a submit has nowhere to place `
+      + 'this record: a fragment is folded into the root the stream registered. '
+      + 'Settle the two in the stream manager, or export this text and merge it by hand';
   }
   return '';
 }
@@ -120,17 +106,34 @@ export interface AnswerInput {
   records: GyldRecords | undefined;
 }
 
-export function composeAnswer({ target, draft, rows, records }: AnswerInput): string {
+/** The pieces one answer composes from, or undefined when the draft does not
+ *  compose. Both readers — the export box's module and the submit's fragment —
+ *  are built from this one resolution, so they can never disagree. */
+function answerComposition({
+  target, draft, rows, records,
+}: AnswerInput): AnswerComposition | undefined {
   if (target === undefined || records === undefined || answerShapeFaults(draft).length > 0) {
-    return '';
+    return undefined;
   }
   const row = rows.find((entry) => entry.slot === draft.question);
   const question = declaredSymbol(records, draft.question);
   const alternative = declaredSymbol(records, draft.alternative);
   if (row === undefined || question === undefined || alternative === undefined) {
-    return '';
+    return undefined;
   }
-  return answerOverlay({ target, draft, question, label: row.label, alternative });
+  return { target, draft, question, label: row.label, alternative };
+}
+
+export function composeAnswer(input: AnswerInput): string {
+  const composition = answerComposition(input);
+  return composition === undefined ? '' : answerOverlay(composition);
+}
+
+/** The fragment one answer SENDS: the ruling class, the member that places it and
+ *  the names both need, for a Gyld host to fold into the notebook. */
+export function composeAnswerFragment(input: AnswerInput): OverlayFragment | undefined {
+  const composition = answerComposition(input);
+  return composition === undefined ? undefined : answerFragment(composition);
 }
 
 export interface AskInput {
@@ -146,7 +149,7 @@ export interface AskInput {
  * module head and the records it appends to it separately, and `askJoin` is
  * what the export box shows. One composition, two readers.
  */
-export function composeAsk({ target, draft, records }: AskInput): AskFragments | undefined {
+function askComposition({ target, draft, records }: AskInput): AskComposition | undefined {
   if (target === undefined || records === undefined || askShapeFaults(draft).length > 0) {
     return undefined;
   }
@@ -155,42 +158,55 @@ export function composeAsk({ target, draft, records }: AskInput): AskFragments |
   if (requires.missing.length > 0 || gates.missing.length > 0) {
     return undefined;
   }
-  return askFragments({ target, draft, requires: requires.found, gates: gates.found });
+  return { target, draft, requires: requires.found, gates: gates.found };
 }
 
-/** Send an answer. Text that did not compose is not sent at all: the window
- *  never asks the supplier to build nothing. */
-export async function answerSubmit(
-  ops: GyldOps,
-  target: OverlayTarget | undefined,
-  overlay: string,
-): Promise<GyldOpsResponse | undefined> {
-  if (target === undefined || overlay === '') {
-    return undefined;
-  }
-  return ops.answer({ stream: target.stream, overlay });
+export function composeAsk(input: AskInput): AskFragments | undefined {
+  const composition = askComposition(input);
+  return composition === undefined ? undefined : askFragments(composition);
+}
+
+/** The fragment one ask SENDS: the question class, its alternatives and the
+ *  members that place them all. */
+export function composeAskFragment(input: AskInput): OverlayFragment | undefined {
+  const composition = askComposition(input);
+  return composition === undefined ? undefined : askFragment(composition);
 }
 
 /**
- * Send a new question.
+ * Send an answer: the FRAGMENT, for a Gyld host to fold into the notebook.
  *
- * The supplier's `ask` takes an `overlay` and a `question` fragment and writes
- * the second under the first. Those two are exactly what the composition
- * produced, and `askJoin` of them is exactly what the export box holds, so the
- * module the supplier writes is the module the reader read. A draft that did
- * not compose is not sent at all.
+ * The export box still holds the whole module — a single-record module to read
+ * and merge by hand — and the wire carries the records alone, so a submit adds to
+ * a notebook instead of replacing it. A draft that did not compose is not sent at
+ * all: the window never asks the supplier to build nothing.
+ */
+export async function answerSubmit(
+  ops: GyldOps,
+  target: OverlayTarget | undefined,
+  fragment: OverlayFragment | undefined,
+): Promise<GyldOpsResponse | undefined> {
+  if (target === undefined || fragment === undefined) {
+    return undefined;
+  }
+  return ops.answer({ stream: target.stream, fragment });
+}
+
+/**
+ * Send a new question, the same way: the question class, its alternatives and
+ * the members that place them, folded into the notebook that is there.
+ *
+ * `overlay` + `question` was the old pair, and the supplier still takes it; what
+ * this window sends is the fragment, because a stream's notebook normally holds
+ * records already and a whole-module write would drop them.
  */
 export async function askSubmit(
   ops: GyldOps,
   target: OverlayTarget | undefined,
-  fragments: AskFragments | undefined,
+  fragment: OverlayFragment | undefined,
 ): Promise<GyldOpsResponse | undefined> {
-  if (target === undefined || fragments === undefined) {
+  if (target === undefined || fragment === undefined) {
     return undefined;
   }
-  return ops.ask({
-    stream: target.stream,
-    overlay: fragments.overlay,
-    question: fragments.question,
-  });
+  return ops.ask({ stream: target.stream, fragment });
 }

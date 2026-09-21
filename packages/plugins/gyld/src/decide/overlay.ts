@@ -27,8 +27,13 @@ export const STREAM_VOCABULARY = 'decision_stream_concepts';
 /** The vocabulary module the decision graph itself is declared against. */
 export const DECISION_VOCABULARY = 'glade_decision_concepts';
 
+/** The module `model` and `use` come from. An ordinary module name, which is what
+ *  lets a FRAGMENT name it beside the vocabularies: a link-generated notebook
+ *  imports `model` alone, and the merge host unions `use` into that statement. */
+export const GYLD_MODULE = 'gyld';
+
 /** Where `model` and `use` come from. */
-export const GYLD_IMPORT = 'from gyld import model, use';
+export const GYLD_IMPORT = `from ${GYLD_MODULE} import model, use`;
 
 /**
  * The line that introduces a stream's registration block, exactly
@@ -263,6 +268,72 @@ export function rulingNames(question: DeclaredSymbol, label: string): {
   return { symbol: `${question.symbol}Ruling`, member: `${label}_ruling` };
 }
 
+/**
+ * The three things a FRAGMENT declares (spec section 4.8): the names the records
+ * it adds have to import, the Python text of those records, and the member lines
+ * that place them in the stream's root.
+ *
+ * It is what a submit sends. A Gyld host folds it into the notebook that is
+ * already there — by line span, with every other byte of that file carried over —
+ * so one notebook holds as many answers as the owner makes. Nothing here merges
+ * anything: composing the pieces is this window's, folding them in is Gyld's.
+ *
+ * `gyld` is an ordinary key of `imports`: a link-generated module imports `model`
+ * alone and needs `use` added, which the host does by unioning the names into the
+ * statement that is there.
+ */
+export interface OverlayFragment {
+  /** Module -> the names to import from it. */
+  imports: Record<string, string[]>;
+  /** One or more top-level classes, as Python text. */
+  classes: string;
+  /** One assignment per line, each placing one class in the root. */
+  members: string[];
+}
+
+/** The needed-imports map as a fragment declares it: modules and names sorted, so
+ *  the same draft always composes the same document. */
+function fragmentImports(needed: Map<string, Set<string>>): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const module of [...needed.keys()].sort()) {
+    out[module] = [...(needed.get(module) ?? [])].sort();
+  }
+  return out;
+}
+
+/** The pieces one draft contributes to a module, which is all a fragment is.
+ *  `use` is needed by every member line, and a fragment says so for itself. */
+interface Pieces {
+  needed: Map<string, Set<string>>;
+  classes: string[];
+  members: string[];
+}
+
+/** Those pieces as the fragment a submit sends. */
+function fragmentOf(pieces: Pieces): OverlayFragment {
+  need(pieces.needed, GYLD_MODULE, 'use');
+  return {
+    imports: fragmentImports(pieces.needed),
+    classes: `${pieces.classes.join('\n')}\n`,
+    members: pieces.members,
+  };
+}
+
+/** The root class a whole module ends with: the `@model` declaration and one
+ *  member line per record the draft placed. */
+function rootClass(target: OverlayTarget, members: readonly string[]): string[] {
+  return [
+    '',
+    '',
+    '@model',
+    `class ${target.root}(${target.followsRoot}):`,
+    docstring(`Stream ${target.stream} root: every member of ${target.parent}, `
+      + 'plus this stream\'s records.'),
+    ...members.map((member) => `    ${member}`),
+    '',
+  ];
+}
+
 export interface AnswerComposition {
   target: OverlayTarget;
   draft: AnswerDraft;
@@ -275,51 +346,66 @@ export interface AnswerComposition {
 }
 
 /**
- * The overlay module for one answer: a `Ruling` that `Decides` the question
- * and `Selects` the alternative, placed in the stream's root.
+ * What one answer adds: a `Ruling` that `Decides` the question and `Selects` the
+ * alternative, and the member that places it.
  *
- * The module holds THIS draft's record and no other. A stream's overlay
- * normally holds several, and merging is the owner's, which the window says
- * beside the box.
+ * ONE composition, two readers — the whole module the export box shows and the
+ * fragment the submit sends are built from exactly these pieces, so what a reader
+ * reads before pressing is what the notebook ends up carrying.
  */
-export function answerOverlay(composition: AnswerComposition): string {
-  const { target, draft, question, label, alternative } = composition;
+function answerPieces(composition: AnswerComposition): Pieces {
+  const { draft, question, label, alternative } = composition;
   const names = rulingNames(question, label);
   const needed = new Map<string, Set<string>>();
   need(needed, STREAM_VOCABULARY, 'Decides', 'Ruling', 'Selects');
   need(needed, question.module, question.symbol);
   need(needed, alternative.module, alternative.symbol);
-  need(needed, target.followsModule, target.followsRoot);
   const sources = sourceLines(draft);
-  const lines = [
-    ...moduleDocstring(target),
-    '',
-    ...imports(needed),
-    '',
-    GYLD_IMPORT,
-    '',
-    '',
+  const classes = [
     `class ${names.symbol}(Ruling):`,
     docstring(rulingProse(draft)),
     `    principal = ${quoted(draft.principal.trim())}`,
     `    stamp = ${quoted(draft.stamp.trim())}`,
   ];
   if (sources.length > 0) {
-    lines.push(`    sources = ${tuple(sources)}`);
+    classes.push(`    sources = ${tuple(sources)}`);
   }
-  lines.push(
+  classes.push(
     `    decides = Decides[${question.symbol}]`,
     `    selects = Selects[${alternative.symbol}]`,
-    '',
-    '',
-    '@model',
-    `class ${target.root}(${target.followsRoot}):`,
-    docstring(`Stream ${target.stream} root: every member of ${target.parent}, `
-      + 'plus this stream\'s records.'),
-    `    ${names.member} = use(${names.symbol})`,
-    '',
   );
-  return lines.join('\n');
+  return { needed, classes, members: [`${names.member} = use(${names.symbol})`] };
+}
+
+/**
+ * The overlay module for one answer, holding THIS draft's record and no other.
+ *
+ * It is the EXPORT text: a module to read, edit and merge into a notebook by
+ * hand. A submit sends [`answerFragment`] instead, which is the same pieces as a
+ * fragment for a Gyld host to fold into the notebook that is there.
+ */
+export function answerOverlay(composition: AnswerComposition): string {
+  const { target } = composition;
+  const pieces = answerPieces(composition);
+  // The whole module subclasses the followed stream's root, so it imports it; a
+  // fragment does not, because the module it is folded into already has it.
+  need(pieces.needed, target.followsModule, target.followsRoot);
+  return [
+    ...moduleDocstring(target),
+    '',
+    ...imports(pieces.needed),
+    '',
+    GYLD_IMPORT,
+    '',
+    '',
+    ...pieces.classes,
+    ...rootClass(target, pieces.members),
+  ].join('\n');
+}
+
+/** The same answer as the fragment a submit sends. */
+export function answerFragment(composition: AnswerComposition): OverlayFragment {
+  return fragmentOf(answerPieces(composition));
 }
 
 export interface AskComposition {
@@ -382,10 +468,11 @@ export function askOverlay(composition: AskComposition): string {
   return askJoin(askFragments(composition));
 }
 
-/** The same module, as the head and the records the supplier's `ask` takes
- *  separately. `askJoin` puts them back together. */
-export function askFragments(composition: AskComposition): AskFragments {
-  const { target, draft, requires, gates } = composition;
+/** What one ask adds: the `Question` class, one `Alternative` per offered answer,
+ *  and the member lines that place them all. The same pieces the export box's
+ *  module is built from and the fragment a submit sends. */
+function askPieces(composition: AskComposition): Pieces {
+  const { draft, requires, gates } = composition;
   const alternatives = filledAlternatives(draft);
   const preferred = preferredAlternative(draft);
   const needed = new Map<string, Set<string>>();
@@ -403,45 +490,59 @@ export function askFragments(composition: AskComposition): AskFragments {
   for (const declared of [...requires, ...gates]) {
     need(needed, declared.module, declared.symbol);
   }
-  need(needed, target.followsModule, target.followsRoot);
-  const head = [
-    ...moduleDocstring(target),
-    '',
-    ...imports(needed),
-    '',
-    GYLD_IMPORT,
-  ];
-  const lines = [
-    '',
+  const classes = [
     `class ${draft.symbol.trim()}(Question):`,
     docstring(draft.docstring),
     `    status = ${preferred === undefined ? 'Open' : 'Lean'}`,
   ];
   if (requires.length > 0) {
-    lines.push(`    requires = Requires[${requires.map((r) => r.symbol).join(', ')}]`);
+    classes.push(`    requires = Requires[${requires.map((r) => r.symbol).join(', ')}]`);
   }
   if (gates.length > 0) {
-    lines.push(`    gated_by = GatedBy[${gates.map((g) => g.symbol).join(', ')}]`);
+    classes.push(`    gated_by = GatedBy[${gates.map((g) => g.symbol).join(', ')}]`);
   }
-  lines.push(
+  classes.push(
     `    offers = Offers[${alternatives.map((a) => a.symbol.trim()).join(', ')}]`,
   );
   for (const alternative of alternatives) {
-    lines.push('', '', `class ${alternative.symbol.trim()}(Alternative):`, docstring(alternative.description));
+    classes.push('', '', `class ${alternative.symbol.trim()}(Alternative):`, docstring(alternative.description));
     if (alternative.preferred) {
-      lines.push('    preference = Preferred');
+      classes.push('    preference = Preferred');
     }
   }
-  lines.push(
+  return {
+    needed,
+    classes,
+    members: [
+      `${draft.label.trim()} = use(${draft.symbol.trim()})`,
+      ...alternatives.map((a) => `${a.label.trim()} = use(${a.symbol.trim()})`),
+    ],
+  };
+}
+
+/** The same module, as the head and the records the supplier's `ask` takes
+ *  separately. `askJoin` puts them back together. */
+export function askFragments(composition: AskComposition): AskFragments {
+  const { target } = composition;
+  const pieces = askPieces(composition);
+  need(pieces.needed, target.followsModule, target.followsRoot);
+  const head = [
+    ...moduleDocstring(target),
     '',
+    ...imports(pieces.needed),
     '',
-    '@model',
-    `class ${target.root}(${target.followsRoot}):`,
-    docstring(`Stream ${target.stream} root: every member of ${target.parent}, `
-      + 'plus this stream\'s records.'),
-    `    ${draft.label.trim()} = use(${draft.symbol.trim()})`,
-    ...alternatives.map((a) => `    ${a.label.trim()} = use(${a.symbol.trim()})`),
+    GYLD_IMPORT,
+  ];
+  const lines = [
     '',
-  );
+    ...pieces.classes,
+    ...rootClass(target, pieces.members),
+  ];
   return { overlay: head.join('\n'), question: lines.join('\n') };
+}
+
+/** The same ask as the fragment a submit sends: its classes and its members,
+ *  folded into the notebook that is already there rather than written over it. */
+export function askFragment(composition: AskComposition): OverlayFragment {
+  return fragmentOf(askPieces(composition));
 }
