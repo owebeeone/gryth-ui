@@ -51,7 +51,7 @@ python3 gyld-ui.py stop [--purge]           # no --port: every instance
 
 | verb | what it does |
 |---|---|
-| `start` | prerequisites, then grazel, then a wait for the supplier to publish a build (it lays the bundle root and makes the first one itself, as run `boot-1`), then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |
+| `start` | prerequisites, then grazel, then a wait for the supplier to publish a build (it lays the bundle root and makes the first one itself, as run `boot-<session>`), then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |
 | `status` | grazel's `/bootstrap.json`, the node's WS port, the supplier serving, the bundle root built and how many streams it lists, the supplier's publication of that build, the page, and in dev mode the two proxied paths. Exit 0 when it works, 1 when it does not. `--json` for a machine. |
 | `stop` | SIGTERM to grazel's process group (which takes the node and both suppliers) and to vite's, SIGKILL what is left, clear a lock the node did not, and confirm nothing of the instance survives. The data stays unless `--purge`. |
 | `restart` | `stop`, then `start` with the options the instance recorded. |
