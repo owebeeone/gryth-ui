@@ -291,14 +291,20 @@ class BootstrapTest(unittest.TestCase):
 class FirstBuildTest(unittest.TestCase):
     """The supplier lays and builds the bundle root itself now (glade-gyld
     `supplier.rs`), so what the script has to read out of grazel's log is
-    whether that first build is still in flight."""
+    whether that first build is still in flight.
+
+    The fixture carries a real-shaped id, `boot-<session>`: the supplier tags it
+    with its own process's start time, so the script cannot assume the id and the
+    regex has to read whatever is there."""
+
+    BOOT_RUN = "boot-muaoaymy"
 
     FRESH = "\n".join(
         [
             "[node] listening 9099",
             "[gyld] glade-gyld: attaching to ws://127.0.0.1:9099 as ws-razel/gyld.ops",
             "[gyld] glade-gyld: first build of /d/files/gyld — the bundle root "
-            "holds none (run boot-1)",
+            f"holds none (run {BOOT_RUN})",
             "[gwz] glade-gwz: serving; SIGTERM/SIGINT to stop",
             "[gyld] glade-gyld: serving; SIGTERM/SIGINT to stop",
             "[gyld] glade-gyld: the checkout declares fork-a, stream-a, stream-b",
@@ -307,7 +313,7 @@ class FirstBuildTest(unittest.TestCase):
     PUBLISHED = "[gyld] glade-gyld: published builds/build-1789363954989 (5 streams)"
 
     def test_a_fresh_root_names_the_run_its_first_build_took(self):
-        self.assertEqual(gu.first_build_run(self.FRESH), "boot-1")
+        self.assertEqual(gu.first_build_run(self.FRESH), self.BOOT_RUN)
 
     def test_a_publication_ends_the_first_build(self):
         landed = self.FRESH + "\n" + self.PUBLISHED

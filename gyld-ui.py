@@ -18,8 +18,8 @@ The Gyld hosts the supplier runs are a different matter: they need 3.13 at
 place it can be. grazel passes no interpreter through to the supplier, so this
 script checks that path is there and has nothing to override it with.
 
-The bundle root is NOT laid here. `glade-gyld` lays the stage and makes the
-first build itself on an empty root, as run `boot-1`, while it goes on serving
+The bundle root is NOT laid here. `glade-gyld` lays the stage and makes the first
+build itself on an empty root, as run `boot-<session>`, while it goes on serving
 (`glade-wz/glade-gyld/README.md`, "The first build is the supplier's own"). What
 this script does is WAIT for it: the supplier's `published builds/… (N streams)`
 line is the census reaching the shares, and a desk that opens before it reads as
@@ -446,9 +446,10 @@ def missing_readiness(text: str, node_port: int) -> List[str]:
 
 
 #: `[gyld] glade-gyld: first build of <root> — the bundle root holds none
-#: (run boot-1)`: the supplier found an empty bundle root and is building it
-#: itself while it serves. The run id is READ off the line rather than assumed,
-#: because it is the supplier that names it.
+#: (run boot-<session>)`: the supplier found an empty bundle root and is building
+#: it itself while it serves. The run id is READ off the line rather than assumed,
+#: because it is the supplier that names it — the session tag on the end is that
+#: supplier process's, so it differs on every start.
 _FIRST_BUILD = re.compile(r"\[gyld\] glade-gyld: first build of .* \(run (\S+)\)")
 
 #: `[gyld] glade-gyld: published builds/<stamp> (5 streams)`: the census reached
@@ -490,8 +491,8 @@ def publication_of(text: str, name: str) -> Optional[PublishedBuild]:
 
 def first_build_run(text: str) -> Optional[str]:
     """The run the supplier's own first build is taking, while it is still in
-    flight — `boot-1` — or nothing. A publication ends it: that is the build
-    landing, and it is what the wait below is waiting for."""
+    flight — `boot-<session>` — or nothing. A publication ends it: that is the
+    build landing, and it is what the wait below is waiting for."""
     found = _FIRST_BUILD.findall(text)
     if not found or _PUBLISHED.search(text):
         return None
@@ -1340,10 +1341,10 @@ def wait_for_publication(
 
     Both of the supplier's paths end here. On a root that already holds a build
     it publishes the moment it attaches and this returns at once; on an empty
-    one it lays the stage and runs the first build itself as `boot-1`, which is
-    minutes of Python, and the wait says so with the elapsed time rather than
-    sitting silent. Nothing else is done meanwhile: the supplier owns this and a
-    second copy of it here is exactly what was deleted.
+    one it lays the stage and runs the first build itself as `boot-<session>`,
+    which is minutes of Python, and the wait says so with the elapsed time rather
+    than sitting silent. Nothing else is done meanwhile: the supplier owns this
+    and a second copy of it here is exactly what was deleted.
 
     Nothing published is `None`, and the caller says which of the two reasons it
     was: grazel exited, or the timeout ran out.
@@ -1860,7 +1861,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Start, check and stop the Gyld UI composition: grazel with the "
             "glade-gyld supplier behind it and the Gyld-only desktop in front. "
             "The supplier lays the bundle root and makes its first build "
-            "itself (run boot-1); start waits for it to publish one."
+            "itself (run boot-<session>); start waits for it to publish one."
         ),
         epilog=(
             "Instances live under ~/.gyld-ui/instances/<port>/ and survive a "
