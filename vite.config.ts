@@ -57,8 +57,12 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
  *  decision declaration, whose docstrings ask their decision outright and
  *  whose lens nodes carry that question as `title`. The default moves forward
  *  with each: pointed at an older run the windows would render those absences,
- *  which is correct and is not what this default is for. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v9'
+ *  which is correct and is not what this default is for. v10 is the first built
+ *  from revision 3, which corrected `version_pin`'s premise: the node's
+ *  lockfile is not tracked, so that question asks for a floor in the manifest
+ *  rather than whether to move off a lock the repository never held. An older
+ *  run draws the box the way it was written, which is the same rule. */
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v10'
 
 /** Where the browser reaches the evaluator runs:
  *  `http://localhost:5173/gyld-evaluator`, with one directory per run under
