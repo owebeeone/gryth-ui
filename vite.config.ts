@@ -70,8 +70,18 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
  *  that matters for a default: under an older host a branch-induced question was
  *  never answerable, so a notebook that answered `scope_model` still showed
  *  `metadata_exposure` as a question nobody could answer. A bundle rebuilt from
- *  v11 or later emits it as answerable with the choice that opened it. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v11'
+ *  v11 or later emits it as answerable with the choice that opened it.
+ *
+ *  v12 is the first built from revision 5, the first revision that moves the
+ *  graph and not only its words: `metadata_exposure` offers four alternatives
+ *  where it offered none, and `relay_posture` no longer hangs off `topology`, so
+ *  it is an ordinary question rather than a branch nobody opened. Both are drawn,
+ *  so an older run's pictures are a different graph and not only different
+ *  prose: the `decisions` and `status` lenses draw one edge fewer, the `branch`
+ *  lens one node and one edge fewer, and `relay_posture` sits in a different
+ *  tier. v12 also carries a tenth source document, the metadata exposure table
+ *  the new alternatives were drawn from, which the ask window resolves. */
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v12'
 
 /** Where the browser reaches the evaluator runs:
  *  `http://localhost:5173/gyld-evaluator`, with one directory per run under

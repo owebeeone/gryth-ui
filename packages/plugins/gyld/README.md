@@ -778,7 +778,7 @@ do the same for the full desktop.
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is
 copied into this repository: the files are about five megabytes and they belong
 to the Gyld workspace. By default the mount points at
-`../../gyld-wz/gyld/artifacts/decision-streams-v11` relative to this repository,
+`../../gyld-wz/gyld/artifacts/decision-streams-v12` relative to this repository,
 which is where the sibling gwz member emits them. Point it somewhere else with
 an environment variable:
 
@@ -817,37 +817,42 @@ Nothing is copied into this repository here either. The runs are about ten
 megabytes each, mostly `report.html` and `workspace.sqlite`, and they belong to
 the Gyld workspace.
 
-The default names `decision-streams-v11` because that is the newest published
-run; it has moved forward with each one, as it did for v7, v8, v9 and v10. That
-run exists for two reasons: it is the first built from revision 4 of the decision
-declaration, whose `ucan` box no longer argues from JWT because UCAN 1.0 encodes
-its proofs as DAG-CBOR in its own envelope, and it is the first emitted under the
-rule that a chosen alternative OPENS the questions it implies. The second is the
-one a reader of this desk sees: under an older host a branch-induced question was
-never answerable, so a notebook that answered `scope_model` still showed
-`metadata_exposure` as a question nobody could answer, and from v11 on a rebuilt
-notebook emits it as answerable with the choice that opened it named in its
-`answerable_because`. Three of this package's own needs put a FLOOR under the
-default as well, and each still holds of v11. From the v5 run every lens node
-carries the point size and the
-justification the host drew it with, and this package reads both rather than
-guessing a font; an older bundle has no `fontsize` on its nodes, so its lens
-files report the missing field instead of drawing. From the v6 run every
-overlay module carries the `gyld-stream-record:` block Gyld discovers streams
-by, which is the block the decide window's exported and submitted text has to
-keep. And from the v7 run on every run emits `sources.json`, the SOURCE INDEX
-the ask window resolves a record's citations against
-(`gyld-wz/dev-docs/ui/GyldAskAgent.md` section 5). Pointed at an older run the
-window renders the index's absence, which is correct and is not what this
-default is for.
+The default names `decision-streams-v12` because that is the newest published
+run; it has moved forward with each one, as it did for v7, v8, v9, v10 and v11.
+That run is the first built from revision 5 of the decision declaration, and
+revision 5 is the first that moves the GRAPH rather than only its words.
+`metadata_exposure` offered no alternatives at all, because its answer was a
+table nobody had written; the table exists now, and the question offers the four
+answers it drew as a ladder. And `relay_posture` was live only if `topology` was
+taken, which nobody took, so the one question about whose relays and whose DNS a
+real route runs on was not on the graph at all; it hangs off nothing now and is
+an ordinary question placed by its own prerequisites. Both are things a reader
+of this desk sees drawn: a box with four Offers lines where it had none, one
+`Implies` arrow fewer, and `relay_posture` in another tier in every window that
+groups by tier. v11's own reason is under it and v12 keeps it: v11 was the first
+run emitted under the rule that a chosen alternative OPENS the questions it
+implies, so a notebook that answers `scope_model` shows `metadata_exposure` as
+answerable with the choice that opened it named in its `answerable_because`
+rather than as a question nobody could answer. Three of this package's own needs
+put a FLOOR under the default as well, and each still holds of v12. From the v5
+run every lens node carries the point size and the justification the host drew
+it with, and this package reads both rather than guessing a font; an older
+bundle has no `fontsize` on its nodes, so its lens files report the missing
+field instead of drawing. From the v6 run every overlay module carries the
+`gyld-stream-record:` block Gyld discovers streams by, which is the block the
+decide window's exported and submitted text has to keep. And from the v7 run on
+every run emits `sources.json`, the SOURCE INDEX the ask window resolves a
+record's citations against (`gyld-wz/dev-docs/ui/GyldAskAgent.md` section 5).
+Pointed at an older run the window renders the index's absence, which is correct
+and is not what this default is for.
 
 The committed bundle holds five streams over two lineages:
 
-- `base`, lineage `glade-decision-graph` revision v4. Twenty four questions,
+- `base`, lineage `glade-decision-graph` revision v5. Twenty four questions,
   four roots, six tiers, a projection, a decide-now list and a validation
   report that passes with no findings. Its four perspectives are `branch`,
   `decisions`, `status` and `tiers`; the `decisions` lens draws twenty nine
-  nodes, thirty two edges and two groups. Four of those questions are in tier
+  nodes, thirty one edges and two groups. Three of those questions are in tier
   `branch-induced`, which is what a stream that has chosen nothing emits: this
   declaration records no ruling, so no branch of it is open.
 - `stream-a`, a link over `base`: it rules two of the base's questions, records
