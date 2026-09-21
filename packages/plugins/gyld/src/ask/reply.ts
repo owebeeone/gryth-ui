@@ -289,10 +289,14 @@ const DIGITS = /^(.*?)(\d+)$/;
 /**
  * Order two run ids.
  *
- * The supplier mints `run-<n>` from a counter (`glade-gyld/src/supplier.rs`),
- * so a plain string order would put `run-10` before `run-2` and show a
- * conversation's turns out of order. Two ids that share a prefix and end in
- * digits are ordered by those digits; anything else is ordered as text. This
+ * The supplier mints `run-<session>-<n>` (`glade-gyld/src/supplier.rs`), where
+ * `<session>` is fixed-width base36 of that supplier process's start time and
+ * `<n>` its run counter. So the ids of ONE session share a prefix and order by
+ * their trailing digits — a plain string order would put `run-…-10` before
+ * `run-…-2` and show a conversation's turns out of order — and the ids of
+ * DIFFERENT sessions order as text, which at one tag width is time order too, so
+ * an older supplier's runs still come first. Two ids that share a prefix and end
+ * in digits are ordered by those digits; anything else is ordered as text. This
  * is ORDERING, not a Gyld fact: nothing is read out of a run id.
  */
 export function compareRunIds(left: string, right: string): number {

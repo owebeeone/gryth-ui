@@ -339,6 +339,18 @@ describe('the reply folds into what the window draws', () => {
     expect(compareRunIds('run-3', 'run-3')).toBe(0);
   });
 
+  it('orders one session by its trailing number and two sessions as text', () => {
+    // One session: its ids share a prefix, so the trailing digits decide and a
+    // tenth turn is not read as earlier than a second.
+    expect(compareRunIds('run-muaoaymy-2', 'run-muaoaymy-10')).toBeLessThan(0);
+    expect(compareRunIds('run-muaoaymy-10', 'run-muaoaymy-2')).toBeGreaterThan(0);
+    // Two sessions: the prefixes differ, so the digits do NOT decide and the ids
+    // order as text — which, the tag being the start time at one width, is also
+    // the order the two suppliers ran in.
+    expect(compareRunIds('run-muaoaymy-9', 'run-muaobk4c-1')).toBeLessThan(0);
+    expect(compareRunIds('run-muaobk4c-1', 'run-muaoaymy-9')).toBeGreaterThan(0);
+  });
+
   it('keeps the partial answer of a turn a budget stopped, and says the reason', () => {
     const stopped: GyldAskRecord[] = [
       answerLine('run-7', 1, 'the ruling turns on '),
