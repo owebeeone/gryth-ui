@@ -778,7 +778,7 @@ do the same for the full desktop.
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is
 copied into this repository: the files are about five megabytes and they belong
 to the Gyld workspace. By default the mount points at
-`../../gyld-wz/gyld/artifacts/decision-streams-v7` relative to this repository,
+`../../gyld-wz/gyld/artifacts/decision-streams-v10` relative to this repository,
 which is where the sibling gwz member emits them. Point it somewhere else with
 an environment variable:
 
@@ -817,14 +817,16 @@ Nothing is copied into this repository here either. The runs are about ten
 megabytes each, mostly `report.html` and `workspace.sqlite`, and they belong to
 the Gyld workspace.
 
-The default names `decision-streams-v7` and not an earlier run for three
-reasons. From the v5 run every lens node carries the point size and the
+The default names `decision-streams-v10` because that is the newest published
+run; it has moved forward with each one, as it did for v7, v8 and v9. Three of
+this package's own needs put a FLOOR under it as well, and each still holds of
+v10. From the v5 run every lens node carries the point size and the
 justification the host drew it with, and this package reads both rather than
 guessing a font; an older bundle has no `fontsize` on its nodes, so its lens
 files report the missing field instead of drawing. From the v6 run every
 overlay module carries the `gyld-stream-record:` block Gyld discovers streams
 by, which is the block the decide window's exported and submitted text has to
-keep. And the v7 run is the first that emits `sources.json`, the SOURCE INDEX
+keep. And from the v7 run on every run emits `sources.json`, the SOURCE INDEX
 the ask window resolves a record's citations against
 (`gyld-wz/dev-docs/ui/GyldAskAgent.md` section 5). Pointed at an older run the
 window renders the index's absence, which is correct and is not what this
@@ -832,7 +834,7 @@ default is for.
 
 The committed bundle holds five streams over two lineages:
 
-- `base`, lineage `glade-decision-graph` revision v1. Twenty four questions,
+- `base`, lineage `glade-decision-graph` revision v3. Twenty four questions,
   four roots, six tiers, a projection, a decide-now list and a validation
   report that passes with no findings. Its record carries no `lenses` manifest,
   so its four perspectives (`branch`, `decisions`, `status` and `tiers`) come
