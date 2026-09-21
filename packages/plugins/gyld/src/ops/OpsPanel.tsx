@@ -3,6 +3,7 @@ import {
   GYLD_OPS_RESULT, GYLD_OPS_STREAM, GYLD_SET, GYLD_SET_TAP,
 } from '../grips';
 import type { GyldSet } from '../store/state';
+import { writeOutcome } from './outcome';
 import { buildUrl, retargetToBuild } from './submit';
 
 // What came back, and what is still coming (step 4.4).
@@ -19,6 +20,7 @@ import { buildUrl, retargetToBuild } from './submit';
 /** The last answer, by verb, with the reason when it was refused. */
 function Answer() {
   const result = useGrip(GYLD_OPS_RESULT);
+  const records = useGrip(GYLD_OPS_STREAM) ?? [];
   const set = useGrip(GYLD_SET);
   const setTap = useGrip(GYLD_SET_TAP) as AtomTapHandle<GyldSet> | undefined;
   if (result === null || result === undefined) {
@@ -26,6 +28,10 @@ function Answer() {
   }
   const { verb, response } = result;
   const url = buildUrl(response.output_dir);
+  // What became of the WRITE, which the accept could not know: it goes out
+  // before the host runs. The records are this run's own — the fold is keyed by
+  // run id — so the line follows the run rather than the press.
+  const outcome = writeOutcome(result, records);
   return (
     <div className="gyld-ops-answer" data-verb={verb} data-ok={response.ok ? 'ok' : 'failed'}>
       <p className={response.ok ? 'gyld-note' : 'gyld-fault'}>
@@ -43,13 +49,18 @@ function Answer() {
       {response.stdout !== undefined && response.stdout !== '' && (
         <pre className="gyld-ops-stdout">{response.stdout}</pre>
       )}
-      {/* The file the ruling was left in, as the supplier named it. "Not
-          committed" is the supplier's contract and not a reading of this
-          answer: it writes files and never runs git, so a notebook it names is
-          always one the owner still has to commit. */}
-      {response.overlay_file !== undefined && (
-        <p className="gyld-note gyld-ops-saved">
-          {`Saved to ${response.overlay_file}. Not committed.`}
+      {/* What became of the write: being checked, saved, or refused. Drawn from
+          the RUN and never from the accept — a streamed `answer` is accepted
+          before Gyld has seen the text, so the accept's own `overlay_file` is a
+          file that is written and not yet a file that is kept. A live region,
+          because the sentence changes under the reader without a gesture. */}
+      {outcome !== undefined && (
+        <p
+          className={outcome.name === 'refused' ? 'gyld-fault gyld-ops-outcome' : 'gyld-note gyld-ops-outcome'}
+          data-outcome={outcome.name}
+          role="status"
+        >
+          {outcome.says}
         </p>
       )}
       {response.output_dir !== undefined && (

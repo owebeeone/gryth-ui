@@ -441,6 +441,60 @@ describe('the decide window offers Submit beside Export', () => {
     await settled(() => tab.read(GYLD_STREAMS).get(), (value) => value?.status === 'ready');
     expect(tab.render(<DecideWindow />)).not.toContain('Saved to');
   });
+
+  // A STREAMED answer is accepted before Gyld has seen the text, so the window
+  // follows the run's terminal record rather than the press.
+  const streamed = { ok: true, run_id: 'run-8', done: false };
+  const notebook = '/w/glade-wz/decisions/glade-decisions-stream-a.gyld.py';
+
+  /** The decide window, with one accept and one fold of the run's log. */
+  async function shown(tag: string, stream: unknown[]): Promise<string> {
+    const { ops } = fakeOps();
+    const desk = deskWith({
+      ops, result: { verb: 'answer', response: streamed }, stream,
+    });
+    const tab = desk.tab(tag, decideTabTaps(tag, { stream: 'stream-a' }));
+    await settled(() => tab.read(GYLD_STREAMS).get(), (value) => value?.status === 'ready');
+    return tab.render(<DecideWindow />);
+  }
+
+  it('says it is checking with Gyld while the run is still going', async () => {
+    const markup = await shown('sub-checking', [
+      { run_id: 'run-8', seq: 1, stream: 'stdout', line: 'capturing base' },
+    ]);
+    expect(markup).toContain('Checking with Gyld…');
+    expect(markup).not.toContain('Saved to');
+  });
+
+  it('says saved once the run\'s terminal record names the notebook', async () => {
+    const markup = await shown('sub-streamed-saved', [{
+      run_id: 'run-8', seq: 2, stream: 'end', done: true, exit: 0, overlay_file: notebook,
+    }]);
+    expect(markup).toContain(`Saved to ${notebook}. Not committed.`);
+    expect(markup).not.toContain('Checking with Gyld');
+  });
+
+  it('says what Gyld refused and that the notebook is unchanged', async () => {
+    const markup = await shown('sub-streamed-refused', [{
+      run_id: 'run-8',
+      seq: 2,
+      stream: 'end',
+      done: true,
+      exit: 0,
+      refusal: {
+        stream: 'stream-a',
+        code: 'SELECTION_NOT_OFFERED',
+        message: 'version_pin does not offer sdax_rs',
+        restored: true,
+      },
+    }]);
+    expect(markup).toContain(
+      'Refused: version_pin does not offer sdax_rs (SELECTION_NOT_OFFERED).'
+      + ' Your notebook was not changed.',
+    );
+    expect(markup).not.toContain('Saved to');
+    expect(markup).toContain('data-outcome="refused"');
+  });
 });
 
 describe('the diff window asks for a comparison the bundle does not carry', () => {

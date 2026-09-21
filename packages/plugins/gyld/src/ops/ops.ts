@@ -39,8 +39,29 @@ export interface GyldOpsResponse {
   /** The overlay module file a writing verb left behind — the NOTEBOOK, in the
    *  owner's decisions folder when one is configured. Absolute, and only when
    *  the file is really there: a streamed `fork` answers before its host has
-   *  run and names none. */
+   *  run and names none.
+   *
+   *  On a streamed accept it is written but NOT yet checked: the host runs after
+   *  the accept goes out, so a notebook Gyld rejects is put back again. The run's
+   *  terminal record is what says a write was saved — see `outcome.ts`. */
   overlay_file?: string;
+  /** Gyld's own `validation.json` for a write it REJECTED, verbatim
+   *  (`GyldGrythPlugins.md` 4.7, "Response"). Present on a synchronous refusal;
+   *  a streamed one carries its reason on the terminal record instead. */
+  validation?: Record<string, unknown>;
+}
+
+/** Why a writing verb was REFUSED, as the supplier reports it (`envelope.rs`,
+ *  `Refusal`). The notebook is back as it was, or there was none to put back. */
+export interface GyldRefusal {
+  /** The stream the refusal is about, which is not always the one that was
+   *  written: a rebuild fails on the first stream it cannot capture. Empty for a
+   *  verb that wrote no stream of its own. */
+  stream?: string;
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+  restored: boolean;
 }
 
 /** One record on the `gyld.output` log for a streaming run. The `gwz.output`
@@ -54,6 +75,13 @@ export interface GyldOutputRecord {
   line?: string;
   done?: boolean;
   exit?: number;
+  /** TERMINAL record only: why the writing verb this run served was refused.
+   *  ADDITIVE — a reader that has never heard of it reads the record exactly as
+   *  it did before. */
+  refusal?: GyldRefusal;
+  /** TERMINAL record only: the notebook a writing verb really left behind, on a
+   *  run that was NOT refused. A desk says "saved" once this says so. */
+  overlay_file?: string;
 }
 
 /** What landed in `Gyld.Ops.Result`: the answer, and which verb asked. */

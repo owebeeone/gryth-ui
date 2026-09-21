@@ -175,8 +175,9 @@ export * from './ops/verbs';
 export {
   createGyldOps, responseFrom,
   type GyldExchangeOutcome, type GyldOps, type GyldOpsResponse, type GyldOpsResult,
-  type GyldOpsWire, type GyldOutputRecord,
+  type GyldOpsWire, type GyldOutputRecord, type GyldRefusal,
 } from './ops/ops';
+export { WriteOutcome, writeOutcome } from './ops/outcome';
 export { GYLD_DOMAIN, GyldSurfaces, gyldAskTap, gyldOutputTap } from './ops/surfaces';
 export {
   GYLD_STATIC_BASE, buildUrl, opsGate, retargetToBuild, type OpsGate,
