@@ -61,8 +61,17 @@ const GYLD_BUNDLE_MOUNT = '/gyld-bundle/'
  *  from revision 3, which corrected `version_pin`'s premise: the node's
  *  lockfile is not tracked, so that question asks for a floor in the manifest
  *  rather than whether to move off a lock the repository never held. An older
- *  run draws the box the way it was written, which is the same rule. */
-const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v10'
+ *  run draws the box the way it was written, which is the same rule.
+ *
+ *  v11 is the first built from revision 4, which corrected the `ucan`
+ *  alternative: UCAN 1.0 encodes its proofs as DAG-CBOR in its own envelope, so
+ *  that box no longer argues from JWT. It is also the first built under the rule
+ *  that a chosen alternative OPENS the questions it implies, which is the one
+ *  that matters for a default: under an older host a branch-induced question was
+ *  never answerable, so a notebook that answered `scope_model` still showed
+ *  `metadata_exposure` as a question nobody could answer. A bundle rebuilt from
+ *  v11 or later emits it as answerable with the choice that opened it. */
+const GYLD_BUNDLE_DEFAULT = '../../gyld-wz/gyld/artifacts/decision-streams-v11'
 
 /** Where the browser reaches the evaluator runs:
  *  `http://localhost:5173/gyld-evaluator`, with one directory per run under

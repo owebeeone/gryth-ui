@@ -778,7 +778,7 @@ do the same for the full desktop.
 `/gyld-bundle/` is mounted over a directory of real Gyld output. Nothing is
 copied into this repository: the files are about five megabytes and they belong
 to the Gyld workspace. By default the mount points at
-`../../gyld-wz/gyld/artifacts/decision-streams-v10` relative to this repository,
+`../../gyld-wz/gyld/artifacts/decision-streams-v11` relative to this repository,
 which is where the sibling gwz member emits them. Point it somewhere else with
 an environment variable:
 
@@ -817,10 +817,19 @@ Nothing is copied into this repository here either. The runs are about ten
 megabytes each, mostly `report.html` and `workspace.sqlite`, and they belong to
 the Gyld workspace.
 
-The default names `decision-streams-v10` because that is the newest published
-run; it has moved forward with each one, as it did for v7, v8 and v9. Three of
-this package's own needs put a FLOOR under it as well, and each still holds of
-v10. From the v5 run every lens node carries the point size and the
+The default names `decision-streams-v11` because that is the newest published
+run; it has moved forward with each one, as it did for v7, v8, v9 and v10. That
+run exists for two reasons: it is the first built from revision 4 of the decision
+declaration, whose `ucan` box no longer argues from JWT because UCAN 1.0 encodes
+its proofs as DAG-CBOR in its own envelope, and it is the first emitted under the
+rule that a chosen alternative OPENS the questions it implies. The second is the
+one a reader of this desk sees: under an older host a branch-induced question was
+never answerable, so a notebook that answered `scope_model` still showed
+`metadata_exposure` as a question nobody could answer, and from v11 on a rebuilt
+notebook emits it as answerable with the choice that opened it named in its
+`answerable_because`. Three of this package's own needs put a FLOOR under the
+default as well, and each still holds of v11. From the v5 run every lens node
+carries the point size and the
 justification the host drew it with, and this package reads both rather than
 guessing a font; an older bundle has no `fontsize` on its nodes, so its lens
 files report the missing field instead of drawing. From the v6 run every
@@ -834,12 +843,13 @@ default is for.
 
 The committed bundle holds five streams over two lineages:
 
-- `base`, lineage `glade-decision-graph` revision v3. Twenty four questions,
+- `base`, lineage `glade-decision-graph` revision v4. Twenty four questions,
   four roots, six tiers, a projection, a decide-now list and a validation
-  report that passes with no findings. Its record carries no `lenses` manifest,
-  so its four perspectives (`branch`, `decisions`, `status` and `tiers`) come
-  from the directory listing. The `decisions` lens draws twenty nine nodes,
-  thirty two edges and two groups.
+  report that passes with no findings. Its four perspectives are `branch`,
+  `decisions`, `status` and `tiers`; the `decisions` lens draws twenty nine
+  nodes, thirty two edges and two groups. Four of those questions are in tier
+  `branch-induced`, which is what a stream that has chosen nothing emits: this
+  declaration records no ruling, so no branch of it is open.
 - `stream-a`, a link over `base`: it rules two of the base's questions, records
   one trigger as occurred and adds a question of its own. Its record carries a
   `parent`, the chain `base, stream-a` and the parent snapshot it was built
