@@ -11,7 +11,10 @@ import {
 // `induced_by` and `effective_status` are read, never computed (spec section
 // 6.7). A row says why it carries the flag it carries BOTH ways round: a
 // blocked one through its three lists, an answerable one through
-// `answerable_because`.
+// `answerable_because`. Whether a branch-induced question is answerable at all
+// is the emitter's answer too: a chosen alternative opens the questions it
+// implies, and the row that comes back says so through `answerable_because`
+// rather than the UI working it out from the graph.
 
 export const DECIDE_NOW_FORMAT = 'gyld.decide-now.v1';
 
@@ -30,20 +33,34 @@ export interface AnswerablePrerequisite {
 }
 
 /**
+ * One alternative whose selection OPENED this question, and what selected it.
+ *
+ * A question an alternative implies is dormant until something chooses that
+ * alternative; a row that names one here is a branch a ruling opened. `ruling`
+ * is the live ruling that made the choice, and is absent only where the emitter
+ * recorded none.
+ */
+export interface AnswerableInducer {
+  slot: QualifiedSlot;
+  ruling?: QualifiedSlot;
+}
+
+/**
  * Why a row is answerable now, in the shape the blocked reason uses.
  *
  * The three facts the emitter tested: every prerequisite with what clears it,
- * the gates holding the question and the alternatives inducing it. On an
- * answerable row the last two are empty, which is how the record says no
- * trigger gates it and no unchosen alternative induced it, and an empty
- * `prerequisites` list says the question requires nothing at all. Absent on a
- * row that is not answerable now, and absent on every row of a bundle emitted
+ * the gates holding the question and the alternatives that opened it. `gated_by`
+ * is empty on an answerable row, which is how the record says no trigger gates
+ * it, and an empty `prerequisites` list says the question requires nothing at
+ * all. `induced_by` is empty on a question no branch induces and names each
+ * selected inducing alternative on a branch a ruling opened. Absent on a row
+ * that is not answerable now, and absent on every row of a bundle emitted
  * before the field existed.
  */
 export interface AnswerableBecause {
   prerequisites: AnswerablePrerequisite[];
   gated_by: QualifiedSlot[];
-  induced_by: QualifiedSlot[];
+  induced_by: AnswerableInducer[];
 }
 
 export interface DecideNowQuestion {
@@ -125,14 +142,34 @@ function readPrerequisite(value: unknown, path: string): AnswerablePrerequisite 
   return prerequisite;
 }
 
+/** One inducing alternative, either as the record the emitter writes or as a
+ *  bare slot. The list was always empty before a branch could be answerable, so
+ *  a bundle that carries a plain slot there is read rather than refused: it says
+ *  which alternative, and nothing about a ruling, which is exactly what absent
+ *  `ruling` means on the record form. */
+function readInducer(value: unknown, path: string): AnswerableInducer {
+  if (typeof value === 'string') {
+    return { slot: readIdentifier(value, path) };
+  }
+  const raw = readObject(value, path);
+  const inducer: AnswerableInducer = { slot: readIdentifier(raw.slot, atPath(path, 'slot')) };
+  const ruling = readOptionalIdentifier(raw.ruling, atPath(path, 'ruling'));
+  if (ruling !== undefined) {
+    inducer.ruling = ruling;
+  }
+  return inducer;
+}
+
 function readBecause(value: unknown, path: string): AnswerableBecause {
   const raw = readObject(value, path);
   const needs = atPath(path, 'prerequisites');
+  const opened = atPath(path, 'induced_by');
   return {
     prerequisites: readArray(raw.prerequisites, needs)
       .map((item, i) => readPrerequisite(item, atPath(needs, i))),
     gated_by: readIdentifiers(raw.gated_by, atPath(path, 'gated_by')),
-    induced_by: readIdentifiers(raw.induced_by, atPath(path, 'induced_by')),
+    induced_by: readArray(raw.induced_by, opened)
+      .map((item, i) => readInducer(item, atPath(opened, i))),
   };
 }
 

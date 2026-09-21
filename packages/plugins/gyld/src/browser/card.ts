@@ -1,5 +1,5 @@
 import type {
-  AnswerablePrerequisite, DecideNowQuestion, GyldDecideNow,
+  AnswerableInducer, AnswerablePrerequisite, DecideNowQuestion, GyldDecideNow,
 } from '../contract';
 import { slotLabel, slotTitle, type GyldRecords } from '../records/records';
 import type { SceneNode } from '../lens/scene';
@@ -88,15 +88,26 @@ function prerequisiteSays(prerequisite: AnswerablePrerequisite): string {
   return `${prerequisite.slot}${status}${ruling}`;
 }
 
+/** One alternative whose selection opened this question, as the row recorded
+ *  it: the alternative chosen, and the ruling that chose it where the row names
+ *  one. */
+function inducerSays(inducer: AnswerableInducer): string {
+  const ruling = inducer.ruling === undefined ? '' : ` by ruling ${inducer.ruling}`;
+  return `${inducer.slot}${ruling}`;
+}
+
 /**
  * The emitted reason a row IS answerable now, as one phrase.
  *
  * The mirror of `blockedSays`, and a read in exactly the same sense: the three
  * facts are the row's own `answerable_because`, not a conclusion drawn here.
- * Each clause says what that record says, so a record whose gate or induced
- * list is not empty is reported rather than glossed as "nothing gates it".
- * Empty when the row is not answerable now and empty when it carries no
- * reason, which is what every row of a bundle emitted before the field looks
+ * Each clause says what that record says, so a record whose gate list is not
+ * empty is reported rather than glossed as "nothing gates it". A branch-induced
+ * question is answerable when a ruling chose an alternative that implies it, and
+ * its row names that alternative, so the clause says whose choice opened the
+ * question rather than the "not branch-induced" a question with no branch above
+ * it reads. Empty when the row is not answerable now and empty when it carries
+ * no reason, which is what every row of a bundle emitted before the field looks
  * like: the card then says what it said before rather than inventing one.
  */
 export function answerableBecause(question: DecideNowQuestion): string {
@@ -115,7 +126,7 @@ export function answerableBecause(question: DecideNowQuestion): string {
     : `gated by ${because.gated_by.join(', ')}`;
   const branch = because.induced_by.length === 0
     ? 'not branch-induced'
-    : `induced by ${because.induced_by.join(', ')}`;
+    : `opened by your choice of ${because.induced_by.map(inducerSays).join(', ')}`;
   return `${prerequisites}, ${gates}, ${branch}`;
 }
 

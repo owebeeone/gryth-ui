@@ -109,6 +109,45 @@ describe('gyld.decidenow lists exactly what the stream emitted', () => {
     );
   });
 
+  it('puts a branch a ruling opened in the answerable group, saying whose choice', async () => {
+    // `metadata_exposure` is branch-induced: the fixture has it unanswerable in
+    // tier `branch-induced`, which is what a stream that chose nothing emits.
+    // A stream whose ruling chose `node_trust`, which implies it, emits it as
+    // answerable with that choice as the reason. The grouping is a read of
+    // `answerable_now`, so the row lands beside the other answerable ones and
+    // the tier it still carries is printed rather than used to sort it.
+    const slot = 'glade_decisions:GladeDecisions.metadata_exposure';
+    const dormant = decideNow.questions.find((q) => q.slot === slot)!;
+    expect(dormant.answerable_now).toBe(false);
+    expect(dormant.tier).toBe('branch-induced');
+    const ruling = 'glade_decisions_rulings:GladeDecisionsRulings.scope_model_ruling';
+    const bundle = new FakeBundle();
+    bundle.write('streams/base/decide-now.json', {
+      ...decideNow,
+      questions: decideNow.questions.map((question) => (question.slot === slot ? {
+        ...question,
+        answerable_now: true,
+        answerable_because: {
+          prerequisites: [],
+          gated_by: [],
+          induced_by: [{ slot: 'glade_decisions:GladeDecisions.node_trust', ruling }],
+        },
+      } : question)),
+    });
+    const list = mount('dn-opened', 'base', bundle);
+    await settled(list.value, (value) => value?.status === 'ok');
+    const markup = list.render();
+    expect(slotsIn(markup, 'answerable')).toContain(slot);
+    expect(slotsIn(markup, 'other')).not.toContain(slot);
+    expect(markup).toContain(
+      'answerable now: no prerequisite at all, nothing gates it, opened by your choice of '
+      + `glade_decisions:GladeDecisions.node_trust by ruling ${ruling}`,
+    );
+    // The row keeps the two lines it always had: its own tier and its own edges.
+    expect(markup).toContain(`${dormant.label} · branch-induced`);
+    expect(markup).toContain('induced by glade_decisions:GladeDecisions.node_trust');
+  });
+
   it('shows every emitted row, including the ones in no other group', async () => {
     const list = mount('dn-rest', 'base');
     await settled(list.value, (value) => value?.status === 'ok');

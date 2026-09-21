@@ -507,6 +507,48 @@ describe('gyld.decide-now.v1', () => {
     });
   });
 
+  it('reads the alternative that opened a branch, and the ruling that chose it', () => {
+    // A branch-induced question is answerable once a ruling of the chain chose
+    // an alternative that implies it, and the row says which and on what. The
+    // list was always empty before that could happen, so a bundle that carries
+    // a bare slot there is read as the alternative with no ruling recorded
+    // rather than refused.
+    const opened = readDecideNow(mutate(decideNowFixture, 'questions.8.answerable_because', {
+      prerequisites: [],
+      gated_by: [],
+      induced_by: [
+        {
+          slot: 'glade_decisions:GladeDecisions.node_trust',
+          ruling: 'glade_decisions_rulings:GladeDecisionsRulings.scope_model_ruling',
+        },
+        'glade_decisions:GladeDecisions.gossip_overlay',
+      ],
+    }));
+    const custody = opened.questions
+      .find((q) => q.slot === 'glade_decisions:GladeDecisions.key_custody')!;
+    expect(custody.answerable_because).toEqual({
+      prerequisites: [],
+      gated_by: [],
+      induced_by: [
+        {
+          slot: 'glade_decisions:GladeDecisions.node_trust',
+          ruling: 'glade_decisions_rulings:GladeDecisionsRulings.scope_model_ruling',
+        },
+        { slot: 'glade_decisions:GladeDecisions.gossip_overlay' },
+      ],
+    });
+  });
+
+  it('rejects an inducer that names no alternative at all', () => {
+    rejects(
+      () => readDecideNow(mutate(decideNowFixture, 'questions.8.answerable_because', {
+        prerequisites: [], gated_by: [], induced_by: [{ ruling: 'r' }],
+      })),
+      GyldContractViolation.MissingField,
+      'gyld.decide-now.v1.questions[8].answerable_because.induced_by[0].slot',
+    );
+  });
+
   it('reads a row that carries no reason at all, as an older bundle emits it', () => {
     const now = readDecideNow(drop(decideNowFixture, 'questions.8.answerable_because'));
     const custody = now.questions

@@ -210,9 +210,43 @@ describe('the card says what the row says, and nothing more', () => {
       answerable_because: {
         prerequisites: [{ slot: 'a', effective_status: 'Open' }],
         gated_by: ['g'],
-        induced_by: ['i'],
+        induced_by: [{ slot: 'i' }],
       },
-    })).toBe('its prerequisites are a (Open), gated by g, induced by i');
+    })).toBe('its prerequisites are a (Open), gated by g, opened by your choice of i');
+  });
+
+  it('says whose choice opened a branch-induced question that is answerable', () => {
+    // A question an alternative implies is answerable once a ruling chose that
+    // alternative, so its reason is not "not branch-induced": it names the
+    // choice that opened it, and the ruling that made the choice.
+    const row = rowAt(KEY_CUSTODY);
+    const opened = {
+      ...row,
+      answerable_because: {
+        prerequisites: [],
+        gated_by: [],
+        induced_by: [{
+          slot: 'glade_decisions:GladeDecisions.node_trust',
+          ruling: 'glade_decisions_rulings:GladeDecisionsRulings.scope_model_ruling',
+        }],
+      },
+    };
+    expect(answerableSays(opened)).toBe(
+      'answerable now: no prerequisite at all, nothing gates it, opened by your choice of '
+      + 'glade_decisions:GladeDecisions.node_trust'
+      + ' by ruling glade_decisions_rulings:GladeDecisionsRulings.scope_model_ruling',
+    );
+    // Two selected inducers are two clauses of one phrase, in emitted order.
+    expect(answerableBecause({
+      ...opened,
+      answerable_because: {
+        prerequisites: [],
+        gated_by: [],
+        induced_by: [{ slot: 'a', ruling: 'r1' }, { slot: 'b' }],
+      },
+    })).toBe(
+      'no prerequisite at all, nothing gates it, opened by your choice of a by ruling r1, b',
+    );
   });
 
   it('says a box is not a question this stream lists, rather than unanswerable', () => {
