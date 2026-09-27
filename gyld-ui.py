@@ -110,10 +110,18 @@ HTTP_TIMEOUT = 5.0
 #: (glade-gyld/src/agent.rs).
 AGENT_BASE_URL_ENV = "ANTHROPIC_BASE_URL"
 AGENT_MODEL_ENV = "GYLD_AGENT_MODEL"
+#: What `start` records with the instance and `restart` hands grazel again,
+#: whatever the restarting shell says: the endpoint and the model belong to the
+#: instance, as its principal does (owner ruling, 2026-09-28).
+AGENT_RECORDED_ENVS = (AGENT_BASE_URL_ENV, AGENT_MODEL_ENV)
+#: How a recorded endpoint or model is changed on purpose, said by `restart`'s
+#: warning and by `--help` alike.
+AGENT_CHANGE_HOW = "stop, then start from the environment you want"
 #: Key sources. Named here to be CARRIED, and never printed or logged: the
 #: supplier reads one at the moment of a call and nothing else ever sees it.
+#: Never recorded either: every run carries the key of whoever runs it.
 AGENT_KEY_ENVS = ("ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
-AGENT_ENVS = (AGENT_BASE_URL_ENV, AGENT_MODEL_ENV) + AGENT_KEY_ENVS
+AGENT_ENVS = AGENT_RECORDED_ENVS + AGENT_KEY_ENVS
 
 #: The supplier's own config file, relative to the bundle root.
 AGENT_CONFIG_FILE = "agent/config.json"
@@ -317,6 +325,11 @@ class InstanceState:
     # before it was started with none and reads as `owner`, so `restart` hands
     # grazel the default, and until then `status` says grazel serves none.
     principal: str = DEFAULT_PRINCIPAL
+    # The ask agent's endpoint and model `start` ran with, by variable name and
+    # None where unset: `restart` hands grazel these again. Never a key. None as
+    # a whole for an instance recorded before this existed, whose restart
+    # carries its own shell's as it always did — only `start` records.
+    agent: Optional[Dict[str, Optional[str]]] = None
 
     def to_dict(self) -> Dict[str, object]:
         return {field.name: getattr(self, field.name) for field in fields(self)}
@@ -853,13 +866,72 @@ def agent_env(base: Dict[str, str]) -> Dict[str, str]:
     return held
 
 
-def grazel_env(base: Dict[str, str]) -> Dict[str, str]:
+def grazel_env(
+    base: Dict[str, str], recorded: Optional[Dict[str, Optional[str]]] = None
+) -> Dict[str, str]:
     """The environment grazel is spawned with: everything, with the agent
     variables carried explicitly so a future narrowing of this cannot drop
-    them in silence."""
+    them in silence. Given what `start` recorded, the recorded endpoint and
+    model stand instead of `base`'s, and one recorded unset is removed, so the
+    supplier falls back to its config file exactly as it did at `start`."""
     env = dict(base)
     env.update(agent_env(base))
+    if recorded is not None:
+        for name in AGENT_RECORDED_ENVS:
+            value = recorded.get(name)
+            if value is None:
+                env.pop(name, None)
+            else:
+                env[name] = value
     return env
+
+
+def agent_record(base: Dict[str, str]) -> Dict[str, Optional[str]]:
+    """What `start` records about the ask agent: the endpoint and the model
+    `base` sets, None where one is unset or blank. PURE, and never a key."""
+    held = agent_env(base)
+    return {name: held.get(name) for name in AGENT_RECORDED_ENVS}
+
+
+def agent_drift_lines(
+    base: Dict[str, str], recorded: Optional[Dict[str, Optional[str]]]
+) -> List[str]:
+    """One warning line for each recorded variable `base` says otherwise,
+    naming it and both values: an endpoint and a model are not secrets, and no
+    key is ever compared. Nothing when nothing was recorded."""
+    if recorded is None:
+        return []
+    here = agent_record(base)
+    said = []
+    for name in AGENT_RECORDED_ENVS:
+        if here[name] != recorded.get(name):
+            said.append(
+                "warning: {} differs: here {}, recorded {} — grazel gets the "
+                "recorded one; to change it, {}".format(
+                    name,
+                    here[name] or "(unset)",
+                    recorded.get(name) or "(unset)",
+                    AGENT_CHANGE_HOW,
+                )
+            )
+    return said
+
+
+def agent_launch(
+    args: argparse.Namespace, base: Dict[str, str]
+) -> Tuple[Dict[str, str], Optional[Dict[str, Optional[str]]], List[str]]:
+    """What one start of an instance hands grazel, records and warns about the
+    ask agent, run from the environment `base`.
+
+    `start` records the endpoint and the model it runs with. `restart` hands
+    grazel what `start` recorded (`replayed_args` sets `args.agent`) whatever
+    `base` says, warns where the two differ, and records it again. An instance
+    recorded before this existed, or a restart with nothing recorded, carries
+    `base` as it always did and records none: only `start` records."""
+    if args.verb == "start":
+        return grazel_env(base), agent_record(base), []
+    recorded = getattr(args, "agent", None)
+    return grazel_env(base, recorded), recorded, agent_drift_lines(base, recorded)
 
 
 def agent_env_line(passed: Dict[str, str]) -> str:
@@ -897,12 +969,17 @@ def config_base_url(data: Path) -> Optional[str]:
     return held if isinstance(held, str) and held.strip() != "" else None
 
 
-def effective_base_url(data: Path, env: Dict[str, str]) -> Optional[Tuple[str, str]]:
+def effective_base_url(
+    data: Path,
+    env: Dict[str, str],
+    recorded: Optional[Dict[str, Optional[str]]] = None,
+) -> Optional[Tuple[str, str]]:
     """The endpoint this instance's supplier will actually call, and where that
     came from — or `None` when nothing configures one and the supplier is on its
     own Anthropic default. The environment beats the file, as the supplier
-    resolves it."""
-    from_env = env.get(AGENT_BASE_URL_ENV, "")
+    resolves it, and it is the one grazel was given: what `start` recorded
+    stands instead of `env`'s."""
+    from_env = grazel_env(env, recorded).get(AGENT_BASE_URL_ENV, "")
     if from_env is not None and from_env.strip() != "":
         return (from_env.strip(), "environment")
     from_file = config_base_url(data)
@@ -1262,7 +1339,7 @@ def status_checks(state: InstanceState) -> List[CheckResult]:
     # The ask agent's endpoint, when anything configures one. An instance with
     # no `base_url` anywhere is on the supplier's Anthropic default and adds no
     # line: a check nobody configured is not a check that failed.
-    endpoint = effective_base_url(data, dict(os.environ))
+    endpoint = effective_base_url(data, dict(os.environ), state.agent)
     if endpoint is not None:
         checks.append(agent_endpoint_check(endpoint[0], endpoint[1]))
 
@@ -1598,9 +1675,13 @@ def start_command(args: argparse.Namespace) -> int:
     print("  log: {}".format(grazel_log))
     # The supplier is spawned by grazel with a fixed argument list, so this
     # environment is one of its only two configuration channels. It is carried
-    # explicitly and SAID — by name for a key, by value for the rest.
-    spawn_environment = grazel_env(dict(os.environ))
+    # explicitly and SAID — by name for a key, by value for the rest. `restart`
+    # hands it the endpoint and the model `start` recorded, and says so where
+    # its own shell says otherwise.
+    spawn_environment, agent, drift = agent_launch(args, dict(os.environ))
     print("  {}".format(agent_env_line(agent_env(spawn_environment))))
+    for line in drift:
+        print("  {}".format(line))
     # Everything already in the log belongs to an earlier start of this same
     # instance: grazel appends. Only what follows this offset is this run.
     log_offset = log_size(grazel_log)
@@ -1627,6 +1708,7 @@ def start_command(args: argparse.Namespace) -> int:
         started_at=now_stamp(),
         url=mode.url(ports),
         principal=principal,
+        agent=agent,
     )
     write_state(data, state)
 
@@ -1868,6 +1950,8 @@ def replayed_args(args: argparse.Namespace, state: InstanceState) -> argparse.Na
     again.glade_wz = args.glade_wz if args.glade_wz is not None else state.glade_wz
     again.gryth_ui = args.gryth_ui if args.gryth_ui is not None else state.gryth_ui
     again.principal = args.principal if args.principal is not None else state.principal
+    # No flag overrides it: a different endpoint is a `stop`, then a `start`.
+    again.agent = state.agent
     return again
 
 
@@ -1949,6 +2033,17 @@ def add_common(parser: argparse.ArgumentParser, with_port_default: bool) -> None
 
 
 def build_parser() -> argparse.ArgumentParser:
+    agent_replay = (
+        "restart hands grazel the ask agent's endpoint and model ({} and {}) as "
+        "start recorded them, whatever its own environment says, and warns "
+        "where that differs; to change them, {}. The keys ({}) are never "
+        "recorded: they come from whoever runs the command.".format(
+            AGENT_BASE_URL_ENV,
+            AGENT_MODEL_ENV,
+            AGENT_CHANGE_HOW,
+            " and ".join(AGENT_KEY_ENVS),
+        )
+    )
     parser = argparse.ArgumentParser(
         prog="gyld-ui.py",
         description=(
@@ -1962,9 +2057,8 @@ def build_parser() -> argparse.ArgumentParser:
             "reboot; stop --purge is what deletes one.\n"
             "The Gyld hosts the supplier runs need Python 3.13 at {}, which is "
             "glade-gyld's own default: grazel passes it no other, so there is "
-            "no option to name one and start checks that path instead.".format(
-                SUPPLIER_PYTHON
-            )
+            "no option to name one and start checks that path instead.\n"
+            "{}".format(SUPPLIER_PYTHON, agent_replay)
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -2000,7 +2094,9 @@ def build_parser() -> argparse.ArgumentParser:
     stop.set_defaults(handler=stop_command)
 
     restart = subs.add_parser(
-        "restart", help="stop, then start with the recorded options"
+        "restart",
+        help="stop, then start with the recorded options",
+        description=agent_replay,
     )
     add_common(restart, with_port_default=False)
     restart.add_argument("--build", action="store_true", help="see start --build")

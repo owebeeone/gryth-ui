@@ -752,7 +752,7 @@ class DecisionsRootTest(unittest.TestCase):
             self.assertIn("no decisions root", gu.notebooks_line(""))
 
 
-def _recorded(principal="alice"):
+def _recorded(principal="alice", **more):
     """An instance as `start` records it, on ports of its own."""
     return gu.InstanceState(
         mode="dev",
@@ -772,6 +772,7 @@ def _recorded(principal="alice"):
         started_at="2026-09-27T00:00:00Z",
         url="http://localhost:5190/",
         principal=principal,
+        **more,
     )
 
 
@@ -893,6 +894,179 @@ class PrincipalRecordTest(unittest.TestCase):
             older = self._recorded_before_the_principal(Path(tmp))
             again = gu.replayed_args(self._restart([]), older)
             self.assertEqual(again.principal, "owner")
+
+
+class AgentRecordTest(unittest.TestCase):
+    """`start` records the ask agent's endpoint and model with the instance, as
+    it records the principal, and `restart` hands grazel those again whatever
+    its own shell says: a desk restarted from a Claude Code shell, which sets
+    ANTHROPIC_BASE_URL, once sent its `ask` to Anthropic instead of the endpoint
+    its `agent/config.json` names (owner ruling, 2026-09-28). The keys are never
+    recorded; they come from whoever runs the command."""
+
+    #: The owner's desk: its endpoint is in `agent/config.json`, so the shell
+    #: that started it set none.
+    DESK_SHELL = {
+        "PATH": "/usr/bin",
+        "GYLD_AGENT_MODEL": "qwen3.8-96k",
+        "ANTHROPIC_AUTH_TOKEN": "desk-s3cret",
+    }
+    #: Any Claude Code shell.
+    CLAUDE_SHELL = {
+        "PATH": "/usr/bin",
+        "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+        "ANTHROPIC_API_KEY": "shell-s3cret",
+    }
+    HOW_TO_CHANGE = "stop, then start from the environment you want"
+
+    def _parse(self, raw):
+        args = gu.build_parser().parse_args(raw)
+        args.mode_given = "--mode" in raw  # as `main` sets it
+        return args
+
+    def _started_from(self, shell):
+        """The instance `start` records when it is run from `shell`."""
+        _, record, _ = gu.agent_launch(self._parse(["start"]), shell)
+        return _recorded(agent=record)
+
+    def _restarted_from(self, shell, state):
+        """What `restart` run from `shell` hands grazel, records and says."""
+        return gu.agent_launch(gu.replayed_args(self._parse(["restart"]), state), shell)
+
+    def test_start_records_the_endpoint_and_model_it_started_with(self):
+        env, record, warnings = gu.agent_launch(
+            self._parse(["start"]),
+            {
+                "ANTHROPIC_BASE_URL": "http://10.1.1.9:11434",
+                "GYLD_AGENT_MODEL": "qwen3.8-96k",
+                "ANTHROPIC_AUTH_TOKEN": "s3cret",
+            },
+        )
+        self.assertEqual(
+            record,
+            {
+                "ANTHROPIC_BASE_URL": "http://10.1.1.9:11434",
+                "GYLD_AGENT_MODEL": "qwen3.8-96k",
+            },
+        )
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "http://10.1.1.9:11434")
+        self.assertEqual(warnings, [])
+        # Unset and blank are both recorded as unset.
+        _, record, _ = gu.agent_launch(
+            self._parse(["start"]), {"GYLD_AGENT_MODEL": "  "}
+        )
+        self.assertEqual(record, {"ANTHROPIC_BASE_URL": None, "GYLD_AGENT_MODEL": None})
+
+    def test_no_key_is_ever_written_to_the_record(self):
+        both_keys = dict(self.CLAUDE_SHELL, ANTHROPIC_AUTH_TOKEN="token-s3cret")
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            gu.write_state(data, self._started_from(both_keys))
+            text = (data / gu.STATE_FILENAME).read_text(encoding="utf-8")
+            for name in gu.AGENT_KEY_ENVS:
+                self.assertNotIn(name, text)
+            self.assertNotIn("s3cret", text)
+            self.assertEqual(
+                gu.read_state(data).agent,
+                {
+                    "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+                    "GYLD_AGENT_MODEL": None,
+                },
+            )
+
+    def test_restart_hands_grazel_the_recorded_endpoint_over_its_own_shell(self):
+        desk = self._started_from(self.DESK_SHELL)
+        env, record, _ = self._restarted_from(
+            dict(self.CLAUDE_SHELL, GYLD_AGENT_MODEL="claude-x"), desk
+        )
+        # Recorded unset, so none reaches grazel and `agent/config.json` answers.
+        self.assertNotIn("ANTHROPIC_BASE_URL", env)
+        self.assertEqual(env["GYLD_AGENT_MODEL"], "qwen3.8-96k")
+        # The key is the restarting shell's, as it always was, and so is the rest.
+        self.assertEqual(env["ANTHROPIC_API_KEY"], "shell-s3cret")
+        self.assertNotIn("ANTHROPIC_AUTH_TOKEN", env)
+        self.assertEqual(env["PATH"], "/usr/bin")
+        # The record carries forward to the restart after this one.
+        self.assertEqual(record, desk.agent)
+        # A recorded endpoint reaches grazel from a shell that sets none.
+        remote = self._started_from({"ANTHROPIC_BASE_URL": "http://10.1.1.9:11434"})
+        env, _, _ = self._restarted_from({"PATH": "/usr/bin"}, remote)
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "http://10.1.1.9:11434")
+
+    def test_restart_warns_once_for_each_variable_its_shell_says_otherwise(self):
+        desk = self._started_from(self.DESK_SHELL)
+        _, _, warnings = self._restarted_from(
+            dict(self.CLAUDE_SHELL, GYLD_AGENT_MODEL="claude-x"), desk
+        )
+        self.assertEqual(len(warnings), 2, warnings)
+        endpoint, model = warnings
+        self.assertIn(
+            "ANTHROPIC_BASE_URL differs: here https://api.anthropic.com, "
+            "recorded (unset)",
+            endpoint,
+        )
+        self.assertIn(
+            "GYLD_AGENT_MODEL differs: here claude-x, recorded qwen3.8-96k", model
+        )
+        for line in warnings:
+            self.assertTrue(line.startswith("warning: "), line)
+            self.assertNotIn("\n", line)
+            self.assertIn(self.HOW_TO_CHANGE, line)
+            self.assertNotIn("s3cret", line)
+        # From the shell it was started from there is nothing to say.
+        _, _, warnings = self._restarted_from(self.DESK_SHELL, desk)
+        self.assertEqual(warnings, [])
+
+    def test_an_instance_recorded_before_the_agent_restarts_as_today(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            body = _recorded().to_dict()
+            del body["agent"]
+            (data / gu.STATE_FILENAME).write_text(json.dumps(body), encoding="utf-8")
+            older = gu.read_state(data)
+        self.assertIsNotNone(older)
+        self.assertIsNone(older.agent)
+        env, record, warnings = self._restarted_from(self.CLAUDE_SHELL, older)
+        self.assertEqual(env, gu.grazel_env(self.CLAUDE_SHELL))
+        # Only `start` records, so its restart records nothing new.
+        self.assertIsNone(record)
+        self.assertEqual(warnings, [])
+
+    def test_a_restart_with_nothing_recorded_records_nothing(self):
+        env, record, warnings = gu.agent_launch(
+            self._parse(["restart"]), self.CLAUDE_SHELL
+        )
+        self.assertEqual(env, gu.grazel_env(self.CLAUDE_SHELL))
+        self.assertIsNone(record)
+        self.assertEqual(warnings, [])
+
+    def test_status_checks_the_endpoint_grazel_was_given(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            config = gu.bundle_root(data) / gu.AGENT_CONFIG_FILE
+            config.parent.mkdir(parents=True)
+            config.write_text('{"base_url": "http://10.1.1.9:11434"}', encoding="utf-8")
+            desk = self._started_from(self.DESK_SHELL)
+            self.assertEqual(
+                gu.effective_base_url(data, self.CLAUDE_SHELL, desk.agent),
+                ("http://10.1.1.9:11434", gu.AGENT_CONFIG_FILE),
+            )
+            # With no agent record, the shell's own says, as it always did.
+            self.assertEqual(
+                gu.effective_base_url(data, self.CLAUDE_SHELL, None),
+                ("https://api.anthropic.com", "environment"),
+            )
+
+    def test_help_says_how_to_change_a_recorded_endpoint(self):
+        said = io.StringIO()
+        with contextlib.redirect_stdout(said):
+            with self.assertRaises(SystemExit):
+                gu.build_parser().parse_args(["restart", "--help"])
+        for text in (gu.build_parser().format_help(), said.getvalue()):
+            flat = " ".join(text.split())
+            self.assertIn(self.HOW_TO_CHANGE, flat)
+            self.assertIn("ANTHROPIC_BASE_URL", flat)
+            self.assertIn("GYLD_AGENT_MODEL", flat)
 
 
 class GrazelArgvTest(unittest.TestCase):
