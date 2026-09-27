@@ -1,13 +1,14 @@
-import { utf8 } from '@owebeeone/glial-runtime';
+import { GlialBinder, utf8 } from '@owebeeone/glial-runtime';
 import { grok } from '@grythjs/plugin-api';
 import type { LayoutStore } from '@grythjs/desktop';
-import { addGladeSubscription, gladeDest, glial } from '@grythjs/glade';
+import { addGladeSubscription, gladeDest } from '@grythjs/glade';
 import { deskIdentity } from '@grythjs/glade/identity';
 import { DEFAULT_APPEARANCE, appearanceManifest, selfKey } from './appearance';
 import { AppearanceMemory } from './migrate';
+import { appearanceStore } from './store';
 import { registerAppearance } from './surfaceTaps';
 
-// The settings plugin's LIVE wiring (Glial appearance plan, Steps 2.3 and 2.4).
+// The settings plugin's LIVE wiring (Glial appearance plan, Steps 2.3, 2.4 and 3.1).
 // THE ONLY FILE IN THIS PACKAGE THAT IMPORTS `@grythjs/glade`, for the reason
 // gyld's `live.ts` gives: the glade runtime owns the one session and reads the
 // desk identity as it loads, which only a page's loader resolves. Everything
@@ -47,7 +48,9 @@ export function registerAppearanceLive(entry: string, store: LayoutStore | null 
     ? addGladeSubscription({ share: route.share, gladeId: route.gladeId, key: route.key })
     : undefined;
   const zone = registerAppearance(grok, {
-    binder: glial,
+    // its own binder, over the store the loader opened (Step 3.1): the
+    // runtime's shared binder stays in memory
+    binder: new GlialBinder(appearanceStore(), identity.origin),
     destination: gladeDest(route),
     identity,
     entry,

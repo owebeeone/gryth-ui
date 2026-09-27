@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryStoreEngine, type StoredOp, type StoreEngine } from '@owebeeone/glial-runtime';
 import type { Grip } from '@owebeeone/grip-react';
 import type { LayoutStore } from '@grythjs/desktop';
 
@@ -17,14 +18,56 @@ interface Tab {
   read<T>(grip: Grip<T>): T | undefined;
 }
 
+/** The site's IndexedDB as `IndexedDbStoreEngine` keeps it, which every tab of
+ *  the site shares: a row per op, keyed (instance, origin, seq) and put as the
+ *  op is appended, read in whole by each page's engine as it opens. */
+class Site {
+  private readonly rows = new Map<string, { readonly instanceKey: string; readonly op: StoredOp }>();
+
+  /** A page's engine, over the rows as they stand as it opens. */
+  readonly open = (): Promise<StoreEngine> => {
+    const read = new MemoryStoreEngine();
+    for (const { instanceKey, op } of this.rows.values()) {
+      read.open(instanceKey).append(op);
+    }
+    return Promise.resolve({
+      open: (instanceKey) => {
+        const held = read.open(instanceKey);
+        return {
+          append: (op) => {
+            const outcome = held.append(op);
+            if (outcome === 'appended') {
+              this.rows.set(JSON.stringify([instanceKey, op.origin, op.seq]), { instanceKey, op });
+            }
+            return outcome;
+          },
+          all: () => held.all(),
+        };
+      },
+      drop: () => {},
+    });
+  };
+
+  /** The seqs the rows hold, per origin. */
+  chains(): Record<string, number[]> {
+    const chains: Record<string, number[]> = {};
+    for (const { op } of this.rows.values()) {
+      chains[op.origin] = [...(chains[op.origin] ?? []), op.seq].sort((a, b) => a - b);
+    }
+    return chains;
+  }
+}
+
 /** Open a tab whose URL names `named`, or none, behind a grazel that serves
  *  `served` (`owner`), or, given null, no principal at all, in a browser whose
- *  storage is `browser`, or one with no site data at all. */
+ *  storage is `browser`, or one with no site data at all, and whose site's
+ *  database `database` opens, by default a new one. */
 async function openTab(
   origin: string,
   named?: string,
   served: string | null = 'owner',
   browser: LayoutStore | null = null,
+  database: () => Promise<StoreEngine> = new Site().open,
 ): Promise<Tab> {
   vi.resetModules();
   const held = new Map([['glade-origin', origin]]);
@@ -40,6 +83,9 @@ async function openTab(
     bootstrap: Promise.resolve({ node_ws: 'ws://127.0.0.1:9106', principal: served ?? undefined }),
     schedule: () => () => {},
   });
+  // and, beside it, the appearance instance's store
+  const { establishAppearanceStore } = await import('./store');
+  await establishAppearanceStore({ open: database, schedule: () => () => {} });
   const glade = await import('@grythjs/glade');
   const desk = await import('@grythjs/desktop');
   const { grok } = await import('@grythjs/plugin-api');
@@ -227,5 +273,64 @@ describe('a browser\'s stored appearance (Step 2.4)', () => {
   it('writes nothing to a zone the node would not replay', async () => {
     const tab = await openTab('tab1', undefined, 'owner', browserWith(OLD));
     expect((await connect(tab, [], false)).written()).toEqual([]);
+  });
+});
+
+describe('the appearance instance\'s store, which every tab of the site shares (Step 3.1)', () => {
+  beforeEach(() => {
+    // a write with no socket, and a database that will not open, each say so
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('shows a second page the stored value before any node op', async () => {
+    const site = new Site();
+    const first = await openTab('tab1', undefined, 'owner', null, site.open);
+    first.read(first.desk.DESKTOP_THEME_TAP)?.set('nord');
+    const second = await openTab('tab2', undefined, 'owner', null, site.open);
+    expect(second.read(second.desk.DESKTOP_THEME)).toBe('nord');
+  });
+
+  it('gives a reloaded tab\'s first write its origin\'s next seq, not 0', async () => {
+    const site = new Site();
+    const first = await openTab('tab1', undefined, 'owner', null, site.open);
+    first.read(first.desk.DESKTOP_THEME_TAP)?.set('nord');
+    const reloaded = await openTab('tab1', undefined, 'owner', null, site.open);
+    // before its replay lands
+    reloaded.read(reloaded.desk.DESKTOP_THEME_TAP)?.set('solar');
+    const node = await connect(reloaded);
+    expect(node.ops().map((op) => op.seq)).toEqual([0, 1]);
+    expect(node.written().at(-1)).toMatchObject({ theme: 'solar' });
+  });
+
+  it('keeps a write made with no socket, and ships it at the next boot', async () => {
+    const site = new Site();
+    const first = await openTab('tab1', undefined, 'owner', null, site.open);
+    first.read(first.desk.DESKTOP_THEME_TAP)?.set('nord');
+    expect(site.chains()).toEqual({ tab1: [0] });
+    const reloaded = await openTab('tab1', undefined, 'owner', null, site.open);
+    expect((await connect(reloaded)).written()).toEqual([expect.objectContaining({ theme: 'nord' })]);
+  });
+
+  it('keeps the rows of two pages over one database, each on its own origin\'s chain', async () => {
+    const site = new Site();
+    const first = await openTab('tab1', undefined, 'owner', null, site.open);
+    const second = await openTab('tab2', undefined, 'owner', null, site.open);
+    first.read(first.desk.DESKTOP_THEME_TAP)?.set('nord');
+    second.read(second.desk.DESKTOP_THEME_TAP)?.set('solar');
+    first.read(first.desk.DESKTOP_THEME_TAP)?.set('dark');
+    // and the second, reloaded, writes on after its own row
+    const reloaded = await openTab('tab2', undefined, 'owner', null, site.open);
+    reloaded.read(reloaded.desk.DESKTOP_ZOOM_TAP)?.set(1.2);
+    expect(site.chains()).toEqual({ tab1: [0, 1], tab2: [0, 1] });
+  });
+
+  it('falls back to memory and the per-user key when the database will not open', async () => {
+    const browser = browserWith();
+    const blocked = () => Promise.reject(new Error('blocked'));
+    const first = await openTab('tab1', undefined, 'owner', browser, blocked);
+    first.read(first.desk.DESKTOP_THEME_TAP)?.set('nord');
+    expect(first.read(first.desk.DESKTOP_THEME)).toBe('nord');
+    const reloaded = await openTab('tab1', undefined, 'owner', browser, blocked);
+    expect(reloaded.read(reloaded.desk.DESKTOP_THEME)).toBe('nord');
   });
 });

@@ -65,15 +65,36 @@ describe('each entry knows who the page is before it composes', () => {
   it.each(TARGETS)('$loader resolves the identity, then imports $composition', ({ loader }) => {
     const text = source(loader);
     // Nothing it imports up front may capture the principal: the identity
-    // module and, at most, a stylesheet.
+    // module, the appearance store's module, which imports glial alone
+    // (Step 3.1), and, at most, a stylesheet.
     for (const line of staticImports(text)) {
-      expect(line).toMatch(/^import (\{ [^}]+ \} from '@grythjs\/glade\/identity'|'[^']+\.css');$/);
+      expect(line).toMatch(
+        /^import (\{ [^}]+ \} from '@grythjs\/(glade\/identity|plugin-settings\/store)'|'[^']+\.css');$/,
+      );
+    }
+    for (const line of staticImports(source('packages/plugins/settings/src/store.ts'))) {
+      expect(line).toMatch(/^import \{ [^}]+ \} from '@owebeeone\/glial-runtime';$/);
     }
     const resolves = text.indexOf('await establishDeskIdentity(pageSources());');
     const composes = text.indexOf("await import('./compose');");
     expect(resolves).toBeGreaterThanOrEqual(0);
     expect(composes).toBeGreaterThan(resolves);
     expect(text).not.toMatch(/^boot\(/m);
+  });
+
+  it('entries/gyld/main.tsx opens the appearance store beside the identity, and has it before it composes', () => {
+    // the site's database of the user's appearance (Glial appearance plan,
+    // Step 3.1), started before the identity is awaited, so neither waits on
+    // the other
+    const text = source('entries/gyld/main.tsx');
+    const opens = text.indexOf('const store = establishAppearanceStore(pageStoreSources());');
+    const resolves = text.indexOf('await establishDeskIdentity(pageSources());');
+    const opened = text.indexOf('await store;');
+    const composes = text.indexOf("await import('./compose');");
+    expect(opens).toBeGreaterThanOrEqual(0);
+    expect(resolves).toBeGreaterThan(opens);
+    expect(opened).toBeGreaterThan(resolves);
+    expect(composes).toBeGreaterThan(opened);
   });
 
   it('src/main.tsx imports its stylesheet and its loader, and nothing else', () => {

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./live": "./src/live.ts"
+    "./live": "./src/live.ts",
+    "./store": "./src/store.ts"
   },
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",
