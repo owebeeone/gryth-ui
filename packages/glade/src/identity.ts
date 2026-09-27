@@ -21,7 +21,9 @@
 // The first two ROAM, naming the same user in every tab and session; the third
 // does not. The origin is the tab's own whatever the principal: two tabs
 // sharing one origin fork a chain, the half of the 2026-07-11 ruling that
-// stands.
+// stands. So a page claims its origin with an exclusive Web Lock, and a
+// duplicated tab, whose session storage is a copy, mints its own (owner
+// ruling of 2026-09-27).
 //
 // DOM-free except `pageSources()`, the one function that reads the page, which
 // only a loader calls. Everything else is driven by fakes in identity.test.ts.
@@ -65,19 +67,72 @@ export interface IdentitySources {
   readonly bootstrap: Promise<BootstrapJson | undefined>;
   /** The clock the wait for it runs on. */
   readonly schedule: Schedule;
+  /** The page's Web Locks, which claim its origin; none where the page has
+   *  none, and the stored origin is kept as before. */
+  readonly locks?: OriginLocks;
+}
+
+/** The slice of the page's Web Locks (`navigator.locks`) its origin is claimed with. */
+export interface OriginLocks {
+  request(
+    name: string,
+    options: { ifAvailable: true },
+    callback: (lock: object | null) => unknown,
+  ): Promise<unknown>;
 }
 
 const ORIGIN_KEY = 'glade-origin';
+
+/** A new origin, random. */
+function mintOrigin(): string {
+  return Math.random().toString(36).slice(2, 8);
+}
 
 /** The tab's own id: minted on the tab's first load and kept in its session
  *  storage, so a reload resumes the same chain. */
 export function tabOrigin(store: TabStore): string {
   let origin = store.getItem(ORIGIN_KEY);
   if (!origin) {
-    origin = Math.random().toString(36).slice(2, 8);
+    origin = mintOrigin();
     store.setItem(ORIGIN_KEY, origin);
   }
   return origin;
+}
+
+/** Never settles: a lock granted with it is held until the page goes. */
+const PAGE_LIFE = new Promise<never>(() => {});
+
+/** The tab's origin, claimed for the page's life with the exclusive Web Lock
+ *  `glade-origin:<origin>`. A duplicated tab, or a window opened by script,
+ *  copies session storage and the origin with it; finding that origin's lock
+ *  held by the live page it came from, it mints a fresh one, stores it and
+ *  claims that instead, never waiting. A reload keeps its origin: the old
+ *  document's locks go as it unloads, before the new one runs a script. Were
+ *  one still held (a browser that unloads it later), the tab would take a
+ *  fresh origin: a new chain, never a shared one. */
+async function claimTabOrigin(store: TabStore, locks: OriginLocks | undefined): Promise<string> {
+  let origin = tabOrigin(store);
+  while (locks !== undefined && (await heldElsewhere(locks, origin))) {
+    origin = mintOrigin();
+    store.setItem(ORIGIN_KEY, origin);
+  }
+  return origin;
+}
+
+/** Whether another live page holds `origin`'s lock; if not, this page now
+ *  holds it for its life. A lock manager that refuses the request (an opaque
+ *  origin) leaves the stored origin, as with no Web Locks at all. */
+function heldElsewhere(locks: OriginLocks, origin: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    locks
+      .request(`${ORIGIN_KEY}:${origin}`, { ifAvailable: true }, (lock) => {
+        resolve(lock === null);
+        return lock === null ? undefined : PAGE_LIFE;
+      })
+      .catch(() => {
+        resolve(false);
+      });
+  });
 }
 
 /** The part of `fetch` that `fetchBootstrap` uses. */
@@ -104,7 +159,7 @@ export async function resolveDeskIdentity(
   sources: IdentitySources,
   boundMs: number = IDENTITY_BOUND_MS,
 ): Promise<DeskIdentity> {
-  const origin = tabOrigin(sources.tabStore);
+  const origin = await claimTabOrigin(sources.tabStore, sources.locks);
   const named =
     pickPrincipal(sources.search, undefined) ??
     pickPrincipal(sources.search, await within(sources.bootstrap, boundMs, sources.schedule));
@@ -187,5 +242,8 @@ export function pageSources(): IdentitySources {
       const timer = setTimeout(fn, ms);
       return () => clearTimeout(timer);
     },
+    // none outside a secure context (plain http to a host other than this
+    // machine) or in an older browser: the stored origin, as before
+    locks: 'locks' in navigator ? navigator.locks : undefined,
   };
 }
