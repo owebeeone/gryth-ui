@@ -24,23 +24,30 @@ import { THEME_IDS, type ThemeId } from './themes';
  *  ignored outright: there is no migration for demo state. */
 export const LAYOUT_DOCUMENT_VERSION = 1;
 
+/** The appearance grips the settings plugin produces, as this document keeps
+ *  them. */
+export interface DeskAppearance {
+  theme: ThemeId;
+  wallpaper: string;
+  wallpaperThemed: boolean;
+  zoom: number;
+  fontScale: number;
+}
+
 /** The grip VALUES this document is folded from and seeded back into — the
- *  environ-scope subset of the desktop document plus the appearance grips the
- *  settings plugin produces. Instance-scope state (drag, hover, menus, canvas
- *  size, overview) is never persisted, and neither is anything a Gyld window
- *  holds in its own tab context except what its tab record already carries. */
-export interface DeskState {
+ *  environ-scope subset of the desktop document plus, unless the target keeps
+ *  them elsewhere (`DesktopSetup.persistAppearance`), the appearance grips.
+ *  The fold carries the whole appearance or none of it. Instance-scope state
+ *  (drag, hover, menus, canvas size, overview) is never persisted, and neither
+ *  is anything a Gyld window holds in its own tab context except what its tab
+ *  record already carries. */
+export interface DeskState extends Partial<DeskAppearance> {
   current: number;
   windows: WindowRecord[];
   gridMemory: Record<number, GridStash>;
   preset: FoundationDef;
   sidebarOpen: boolean;
   sidebarWidth: number;
-  theme: ThemeId;
-  wallpaper: string;
-  wallpaperThemed: boolean;
-  zoom: number;
-  fontScale: number;
 }
 
 /** One entry's stored desk. `entry` names the TARGET it was written by, so the
@@ -57,17 +64,15 @@ export interface DeskDocument {
     preset: FoundationDef;
   };
   sidebar: { open: boolean; width: number };
-  appearance: {
-    theme: ThemeId;
-    wallpaper: string;
-    wallpaperThemed: boolean;
-    zoom: number;
-    fontScale: number;
-  };
+  /** Absent from the document of a desk that keeps its appearance elsewhere.
+   *  The version stays 1 either way: a reader already reads a version-1
+   *  document with no appearance, and one of another version is ignored whole,
+   *  which would lose every stored layout. */
+  appearance?: DeskAppearance;
 }
 
 export function foldDocument(entry: string, state: DeskState): DeskDocument {
-  return {
+  const doc: DeskDocument = {
     version: LAYOUT_DOCUMENT_VERSION,
     entry,
     desks: {
@@ -77,14 +82,15 @@ export function foldDocument(entry: string, state: DeskState): DeskDocument {
       preset: state.preset,
     },
     sidebar: { open: state.sidebarOpen, width: state.sidebarWidth },
-    appearance: {
-      theme: state.theme,
-      wallpaper: state.wallpaper,
-      wallpaperThemed: state.wallpaperThemed,
-      zoom: state.zoom,
-      fontScale: state.fontScale,
-    },
   };
+  const { theme, wallpaper, wallpaperThemed, zoom, fontScale } = state;
+  if (
+    theme !== undefined && wallpaper !== undefined && wallpaperThemed !== undefined
+    && zoom !== undefined && fontScale !== undefined
+  ) {
+    doc.appearance = { theme, wallpaper, wallpaperThemed, zoom, fontScale };
+  }
+  return doc;
 }
 
 // --- readers ---------------------------------------------------------------
@@ -273,6 +279,63 @@ function readGridMemory(raw: unknown): Record<number, GridStash> {
   return out;
 }
 
+/** Whether `raw` is a document at all: an object of this version, written by
+ *  `entry` when one is named. */
+function usable(raw: unknown, entry?: string): raw is Record<string, unknown> {
+  if (!isObject(raw) || raw.version !== LAYOUT_DOCUMENT_VERSION) {
+    return false;
+  }
+  const from = str(raw.entry);
+  return from !== undefined && (entry === undefined || from === entry);
+}
+
+/** The fields of an `appearance` block that survive validation. */
+function readAppearance(raw: unknown): Partial<DeskAppearance> {
+  const appearance: Partial<DeskAppearance> = {};
+  if (!isObject(raw)) {
+    return appearance;
+  }
+  const theme = str(raw.theme);
+  if (theme !== undefined && (THEME_IDS as string[]).includes(theme)) {
+    appearance.theme = theme as ThemeId;
+  }
+  const wallpaper = str(raw.wallpaper);
+  if (wallpaper !== undefined) {
+    appearance.wallpaper = wallpaper;
+  }
+  const themed = bool(raw.wallpaperThemed);
+  if (themed !== undefined) {
+    appearance.wallpaperThemed = themed;
+  }
+  const zoom = num(raw.zoom);
+  if (zoom !== undefined) {
+    appearance.zoom = zoom;
+  }
+  const fontScale = num(raw.fontScale);
+  if (fontScale !== undefined) {
+    appearance.fontScale = fontScale;
+  }
+  return appearance;
+}
+
+/**
+ * The appearance a stored document carries, read as `seedFrom` reads it, or
+ * nothing when there is no usable document or no field of its appearance
+ * reads. A desk that keeps its appearance elsewhere seeds none from this
+ * document, so this is what carries the value a browser held across, once
+ * (Glial appearance plan, Step 2.4).
+ */
+export function readLegacyAppearance(
+  raw: unknown,
+  entry?: string,
+): Partial<DeskAppearance> | undefined {
+  if (!usable(raw, entry)) {
+    return undefined;
+  }
+  const appearance = readAppearance(raw.appearance);
+  return Object.keys(appearance).length > 0 ? appearance : undefined;
+}
+
 /**
  * The grip values a stored document seeds back, or `null` when there is no
  * usable document at all — not an object, the wrong version, or written by
@@ -280,11 +343,7 @@ function readGridMemory(raw: unknown): Record<number, GridStash> {
  * the caller leaves those grips alone.
  */
 export function seedFrom(raw: unknown, entry?: string): Partial<DeskState> | null {
-  if (!isObject(raw) || raw.version !== LAYOUT_DOCUMENT_VERSION) {
-    return null;
-  }
-  const from = str(raw.entry);
-  if (from === undefined || (entry !== undefined && from !== entry)) {
+  if (!usable(raw, entry)) {
     return null;
   }
   const state: Partial<DeskState> = {};
@@ -320,26 +379,5 @@ export function seedFrom(raw: unknown, entry?: string): Partial<DeskState> | nul
   if (width !== undefined) {
     state.sidebarWidth = width;
   }
-  const appearance = isObject(raw.appearance) ? raw.appearance : {};
-  const theme = str(appearance.theme);
-  if (theme !== undefined && (THEME_IDS as string[]).includes(theme)) {
-    state.theme = theme as ThemeId;
-  }
-  const wallpaper = str(appearance.wallpaper);
-  if (wallpaper !== undefined) {
-    state.wallpaper = wallpaper;
-  }
-  const themed = bool(appearance.wallpaperThemed);
-  if (themed !== undefined) {
-    state.wallpaperThemed = themed;
-  }
-  const zoom = num(appearance.zoom);
-  if (zoom !== undefined) {
-    state.zoom = zoom;
-  }
-  const fontScale = num(appearance.fontScale);
-  if (fontScale !== undefined) {
-    state.fontScale = fontScale;
-  }
-  return state;
+  return { ...state, ...readAppearance(raw.appearance) };
 }

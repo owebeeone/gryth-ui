@@ -10,7 +10,9 @@ import {
 import { HUB } from './foundations';
 import type { GridStash } from './ops';
 import type { ThemeId } from './themes';
-import { foldDocument, seedFrom, type DeskDocument, type DeskState } from './layoutDocument';
+import {
+  foldDocument, seedFrom, type DeskAppearance, type DeskDocument, type DeskState,
+} from './layoutDocument';
 // One injectable clock for the whole desk — the debounce below and the
 // attention sweep are the same shape, and a suite fires either by hand.
 import { timeoutSchedule, type Schedule } from './attention';
@@ -174,13 +176,9 @@ function pluginSlot<T>(
   };
 }
 
-export function deskPorts(grok: Grok, atoms: DeskAtoms): DeskPorts {
-  const current = ownSlot(grok, DESKTOP_CURRENT, atoms.current, 1);
-  const windows = ownSlot(grok, DESKTOP_WINDOWS, atoms.windows, []);
-  const gridMemory = ownSlot(grok, DESKTOP_GRID_MEMORY, atoms.gridMemory, {});
-  const preset = ownSlot(grok, DESKTOP_FOUNDATION_PRESET, atoms.preset, HUB);
-  const sidebarOpen = ownSlot(grok, SIDEBAR_OPEN, atoms.sidebarOpen, true);
-  const sidebarWidth = ownSlot(grok, SIDEBAR_WIDTH, atoms.sidebarWidth, 200);
+/** The five appearance grips as the blob keeps them: read whole, seeded from
+ *  what a document carried, and watched through their slots. */
+function appearancePorts(grok: Grok) {
   const theme = pluginSlot<ThemeId>(grok, DESKTOP_THEME, DESKTOP_THEME_TAP, 'light');
   const wallpaper = pluginSlot(grok, DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_TAP, '');
   const wallpaperThemed = pluginSlot(
@@ -188,9 +186,40 @@ export function deskPorts(grok: Grok, atoms: DeskAtoms): DeskPorts {
   );
   const zoom = pluginSlot(grok, DESKTOP_ZOOM, DESKTOP_ZOOM_TAP, 1);
   const fontScale = pluginSlot(grok, DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP, 10);
+  return {
+    slots: [theme, wallpaper, wallpaperThemed, zoom, fontScale],
+    read: (): DeskAppearance => ({
+      theme: theme.value(),
+      wallpaper: wallpaper.value(),
+      wallpaperThemed: wallpaperThemed.value(),
+      zoom: zoom.value(),
+      fontScale: fontScale.value(),
+    }),
+    seed(state: Partial<DeskState>) {
+      if (state.theme !== undefined) { theme.seed(state.theme); }
+      if (state.wallpaper !== undefined) { wallpaper.seed(state.wallpaper); }
+      if (state.wallpaperThemed !== undefined) { wallpaperThemed.seed(state.wallpaperThemed); }
+      if (state.zoom !== undefined) { zoom.seed(state.zoom); }
+      if (state.fontScale !== undefined) { fontScale.seed(state.fontScale); }
+    },
+  };
+}
+
+/** The desk's grips as the blob's ports. `persistAppearance` false leaves out
+ *  the five appearance slots: a desk whose appearance lives elsewhere neither
+ *  seeds it from a stored document, nor writes it, nor writes because it
+ *  changed. */
+export function deskPorts(grok: Grok, atoms: DeskAtoms, persistAppearance = true): DeskPorts {
+  const current = ownSlot(grok, DESKTOP_CURRENT, atoms.current, 1);
+  const windows = ownSlot(grok, DESKTOP_WINDOWS, atoms.windows, []);
+  const gridMemory = ownSlot(grok, DESKTOP_GRID_MEMORY, atoms.gridMemory, {});
+  const preset = ownSlot(grok, DESKTOP_FOUNDATION_PRESET, atoms.preset, HUB);
+  const sidebarOpen = ownSlot(grok, SIDEBAR_OPEN, atoms.sidebarOpen, true);
+  const sidebarWidth = ownSlot(grok, SIDEBAR_WIDTH, atoms.sidebarWidth, 200);
+  const appearance = persistAppearance ? appearancePorts(grok) : undefined;
   const all = [
     current, windows, gridMemory, preset, sidebarOpen, sidebarWidth,
-    theme, wallpaper, wallpaperThemed, zoom, fontScale,
+    ...(appearance?.slots ?? []),
   ];
   return {
     read: () => ({
@@ -200,11 +229,7 @@ export function deskPorts(grok: Grok, atoms: DeskAtoms): DeskPorts {
       preset: preset.value(),
       sidebarOpen: sidebarOpen.value(),
       sidebarWidth: sidebarWidth.value(),
-      theme: theme.value(),
-      wallpaper: wallpaper.value(),
-      wallpaperThemed: wallpaperThemed.value(),
-      zoom: zoom.value(),
-      fontScale: fontScale.value(),
+      ...appearance?.read(),
     }),
     seed(state) {
       if (state.current !== undefined) { current.seed(state.current); }
@@ -213,11 +238,7 @@ export function deskPorts(grok: Grok, atoms: DeskAtoms): DeskPorts {
       if (state.preset !== undefined) { preset.seed(state.preset); }
       if (state.sidebarOpen !== undefined) { sidebarOpen.seed(state.sidebarOpen); }
       if (state.sidebarWidth !== undefined) { sidebarWidth.seed(state.sidebarWidth); }
-      if (state.theme !== undefined) { theme.seed(state.theme); }
-      if (state.wallpaper !== undefined) { wallpaper.seed(state.wallpaper); }
-      if (state.wallpaperThemed !== undefined) { wallpaperThemed.seed(state.wallpaperThemed); }
-      if (state.zoom !== undefined) { zoom.seed(state.zoom); }
-      if (state.fontScale !== undefined) { fontScale.seed(state.fontScale); }
+      appearance?.seed(state);
     },
     watch(onChange) {
       for (const one of all) {

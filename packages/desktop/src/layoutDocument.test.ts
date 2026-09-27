@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GYLD } from './foundations';
 import type { WindowRecord } from './grips.desktop';
 import {
-  LAYOUT_DOCUMENT_VERSION, foldDocument, seedFrom, type DeskState,
+  LAYOUT_DOCUMENT_VERSION, foldDocument, readLegacyAppearance, seedFrom, type DeskState,
 } from './layoutDocument';
 
 // The INTERIM desk document (./layoutDocument), which is the only part of the
@@ -115,5 +115,57 @@ describe('the interim desk document', () => {
       windows: [{ ...WINDOW, tabs: [{ id: 't1', facet: 'nobody.knows' }] }],
     };
     expect(roundTrip('gyld', state)?.windows?.[0].tabs[0].facet).toBe('nobody.knows');
+  });
+});
+
+/** STATE's layout alone: the desk of a target whose appearance lives elsewhere
+ *  (`DesktopSetup.persistAppearance`, Glial appearance plan Step 2.2). */
+const LAYOUT: DeskState = {
+  current: STATE.current,
+  windows: STATE.windows,
+  gridMemory: STATE.gridMemory,
+  preset: STATE.preset,
+  sidebarOpen: STATE.sidebarOpen,
+  sidebarWidth: STATE.sidebarWidth,
+};
+
+describe('a desk document that carries no appearance', () => {
+  it('leaves appearance out of the fold and still round-trips as version 1', () => {
+    const doc = stored('gyld', LAYOUT);
+    expect(doc.version).toBe(LAYOUT_DOCUMENT_VERSION);
+    expect(doc).not.toHaveProperty('appearance');
+    expect(seedFrom(doc, 'gyld')).toEqual(LAYOUT);
+  });
+});
+
+describe('the legacy appearance reader', () => {
+  it('returns the appearance a stored document carries', () => {
+    expect(readLegacyAppearance(stored('gyld', STATE), 'gyld')).toEqual({
+      theme: 'nord',
+      wallpaper: 'https://example.test/wide.png',
+      wallpaperThemed: false,
+      zoom: 1.1,
+      fontScale: 12,
+    });
+  });
+
+  it('leaves out a field that does not read, as the seed does', () => {
+    const doc = stored('gyld', STATE);
+    (doc.appearance as Record<string, unknown>).theme = 'chartreuse';
+    const appearance = readLegacyAppearance(doc, 'gyld');
+    expect(appearance).not.toHaveProperty('theme');
+    expect(appearance?.zoom).toBe(1.1);
+  });
+
+  it('returns nothing where there is no appearance to carry', () => {
+    const newer = stored('gyld', STATE);
+    newer.version = LAYOUT_DOCUMENT_VERSION + 1;
+    const unreadable = stored('gyld', STATE);
+    unreadable.appearance = { theme: 'chartreuse', zoom: 'big' };
+    expect(readLegacyAppearance(stored('gyld', LAYOUT), 'gyld')).toBeUndefined();
+    expect(readLegacyAppearance(unreadable, 'gyld')).toBeUndefined();
+    expect(readLegacyAppearance(newer, 'gyld')).toBeUndefined();
+    expect(readLegacyAppearance(stored('desktop', STATE), 'gyld')).toBeUndefined();
+    expect(readLegacyAppearance(null, 'gyld')).toBeUndefined();
   });
 });

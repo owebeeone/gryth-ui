@@ -300,6 +300,15 @@ export interface DesktopSetup {
    * not empty, so the shell's first-run Welcome window is not opened.
    */
   tools?: readonly DeskTool[];
+  /**
+   * Whether the INTERIM stored desk also keeps this desk's appearance — theme,
+   * wallpaper, UI zoom and font scale — and seeds those grips from it at boot.
+   * Default true. A target whose appearance lives elsewhere, a value in the
+   * user's own zone (Glial appearance plan, Step 2.3), says false: the stored
+   * desk then keeps the layout alone, so no browser's stale appearance is
+   * seeded back over the user's.
+   */
+  persistAppearance?: boolean;
 }
 
 /**
@@ -336,10 +345,15 @@ function lockFirstDesk(): void {
 
 // One persistence session per composition root: a suite that composes a bare
 // desk and then the target's calls `registerDesktopTaps` twice, and the stored
-// desk must be restored once and written back by one writer.
+// desk must be restored once and written back by one writer. The first call's
+// entry and appearance choice are the session's.
 let persistence: LayoutPersistence | null = null;
 
-function startPersistence(grok: Grok, entry: string): LayoutPersistence {
+function startPersistence(
+  grok: Grok,
+  entry: string,
+  persistAppearance: boolean,
+): LayoutPersistence {
   if (persistence === null) {
     persistence = startLayoutPersistence(
       deskPorts(grok, {
@@ -349,7 +363,7 @@ function startPersistence(grok: Grok, entry: string): LayoutPersistence {
         preset: DesktopFoundationPresetTap,
         sidebarOpen: SidebarOpenTap,
         sidebarWidth: SidebarWidthTap,
-      }),
+      }, persistAppearance),
       { entry },
     );
     ResetLayoutTap.set(persistence.reset);
@@ -393,7 +407,9 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   // the reader's own and the entry's `locked`/`tools` defaults are what a desk
   // opens with when there is no stored one. See ./layoutStorageTap — this
   // whole seam is stand-in code for a glial value instance.
-  const persisted = startPersistence(grok, setup?.entry ?? DEFAULT_ENTRY);
+  const persisted = startPersistence(
+    grok, setup?.entry ?? DEFAULT_ENTRY, setup?.persistAppearance ?? true,
+  );
   if (persisted.restored) {
     return;
   }

@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { GripRegistry, Grok, createAtomValueTap } from '@owebeeone/grip-react';
 import { HUB } from './foundations';
+import {
+  DESKTOP_CURRENT, DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP, DESKTOP_FOUNDATION_PRESET,
+  DESKTOP_GRID_MEMORY, DESKTOP_THEME, DESKTOP_THEME_TAP, DESKTOP_WINDOWS, SIDEBAR_OPEN,
+  SIDEBAR_WIDTH, type WindowRecord,
+} from './grips.desktop';
 import { foldDocument, type DeskState } from './layoutDocument';
 import {
-  clearStoredLayout, layoutKey, readStoredLayout, startLayoutPersistence,
+  clearStoredLayout, deskPorts, layoutKey, readStoredLayout, startLayoutPersistence,
   type DeskPorts, type LayoutStore, type Schedule,
 } from './layoutStorageTap';
+import type { GridStash } from './ops';
+import type { ThemeId } from './themes';
 
 // The INTERIM storage side: what it writes, when it writes it, what it seeds,
 // and — the part that matters most for a demo — that a store which is absent,
@@ -181,5 +189,72 @@ describe('the interim layout store', () => {
     expect(store.items.has(layoutKey('gyld'))).toBe(false);
     expect(store.getItem('someone.else')).toBe('keep me');
     expect(() => { clearStoredLayout(HOSTILE, layoutKey('gyld')); }).not.toThrow();
+  });
+});
+
+/** A composed page's grip graph: the desk's six layout atoms, and two of the
+ *  appearance producers @grythjs/plugin-settings registers, with their handles.
+ *  A stored `nord` theme and font scale 13 are waiting in the blob. */
+function restoredDesk(persistAppearance?: boolean) {
+  const grok = new Grok(new GripRegistry());
+  const atoms = {
+    current: createAtomValueTap(DESKTOP_CURRENT, { initial: 1 }),
+    windows: createAtomValueTap<WindowRecord[]>(DESKTOP_WINDOWS, { initial: [] }),
+    gridMemory: createAtomValueTap<Record<number, GridStash>>(DESKTOP_GRID_MEMORY, { initial: {} }),
+    preset: createAtomValueTap(DESKTOP_FOUNDATION_PRESET, { initial: HUB }),
+    sidebarOpen: createAtomValueTap(SIDEBAR_OPEN, { initial: true }),
+    sidebarWidth: createAtomValueTap(SIDEBAR_WIDTH, { initial: 200 }),
+  };
+  const theme = createAtomValueTap<ThemeId>(DESKTOP_THEME, {
+    initial: 'light', handleGrip: DESKTOP_THEME_TAP,
+  });
+  const fontScale = createAtomValueTap(DESKTOP_FONT_SCALE, {
+    initial: 10, handleGrip: DESKTOP_FONT_SCALE_TAP,
+  });
+  for (const tap of [...Object.values(atoms), theme, fontScale]) {
+    grok.registerTap(tap);
+  }
+  const store = new FakeStore();
+  store.setItem(layoutKey('gyld'), JSON.stringify(
+    foldDocument('gyld', { ...STATE, theme: 'nord', fontScale: 13, sidebarWidth: 320 }),
+  ));
+  const clock = manualClock();
+  const ports = persistAppearance === undefined
+    ? deskPorts(grok, atoms)
+    : deskPorts(grok, atoms, persistAppearance);
+  const held = startLayoutPersistence(ports, { entry: 'gyld', store, schedule: clock.schedule });
+  grok.flush();
+  // whatever the restore itself queued is written before the test acts
+  clock.tick();
+  const written = () => readStoredLayout(store, layoutKey('gyld')) as Record<string, unknown>;
+  return { grok, atoms, theme, fontScale, clock, held, written };
+}
+
+describe('the desk ports, over a composed page', () => {
+  it('with persistAppearance false, seed no stored appearance and write none', () => {
+    const desk = restoredDesk(false);
+    expect(desk.held.restored).toBe(true);
+    expect(desk.atoms.sidebarWidth.get()).toBe(320);
+    expect([desk.theme.get(), desk.fontScale.get()]).toEqual(['light', 10]);
+    // the reader's appearance is not the blob's to write
+    desk.theme.set('dark');
+    desk.grok.flush();
+    expect(desk.clock.waiting).toBe(false);
+    // and a layout write carries none
+    desk.atoms.sidebarWidth.set(280);
+    desk.grok.flush();
+    desk.clock.tick();
+    expect(desk.written().sidebar).toEqual({ open: true, width: 280 });
+    expect(desk.written()).not.toHaveProperty('appearance');
+  });
+
+  it('by default, seed the stored appearance and write it back, as before', () => {
+    const desk = restoredDesk();
+    expect([desk.theme.get(), desk.fontScale.get()]).toEqual(['nord', 13]);
+    desk.theme.set('dark');
+    desk.grok.flush();
+    expect(desk.clock.waiting).toBe(true);
+    desk.clock.tick();
+    expect((desk.written().appearance as Record<string, unknown>).theme).toBe('dark');
   });
 });

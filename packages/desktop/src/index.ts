@@ -12,3 +12,8 @@ export * from './ticker';
 // The pane presets a target may hand to registerDesktopTaps.
 export { HUB, GYLD } from './foundations';
 export { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
+// A browser's stored appearance, for a target that carries it into the user's
+// zone once (Glial appearance plan, Step 2.4): where an entry's stored desk is,
+// and the one reader of its appearance. The rest of the document stays private.
+export { readLegacyAppearance, type DeskAppearance } from './layoutDocument';
+export { layoutKey, readStoredLayout, type LayoutStore } from './layoutStorageTap';
