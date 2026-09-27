@@ -45,6 +45,7 @@ front. `./gyld-ui.py` stands all of that up, checks it, and prints the URL:
 python3 gyld-ui.py start                    # -> http://localhost:5173/
 python3 gyld-ui.py status                   # ok/FAIL per check, then working / not working
 python3 gyld-ui.py start --port 5180        # a second instance, its own ports and data
+python3 gyld-ui.py start --principal alice  # the user the desk is for (default: owner)
 python3 gyld-ui.py restart --port 5180
 python3 gyld-ui.py stop [--purge]           # no --port: every instance
 ```
@@ -52,13 +53,20 @@ python3 gyld-ui.py stop [--purge]           # no --port: every instance
 | verb | what it does |
 |---|---|
 | `start` | prerequisites, then grazel, then a wait for the supplier to publish a build (it lays the bundle root and makes the first one itself, as run `boot-<session>`), then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |
-| `status` | grazel's `/bootstrap.json`, the node's WS port, the supplier serving, the bundle root built and how many streams it lists, the supplier's publication of that build, the page, and in dev mode the two proxied paths. Exit 0 when it works, 1 when it does not. `--json` for a machine. |
+| `status` | grazel's `/bootstrap.json` and the principal it names, the node's WS port, the supplier serving, the bundle root built and how many streams it lists, the supplier's publication of that build, the page, and in dev mode the two proxied paths. Exit 0 when it works, 1 when it does not. `--json` for a machine. |
 | `stop` | SIGTERM to grazel's process group (which takes the node and both suppliers) and to vite's, SIGKILL what is left, clear a lock the node did not, and confirm nothing of the instance survives. The data stays unless `--purge`. |
 | `restart` | `stop`, then `start` with the options the instance recorded. |
 
 `--mode dev` (the default) is `pnpm dev:gyld` in front of grazel, with `/gyld/`
 and `/bootstrap.json` proxied back to it. `--mode built` is `dist-gyld` handed
 to grazel — one origin, no proxy, and `--port` is then grazel's own HTTP port.
+
+**Whose desk it is.** `--principal NAME` names the user the desk is for; with
+none named it is `owner`, the one principal the shipped seeds grant. It is
+recorded with the instance, `restart` keeps it unless given another, and grazel
+serves it in `/bootstrap.json`, where `status` checks it: a body that names no
+principal comes from a grazel started without one, and `restart` fixes it. NAME
+is 1 to 63 of `A-Z a-z 0-9 . _ -`, as grazel's own `--principal` requires.
 
 **Where an instance lives.** `~/.gyld-ui/instances/<port>/`, and NOT under
 `/tmp`: a ruling submitted from the UI is written into the bundle root there, so

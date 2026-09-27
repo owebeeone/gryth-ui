@@ -8,12 +8,15 @@ Run them with `pnpm test:py`, or directly:
 They exercise only what can be decided without a running composition — port
 derivation, the state file, the stale-lock decision, readiness detection over
 log text, the supplier's first-build and publication lines, `/bootstrap.json`
-parsing, the ask agent's environment passthrough and endpoint check, and the
-status verdict — so the suite needs no grazel, no node and no
-Python 3.13. It runs on the system `python3` (3.10) exactly as the script does.
+parsing, the ask agent's environment passthrough and endpoint check, the
+principal and grazel's command line, and the status verdict — so the suite
+needs no grazel, no node and no Python 3.13. It runs on the system `python3`
+(3.10) exactly as the script does.
 """
 
+import contextlib
 import importlib.util
+import io
 import json
 import os
 import sys
@@ -746,6 +749,260 @@ class DecisionsRootTest(unittest.TestCase):
             self.assertIn("(1 notebooks)", line)
             # An older instance recorded none at all.
             self.assertIn("no decisions root", gu.notebooks_line(""))
+
+
+def _recorded(principal="alice"):
+    """An instance as `start` records it, on ports of its own."""
+    return gu.InstanceState(
+        mode="dev",
+        ui_port=5190,
+        http_port=8097,
+        node_port=9116,
+        grazel_pid=4242,
+        vite_pid=4243,
+        data="/home/x/.gyld-ui/instances/5190",
+        gyld_root="/w/gyld-wz/gyld",
+        decisions_root="/w/glade-wz/decisions",
+        glade_wz="/w/glade-wz",
+        gryth_ui="/w/gryth-wz/gryth-ui",
+        python=gu.SUPPLIER_PYTHON,
+        grazel_log="/home/x/.gyld-ui/instances/5190/logs/grazel.log",
+        vite_log="/home/x/.gyld-ui/instances/5190/logs/vite.log",
+        started_at="2026-09-27T00:00:00Z",
+        url="http://localhost:5190/",
+        principal=principal,
+    )
+
+
+class PrincipalNameTest(unittest.TestCase):
+    """`--principal` names the user the desk is for (Glial appearance plan,
+    Step 1.2): `owner` unless named, and held to the names grazel's own
+    `--principal` takes, so a name grazel would refuse is refused here, with
+    the rule it breaks, before anything starts."""
+
+    def test_start_presents_owner_unless_it_names_another(self):
+        parser = gu.build_parser()
+        self.assertEqual(parser.parse_args(["start"]).principal, "owner")
+        args = parser.parse_args(["start", "--port", "5190", "--principal", "alice"])
+        self.assertEqual(args.principal, "alice")
+
+    def test_restart_names_none_so_the_recorded_one_stands(self):
+        parser = gu.build_parser()
+        self.assertIsNone(parser.parse_args(["restart"]).principal)
+        args = parser.parse_args(["restart", "--principal", "bob"])
+        self.assertEqual(args.principal, "bob")
+
+    def test_the_names_grazel_takes_are_taken(self):
+        # 63 hex digits is one short of a node id, so it is an ordinary name.
+        hex63 = ("0123456789abcdef" * 4)[:63]
+        for name in ("owner", "it-user", "a.b_c-D9", "p" * 63, hex63):
+            self.assertIsNone(gu.principal_refusal(name), repr(name))
+
+    def test_each_name_grazel_refuses_is_refused_with_grazels_rule(self):
+        node_id = "0123456789abcdef" * 4
+        cases = [
+            ("", "is empty"),
+            (node_id, "which the node reads as a node id"),
+            ("a b", "whitespace or a control character"),
+            ("owner ", "whitespace or a control character"),
+            ("a\tb", "whitespace or a control character"),
+            ("own\x07er", "whitespace or a control character"),
+            ("\x1b[31mowner", "whitespace or a control character"),
+            ("a:b", "may hold only A-Z a-z 0-9 . _ and -"),
+            ("ówner", "may hold only A-Z a-z 0-9 . _ and -"),
+            ("p" * 64, "longer than 63"),
+            (node_id.upper(), "longer than 63"),
+        ]
+        for name, why in cases:
+            refusal = gu.principal_refusal(name)
+            self.assertIsNotNone(refusal, repr(name))
+            self.assertIn(why, refusal, repr(name))
+
+    def test_a_refused_name_stops_the_parse_with_the_rule_it_breaks(self):
+        for verb in ("start", "restart"):
+            said = io.StringIO()
+            with contextlib.redirect_stderr(said):
+                with self.assertRaises(SystemExit) as caught:
+                    gu.build_parser().parse_args([verb, "--principal", "a b"])
+            self.assertEqual(caught.exception.code, 2)
+            self.assertIn(
+                "argument --principal: 'a b' holds whitespace or a control character",
+                said.getvalue(),
+            )
+
+
+class PrincipalRecordTest(unittest.TestCase):
+    """The principal is recorded with the instance, and `restart` starts it as
+    the same user unless told otherwise."""
+
+    def _restart(self, extra):
+        raw = ["restart"] + extra
+        args = gu.build_parser().parse_args(raw)
+        args.mode_given = "--mode" in raw  # as `main` sets it
+        return args
+
+    def _recorded_before_the_principal(self, data):
+        body = _recorded().to_dict()
+        del body["principal"]
+        (data / gu.STATE_FILENAME).write_text(json.dumps(body), encoding="utf-8")
+        return gu.read_state(data)
+
+    def test_the_state_round_trips_the_principal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            gu.write_state(data, _recorded("alice"))
+            read_back = gu.read_state(data)
+            self.assertEqual(read_back, _recorded("alice"))
+            self.assertEqual(read_back.principal, "alice")
+
+    def test_a_state_file_written_before_the_principal_existed_loads_as_owner(self):
+        # Such an instance was started with no `--principal`. It reads as the
+        # default, so `restart` starts it as `owner`, and until then `status`
+        # says its grazel serves no principal.
+        with tempfile.TemporaryDirectory() as tmp:
+            read_back = self._recorded_before_the_principal(Path(tmp))
+            self.assertIsNotNone(read_back)
+            self.assertEqual(read_back.principal, "owner")
+
+    def test_restart_keeps_the_recorded_principal_and_the_rest(self):
+        again = gu.replayed_args(self._restart([]), _recorded("alice"))
+        self.assertEqual(again.principal, "alice")
+        self.assertEqual(
+            (again.port, again.mode, again.http, again.node_port, again.data),
+            (5190, "dev", 8097, 9116, "/home/x/.gyld-ui/instances/5190"),
+        )
+        self.assertEqual(
+            (again.gyld_root, again.decisions_root, again.glade_wz, again.gryth_ui),
+            (
+                "/w/gyld-wz/gyld",
+                "/w/glade-wz/decisions",
+                "/w/glade-wz",
+                "/w/gryth-wz/gryth-ui",
+            ),
+        )
+
+    def test_restart_given_a_principal_starts_as_that_one(self):
+        again = gu.replayed_args(
+            self._restart(["--principal", "bob"]), _recorded("alice")
+        )
+        self.assertEqual(again.principal, "bob")
+
+    def test_restart_of_an_instance_that_recorded_none_starts_it_as_owner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            older = self._recorded_before_the_principal(Path(tmp))
+            again = gu.replayed_args(self._restart([]), older)
+            self.assertEqual(again.principal, "owner")
+
+
+class GrazelArgvTest(unittest.TestCase):
+    """What `start` hands grazel. grazel serves the principal it is given in
+    `/bootstrap.json` (glade-wz grazel, appearance Step 1.1)."""
+
+    LAYOUT = gu.Layout(
+        gryth_ui=Path("/w/gryth-wz/gryth-ui"),
+        glade_wz=Path("/w/glade-wz"),
+        gyld_root=Path("/w/gyld-wz/gyld"),
+        decisions_root=Path("/w/glade-wz/decisions"),
+        python=Path(gu.SUPPLIER_PYTHON),
+    )
+
+    def test_dev_mode_hands_grazel_the_principal_beside_its_other_flags(self):
+        argv = gu.grazel_argv(
+            self.LAYOUT, Path("/d"), gu.Ports(5190, 8097, 9116), gu.DEV, "alice"
+        )
+        self.assertEqual(
+            argv,
+            [
+                "/w/glade-wz/grazel/target/debug/grazel",
+                "--mode",
+                "both",
+                "--data",
+                "/d",
+                "--http",
+                "8097",
+                "--node-port",
+                "9116",
+                "--gyld-supplier-bin",
+                "/w/glade-wz/glade-gyld/target/debug/glade-gyld",
+                "--gyld-root",
+                "/w/gyld-wz/gyld",
+                "--gyld-decisions-root",
+                "/w/glade-wz/decisions",
+                "--principal",
+                "alice",
+            ],
+        )
+
+    def test_built_mode_hands_grazel_the_principal_and_the_page(self):
+        argv = gu.grazel_argv(
+            self.LAYOUT, Path("/d"), gu.Ports(8090, 8090, 9109), gu.BUILT, "owner"
+        )
+        self.assertEqual(
+            argv[-4:],
+            ["--principal", "owner", "--ui", "/w/gryth-wz/gryth-ui/dist-gyld"],
+        )
+        self.assertEqual(argv.count("--principal"), 1)
+
+
+class PrincipalStatusTest(unittest.TestCase):
+    """`status` fails its `/bootstrap.json` line unless grazel serves the
+    principal the instance recorded, and says which principal that is."""
+
+    URL = "http://127.0.0.1:8097/bootstrap.json"
+    SERVED = '{"node_ws":"ws://127.0.0.1:9116","mode":"both","name":"grazel"'
+
+    def _check(self, body, recorded="alice"):
+        return gu.bootstrap_check(self.URL, gu.HttpAnswer(200, body), recorded)
+
+    def test_a_body_names_its_principal_or_none(self):
+        boot = gu.parse_bootstrap(self.SERVED + ',"principal":"alice"}')
+        self.assertEqual(boot.principal, "alice")
+        self.assertIsNone(gu.parse_bootstrap(self.SERVED + "}").principal)
+
+    def test_grazel_serving_the_recorded_principal_passes(self):
+        check, node_port = self._check(self.SERVED + ',"principal":"alice"}')
+        self.assertTrue(check.ok, check.line())
+        self.assertEqual(check.label, "grazel /bootstrap.json")
+        self.assertIn("principal alice", check.detail)
+        self.assertEqual(node_port, 9116)
+
+    def test_a_body_naming_another_principal_fails_and_names_both(self):
+        check, node_port = self._check(self.SERVED + ',"principal":"bob"}')
+        self.assertFalse(check.ok)
+        self.assertIn("principal bob, NOT alice", check.detail)
+        # node_ws is still what the WS check after it probes.
+        self.assertEqual(node_port, 9116)
+
+    def test_a_body_naming_no_principal_fails(self):
+        # What a grazel started with no `--principal` serves, as every grazel
+        # started before this step was: the body without the field.
+        check, node_port = self._check(self.SERVED + "}")
+        self.assertFalse(check.ok)
+        self.assertIn("NO principal", check.detail)
+        self.assertIn("alice", check.detail)
+        self.assertEqual(node_port, 9116)
+
+    def test_a_grazel_that_does_not_answer_fails_as_before(self):
+        check, node_port = gu.bootstrap_check(
+            self.URL, gu.HttpAnswer(0, "", "Connection refused"), "alice"
+        )
+        self.assertFalse(check.ok)
+        self.assertEqual(
+            check.detail, "{} did not answer (Connection refused)".format(self.URL)
+        )
+        self.assertIsNone(node_port)
+
+    def test_a_body_that_is_not_json_fails_and_names_no_port(self):
+        check, node_port = self._check("not json")
+        self.assertFalse(check.ok)
+        self.assertIn("not JSON", check.detail)
+        self.assertIsNone(node_port)
+
+    def test_the_report_says_whose_desk_it_is(self):
+        said = io.StringIO()
+        with contextlib.redirect_stdout(said):
+            gu.report_instance(_recorded("alice"), [gu.CheckResult("a", True, "ok")])
+        self.assertIn("\n  principal: alice\n", said.getvalue())
 
 
 if __name__ == "__main__":

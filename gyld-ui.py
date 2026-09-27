@@ -46,6 +46,7 @@ import socket
 import subprocess
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -70,6 +71,13 @@ HIGHEST_PORT = 65535
 
 #: grazel's `--name`, which is also the instance directory the node locks.
 GRAZEL_NODE_NAME = "grazel"
+
+#: The user a desk is for when `--principal` names none: the one principal the
+#: shipped seeds grant (glade-wz `grazel/apps/gyld-app.glade`, `seed owner
+#: ws-razel read.*`), so the desk keeps its reads when slice 4.3's websocket
+#: switch goes on, where `$USER` would hold no grant (Glial appearance plan §2,
+#: ruled 2026-09-25).
+DEFAULT_PRINCIPAL = "owner"
 
 #: The interpreter the Gyld hosts the supplier runs need. The system python3 is
 #: 3.10 and they fail on it (glade-gyld/README.md, "Run"). This exact path is
@@ -234,6 +242,47 @@ def default_data_dir(ui_port: int) -> Path:
 
 
 # --------------------------------------------------------------------------
+# The principal: whose desk it is
+# --------------------------------------------------------------------------
+
+
+#: 64 lower-case hex digits name a node, and a Hello naming one binds no
+#: principal (glade-wz slice 4.3), so they are never a user's name.
+_NODE_ID = re.compile(r"[0-9a-f]{64}")
+_PRINCIPAL_CHARS = re.compile(r"[A-Za-z0-9._-]+")
+LONGEST_PRINCIPAL = 63
+
+
+def principal_refusal(name: str) -> Optional[str]:
+    """Why grazel would refuse `name` as its `--principal`, or nothing.
+
+    grazel's own rules, in its order and in its words (glade-wz
+    `grazel/src/lib.rs`, `parse_principal`), so a name is refused here before
+    anything starts rather than in grazel's log after: 1 to 63 of
+    `A-Z a-z 0-9 . _ -`, which is never a node id and never needs escaping in
+    `?principal=` or in the `self:<principal>` key."""
+    if name == "":
+        return "is empty: the node binds no principal for an empty name"
+    if _NODE_ID.fullmatch(name):
+        return "is 64 lower-case hex digits, which the node reads as a node id"
+    if any(char.isspace() or unicodedata.category(char) == "Cc" for char in name):
+        return "holds whitespace or a control character"
+    if not _PRINCIPAL_CHARS.fullmatch(name):
+        return "may hold only A-Z a-z 0-9 . _ and -"
+    if len(name) > LONGEST_PRINCIPAL:
+        return "is longer than {} characters".format(LONGEST_PRINCIPAL)
+    return None
+
+
+def principal_name(text: str) -> str:
+    """`--principal`'s argparse type: the name, or a refusal naming its rule."""
+    refusal = principal_refusal(text)
+    if refusal is not None:
+        raise argparse.ArgumentTypeError("{!r} {}".format(text, refusal))
+    return text
+
+
+# --------------------------------------------------------------------------
 # The state file
 # --------------------------------------------------------------------------
 
@@ -263,6 +312,11 @@ class InstanceState:
     # and the file is written sorted anyway. Defaulted because instances were
     # already running when it arrived — see `from_dict`.
     decisions_root: str = ""
+    # The user the desk is for, handed to grazel as `--principal` and served in
+    # `/bootstrap.json`. Defaulted for the same reason: an instance recorded
+    # before it was started with none and reads as `owner`, so `restart` hands
+    # grazel the default, and until then `status` says grazel serves none.
+    principal: str = DEFAULT_PRINCIPAL
 
     def to_dict(self) -> Dict[str, object]:
         return {field.name: getattr(self, field.name) for field in fields(self)}
@@ -536,14 +590,19 @@ def log_since(path: Path, offset: int) -> str:
 
 
 class Bootstrap:
-    """grazel's session-placement body: `{node_ws, mode, name}`. `node_ws` is
-    authoritative for which node the page will attach to — a derived port is
-    only ever a guess at it."""
+    """grazel's session-placement body: `{node_ws, mode, name}`, and
+    `principal` when grazel was given one (glade-wz grazel, appearance Step
+    1.1). `node_ws` is authoritative for which node the page will attach to — a
+    derived port is only ever a guess at it."""
 
-    def __init__(self, node_ws: str, mode: str, name: str) -> None:
+    def __init__(
+        self, node_ws: str, mode: str, name: str, principal: Optional[str] = None
+    ) -> None:
         self.node_ws = node_ws
         self.mode = mode
         self.name = name
+        # None when the body has no `principal`: grazel was given none.
+        self.principal = principal
 
     @property
     def node_port(self) -> Optional[int]:
@@ -553,7 +612,9 @@ class Bootstrap:
         return int(found.group(1))
 
     def __repr__(self) -> str:
-        return "Bootstrap({!r}, {!r}, {!r})".format(self.node_ws, self.mode, self.name)
+        return "Bootstrap({!r}, {!r}, {!r}, {!r})".format(
+            self.node_ws, self.mode, self.name, self.principal
+        )
 
 
 def parse_bootstrap(text: str) -> Bootstrap:
@@ -563,10 +624,12 @@ def parse_bootstrap(text: str) -> Bootstrap:
         raise ValueError("/bootstrap.json is not JSON: {}".format(error))
     if not isinstance(body, dict):
         raise ValueError("/bootstrap.json is not an object")
+    principal = body.get("principal")
     return Bootstrap(
         node_ws=str(body.get("node_ws", "")),
         mode=str(body.get("mode", "")),
         name=str(body.get("name", "")),
+        principal=None if principal is None else str(principal),
     )
 
 
@@ -1079,6 +1142,39 @@ def prerequisite_checks(layout: Layout) -> List[CheckResult]:
 # --------------------------------------------------------------------------
 
 
+def bootstrap_check(
+    url: str, answer: HttpAnswer, principal: str
+) -> Tuple[CheckResult, Optional[int]]:
+    """The line for grazel's `/bootstrap.json`, and the node port its body
+    names for the WS check after it (`None` when no body names one).
+
+    The body has to name the principal the instance recorded. One that names
+    none comes from a grazel started without `--principal`, as every grazel
+    was before gyld-ui passed it; one that names another is not this desk."""
+    label = "grazel /bootstrap.json"
+    if not answer.ok:
+        detail = "{} did not answer ({})".format(url, answer.error or answer.status)
+        return CheckResult(label, False, detail), None
+    try:
+        boot = parse_bootstrap(answer.body)
+    except ValueError as error:
+        return CheckResult(label, False, str(error)), None
+    served = "node_ws {} mode {} name {}".format(boot.node_ws, boot.mode, boot.name)
+    if boot.principal is None:
+        detail = (
+            "{}, and NO principal where {} was recorded — a grazel started "
+            "without --principal: restart it".format(served, principal)
+        )
+    elif boot.principal != principal:
+        detail = "{} principal {}, NOT {} as recorded".format(
+            served, boot.principal, principal
+        )
+    else:
+        detail = "{} principal {}".format(served, principal)
+    ok = boot.principal is not None and boot.principal == principal
+    return CheckResult(label, ok, detail), boot.node_port
+
+
 def status_checks(state: InstanceState) -> List[CheckResult]:
     """Is this instance working? Each answer is one line, and the reason is on
     it whether it passed or not."""
@@ -1087,33 +1183,10 @@ def status_checks(state: InstanceState) -> List[CheckResult]:
     checks: List[CheckResult] = []
 
     boot_url = "http://127.0.0.1:{}/bootstrap.json".format(state.http_port)
-    answer = http_get(boot_url)
-    node_port = None
-    if not answer.ok:
-        checks.append(
-            CheckResult(
-                "grazel /bootstrap.json",
-                False,
-                "{} did not answer ({})".format(
-                    boot_url, answer.error or answer.status
-                ),
-            )
-        )
-    else:
-        try:
-            boot = parse_bootstrap(answer.body)
-            node_port = boot.node_port
-            checks.append(
-                CheckResult(
-                    "grazel /bootstrap.json",
-                    True,
-                    "node_ws {} mode {} name {}".format(
-                        boot.node_ws, boot.mode, boot.name
-                    ),
-                )
-            )
-        except ValueError as error:
-            checks.append(CheckResult("grazel /bootstrap.json", False, str(error)))
+    boot_check, node_port = bootstrap_check(
+        boot_url, http_get(boot_url), state.principal
+    )
+    checks.append(boot_check)
 
     # node_ws is authoritative; the recorded port is only the request we made.
     probe_port = node_port if node_port is not None else state.node_port
@@ -1255,6 +1328,7 @@ def report_instance(state: InstanceState, checks: Sequence[CheckResult]) -> Verd
     )
     for check in checks:
         print(check.line())
+    print("  principal: {}".format(state.principal))
     print("  data: {}".format(state.data))
     print("  rulings: {}".format(notebooks_line(state.decisions_root)))
     print("  logs: {}".format(Path(state.grazel_log).parent))
@@ -1379,8 +1453,41 @@ def wait_for_port(port: int, timeout: float, pid: Optional[int] = None) -> bool:
     return False
 
 
+def grazel_argv(
+    layout: Layout, data: Path, ports: Ports, mode: RunMode, principal: str
+) -> List[str]:
+    """grazel's command line for one instance. The principal always rides it:
+    grazel serves it in `/bootstrap.json` (glade-wz grazel, appearance Step
+    1.1), and a grazel older than that flag refuses it and exits, which `start`
+    reports with the tail of grazel's log."""
+    argv = [
+        str(layout.grazel_bin),
+        "--mode",
+        "both",
+        "--data",
+        str(data),
+        "--http",
+        str(ports.http),
+        "--node-port",
+        str(ports.node),
+        "--gyld-supplier-bin",
+        str(layout.gyld_supplier_bin),
+        "--gyld-root",
+        str(layout.gyld_root),
+        "--gyld-decisions-root",
+        str(layout.decisions_root),
+        "--principal",
+        principal,
+    ]
+    if not mode.runs_vite:
+        argv += ["--ui", str(layout.dist_gyld)]
+    return argv
+
+
 def start_command(args: argparse.Namespace) -> int:
     ui_port = DEFAULT_UI_PORT if args.port is None else args.port
+    # `restart` with nothing recorded starts fresh, and names none.
+    principal = DEFAULT_PRINCIPAL if args.principal is None else args.principal
     mode = RunMode.named(args.mode)
     if mode is None:
         print("unknown --mode {}".format(args.mode), file=sys.stderr)
@@ -1416,6 +1523,7 @@ def start_command(args: argparse.Namespace) -> int:
         )
     )
     print("  data:  {}".format(data))
+    print("  principal: {}".format(principal))
 
     print("prerequisites")
     prereqs = prerequisite_checks(layout)
@@ -1484,25 +1592,7 @@ def start_command(args: argparse.Namespace) -> int:
     grazel_log = logs / "grazel.log"
     vite_log = logs / "vite.log"
 
-    argv = [
-        str(layout.grazel_bin),
-        "--mode",
-        "both",
-        "--data",
-        str(data),
-        "--http",
-        str(ports.http),
-        "--node-port",
-        str(ports.node),
-        "--gyld-supplier-bin",
-        str(layout.gyld_supplier_bin),
-        "--gyld-root",
-        str(layout.gyld_root),
-        "--gyld-decisions-root",
-        str(layout.decisions_root),
-    ]
-    if not mode.runs_vite:
-        argv += ["--ui", str(layout.dist_gyld)]
+    argv = grazel_argv(layout, data, ports, mode, principal)
 
     print("grazel: {}".format(" ".join(argv)))
     print("  log: {}".format(grazel_log))
@@ -1536,6 +1626,7 @@ def start_command(args: argparse.Namespace) -> int:
         vite_log=str(vite_log),
         started_at=now_stamp(),
         url=mode.url(ports),
+        principal=principal,
     )
     write_state(data, state)
 
@@ -1758,6 +1849,28 @@ def status_command(args: argparse.Namespace) -> int:
     return worst
 
 
+def replayed_args(args: argparse.Namespace, state: InstanceState) -> argparse.Namespace:
+    """What `restart` starts one recorded instance with: what it recorded,
+    except where this invocation named its own."""
+    again = argparse.Namespace(**vars(args))
+    again.port = args.port if args.port is not None else state.ui_port
+    again.mode = args.mode if args.mode_given else state.mode
+    again.http = args.http if args.http is not None else state.http_port
+    again.node_port = args.node_port if args.node_port is not None else state.node_port
+    again.data = args.data if args.data is not None else state.data
+    again.gyld_root = args.gyld_root if args.gyld_root is not None else state.gyld_root
+    again.decisions_root = (
+        args.decisions_root
+        if args.decisions_root is not None
+        # An older state file carries none, and then the default stands.
+        else (state.decisions_root or None)
+    )
+    again.glade_wz = args.glade_wz if args.glade_wz is not None else state.glade_wz
+    again.gryth_ui = args.gryth_ui if args.gryth_ui is not None else state.gryth_ui
+    again.principal = args.principal if args.principal is not None else state.principal
+    return again
+
+
 def restart_command(args: argparse.Namespace) -> int:
     """Stop, then start again with what was recorded — unless this invocation
     overrode it."""
@@ -1777,27 +1890,8 @@ def restart_command(args: argparse.Namespace) -> int:
 
     worst = 0
     for state in remembered:
-        again = argparse.Namespace(**vars(args))
-        again.port = args.port if args.port is not None else state.ui_port
-        again.mode = args.mode if args.mode_given else state.mode
-        again.http = args.http if args.http is not None else state.http_port
-        again.node_port = (
-            args.node_port if args.node_port is not None else state.node_port
-        )
-        again.data = args.data if args.data is not None else state.data
-        again.gyld_root = (
-            args.gyld_root if args.gyld_root is not None else state.gyld_root
-        )
-        again.decisions_root = (
-            args.decisions_root
-            if args.decisions_root is not None
-            # An older state file carries none, and then the default stands.
-            else (state.decisions_root or None)
-        )
-        again.glade_wz = args.glade_wz if args.glade_wz is not None else state.glade_wz
-        again.gryth_ui = args.gryth_ui if args.gryth_ui is not None else state.gryth_ui
         print("")
-        worst = max(worst, start_command(again))
+        worst = max(worst, start_command(replayed_args(args, state)))
     return worst
 
 
@@ -1885,6 +1979,15 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="built mode: force pnpm build:gyld even when dist-gyld/index.html is there",
     )
+    start.add_argument(
+        "--principal",
+        metavar="NAME",
+        type=principal_name,
+        default=DEFAULT_PRINCIPAL,
+        help="the user the desk is for, handed to grazel, which serves it in "
+        "/bootstrap.json; 1 to 63 of A-Z a-z 0-9 . _ - (default: owner, the "
+        "principal the shipped seeds grant)",
+    )
     start.set_defaults(handler=start_command)
 
     stop = subs.add_parser("stop", help="stop an instance, or every one of them")
@@ -1901,6 +2004,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_common(restart, with_port_default=False)
     restart.add_argument("--build", action="store_true", help="see start --build")
+    restart.add_argument(
+        "--principal",
+        metavar="NAME",
+        type=principal_name,
+        default=None,
+        help="see start --principal (default: the one the instance recorded)",
+    )
     restart.set_defaults(handler=restart_command)
 
     status = subs.add_parser(
