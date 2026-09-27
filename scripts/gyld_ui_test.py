@@ -18,7 +18,6 @@ import contextlib
 import importlib.util
 import io
 import json
-import os
 import sys
 import tempfile
 import unittest
@@ -90,7 +89,9 @@ class PortDerivationTest(unittest.TestCase):
         data = gu.default_data_dir(5180)
         self.assertEqual(data.name, "5180")
         self.assertEqual(data.parent, Path.home() / ".gyld-ui" / "instances")
-        self.assertNotIn("tmp", str(data).split(os.sep))
+        # Only the part below HOME is the script's choice. HOME is the user's, and
+        # a suite run under a scratch HOME in /tmp must still pass.
+        self.assertNotIn("tmp", data.relative_to(Path.home()).parts)
 
 
 class RunModeTest(unittest.TestCase):
