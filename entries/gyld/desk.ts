@@ -1,5 +1,10 @@
 import { GYLD, type DesktopSetup } from '@grythjs/desktop';
+import type { DeskIdentity } from '@grythjs/glade/identity';
 import { GYLD_BROWSER_TOOL, GYLD_STREAMS_TOOL } from '@grythjs/plugin-gyld';
+
+/** This target's name: what its stored desk is keyed by, and what names its
+ *  appearance surface (`gyld.appearance`). */
+export const GYLD_ENTRY = 'gyld';
 
 // The Gyld-only target's DESK, the second thing a target chooses after its
 // plugin list: the pane preset every lock opens, and that the first desk is
@@ -37,7 +42,7 @@ export const GYLD_DESK: DesktopSetup = {
   // and its own name, which is what the INTERIM stored desk is keyed by: this
   // target and the full desktop are two desks, not one seen twice
   // (packages/desktop/src/layoutStorageTap.ts).
-  entry: 'gyld',
+  entry: GYLD_ENTRY,
   foundation: GYLD,
   locked: true,
   tools: [
@@ -45,3 +50,12 @@ export const GYLD_DESK: DesktopSetup = {
     { toolId: GYLD_STREAMS_TOOL, wiredTo: GYLD_BROWSER_TOOL },
   ],
 };
+
+/** This target's desk for the page's identity. A page whose principal names a
+ *  user keeps its appearance in that user's own zone (Glial appearance plan,
+ *  Step 2.3), so its stored desk keeps the layout alone and never seeds a
+ *  browser's stale appearance over the user's; a page that is its tab alone
+ *  keeps its appearance in the stored desk, as before. */
+export function gyldDesk(identity: Pick<DeskIdentity, 'roams'>): DesktopSetup {
+  return { ...GYLD_DESK, persistAppearance: !identity.roams };
+}

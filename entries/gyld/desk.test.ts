@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { PluginRegistryTap, allTools, type ToolId } from '@grythjs/plugin-api';
 import { GYLD, openFoundation, openWindow, toolRoles, type WindowRecord } from '@grythjs/desktop';
-import { GYLD_DESK } from './desk';
+import { DeskIdentity } from '@grythjs/glade/identity';
+import { GYLD_DESK, gyldDesk } from './desk';
 import './plugins'; // the target's plugin list; importing it IS registering
 
 // The target's DESK, asserted the way its plugin list is: against what the
@@ -70,5 +71,18 @@ describe('the gyld target desk', () => {
     expect(tools['gyld.streams'].label).toBe('Streams');
     expect(tools['gyld.detail'].label).toBe('Details');
     expect(tools['gyld.decidenow'].label).toBe('Next up');
+  });
+});
+
+describe('the gyld target desk for a page', () => {
+  it('keeps appearance out of the stored desk when the page names its user', () => {
+    // the appearance lives in that user's zone (Glial appearance plan, Step 2.3)
+    expect(gyldDesk(new DeskIdentity('owner', 'tab1', true)))
+      .toEqual({ ...GYLD_DESK, persistAppearance: false });
+  });
+
+  it('keeps it in the stored desk when the page is its tab alone', () => {
+    expect(gyldDesk(new DeskIdentity('tab1', 'tab1', false)))
+      .toEqual({ ...GYLD_DESK, persistAppearance: true });
   });
 });

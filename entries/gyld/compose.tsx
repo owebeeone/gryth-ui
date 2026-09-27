@@ -1,7 +1,9 @@
 import './plugins';
+import { deskIdentity } from '@grythjs/glade/identity';
 import { registerGyldLive } from '@grythjs/plugin-gyld/live';
+import { registerAppearanceLive } from '@grythjs/plugin-settings/live';
 import { boot } from '../../src/boot';
-import { GYLD_DESK } from './desk';
+import { GYLD_ENTRY, gyldDesk } from './desk';
 
 // The Gyld-only target's composition root, imported by `main.tsx` once the
 // page knows who it is. It is `src/compose.tsx` with a different plugin list
@@ -17,4 +19,10 @@ import { GYLD_DESK } from './desk';
 // the boot subscriptions this registers.
 registerGyldLive();
 
-boot(GYLD_DESK);
+// The desk's appearance (Glial appearance plan, Step 2.3): the user's own zone
+// when the page's principal names a user, and then the desk keeps its layout
+// alone in this browser; the settings atoms, kept with the layout, when the
+// page is its tab alone.
+registerAppearanceLive(GYLD_ENTRY);
+
+boot(gyldDesk(deskIdentity()));

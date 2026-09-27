@@ -321,9 +321,15 @@ importers:
       '@grythjs/desktop':
         specifier: workspace:*
         version: link:../../desktop
+      '@grythjs/glade':
+        specifier: workspace:*
+        version: link:../../glade
       '@grythjs/plugin-api':
         specifier: workspace:*
         version: link:../../plugin-api
+      '@owebeeone/glial-runtime':
+        specifier: workspace:*
+        version: link:../../../../glial
       '@owebeeone/grip-react':
         specifier: workspace:*
         version: link:../../../../grip-react

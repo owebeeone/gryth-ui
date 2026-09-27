@@ -8,6 +8,7 @@ import {
   DESKTOP_RESET_LAYOUT,
   THEMES, THEME_IDS,
 } from '@grythjs/desktop';
+import { APPEARANCE_FOLLOWS } from './grips';
 
 // The desktop appearance editor. A thin projection over the environ
 // appearance grips: read the value, write through the handle. It edits the
@@ -25,6 +26,8 @@ export function Settings() {
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
   const fontScaleTap = useGrip(DESKTOP_FONT_SCALE_TAP);
   const resetLayout = useGrip(DESKTOP_RESET_LAYOUT);
+  // the user the appearance follows, when it follows one (./surfaceTaps)
+  const follows = useGrip(APPEARANCE_FOLLOWS);
   return (
     <div className="facet-pad settings-facet">
       <h3>Display</h3>
@@ -79,11 +82,19 @@ export function Settings() {
         onChange={(e) => wallpaperTap?.set(e.target.value)}
       />
       <h3>Desk</h3>
-      <p className="settings-hint">
-        This desk — its windows, where they are docked, and everything above —
-        is remembered in this browser between reloads. Interim demo
-        persistence: it is local to this browser and does not roam.
-      </p>
+      {follows === undefined ? (
+        <p className="settings-hint">
+          This desk — its windows, where they are docked, and everything above —
+          is remembered in this browser between reloads. Interim demo
+          persistence: it is local to this browser and does not roam.
+        </p>
+      ) : (
+        <p className="settings-hint">
+          Everything above follows {follows}: every tab and session of {follows} shows
+          it. This desk&apos;s windows and where they are docked are remembered in
+          this browser only, and Reset layout resets only those.
+        </p>
+      )}
       <button type="button" className="settings-reset" onClick={() => resetLayout?.()}>
         Reset layout
       </button>

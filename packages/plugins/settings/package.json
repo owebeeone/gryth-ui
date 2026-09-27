@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./live": "./src/live.ts"
   },
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",
-    "@grythjs/desktop": "workspace:*"
+    "@grythjs/desktop": "workspace:*",
+    "@grythjs/glade": "workspace:*",
+    "@owebeeone/glial-runtime": "workspace:*"
   },
   "peerDependencies": {
     "@owebeeone/grip-react": "*",
