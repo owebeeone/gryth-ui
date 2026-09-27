@@ -69,8 +69,9 @@ function clock() {
 function page(identity: AppearanceIdentity, zone?: Zone, placeholder = DEFAULT_APPEARANCE) {
   const grok = new Grok(new GripRegistry());
   const fills: Fill[] = [];
+  const kept: unknown[] = [];
   const time = clock();
-  registerAppearance(grok, {
+  const handle = registerAppearance(grok, {
     binder: new GlialBinder(),
     destination: (fill) => {
       fills.push(fill);
@@ -80,13 +81,14 @@ function page(identity: AppearanceIdentity, zone?: Zone, placeholder = DEFAULT_A
     entry: 'gyld',
     placeholder,
     schedule: time.schedule,
+    remember: (value) => kept.push(value),
   });
   const read = <T>(grip: Grip<T>): T | undefined => {
     const held = grok.query(grip, grok.mainContext);
     grok.flush();
     return held.get();
   };
-  return { fills, read, time, flush: () => grok.flush() };
+  return { fills, read, time, flush: () => grok.flush(), handle, kept };
 }
 
 describe('a page whose principal is its tab alone', () => {
@@ -96,6 +98,8 @@ describe('a page whose principal is its tab alone', () => {
     expect(tab.read(DESKTOP_THEME)).toBe('dark');
     expect(tab.fills).toEqual([]);
     expect(tab.read(APPEARANCE_FOLLOWS)).toBeUndefined();
+    // and there is no zone for a migration to seed
+    expect(tab.handle).toBeUndefined();
   });
 });
 
@@ -133,5 +137,28 @@ describe('a page whose principal names its user', () => {
     expect(zone.sent).toEqual([]);
     tab.time.advance(WALLPAPER_SETTLE_MS);
     expect(zone.sent).toEqual([{ v: 1, ...DEFAULT_APPEARANCE, wallpaper: '/wide.jpeg' }]);
+  });
+});
+
+describe('the zone, for the migration (Step 2.4)', () => {
+  it('shows the browser\'s last value until the replay, then the zone\'s, and keeps each', () => {
+    const zone = new Zone();
+    const last = { ...DEFAULT_APPEARANCE, theme: 'nord' as const, fontScale: 12 };
+    const tab = page({ principal: 'owner', roams: true }, zone, last);
+    expect([tab.read(DESKTOP_THEME), tab.kept]).toEqual(['nord', []]);
+    const replayed = { v: 1, ...DEFAULT_APPEARANCE, theme: 'solar' };
+    zone.deliver(replayed, 4);
+    tab.flush();
+    expect(tab.read(DESKTOP_THEME)).toBe('solar');
+    expect(tab.kept).toEqual([replayed]);
+  });
+
+  it('says whether the zone holds a value, and takes a whole one', () => {
+    const zone = new Zone();
+    const tab = page({ principal: 'owner', roams: true }, zone);
+    expect(tab.handle?.empty()).toBe(true);
+    tab.handle?.write({ v: 1, ...DEFAULT_APPEARANCE, theme: 'dark' });
+    expect(zone.sent).toEqual([{ v: 1, ...DEFAULT_APPEARANCE, theme: 'dark' }]);
+    expect(tab.handle?.empty()).toBe(false);
   });
 });

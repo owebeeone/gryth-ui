@@ -12,6 +12,7 @@ import {
   type Appearance, type AppearanceController, type Schedule,
 } from './appearance';
 import { APPEARANCE_FOLLOWS, APPEARANCE_VALUE } from './grips';
+import type { AppearanceZone } from './migrate';
 import { registerSettingsTaps } from './taps';
 
 // Which producers a composition registers for the desk's five appearance grips
@@ -44,6 +45,8 @@ export interface AppearanceParts {
   readonly placeholder: Appearance;
   /** The clock the wallpaper text settles on; the tap's real one by default. */
   readonly schedule?: Schedule;
+  /** Told each value the zone takes, for the browser to keep (`./migrate`). */
+  readonly remember?: (value: unknown) => void;
 }
 
 /** The real clock. It runs in the projection tap, where a timer belongs
@@ -59,7 +62,13 @@ function timeoutSchedule(fn: () => void, ms: number): () => void {
 class AppearanceProjectionTap extends BaseTap {
   private readonly handles: AppearanceHandles;
 
-  constructor(controller: AppearanceController, schedule: Schedule, private readonly follows: string) {
+  constructor(
+    controller: AppearanceController,
+    schedule: Schedule,
+    private readonly follows: string,
+    /** Called as the zone's value changes, before the grips are published. */
+    private readonly zoneChanged: () => void,
+  ) {
     super({
       provides: [
         DESKTOP_THEME, DESKTOP_THEME_TAP, DESKTOP_ZOOM, DESKTOP_ZOOM_TAP,
@@ -106,6 +115,7 @@ class AppearanceProjectionTap extends BaseTap {
   }
 
   produceOnParams(): void {
+    this.zoneChanged();
     this.produce();
   }
 
@@ -123,11 +133,13 @@ function controllerOver(zone: GlialTap<unknown>, placeholder: Appearance): Appea
 }
 
 /** Register the producers of the desk's five appearance grips on `grok`: the
- *  user's zone when the identity names a user, today's atoms when it does not. */
-export function registerAppearance(grok: Grok, parts: AppearanceParts): void {
+ *  user's zone when the identity names a user, today's atoms when it does not.
+ *  Returns the zone, for the one-time seed (`./migrate`), or nothing when
+ *  there is none. */
+export function registerAppearance(grok: Grok, parts: AppearanceParts): AppearanceZone | undefined {
   if (!parts.identity.roams) {
     registerSettingsTaps(grok);
-    return;
+    return undefined;
   }
   const surface = defineManifest(appearanceManifest(parts.entry)).appearance;
   const zone = glialTap<unknown>({
@@ -142,5 +154,15 @@ export function registerAppearance(grok: Grok, parts: AppearanceParts): void {
     controllerOver(zone, parts.placeholder),
     parts.schedule ?? timeoutSchedule,
     parts.identity.principal,
+    () => {
+      const value = zone.get();
+      if (value !== undefined) {
+        parts.remember?.(value);
+      }
+    },
   ));
+  return {
+    empty: () => zone.get() === undefined,
+    write: (value) => zone.set(value),
+  };
 }

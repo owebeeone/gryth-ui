@@ -29,6 +29,7 @@ import { GladeClient } from '@glade/client-ts/src/client.ts';
 import { loadSchema } from '@glade/client-ts/src/taut/schema.ts';
 import { pickNodeWs } from './bootstrap-util';
 import { deskBootstrap, deskIdentity, type DeskIdentity } from './identity';
+import { ZoneReplays, type GladeSubscription } from './replay';
 // VENDORED copy of glade-wz/taut/corpus/glade.ir.json (the frozen wire schema).
 // INTERIM: refresh if the glade wire protocol ever changes (it is frozen today).
 import gladeIr from './glade.ir.json';
@@ -135,14 +136,13 @@ grok.registerTap(GladeNodeTap);
 // interest + late-join history). startGlade replays them all — the app never
 // needs to know any plugin's surfaces (the decoupled bootstrap seam).
 
-export interface GladeSubscription {
-  readonly share: string;
-  readonly gladeId: string;
-  readonly key?: Uint8Array;
-}
-const subscriptions: GladeSubscription[] = [];
-export function addGladeSubscription(sub: GladeSubscription): void {
-  subscriptions.push(sub);
+export type { GladeSubscription };
+const replays = new ZoneReplays();
+/** Subscribe `sub` when the page connects, and learn whether its replay came
+ *  in (`./replay`): what a migration waits for before it reads the zone as
+ *  empty. A plugin that only wants the zone ignores the answer. */
+export function addGladeSubscription(sub: GladeSubscription): Promise<boolean> {
+  return replays.whenReplayed(sub);
 }
 
 // --- the bootstrap -----------------------------------------------------------
@@ -167,13 +167,12 @@ export async function startGlade(): Promise<void> {
     GladeNodeTap.set(url);
     await client.connect(url);
     await client.hello?.(principal);
-    for (const s of subscriptions) {
-      await client.subscribe(s.share, s.gladeId, s.key);
-    }
+    await replays.subscribeAll(client);
     const ops = session.dump();
     if (ops.length) client.sendOps(ops);
     setStatus('live');
   } catch (e) {
+    replays.abandon();
     setStatus('offline');
     console.error('[glade] sync failed:', (e as Error).message);
   }
