@@ -14,6 +14,7 @@ export {
   addGladeSubscription,
   startGlade,
   resolveController,
+  GLADE_IDENTITY,
   GLADE_NODE,
   GLADE_NODE_TAP,
   GLADE_STATUS,
@@ -21,3 +22,4 @@ export {
   type GladeStatus,
   type GladeSubscription,
 } from './runtime';
+export { DeskIdentity } from './identity';

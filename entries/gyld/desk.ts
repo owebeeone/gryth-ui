@@ -30,8 +30,8 @@ import { GYLD_BROWSER_TOOL, GYLD_STREAMS_TOOL } from '@grythjs/plugin-gyld';
 // a second browser on every pick. A reader who wants a second browser opens
 // one from the launcher, which is how a second of any tool is opened.
 //
-// A separate module from `main.tsx` for the reason `plugins.ts` is one:
-// `main.tsx` mounts React and lights the live write path on import, so the
+// A separate module from `compose.tsx` for the reason `plugins.ts` is one:
+// `compose.tsx` mounts React and lights the live write path on import, so the
 // choice is stated where a test can read it back.
 export const GYLD_DESK: DesktopSetup = {
   // and its own name, which is what the INTERIM stored desk is keyed by: this

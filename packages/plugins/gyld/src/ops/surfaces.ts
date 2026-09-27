@@ -18,10 +18,11 @@ import type { GyldAskRecord } from '../ask/reply';
 // mount the ops path owns (step 4.3).
 //
 // This module imports glial, which is the client-side kernel and reads no DOM,
-// and it does NOT import `@grythjs/glade`, which owns the session and reads
-// `sessionStorage` at import. That is the line the whole package is written
-// against: everything here is exercised by the test suite against a local
-// binder with no connectivity at all, and only `src/live.ts` lights the wire.
+// and it does NOT import `@grythjs/glade`, which owns the session and will not
+// load before a page's loader has resolved the desk identity. That is the line
+// the whole package is written against: everything here is exercised by the
+// test suite against a local binder with no connectivity at all, and only
+// `src/live.ts` lights the wire.
 
 /** The seven surfaces `grazel/apps/gyld-app.glade` declares. Referenced through
  *  these handles, never by their id strings (the P0.S5a compile wall). */

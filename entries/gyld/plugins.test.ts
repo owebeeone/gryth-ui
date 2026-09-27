@@ -6,7 +6,7 @@ import './plugins'; // the target's whole plugin list; importing it IS registeri
 
 // The Gyld-only target is only worth having if it really is Gyld only, so the
 // claim is asserted against the plugin registry rather than read off the
-// import list: this suite imports the same module `entries/gyld/main.tsx`
+// import list: this suite imports the same module `entries/gyld/compose.tsx`
 // imports and then enumerates what the chrome would enumerate.
 
 grok.registerTap(PluginRegistryTap);

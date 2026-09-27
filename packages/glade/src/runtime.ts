@@ -27,32 +27,35 @@ import {
 import { Session, type Op } from '@glade/client-ts/src/session.ts';
 import { GladeClient } from '@glade/client-ts/src/client.ts';
 import { loadSchema } from '@glade/client-ts/src/taut/schema.ts';
-import { DEV_FALLBACK_NODE_WS, pickNodeWs, pickPrincipal, type BootstrapJson } from './bootstrap-util';
+import { pickNodeWs } from './bootstrap-util';
+import { deskBootstrap, deskIdentity, type DeskIdentity } from './identity';
 // VENDORED copy of glade-wz/taut/corpus/glade.ir.json (the frozen wire schema).
 // INTERIM: refresh if the glade wire protocol ever changes (it is frozen today).
 import gladeIr from './glade.ir.json';
 
 const schema = loadSchema(gladeIr as never);
 
-// --- participant identity ----------------------------------------------------
-// Per-tab by ruling (Gianni, 2026-07-11): each tab is a distinct participant —
-// the two-participant demo IS the product intent. `?principal=` (alias `?user=`)
-// forces a stable identity across tabs (two tabs = same user); otherwise a
-// per-tab sessionStorage origin makes each tab its own participant. This is the
-// stage-1 stub the P0.S7 principal records replace with real identity later.
-function stableOrigin(): string {
-  const key = 'glade-origin';
-  let o = sessionStorage.getItem(key);
-  if (!o) {
-    o = Math.random().toString(36).slice(2, 8);
-    sessionStorage.setItem(key, o);
-  }
-  return o;
-}
+// --- the desk identity -------------------------------------------------------
+// Resolved by the entry's loader before the page composed (`./identity`) and
+// read as this module loads: every capture site takes the principal from here,
+// so this module will not load without it. On a gyld-ui desk the principal is
+// the one grazel serves, so all the desk's tabs are ONE participant (owner
+// ruling 4 of 2026-09-25 supersedes the participant half of the 2026-07-11
+// per-tab ruling there); `?principal=` (alias `?user=`) still names another.
+// With no principal served, each tab is its own participant, as before. The
+// origin stays per tab either way: two tabs sharing one origin would fork its
+// chain, the half of 2026-07-11 that stands. This is the stage-1 stub the
+// P0.S7 principal records replace with real identity later.
+const identity = deskIdentity();
 
-export const origin = stableOrigin();
+export const origin = identity.origin;
 /** The acting principal — the attribution stamped on chat lines / gwz runs. */
-export const principal = pickPrincipal(location.search, origin);
+export const principal = identity.principal;
+
+/** Who this page is — its principal, its tab's origin and whether the
+ *  principal roams — as a grip. Fixed for the page's life, so its default IS
+ *  the value. */
+export const GLADE_IDENTITY = defineGrip<DeskIdentity>('Glade.Identity', identity);
 
 // --- the one session + WS carrier + glial binder -----------------------------
 
@@ -63,8 +66,16 @@ export const client = new GladeClient(schema, origin, session);
  *  fan to every subscriber (each SessionDestination filters its own route). */
 class ClientBus implements OpBus {
   private handlers = new Set<(ops: WireOp[]) => void>();
+  /** Never throws. A socket still CONNECTING throws from `send` after the
+   *  session has minted the op and before the instance could append it. Kept
+   *  in the session, the op ships with the session's ops once `startGlade()`
+   *  connects, so the write stands and the instance folds it now. */
   publish(ops: WireOp[]): void {
-    client.sendOps(ops as unknown as Op[]);
+    try {
+      client.sendOps(ops as unknown as Op[]);
+    } catch (e) {
+      console.warn('[glade] ops kept for the connect:', (e as Error).message);
+    }
   }
   onOps(handler: (ops: WireOp[]) => void): () => void {
     this.handlers.add(handler);
@@ -136,16 +147,11 @@ export function addGladeSubscription(sub: GladeSubscription): void {
 
 // --- the bootstrap -----------------------------------------------------------
 
-/** Fetch grazel's `/bootstrap.json` session placement ({node_ws, mode, name});
- *  fall back to the dev node when it is absent (e.g. `pnpm dev` with no grazel). */
+/** The node from grazel's `/bootstrap.json` session placement, as the loader
+ *  fetched it (the page asks once); the dev node when nothing answered (e.g.
+ *  `pnpm dev` with no grazel). */
 async function resolveNodeWs(): Promise<string> {
-  try {
-    const res = await fetch('/bootstrap.json');
-    if (res.ok) return pickNodeWs((await res.json()) as BootstrapJson);
-  } catch {
-    // no grazel serving us — dev fallback below
-  }
-  return DEV_FALLBACK_NODE_WS;
+  return pickNodeWs(await deskBootstrap());
 }
 
 let started = false;

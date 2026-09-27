@@ -26,10 +26,11 @@
 // target's whole contract is that its list is closed, and a glob would let a
 // future directory widen it silently.
 //
-// The LIVE wiring — `registerGyldLive()` — is called by `main.tsx` rather than
-// here, for the reason `packages/plugins/gyld/src/live.ts` states about its own
-// package: that module imports `@grythjs/glade`, which reads `location.search`
-// and `sessionStorage` at import. Keeping it out of this file is what lets
-// `plugins.test.ts` import the list and check it against the registry.
+// The LIVE wiring — `registerGyldLive()` — is called by `compose.tsx` rather
+// than here, for the reason `packages/plugins/gyld/src/live.ts` states about its
+// own package: that module imports `@grythjs/glade`, whose runtime will not load
+// until an entry's loader has resolved the desk identity. Keeping it out of
+// this file is what lets `plugins.test.ts` import the list and check it against
+// the registry.
 import '@grythjs/plugin-gyld';
 import '@grythjs/plugin-settings';

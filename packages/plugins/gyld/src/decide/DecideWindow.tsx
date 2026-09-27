@@ -36,10 +36,10 @@ import {
 // record from the projection's definitions, and the last capture result from
 // `validation.json`, shown by code with its details as Gyld wrote them.
 //
-// The principal is a per-tab field rather than the glade stub. The stub is
-// computed from `location.search` when `@grythjs/glade` is first imported and
-// that module owns the glade runtime, so importing it here would put a DOM
-// read and a session client into a package that needs neither. Owner ruling O6
+// The principal is a per-tab field rather than the glade stub. The stub is the
+// desk identity an entry's loader resolves before `@grythjs/glade` is first
+// imported, and that module owns the glade runtime, so importing it here would
+// put a session client into a package that needs none. Owner ruling O6
 // says a ruling carries the stage-one principal as DATA until real principals
 // land; a field the owner fills in is exactly that, and the export shows what
 // will be stamped.

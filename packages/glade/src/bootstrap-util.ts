@@ -1,12 +1,14 @@
-// Pure, DOM-free bootstrap decision logic (GLP-0006 P1.S4) — split out of
-// runtime.ts so it is unit-testable with plain fakes (runtime.ts touches
-// sessionStorage / location / WebSocket at import and cannot load under a node
-// test env).
+// Pure, DOM-free bootstrap decision logic (GLP-0006 P1.S4): what grazel's
+// `/bootstrap.json` placement says, read with plain fakes in the tests. Who the
+// page is, resolved from it before the page composes, is `identity.ts`'s.
 
 export interface BootstrapJson {
   node_ws?: string;
   mode?: string;
   name?: string;
+  /** The user this desk is for, when grazel was given `--principal` (gyld-ui
+   *  always gives one). An older grazel, or one given none, serves no field. */
+  principal?: string;
 }
 
 /** The dev fallback node — used when grazel is not serving `/bootstrap.json`
@@ -21,10 +23,18 @@ export function pickNodeWs(boot: BootstrapJson | undefined, fallback = DEV_FALLB
   return url ? url : fallback;
 }
 
-/** The acting principal from the URL, else the per-tab origin: `?principal=`
- *  (alias `?user=`) forces a stable identity across tabs; otherwise each tab is
- *  its own participant. The stage-1 stub the P0.S7 principal records replace. */
-export function pickPrincipal(search: string, origin: string): string {
+/** The principal something NAMES for this page: `?principal=` (alias
+ *  `?user=`), else the one grazel serves. None when neither names one, and
+ *  the tab is then its own participant (`identity.ts`). A blank name, or one
+ *  that is not a string, names nobody. */
+export function pickPrincipal(search: string, boot: BootstrapJson | undefined): string | undefined {
   const params = new URLSearchParams(search);
-  return params.get('principal') ?? params.get('user') ?? origin;
+  return named(params.get('principal')) ?? named(params.get('user')) ?? named(boot?.principal);
+}
+
+function named(value: unknown): string | undefined {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return undefined;
+  }
+  return value;
 }

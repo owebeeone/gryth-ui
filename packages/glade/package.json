@@ -5,7 +5,8 @@
   "type": "module",
   "description": "gryth-ui's glade seam: the one session + client + glial binder + bootstrap (GLP-0006 P1.S4). Ports the glade demo's glial.ts/glade.ts into the plugin runtime.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./identity": "./src/identity.ts"
   },
   "dependencies": {
     "@grythjs/plugin-api": "workspace:*",

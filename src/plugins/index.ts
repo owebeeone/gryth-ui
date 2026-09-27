@@ -18,7 +18,8 @@ import '@grythjs/plugin-gwz';
 import '@grythjs/plugin-gyld';
 // The gyld plugin's write path is registered by the APP rather than by its own
 // index, because that index is what the package's registration test imports and
-// this module reaches `@grythjs/glade`, which reads the DOM at import (see
+// this module reaches `@grythjs/glade`, whose runtime will not load until the
+// entry's loader has resolved the desk identity (see
 // packages/plugins/gyld/src/live.ts).
 import { registerGyldLive } from '@grythjs/plugin-gyld/live';
 

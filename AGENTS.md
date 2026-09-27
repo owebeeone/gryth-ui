@@ -32,12 +32,14 @@ Adopted from grip-lab's AGENTS.md.
 - `src/taps.ts` — taps (data producers) and the `registerAllTaps()` helper.
 - `src/boot.tsx` — `boot()`: registers taps, starts the glade session and
   mounts the app under `GripProvider`. Every target calls it.
-- `src/bootstrap.tsx` — the FULL desktop target's entry: the whole plugin list
-  (`src/plugins/`), then `boot()`.
+- `src/bootstrap.tsx` — the FULL desktop target's loader: it resolves who the
+  page is, then imports `src/compose.tsx`, the whole plugin list
+  (`src/plugins/`) and then `boot()`.
 - `entries/<target>/` — an additional entry point. A target is `index.html` +
-  `main.tsx` + a `plugins.ts` that chooses the plugin list; it differs from the
-  full desktop in nothing else. `entries/gyld/` is the Gyld-only desktop, built
-  by `vite.gyld.config.ts` into `dist-gyld/`. See README.md, "Targets".
+  a `main.tsx` loader + a `compose.tsx` + a `plugins.ts` that chooses the
+  plugin list; it differs from the full desktop in nothing else.
+  `entries/gyld/` is the Gyld-only desktop, built by `vite.gyld.config.ts` into
+  `dist-gyld/`. See README.md, "Targets".
 - `src/App.tsx` — the root React component.
 
 ## Design rules

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { DEV_FALLBACK_NODE_WS, pickNodeWs, pickPrincipal } from './bootstrap-util';
 
-// The glade bootstrap's decision logic (GLP-0006 P1.S4). The runtime module
-// itself touches sessionStorage/location/WebSocket at import, so the testable
-// contract is these pure helpers driven by fakes.
+// The glade bootstrap's decision logic (GLP-0006 P1.S4): pure helpers, driven
+// by fakes. Who a page is, resolved from these before it composes, is
+// `identity.ts`'s (identity.test.ts).
 
 describe('pickNodeWs — grazel /bootstrap.json → node_ws (dev fallback)', () => {
   it('uses the payload node_ws when grazel provides one', () => {
@@ -23,18 +23,26 @@ describe('pickNodeWs — grazel /bootstrap.json → node_ws (dev fallback)', () 
   });
 });
 
-describe('pickPrincipal — URL identity, else per-tab origin', () => {
-  it('prefers ?principal=, then ?user=, else the origin', () => {
-    expect(pickPrincipal('?principal=alice', 'tab7')).toBe('alice');
-    expect(pickPrincipal('?user=bob', 'tab7')).toBe('bob');
-    expect(pickPrincipal('?principal=alice&user=bob', 'tab7')).toBe('alice');
-    expect(pickPrincipal('', 'tab7')).toBe('tab7');
+describe('pickPrincipal — the URL, else the principal grazel serves', () => {
+  const boot = { node_ws: 'ws://127.0.0.1:9099', mode: 'both', name: 'grazel', principal: 'owner' };
+
+  it('prefers ?principal=, then ?user=, then the bootstrap', () => {
+    expect(pickPrincipal('?principal=alice', boot)).toBe('alice');
+    expect(pickPrincipal('?user=bob', boot)).toBe('bob');
+    expect(pickPrincipal('?principal=alice&user=bob', boot)).toBe('alice');
+    expect(pickPrincipal('', boot)).toBe('owner');
   });
 
-  it('two tabs with no param are distinct participants; the same param converges them', () => {
-    // per-tab origins → different principals (the two-participant demo intent)
-    expect(pickPrincipal('', 'tabA')).not.toBe(pickPrincipal('', 'tabB'));
-    // the same ?principal on both → the same participant
-    expect(pickPrincipal('?principal=gianni', 'tabA')).toBe(pickPrincipal('?principal=gianni', 'tabB'));
+  it('names nobody when neither does, as with no grazel or one given no --principal', () => {
+    expect(pickPrincipal('', undefined)).toBeUndefined();
+    expect(pickPrincipal('', { node_ws: 'ws://127.0.0.1:9099', mode: 'both', name: 'grazel' })).toBeUndefined();
+  });
+
+  it('reads a blank name, or one that is not a string, as no name', () => {
+    expect(pickPrincipal('?principal=', boot)).toBe('owner');
+    expect(pickPrincipal('?principal=%20', boot)).toBe('owner');
+    expect(pickPrincipal('?principal=&user=bob', boot)).toBe('bob');
+    expect(pickPrincipal('', { principal: '  ' })).toBeUndefined();
+    expect(pickPrincipal('', { principal: 7 } as never)).toBeUndefined();
   });
 });

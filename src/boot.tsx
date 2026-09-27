@@ -9,7 +9,8 @@ import App from './App';
 // The render every gryth TARGET shares.
 //
 // A target is an entry directory whose whole job is to choose a plugin list:
-// its `main.tsx` imports the plugins it wants — an ES import IS the
+// its composition (`compose.tsx`, which its loader imports once the page knows
+// who it is) imports the plugins it wants — an ES import IS the
 // registration — and then calls this. Everything after the plugin list is the
 // same desktop, so it lives here once rather than once per entry; "which
 // plugins" is the entire difference between `index.html` (the full desktop)
@@ -30,9 +31,9 @@ export function boot(desk?: DesktopSetup): void {
 
   // Connect to grazel's glade node (GLP-0006 P1.S4). Plugins have registered
   // their glial mounts + boot subscriptions by the time a target calls this;
-  // this fetches grazel's /bootstrap.json (dev fallback ws://127.0.0.1:9099),
-  // connects the one session, binds the principal, and replays the
-  // subscriptions.
+  // this reads grazel's /bootstrap.json as the loader fetched it (dev fallback
+  // ws://127.0.0.1:9099), connects the one session, binds the principal, and
+  // replays the subscriptions.
   void startGlade();
 
   const root = ReactDOM.createRoot(document.getElementById('root')!);

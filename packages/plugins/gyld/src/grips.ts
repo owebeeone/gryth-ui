@@ -586,8 +586,9 @@ export const GYLD_ASK_STREAM = defineGrip<GyldAskRecord[]>('Gyld.Ask.Stream', []
  * a different fact from `offline` and is rendered as one.
  *
  * It is mirrored rather than read from `@grythjs/glade` directly because that
- * module reads the DOM at import: this package's windows and its whole test
- * suite must stay able to run without one (owner ruling O6's boundary).
+ * module owns the session and will not load before a page's loader has
+ * resolved the desk identity: this package's windows and its whole test suite
+ * must stay able to run without either (owner ruling O6's boundary).
  */
 export const GYLD_OPS_STATUS = defineGrip<string>('Gyld.Ops.Status', '');
 

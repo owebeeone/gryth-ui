@@ -8,8 +8,9 @@ import { postToGroup } from './live';
 // hook. The selected group is a PER-TAB grip atom (seeded via tabTaps); the
 // message list is the selected group's GLOBAL glial log mount (live.ts); the
 // compose box is uncontrolled (posting is a client append — postToGroup stamps
-// the ChatLine attributed to the acting principal). Two participants (two
-// browser contexts / `?principal=`) converge on the same keyed commons log.
+// the ChatLine attributed to the acting principal). Two participants converge
+// on the same keyed commons log: two `?principal=` names, or two browser
+// contexts where no grazel names the desk's principal.
 
 export function Chat() {
   const group = useGrip(CHAT_GROUP) ?? CHAT_GROUPS[0]!.id;

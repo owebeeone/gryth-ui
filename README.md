@@ -90,8 +90,16 @@ glade session, the React root — is `src/boot.tsx`, which both call.
 
 | target | entry | plugins | scripts |
 |---|---|---|---|
-| full desktop | `index.html` → `src/main.tsx` → `src/bootstrap.tsx` | `src/plugins/` — every plugin the composition root lists | `pnpm dev`, `pnpm build` → `dist/` |
-| Gyld only | `entries/gyld/index.html` → `entries/gyld/main.tsx` | `entries/gyld/plugins.ts` — `@grythjs/plugin-gyld`, and nothing else | `pnpm dev:gyld`, `pnpm build:gyld` → `dist-gyld/` |
+| full desktop | `index.html` → `src/main.tsx` → `src/bootstrap.tsx` → `src/compose.tsx` | `src/plugins/` — every plugin the composition root lists | `pnpm dev`, `pnpm build` → `dist/` |
+| Gyld only | `entries/gyld/index.html` → `entries/gyld/main.tsx` → `entries/gyld/compose.tsx` | `entries/gyld/plugins.ts` — `@grythjs/plugin-gyld`, and nothing else | `pnpm dev:gyld`, `pnpm build:gyld` → `dist-gyld/` |
+
+Each entry is a LOADER and a composition. The loader (`src/bootstrap.tsx`,
+`entries/gyld/main.tsx`) first resolves who the page is — `?principal=`, else
+the principal grazel serves in `/bootstrap.json` (waiting 1.5 s at most), else
+the tab alone — and only then imports its `compose.tsx`, because the principal
+is captured as the composition's modules load. Every tab of a gyld-ui desk so
+presents one principal, while each keeps its own op origin. `src/boot.test.ts`
+holds each loader to importing nothing else first.
 
 The Gyld-only target is a desk for the Gyld decision graph with nothing
 unrelated on it. It needs no other plugin: the shell's own facets and its

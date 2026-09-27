@@ -542,12 +542,13 @@ make.
 The root reads as a loud error when there is no glade in the composition at
 all, rather than as a bundle with nothing in it. `@grythjs/glade` is reached
 from exactly one file of this package, `src/live.ts`, because that module
-computes the per-tab principal from `location.search` and a `sessionStorage`
-origin at import and owns the one session; every window, the store, the
-contract readers and the whole test suite run with no DOM and no socket. For
-the same reason `registerGyldLive()` is called by the APPLICATION
-(`gryth-ui/src/plugins/index.ts`) rather than by this package's `index.ts`,
-which is what the package's own registration test imports.
+reads at import the desk identity the entry's loader resolved (the principal
+grazel serves, or `?principal=`, else the tab's own id) and owns the one
+session; every window, the store, the contract readers and the whole test
+suite run with no DOM and no socket. For the same reason `registerGyldLive()`
+is called by the APPLICATION (`gryth-ui/src/plugins/index.ts`) rather than by
+this package's `index.ts`, which is what the package's own registration test
+imports.
 
 ## Submitting to the supplier
 
@@ -965,19 +966,20 @@ one this step needed.
 The submit path stamps the GLADE principal, and the decide window's own
 principal field is the one that goes into the ruling text. Those are two
 different things and both are as the owner ruled. `Gyld.Ops` carries the
-per-tab glade principal on every envelope, which is what attributes the RUN and
+desk's glade principal on every envelope, which is what attributes the RUN and
 what comes back as `attributed_to`; the ruling's `principal =` line is the
 field the reader filled in, which is what the overlay records. A desk where the
 two differ submits a ruling stamped with one and attributed to the other, and
 both are shown.
 
 The decide window's principal is a per-tab field, not the glade principal stub.
-`@grythjs/glade` computes that stub from `location.search` at import and owns
-the glade runtime with it, so importing it here would put a DOM read and a
-session client into a package that needs neither and would break a test suite
-that runs without a DOM. Owner ruling O6 says a ruling carries the stage-one
-principal as data until real principals land; a field the owner fills in is
-that, and the exported text shows exactly what will be stamped.
+`@grythjs/glade` reads that stub at import, from the desk identity the entry's
+loader resolved, and owns the glade runtime with it, so importing it here would
+put a session client into a package that needs none and would break a test
+suite that has no page to resolve an identity. Owner ruling O6 says a ruling
+carries the stage-one principal as data until real principals land; a field the
+owner fills in is that, and the exported text shows exactly what will be
+stamped.
 
 The decide window composes an overlay module holding the ONE record the draft
 adds. A stream's overlay normally holds several, so merging the text into the
