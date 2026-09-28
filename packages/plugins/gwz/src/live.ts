@@ -1,11 +1,15 @@
 // The Gwz plugin's LIVE wiring (GLP-0006 P1.S4) — the demo's gwz.ts ported into
 // the plugin. The gwz command surface is grazel's composed glade-gwz supplier
-// EXCHANGE (ws-razel, gwz.ops): a request is a JSON envelope, the answer a
-// {ok,exit,stdout,stderr} — failure is DATA (a disallowed verb comes back
-// {ok:false,error}), never a hang. Long ops stream: the exchange answers
-// {run_id,done:false}; we subscribe (ws-razel, gwz.output, run_id) and point a
-// glial LOG mount at that run key (GWZ_RUN_ID drives its fill) so the run's
-// output ops converge live into GWZ_STREAM.
+// EXCHANGE (ws-razel, gwz.ops): a request is a JSON envelope, and failure is
+// DATA (a disallowed verb comes back {ok:false,error}), never a hang.
+//
+// EVERY command streams (owner ruling 2026-09-28: exchanges answer quickly;
+// long work streams). The exchange answers at once — {run_id,done:false}, or a
+// refusal — and never stays open for the command itself, so no gwz command can
+// outlive the node's exchange deadline and lose its answer there. We subscribe
+// (ws-razel, gwz.output, run_id) and point a glial LOG mount at that run key
+// (GWZ_RUN_ID drives its fill), so the run's output ops and its {done,exit}
+// marker converge live into GWZ_STREAM.
 
 import { createAtomValueTap } from '@owebeeone/grip-react';
 import { glialTap } from '@owebeeone/glial-runtime/grip';
@@ -84,9 +88,15 @@ function setRunId(v: string): void {
 // --- the exchange ------------------------------------------------------------
 
 /** The JSON request envelope the supplier decodes: {verb,args,stream,principal}.
- *  `principal` is the P0.S7 attribution stamp (stage-1: data, not gated). */
-function envelope(verb: string, args: string[], stream: boolean): Uint8Array {
-  return enc.encode(JSON.stringify({ verb, args, stream, principal }));
+ *  `stream` is always true: the streaming path is the only one this panel
+ *  takes. `principal` is the P0.S7 attribution stamp (stage-1: data, not gated). */
+function envelope(verb: string, args: string[]): Uint8Array {
+  return enc.encode(JSON.stringify({ verb, args, stream: true, principal }));
+}
+
+/** A thrown value's message, for the answer that carries it. */
+function reason(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
 
 /** Turn the wire outcome into a GwzResponse. A wire ok:false (no provider /
@@ -103,22 +113,42 @@ function responseFrom(out: { ok: boolean; payload?: Uint8Array; error?: string }
   }
 }
 
-/** Run a verb (stream:false) and land the answer in GWZ_RESULT. `verb` may be a
- *  disallowed verb (the deny demo) — the supplier answers ok:false as data. */
+/**
+ * Run a verb on the streaming path and follow its output.
+ *
+ * The exchange answers at once: {run_id,done:false} for a run the supplier
+ * accepted, {ok:false,error} for one it refused (the deny demo's disallowed
+ * verb, a denied arg). An accepted run is followed: subscribe its gwz.output
+ * log, then point the glial mount at it, so its lines and its {done,exit}
+ * marker converge live into GWZ_STREAM.
+ *
+ * A press always comes back, with failure as DATA in GWZ_RESULT: a refusal, a
+ * wire failure, an exchange that rejects, and a run whose output cannot be
+ * followed each land there with the reason. With no run to follow, the mount
+ * is pointed at none, so an earlier run's output never sits under this answer.
+ */
 export async function runGwz(verb: string, args: string[]): Promise<void> {
-  const out = await client.exchange(GWZ_SHARE, GWZ_OPS_ID, envelope(verb, args, false));
-  setResult(responseFrom(out));
-}
-
-/** Run a verb with stream:true: the exchange answers {run_id,done:false}; then
- *  subscribe the output surface for that run and point the glial mount at it so
- *  the output ops converge live into GWZ_STREAM. */
-export async function streamGwz(verb: string, args: string[]): Promise<void> {
-  const out = await client.exchange(GWZ_SHARE, GWZ_OPS_ID, envelope(verb, args, true));
-  const resp = responseFrom(out);
-  setResult(resp);
-  if (resp.ok && resp.run_id) {
-    await client.subscribe(GWZ_SHARE, GWZ_OUTPUT_ID, utf8(resp.run_id));
-    setRunId(resp.run_id);
+  let resp: GwzResponse;
+  try {
+    resp = responseFrom(await client.exchange(GWZ_SHARE, GWZ_OPS_ID, envelope(verb, args)));
+  } catch (err) {
+    resp = { ok: false, error: `gwz: ${reason(err)}` };
   }
+  setResult(resp);
+  const runId = resp.ok ? (resp.run_id ?? '') : '';
+  if (runId === '') {
+    setRunId('');
+    return;
+  }
+  try {
+    await client.subscribe(GWZ_SHARE, GWZ_OUTPUT_ID, utf8(runId));
+  } catch (err) {
+    setResult({
+      ...resp,
+      error: `run ${runId} was accepted but its output could not be followed: ${reason(err)}`,
+    });
+    setRunId('');
+    return;
+  }
+  setRunId(runId);
 }

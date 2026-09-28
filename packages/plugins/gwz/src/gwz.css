@@ -86,3 +86,5 @@
 }
 .gwz-empty { opacity: 0.55; font-style: italic; }
 .gwz-seq { opacity: 0.5; }
+/* a run's done marker: a non-zero exit is shown as the failure it is */
+.gwz-end.err { background: color-mix(in srgb, crimson 12%, transparent); border-radius: 4px; }

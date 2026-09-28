@@ -1,13 +1,15 @@
 import { useGrip } from '@owebeeone/grip-react';
 import { GLADE_STATUS, principal } from '@grythjs/glade';
-import { GWZ_RESULT, GWZ_STREAM, GWZ_VERB, GWZ_VERB_TAP, GWZ_VERBS } from './grips';
-import { runGwz, streamGwz } from './live';
+import { GWZ_RESULT, GWZ_RUN_ID, GWZ_STREAM, GWZ_VERB, GWZ_VERB_TAP, GWZ_VERBS } from './grips';
+import { runGwz } from './live';
 
 // Gwz panel (GLP-0006 P1.S4) — a thin projection over grips, no React state
 // hook. The verb is a grip atom (picker-limited to the allow-list); the last
-// answer is GWZ_RESULT; the streamed run is GWZ_STREAM (a live glial mount on
-// gwz.output). The args box is uncontrolled (read on run). Failure is data:
-// a disallowed verb comes back {ok:false,error}, surfaced, never a hang.
+// answer is GWZ_RESULT; the run is GWZ_STREAM (a live glial mount on
+// gwz.output). ONE run button, and it streams: the exchange only accepts or
+// refuses, and the run's output and its done marker arrive on the log. The args
+// box is uncontrolled (read on run). Failure is data: a disallowed verb comes
+// back {ok:false,error}, surfaced, never a hang.
 
 /** Split the args box into an argv (whitespace-separated, empties dropped). */
 function readArgs(form: HTMLFormElement): string[] {
@@ -19,6 +21,7 @@ export function Gwz() {
   const verb = useGrip(GWZ_VERB) ?? GWZ_VERBS[0];
   const verbTap = useGrip(GWZ_VERB_TAP);
   const result = useGrip(GWZ_RESULT);
+  const runId = useGrip(GWZ_RUN_ID) ?? '';
   const stream = useGrip(GWZ_STREAM) ?? [];
   const status = useGrip(GLADE_STATUS);
 
@@ -51,9 +54,6 @@ export function Gwz() {
       >
         <input name="args" placeholder={`args for ${verb} (optional)…`} autoComplete="off" />
         <button type="submit">run</button>
-        <button type="button" onClick={(e) => void streamGwz(verb, readArgs(e.currentTarget.form!))}>
-          stream
-        </button>
         <button
           type="button"
           title="send a disallowed (mutating) verb — proves failure-as-data"
@@ -64,12 +64,14 @@ export function Gwz() {
       </form>
 
       {result && (
-        <div className={`gwz-result ${result.ok ? 'ok' : 'err'}`}>
+        <div className={`gwz-result ${result.ok && !result.error ? 'ok' : 'err'}`}>
           {result.error ? (
             <>error: <b>{result.error}</b></>
           ) : (
             <>
-              ok=<b>{String(result.ok)}</b>
+              {/* a streamed run's answer is its ACCEPT, not its outcome: that
+                  is the done marker on the log below */}
+              {result.done === false ? <>accepted</> : <>ok=<b>{String(result.ok)}</b></>}
               {result.exit != null && <> · exit=<b>{result.exit}</b></>}
               {result.run_id && <> · run <b>{result.run_id}</b></>}
               {result.attributed_to && <> · by <b>{result.attributed_to}</b></>}
@@ -82,11 +84,17 @@ export function Gwz() {
 
       <div className="gwz-stream">
         {stream.length === 0 && (
-          <div className="gwz-empty">no streamed run yet — press “stream” to watch gwz.output converge live</div>
+          <div className="gwz-empty">
+            {runId === ''
+              ? 'no run yet — press “run” to watch its output converge live on gwz.output'
+              : `run ${runId} accepted — waiting for its output on gwz.output…`}
+          </div>
         )}
         {stream.map((r, i) =>
           r.stream === 'end' ? (
-            <div key={i} className="gwz-line"><b>— done</b> · exit {r.exit}</div>
+            <div key={i} className={r.exit === 0 ? 'gwz-line gwz-end' : 'gwz-line gwz-end err'}>
+              <b>— done</b> · exit {r.exit}
+            </div>
           ) : (
             <div key={i} className="gwz-line">
               <span className="gwz-seq">{r.seq}</span> <b>{r.stream}</b> {r.line}
