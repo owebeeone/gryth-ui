@@ -65,7 +65,8 @@ interface TabRecord {
 Scope rules for plugin atoms (declared per tap, drives persistence):
 
 - `doc` — shared artifact state.
-- `environ` — the user's durable desktop state; persists and roams.
+- `environ` — the user's appearance; persists and roams across sessions.
+- `session` — one named mirrored desk, including tab destinations and semantic inputs.
 - `instance` — local client state; never persisted or replicated.
 
 ## Registration and discovery
@@ -122,6 +123,7 @@ interface GrythPlugin {
     tabTitle?: GripComponentFactory;        // mounts in the TAB context
     windowComponent: GripComponentFactory;  // mounts in the TAB context
     tabTaps?: (tabId: string) => Tap[];     // seeded into the tab context
+    linkFields?: readonly TabLinkField[];  // bidirectional serializable inputs
   }>;
 }
 
@@ -149,6 +151,23 @@ seeding slot: per-tab atoms (selections, form drafts) and stateful taps
 `windowComponent` inside a nested provider on that context, so tools use
 plain `useGrip` with no context plumbing of their own; this also removes
 the unmount/remount context churn the keyed-id GC race rode on.
+
+### Live tab-link fields (SS-06)
+
+A tool MUST declare serializable destination atoms through `linkFields` when
+those inputs belong to the mirrored desk. `tabLinkField` supplies a codec,
+value grip and setter grip. `read(params)` MUST provide a default when an input
+is removed; `write(value)` MUST return a JSON-safe patch. The desktop MUST merge that
+patch with the existing params and preserve unrelated parameters. A codec
+MUST reconstruct runtime value objects, such as legend modes, from JSON.
+
+The desktop MUST reapply changed records into an existing tab context and
+MUST mirror local atom changes back into that record. It MUST preserve camera,
+draft and other instance atoms, suppress echoes and release listeners on tab
+removal. `inherited: true` fields on wired sinks MUST resolve through the
+source context; they MUST NOT be copied into the sink's params. `owns(params)`
+MAY exclude an input supplied elsewhere by that tool. Unknown parameters MUST
+survive updates. Source providers remain above the tab context.
 
 Manifests advertise a *role*, not an area name — foundations own their area
 vocabulary (`designate`).

@@ -8,7 +8,7 @@ Repository-specific coding rules for `gryth-ui`. Adopted from grip-lab's
 - **Do not use `useState` or `useEffect`** (nor `useRef`/`useReducer`/
   `useMemo`/`useCallback`/`useLayoutEffect`) for application or UI state. All
   state lives in **grips** (atom taps) so it is shared, inspectable,
-  reproducible, and — in gryth — persistable and delegable as environ state.
+  reproducible, and — in gryth — persistable and delegable according to its declared scope.
 - Patterns to use instead:
   - **UI state** (selections, toggles, widths, open/collapsed, form fields,
     drag-in-progress): a grip + atom tap. Read with `useGrip`, write with the
@@ -52,7 +52,8 @@ entry fails the test.
 ## Gryth addition: declare scope with the grip
 
 - Every class-1 (atom) grip is declared with its scope in mind —
-  **doc** (team-shared), **environ** (user's desktop, persisted/roamed), or
+  **doc** (team-shared), **environ** (user appearance, persisted/roamed),
+  **session** (one named mirrored desk), or
   **instance** (this client only, never replicated) — per
   `gryth-dev/dev-docs/GrythVision.md`. Until the declaration schema carries a
   scope tag, record the intended scope in a comment block grouping the grips

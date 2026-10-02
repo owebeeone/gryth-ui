@@ -292,48 +292,18 @@ export function selectTab(list: WindowRecord[], frameId: string, tabId: string):
 // the reader can see. A minimized frame is restored for the same reason — an
 // act that lands where nobody can see it has not landed.
 //
-// The transient mark is a STAMP (see WindowRecord.attention) and only ONE
-// frame carries one: an act that moves a browser and THEN opens a sink wired
-// to it (the Gyld node menu does exactly that, in one turn) must leave the
-// reader with one cue — the window that answered — not a trail of them.
-//
-// Geometry is untouched, and the SAME list comes back when there is no such
-// frame.
+// The cue lives in a page-local grip, independently of this shared transform.
 export function revealFrame(list: WindowRecord[], frameId: string, tabId?: string): WindowRecord[] {
   if (!list.some((w) => w.id === frameId)) {
     return list;
   }
-  const stamp = list.reduce((max, w) => Math.max(max, w.attention ?? 0), 0) + 1;
   return raiseWindow(list, frameId).map((w) => {
     if (w.id !== frameId) {
-      return w.attention === undefined ? w : { ...w, attention: undefined };
+      return w;
     }
     const shows = tabId !== undefined && w.tabs.some((t) => t.id === tabId);
-    return {
-      ...w,
-      activeTab: shows ? tabId : w.activeTab,
-      minimized: false,
-      attention: stamp,
-    };
+    return { ...w, activeTab: shows ? tabId : w.activeTab, minimized: false };
   });
-}
-
-// Drop every attention mark: what ./attention's sweep applies when the cue's
-// interval is up. Returns the SAME list when there is nothing marked, so a
-// sweep over a quiet desk notifies nobody.
-export function clearAttention(list: WindowRecord[]): WindowRecord[] {
-  if (!list.some((w) => w.attention !== undefined)) {
-    return list;
-  }
-  return list.map((w) => (w.attention === undefined ? w : { ...w, attention: undefined }));
-}
-
-// The frame's attention class, ready to concatenate into the chrome's
-// className (leading space, like every other flag there) — `desktop.css`
-// tints the titlebar for as long as the mark is set, which is also the
-// prefers-reduced-motion reader's whole cue.
-export function attentionClass(win: WindowRecord): string {
-  return win.attention === undefined ? '' : ' attention';
 }
 
 export function closeTab(list: WindowRecord[], frameId: string, tabId: string): WindowRecord[] {

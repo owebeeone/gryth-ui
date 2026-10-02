@@ -64,3 +64,5 @@ export function registerAppearanceLive(entry: string, store: LayoutStore | null 
     }
   });
 }
+
+export { sessionDesk } from './sessionDesk';

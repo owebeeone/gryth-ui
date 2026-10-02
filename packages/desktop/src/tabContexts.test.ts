@@ -97,3 +97,69 @@ describe('chrome-held tab contexts', () => {
     await expect.poll(() => (drip(DESKTOP_WINDOWS).get() ?? []).some((w) => w.id === opened.id)).toBe(false);
   });
 });
+
+describe('SS-06 live tab-link fields', () => {
+  it('reapplies destinations in place and writes local picks back without resetting instance atoms', async () => {
+    const { tabLinkField } = await import('@grythjs/plugin-api');
+    const DEST = defineGrip<string>('TabCtx.Destination', '');
+    const DEST_TAP = defineGrip<import('@owebeeone/grip-react').AtomTapHandle<string>>('TabCtx.Destination.Tap');
+    const CAMERA = defineGrip<number>('TabCtx.Camera', 0);
+    const camera = createAtomValueTap(CAMERA, { initial: 1 });
+    const def: ToolDef = {
+      ...DEF,
+      tabTaps: (_id, params) => [createAtomValueTap(DEST, { initial: String(params?.dest ?? ''), handleGrip: DEST_TAP }), camera],
+      linkFields: [tabLinkField(DEST, DEST_TAP, (p) => typeof p?.dest === 'string' ? p.dest : '', (v) => ({ dest: v }))],
+    };
+    const handle = drip(DESKTOP_WINDOWS_TAP).get()!;
+    const oldIds = handle.get().flatMap((w) => w.tabs.map((t) => t.id));
+    handle.set([]);
+    await expect.poll(() => oldIds.every((id) => !hasTabContext(id))).toBe(true);
+    const opened = openWindow([], 'test', { w: 10, h: 10 }, 1, { dest: 'first' });
+    handle.set(opened.list);
+    const tab = opened.list[0].tabs[0];
+    const ctx = tabContextFor(grok, tab.id, def, tab.params);
+    const d = ctx.getGripConsumerContext().getOrCreateConsumer(DEST);
+    d.subscribe(() => {});
+    grok.flush();
+    camera.set(99);
+    handle.update((list) => list.map((w) => ({ ...w, tabs: w.tabs.map((t) => ({ ...t, params: { dest: 'remote' } })) })));
+    grok.flush();
+    expect(tabContextFor(grok, tab.id, def, { dest: 'remote' })).toBe(ctx);
+    await expect.poll(() => d.get()).toBe('remote');
+    expect(camera.get()).toBe(99);
+    const destination = ctx.getGripConsumerContext().getOrCreateConsumer(DEST_TAP);
+    destination.subscribe(() => {}); grok.flush();
+    destination.get()!.set('local'); grok.flush();
+    await expect.poll(() => handle.get()[0].tabs[0].params).toEqual({ dest: 'local' });
+    handle.update((list) => list.map((w) => ({ ...w, tabs: w.tabs.map((t) => ({ ...t, params: undefined })) })));
+    grok.flush();
+    await expect.poll(() => d.get()).toBe('');
+    expect(camera.get()).toBe(99);
+  });
+  it('keeps inherited destinations out of a wired sink record', async () => {
+    const { tabLinkField } = await import('@grythjs/plugin-api');
+    const VALUE = defineGrip<string>('TabCtx.Inherited', '');
+    const HANDLE = defineGrip<import('@owebeeone/grip-react').AtomTapHandle<string>>('TabCtx.Inherited.Tap');
+    const sourceTap = createAtomValueTap(VALUE, { initial: 'source', handleGrip: HANDLE });
+    const field = tabLinkField(VALUE, HANDLE, (p) => String(p?.dest ?? ''), (v) => ({ dest: v }), { inherited: true });
+    const sourceDef: ToolDef = { ...DEF, tabTaps: () => [sourceTap] };
+    const sinkDef: ToolDef = { ...DEF, tabTaps: () => [], linkFields: [field] };
+    const handle = drip(DESKTOP_WINDOWS_TAP).get()!;
+    const oldIds = handle.get().flatMap((w) => w.tabs.map((t) => t.id));
+    handle.set([]);
+    await expect.poll(() => oldIds.every((id) => !hasTabContext(id))).toBe(true);
+    const a = openWindow([], 'source', { w: 1, h: 1 });
+    const sourceId = a.list[0].tabs[0].id;
+    const b = openWindow(a.list, 'sink', { w: 1, h: 1 }, 1, undefined, sourceId);
+    const sinkId = b.list[1].tabs[0].id;
+    handle.set(b.list);
+    const source = tabContextFor(grok, sourceId, sourceDef);
+    const sink = tabContextFor(grok, sinkId, sinkDef);
+    wireTabSource(sinkId, sourceId, source);
+    const read = sink.getGripConsumerContext().getOrCreateConsumer(VALUE); read.subscribe(() => {}); grok.flush();
+    await expect.poll(() => read.get()).toBe('source');
+    sourceTap.set('next'); grok.flush();
+    await expect.poll(() => read.get()).toBe('next');
+    expect(handle.get()[1].tabs[0].params).toBeUndefined();
+  });
+});

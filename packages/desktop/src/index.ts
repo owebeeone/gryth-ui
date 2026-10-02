@@ -17,3 +17,6 @@ export { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
 // and the one reader of its appearance. The rest of the document stays private.
 export { readLegacyAppearance, type DeskAppearance } from './layoutDocument';
 export { layoutKey, readStoredLayout, type LayoutStore } from './layoutStorageTap';
+
+export { startSessionLayout, sessionLayoutKey, type DeskZone, type SessionFields } from './sessionLayout';
+export type { DeskPorts, LayoutPersistence } from './layoutStorageTap';

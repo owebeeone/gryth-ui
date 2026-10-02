@@ -9,7 +9,7 @@ import { HUB } from './foundations';
 // desktop holds no plugin directory).
 export const DESKTOP_BUILTINS_PLUGIN = defineGrip<GrythPlugin>('Desktop.BuiltinTools.Plugin');
 
-// The desktop document — environ scope. This is the serializable class-1
+// The desktop document — session scope. This is the serializable class-1
 // atom map that persists and roams across the user's instances, and the
 // surface a delegated agent writes to drive the UI.
 //
@@ -79,34 +79,29 @@ export interface WindowRecord {
   // Docked frame: rendered geometry is computed from the foundation's area;
   // x/y/w/h above remain the FLOAT memory and are never overwritten.
   dock?: { foundation: string; area: string };
-  // TRANSIENT attention mark: the stamp of the act the shell last REVEALED
-  // this frame for (ops.revealFrame). A STAMP and not a flag, because the
-  // chrome keys its cue on the value: a repeat of the same act on the same
-  // frame is a new number, so the animation plays again instead of sitting
-  // already-applied. At most one frame carries one, and ./attention's sweep
-  // clears it a moment later — including one a restored document carried in.
-  attention?: number;
+
 }
 
 export const DESKTOP_WINDOWS = defineGrip<WindowRecord[]>('Desktop.Windows', []);
 export const DESKTOP_WINDOWS_TAP = defineGrip<AtomTapHandle<WindowRecord[]>>('Desktop.Windows.Tap');
 
-// Focused window id, null when none. May become per-instance state when two
-// live instances of one environ exist (see GrythVision open questions).
+// Instance scope: the page's keyboard focus and transient reveal cue.
+export interface AttentionCue { frameId: string; stamp: number }
+export const DESKTOP_ATTENTION = defineGrip<AttentionCue | null>('Desktop.Attention', null);
+export const DESKTOP_ATTENTION_TAP = defineGrip<AtomTapHandle<AttentionCue | null>>('Desktop.Attention.Tap');
+
 export const DESKTOP_FOCUSED = defineGrip<string | null>('Desktop.FocusedWindow', null);
 export const DESKTOP_FOCUSED_TAP = defineGrip<AtomTapHandle<string | null>>('Desktop.FocusedWindow.Tap');
 
-// Current virtual desktop (environ for now; the vision flags this as a
-// candidate for per-instance state — two instances may view different
-// desktops of one environ).
+// Current virtual desktop (session): pages on one session switch together.
 export const DESKTOP_CURRENT = defineGrip<number>('Desktop.Current', 1);
 export const DESKTOP_CURRENT_TAP = defineGrip<AtomTapHandle<number>>('Desktop.Current.Tap');
 
-// Sidebar collapsed/expanded (environ — desktop-geometry preference).
+// Sidebar collapsed/expanded (session — desk geometry).
 export const SIDEBAR_OPEN = defineGrip<boolean>('Desktop.SidebarOpen', true);
 export const SIDEBAR_OPEN_TAP = defineGrip<AtomTapHandle<boolean>>('Desktop.SidebarOpen.Tap');
 
-// Sidebar width in layout px (environ): its boundary drags like any other.
+// Sidebar width in layout px (session): its boundary drags like any other.
 export const SIDEBAR_WIDTH = defineGrip<number>('Desktop.SidebarWidth', 200);
 export const SIDEBAR_WIDTH_TAP = defineGrip<AtomTapHandle<number>>('Desktop.SidebarWidth.Tap');
 
@@ -118,7 +113,7 @@ export const DESKTOP_ZOOM_TAP = defineGrip<AtomTapHandle<number>>('Desktop.UiZoo
 export const DESKTOP_FONT_SCALE = defineGrip<number>('Desktop.FontScale', 10);
 export const DESKTOP_FONT_SCALE_TAP = defineGrip<AtomTapHandle<number>>('Desktop.FontScale.Tap');
 
-// The pane preset a lock opens on a desk with no grid memory (environ).
+// The pane preset a lock opens on a desk with no grid memory (session).
 // The chrome DEFAULTS it, exactly as it defaults theme and wallpaper, so the
 // shell renders with no producer at all; a TARGET whose desk is one purpose
 // (the Gyld desk) hands its own preset to registerDesktopTaps and every lock
@@ -126,7 +121,7 @@ export const DESKTOP_FONT_SCALE_TAP = defineGrip<AtomTapHandle<number>>('Desktop
 export const DESKTOP_FOUNDATION_PRESET = defineGrip<FoundationDef>('Desktop.FoundationPreset', HUB);
 export const DESKTOP_FOUNDATION_PRESET_TAP = defineGrip<AtomTapHandle<FoundationDef>>('Desktop.FoundationPreset.Tap');
 
-// Per-desktop grid memory (environ): unlocking stashes the foundation's
+// Per-desktop grid memory (session): unlocking stashes the foundation's
 // layout + window assignments; the lock toggle restores them.
 export const DESKTOP_GRID_MEMORY = defineGrip<Record<number, GridStash>>('Desktop.GridMemory', {});
 export const DESKTOP_GRID_MEMORY_TAP = defineGrip<AtomTapHandle<Record<number, GridStash>>>('Desktop.GridMemory.Tap');
@@ -208,7 +203,7 @@ export interface SplitterDrag extends DragBase {
   baseB: number;
   spanPx: number;      // parent span in pixels along the axis
 }
-// Sidebar boundary drag: adjusts the sidebar width (an environ preference).
+// Sidebar boundary drag: adjusts the sidebar width (a session preference).
 export interface SidebarDrag extends DragBase {
   kind: 'sidebar';
   baseW: number; // sidebar width at drag start

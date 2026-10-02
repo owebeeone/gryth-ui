@@ -9,11 +9,11 @@ import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
 import { DESKTOP_BUILTINS_PLUGIN, DESKTOP_RESET_LAYOUT, type FoundationDef } from './grips.desktop';
 import { HUB } from './foundations';
 import {
-  DEFAULT_ENTRY, deskPorts, startLayoutPersistence, type LayoutPersistence,
+  DEFAULT_ENTRY, deskPorts, startLayoutPersistence, type LayoutPersistence, type DeskPorts,
 } from './layoutStorageTap';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
-  DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
+  DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP, DESKTOP_ATTENTION, DESKTOP_ATTENTION_TAP,
   DESKTOP_CURRENT, DESKTOP_CURRENT_TAP,
   SIDEBAR_OPEN, SIDEBAR_OPEN_TAP,
   SIDEBAR_WIDTH, SIDEBAR_WIDTH_TAP,
@@ -49,6 +49,10 @@ export const DesktopWindowsTap = createAtomValueTap(DESKTOP_WINDOWS, {
   initial: FIRST_RUN.list,
   handleGrip: DESKTOP_WINDOWS_TAP,
 });
+export const DesktopAttentionTap = createAtomValueTap(DESKTOP_ATTENTION, {
+  initial: null, handleGrip: DESKTOP_ATTENTION_TAP,
+});
+
 export const DesktopFocusedTap = createAtomValueTap(DESKTOP_FOCUSED, {
   initial: FIRST_RUN.id,
   handleGrip: DESKTOP_FOCUSED_TAP,
@@ -126,7 +130,8 @@ export const ResetLayoutTap = createAtomValueTap(DESKTOP_RESET_LAYOUT, {
 function reveal(frameId: string, tabId?: string): void {
   DesktopWindowsTap.update((list) => revealFrame(list, frameId, tabId));
   DesktopFocusedTap.set(frameId);
-  attentionSweep.arm(DesktopWindowsTap);
+  DesktopAttentionTap.set({ frameId, stamp: (DesktopAttentionTap.get()?.stamp ?? 0) + 1 });
+  attentionSweep.arm(DesktopAttentionTap);
 }
 
 // The Desktop.OpenTool intent: invoking a LINK opens a new window at the
@@ -309,6 +314,8 @@ export interface DesktopSetup {
    * seeded back over the user's.
    */
   persistAppearance?: boolean;
+  /** Injected session persistence; omitted keeps browser-local persistence. */
+  persistence?: (ports: DeskPorts, resetDefaults: () => void) => LayoutPersistence;
 }
 
 /**
@@ -353,19 +360,25 @@ function startPersistence(
   grok: Grok,
   entry: string,
   persistAppearance: boolean,
+  setup?: DesktopSetup,
 ): LayoutPersistence {
   if (persistence === null) {
-    persistence = startLayoutPersistence(
-      deskPorts(grok, {
-        current: DesktopCurrentTap,
-        windows: DesktopWindowsTap,
-        gridMemory: DesktopGridMemoryTap,
-        preset: DesktopFoundationPresetTap,
-        sidebarOpen: SidebarOpenTap,
-        sidebarWidth: SidebarWidthTap,
-      }, persistAppearance),
-      { entry },
-    );
+    const ports = deskPorts(grok, {
+      current: DesktopCurrentTap, windows: DesktopWindowsTap,
+      gridMemory: DesktopGridMemoryTap, preset: DesktopFoundationPresetTap,
+      sidebarOpen: SidebarOpenTap, sidebarWidth: SidebarWidthTap,
+    }, persistAppearance);
+    persistence = setup?.persistence === undefined
+      ? startLayoutPersistence(ports, { entry })
+      : setup.persistence(ports, () => {
+        DesktopCurrentTap.set(1);
+        DesktopWindowsTap.set(FIRST_RUN.list);
+        DesktopGridMemoryTap.set({});
+        SidebarOpenTap.set(true);
+        SidebarWidthTap.set(200);
+        DesktopFoundationPresetTap.set(setup.foundation ?? HUB);
+        applySetup(setup);
+      });
     ResetLayoutTap.set(persistence.reset);
   }
   return persistence;
@@ -377,6 +390,7 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   addEntry(DESKTOP_BUILTINS_PLUGIN, DESKTOP_BUILTINS);
   grok.registerTap(DesktopWindowsTap);
   grok.registerTap(DesktopFocusedTap);
+  grok.registerTap(DesktopAttentionTap);
   grok.registerTap(WindowDragTap);
   grok.registerTap(DesktopCurrentTap);
   grok.registerTap(SidebarOpenTap);
@@ -403,16 +417,20 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   if (setup?.foundation !== undefined) {
     DesktopFoundationPresetTap.set(setup.foundation);
   }
-  // INTERIM demo persistence, BEFORE the rest of the setup: a stored desk is
+  // Restore the selected persistence adapter BEFORE the rest of the setup: a stored desk is
   // the reader's own and the entry's `locked`/`tools` defaults are what a desk
-  // opens with when there is no stored one. See ./layoutStorageTap — this
-  // whole seam is stand-in code for a glial value instance.
+  // opens with when there is no stored one. Browser-local storage is the
+  // default; the Gyld composition injects the Glial session adapter.
   const persisted = startPersistence(
-    grok, setup?.entry ?? DEFAULT_ENTRY, setup?.persistAppearance ?? true,
+    grok, setup?.entry ?? DEFAULT_ENTRY, setup?.persistAppearance ?? true, setup,
   );
-  if (persisted.restored) {
-    return;
+  if (!persisted.restored) {
+    applySetup(setup);
   }
+  persisted.initialize?.();
+}
+
+function applySetup(setup?: DesktopSetup): void {
   const tools = setup?.tools ?? [];
   if (tools.length > 0) {
     // The Welcome window is the shell's answer to a desktop with nothing on

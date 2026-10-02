@@ -2,12 +2,12 @@ import type { MouseEvent } from 'react';
 import { GripProvider, useGrip } from '@owebeeone/grip-react';
 import { PLUGIN_REGISTRY, allTools, grok } from '@grythjs/plugin-api';
 import {
-  DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP, DESKTOP_FOCUSED_TAP,
+  DESKTOP_ATTENTION, DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP, DESKTOP_FOCUSED_TAP,
   WINDOW_DRAG_TAP, WINDOW_MENU_TAP, DESKTOP_FONT_SCALE,
   type WindowRecord,
 } from './grips.desktop';
 import {
-  attentionClass, closeTab, minimizeWindow, raiseWindow,
+  closeTab, minimizeWindow, raiseWindow,
   type OverviewPlacement, type Rect,
 } from './ops';
 import TickerStrip from './TickerStrip';
@@ -43,6 +43,8 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
   deskAnim: string | null;
 }) {
   const windows = useGrip(DESKTOP_WINDOWS) ?? [];
+  const cue = useGrip(DESKTOP_ATTENTION);
+  const attention = cue?.frameId === win.id ? cue.stamp : undefined;
   const windowsTap = useGrip(DESKTOP_WINDOWS_TAP);
   const focusedTap = useGrip(DESKTOP_FOCUSED_TAP);
   const dragTap = useGrip(WINDOW_DRAG_TAP);
@@ -117,7 +119,7 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
   const place = overview?.placement;
   return (
     <section
-      className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attentionClass(win)}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
+      className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attention === undefined ? '' : ' attention'}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
       style={{
         left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex: z,
         transform: place
@@ -159,13 +161,13 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
       {!docked && (
         <div className="gwin-resize" onMouseDown={(e) => { e.stopPropagation(); startFrameDrag(e, 'resize'); }} />
       )}
-      {win.attention !== undefined && (
+      {attention !== undefined && (
         // The cue for an act the shell just landed here. KEYED on the mark's
         // stamp: a repeat of the same act on the same frame mounts a NEW node,
         // and mounting is what replays a CSS animation — the chrome holds no
         // timer and no effect (desktop.css owns the motion, ./attention the
         // clock, and the desk document the fact).
-        <div key={win.attention} className="gwin-attention" aria-hidden="true" />
+        <div key={attention} className="gwin-attention" aria-hidden="true" />
       )}
     </section>
   );

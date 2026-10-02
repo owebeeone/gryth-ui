@@ -17,3 +17,7 @@ export const APPEARANCE_VALUE = defineGrip<unknown>('Settings.Appearance.Value')
 // scope: who THIS page is. Absent, the appearance stays in this browser with
 // the rest of the stored desk. The settings window says which.
 export const APPEARANCE_FOLLOWS = defineGrip<string>('Settings.Appearance.Follows');
+
+/** Session desk identity and an absolute link, fixed for this page. */
+export interface SessionLink { name: string; href: string }
+export const DESK_SESSION = defineGrip<SessionLink | undefined>('Settings.Desk.Session');

@@ -2,7 +2,7 @@ import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import { DESKTOP_RETARGET_TAB, type ToolViewProps } from '@grythjs/plugin-api';
 import {
   GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP,
-  GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
+  GYLD_DEST_PREVIEW, GYLD_DEST_PREVIEW_TAP, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
   GYLD_LENS, GYLD_PREVIEW, GYLD_RECORDS, GYLD_SET, GYLD_TAB_LEGEND_TAP, GYLD_TAB_SEARCH,
 } from './grips';
 import type { LegendPanel } from './lens/legendPanel';
@@ -92,6 +92,7 @@ function useDestination(tabId: string): DestinationHandles {
     stream: useGrip(GYLD_DEST_STREAM_TAP) as AtomTapHandle<string> | undefined,
     perspective: useGrip(GYLD_DEST_PERSPECTIVE_TAP) as AtomTapHandle<string> | undefined,
     preview: useGrip(GYLD_DEST_PREVIEW_TAP) as AtomTapHandle<string> | undefined,
+    ref: useGrip(GYLD_DEST_REF_TAP) as AtomTapHandle<string> | undefined,
     legend: useGrip(GYLD_TAB_LEGEND_TAP) as AtomTapHandle<LegendPanel> | undefined,
     retarget: useGrip(DESKTOP_RETARGET_TAB),
   };

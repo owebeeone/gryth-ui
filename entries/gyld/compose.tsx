@@ -1,7 +1,9 @@
 import './plugins';
+import { grok } from '@grythjs/plugin-api';
+import { gyldSessionFields } from '@grythjs/plugin-gyld';
 import { deskIdentity } from '@grythjs/glade/identity';
 import { registerGyldLive } from '@grythjs/plugin-gyld/live';
-import { registerAppearanceLive } from '@grythjs/plugin-settings/live';
+import { sessionDesk, registerAppearanceLive } from '@grythjs/plugin-settings/live';
 import { boot } from '../../src/boot';
 import { GYLD_ENTRY, gyldDesk } from './desk';
 
@@ -25,4 +27,4 @@ registerGyldLive();
 // page is its tab alone.
 registerAppearanceLive(GYLD_ENTRY);
 
-boot(gyldDesk(deskIdentity()));
+boot(sessionDesk(gyldDesk(deskIdentity()), undefined, gyldSessionFields(grok)));

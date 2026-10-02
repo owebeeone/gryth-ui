@@ -10,7 +10,7 @@ import {
   areaRects, splitArea, closeArea, setSplitSizes,
   placeWindows, dockWindow, undockWindow, openFoundation, closeFoundation,
   dockOrMerge, probeArea, normalizeFoundations, captureGrid, dockingHome, setTabSource,
-  dragOverlayClass, attentionClass, clearAttention, findWiredTab, revealFrame,
+  dragOverlayClass, findWiredTab, revealFrame,
 } from './ops';
 import type { FacetKind, LayoutNode, WindowDrag, WindowRecord } from './grips.desktop';
 
@@ -764,7 +764,7 @@ describe('revealing the frame an act landed on', () => {
     const target = list[0].id;
     const next = revealFrame(list, target);
     expect(next[next.length - 1].id).toBe(target);      // topmost
-    expect(next.find((w) => w.id === target)!.attention).toBe(1);
+    expect(next.every((w) => !('attention' in w))).toBe(true);
     expect(next).toHaveLength(list.length);             // nothing opened
   });
 
@@ -785,9 +785,7 @@ describe('revealing the frame an act landed on', () => {
     const top = list[list.length - 1];
     const next = revealFrame(list, top.id, top.activeTab);
     expect(next.map((w) => w.id)).toEqual(list.map((w) => w.id)); // z-order held
-    const { attention, ...rest } = next[next.length - 1];
-    expect(rest).toEqual(top);          // geometry, tabs, dock: untouched
-    expect(attention).toBe(1);
+    expect(next[next.length - 1]).toEqual(top);
   });
 
   it('restores a minimized frame — an act that lands unseen has not landed', () => {
@@ -796,39 +794,9 @@ describe('revealing the frame an act landed on', () => {
     expect(revealFrame(hidden, list[0].id)[0].minimized).toBe(false);
   });
 
-  it('stamps a new number every time, so a REPEAT plays the cue again', () => {
-    const desk = inspector();
-    const once = revealFrame(desk.list, desk.frame, desk.askTab);
-    const twice = revealFrame(once, desk.frame, desk.askTab);
-    expect(once.find((w) => w.id === desk.frame)!.attention).toBe(1);
-    expect(twice.find((w) => w.id === desk.frame)!.attention).toBe(2);
-  });
-
-  it('marks ONE frame: an act that moves a browser and then opens a sink', () => {
-    const desk = inspector();
-    // exactly what the Gyld node menu does in one turn, in that order
-    const moved = revealFrame(desk.list, desk.browser, desk.browserTab);
-    const asked = revealFrame(moved, desk.frame, desk.askTab);
-    expect(asked.find((w) => w.id === desk.browser)!.attention).toBeUndefined();
-    expect(asked.find((w) => w.id === desk.frame)!.attention).toBe(2);
-    expect(asked.filter((w) => w.attention !== undefined)).toHaveLength(1);
-  });
-
   it('is the SAME list when there is no such frame', () => {
     const list = openMany(['chat']);
     expect(revealFrame(list, 'w99')).toBe(list);
   });
 
-  it('clears every mark, and notifies nobody when there is none', () => {
-    const list = openMany(['chat', 'chat']);
-    expect(clearAttention(list)).toBe(list);
-    const marked = revealFrame(list, list[0].id);
-    expect(clearAttention(marked).every((w) => w.attention === undefined)).toBe(true);
-  });
-
-  it('names the class the chrome wears while the mark is set', () => {
-    const list = openMany(['chat']);
-    expect(attentionClass(list[0])).toBe('');
-    expect(attentionClass(revealFrame(list, list[0].id)[0])).toBe(' attention');
-  });
 });

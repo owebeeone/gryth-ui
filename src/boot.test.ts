@@ -52,7 +52,7 @@ describe('the shared boot', () => {
       expect(text).toMatch(/import \{ boot \} from '[^']*\/boot'/);
       // bare, or with this target's desk for the page's identity — and nothing
       // else (Glial appearance plan, Step 2.3)
-      expect(text).toMatch(/^boot\((gyldDesk\(deskIdentity\(\)\))?\);$/m);
+      expect(text).toMatch(/^boot\((sessionDesk\(gyldDesk\(deskIdentity\(\)\), undefined, gyldSessionFields\(grok\)\))?\);$/m);
       // A target that mounted its own root would be a second render path, and
       // the two desktops would start drifting the moment one of them changed.
       expect(text).not.toContain('createRoot');

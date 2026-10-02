@@ -8,7 +8,8 @@ import { IndexedDbStoreEngine, MemoryStoreEngine, type StoreEngine } from '@oweb
 // seq; the desk paints the stored value before any node op, and a write made
 // with no socket ships at the next boot.
 //
-// The database is the appearance instance's own, shared by every tab of the
+// The existing appearance database also holds distinct session desk instances.
+// It is shared by every tab of the
 // site: a row per op, keyed by instance, origin and seq, so pages with their
 // own origins never write each other's rows. The Gyld entry's loader opens it
 // beside the identity, and memory stands in when it fails or has not opened
@@ -16,7 +17,7 @@ import { IndexedDbStoreEngine, MemoryStoreEngine, type StoreEngine } from '@oweb
 // outside a tap the owner ruled, beside the identity's. This module imports
 // glial alone, so the loader may import it before the page composes.
 
-/** The appearance instance's own database, apart from any other glial store. */
+/** The appearance/desk database, with rows isolated by Glial instance. */
 export const APPEARANCE_DB = 'gryth.appearance';
 
 /** How long the loader waits for the database before the page goes on with

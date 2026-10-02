@@ -3,21 +3,10 @@ import type { GridStash } from './ops';
 import { THEME_IDS, type ThemeId } from './themes';
 
 // ---------------------------------------------------------------------------
-// INTERIM demo persistence — the desk document, as pure data.
-//
-// This module (with ./layoutStorageTap) is the smallest thing that makes a
-// demo desk survive a reload. It is NOT the definitive answer and must not be
-// treated as one: environ state belongs in a GLIAL value instance, whose
-// persistence gap is the recorded one in
-// /Users/owebeeone/limbo/glade-wz/dev-docs/glial/GlialFitAssessment-2026-09-15.md
-// ("the two things that would actually bite the next step — persistence and
-// the offline outbox — are glial's own recorded gaps").
-//
-// WHAT WILL MOVE is the document SHAPE below. When glial holds this state each
-// grip becomes an instance value with its own share and its own conflict rule,
-// so `DeskDocument` — one blob, one version number, one all-or-nothing write —
-// disappears rather than being ported. Nothing outside these two files knows
-// this shape; keep it that way.
+// Versioned desk data. The browser-local path and the session adapter share
+// this codec. Named Gyld sessions mount one whole-document LWW Glial value;
+// per-window merge rules remain deferred until measured lost moves justify them.
+// Appearance is omitted when its environ surface persists separately.
 // ---------------------------------------------------------------------------
 
 /** Bumped when the shape below changes. A document of any other version is
@@ -35,7 +24,7 @@ export interface DeskAppearance {
 }
 
 /** The grip VALUES this document is folded from and seeded back into — the
- *  environ-scope subset of the desktop document plus, unless the target keeps
+ *  session-scope subset of the desktop document plus, unless the target keeps
  *  them elsewhere (`DesktopSetup.persistAppearance`), the appearance grips.
  *  The fold carries the whole appearance or none of it. Instance-scope state
  *  (drag, hover, menus, canvas size, overview) is never persisted, and neither

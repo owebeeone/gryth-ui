@@ -53,8 +53,8 @@ import {
 // the same act, in src/index.ts.
 export const GYLD_PLUGIN = defineGrip<GrythPlugin>('Gyld.Plugin');
 
-// Class 1 atoms; INSTANCE scope, one set per tab. The desktop seeds these
-// into the chrome-held tab context from the opening link's params
+// Class 1 atoms; SESSION scope, one destination per tab. The desktop mirrors these
+// into the chrome-held tab context through live tab-link fields
 // (packages/desktop/src/tabContexts.ts, tabContextFor), so every gyld window
 // is its own destination for the store and lens taps and a window rehydrates
 // onto the same stream and perspective after a reload.
@@ -135,7 +135,7 @@ export function refFromParams(params?: Record<string, unknown>): string {
 // each other's bundle.
 // ---------------------------------------------------------------------------
 
-// Class 1 atom; ENVIRON scope (the user's desk, persisted and roamed), doc
+// Class 1 atom; SESSION scope (one named mirrored desk), doc
 // promotable when a set becomes team shared. The roots only, never a picked
 // directory HANDLE: a handle cannot be serialized, so the tap holds it as
 // runtime state and a reloaded desktop asks for the directory again.
@@ -184,6 +184,7 @@ export const GYLD_SOURCES =
 // is not `diffs/<right>..<left>` and this package never reverses one.
 // ---------------------------------------------------------------------------
 
+// SESSION scope: serialized diff endpoints in the live tab link.
 export const GYLD_DEST_LEFT = defineGrip<string>('Gyld.Dest.Left', '');
 export const GYLD_DEST_LEFT_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Dest.Left.Tap');
 
@@ -248,7 +249,7 @@ export const GYLD_RUN_DRAFT_TAP = defineGrip<AtomTapHandle<string>>('Gyld.Tab.Ru
 // GyldIndexTap and GyldRecordTap over the destination's own bundle.
 // ---------------------------------------------------------------------------
 
-// Class 1 atom; INSTANCE scope, per tab. The record a detail window is looking
+// Class 1 atom; SESSION scope, per tab. The record a detail window is looking
 // at, as a qualified slot (the identity that survives a restream) or a record
 // id. Empty means the window has no record yet, and is rendered as such.
 export const GYLD_DEST_REF = defineGrip<string>('Gyld.Dest.Ref', '');
@@ -262,8 +263,9 @@ export const GYLD_RECORDS = defineGrip<GyldRecords>('Gyld.Records', RECORDS_UNSE
 export const GYLD_RECORD = defineGrip<GyldRecordView>('Gyld.Record', RECORD_UNSET);
 
 // ---------------------------------------------------------------------------
-// Step 1.3: the lens view's own state. All class 1 atoms, all INSTANCE scope
-// (this client only, one set per tab), seeded by lensTabTaps. They are view
+// Step 1.3: the lens view's own state. Class 1 atoms, INSTANCE scope except
+// the session legend below
+// (one set per tab), seeded by lensTabTaps. They are view
 // state, not Gyld facts: the camera moves the eye and the dim set changes what
 // is drawn over a FIXED layout (MDV-4), so none of them can alter a record.
 // ---------------------------------------------------------------------------
@@ -294,6 +296,7 @@ export const GYLD_TAB_DIMMED_TAP = defineGrip<AtomTapHandle<GyldDimmed>>('Gyld.T
 // the help. Per window like everything else here, and — unlike everything else
 // here — folded into the window's TAB RECORD as one word, so a reload reopens
 // the legend the way the reader left it (./lens/legendPanel.ts).
+// SESSION scope: legend presentation follows this tab in the mirrored desk.
 export const GYLD_TAB_LEGEND = defineGrip<LegendPanel>('Gyld.Tab.Legend', LegendPanel.SHRUNK);
 export const GYLD_TAB_LEGEND_TAP =
   defineGrip<AtomTapHandle<LegendPanel>>('Gyld.Tab.Legend.Tap');
@@ -328,11 +331,12 @@ export const GYLD_LENS_PALETTE =
 // Step 1.4: the browser window's own state and the shared focus.
 // ---------------------------------------------------------------------------
 
-// Class 1 atom; ENVIRON intent, share-promotable (spec section 3.2): the one
+// Class 1 atom; SESSION intent, doc-promotable (spec section 3.2): the one
 // cross-window "what are you looking at", written by a click in any gyld
 // window and readable by every other. It lives at the PLUGIN ROOT, not in a
 // tab, because MDV-5 correlates dimensions across windows rather than inside
 // one picture.
+// SESSION scope, doc-promotable: semantic record focus; keyboard focus is local.
 export const GYLD_FOCUS = defineGrip<GyldFocus>('Gyld.Focus', NO_FOCUS);
 export const GYLD_FOCUS_TAP = defineGrip<AtomTapHandle<GyldFocus>>('Gyld.Focus.Tap');
 
@@ -366,7 +370,7 @@ export const GYLD_TAB_MENU_TAP =
 
 // ---------------------------------------------------------------------------
 // GyldAskAgent.md step 0.3: the ask window's own state. Class 1 atoms,
-// INSTANCE scope, one set per `gyld.ask` window, seeded by askTabTaps.
+// SESSION conversation and INSTANCE draft, one set per `gyld.ask` window.
 //
 // Both are the READER's, not Gyld's. A conversation id is minted by the window
 // that opened the menu and rides in the envelope, so a follow-up is the same
@@ -446,6 +450,7 @@ export const GYLD_PICKER_ERROR_TAP =
 // survives a restream (R1) and is what a pick in the picture puts in hand.
 // ---------------------------------------------------------------------------
 
+// SESSION scope: which preview the tab destination shows.
 export const GYLD_DEST_PREVIEW = defineGrip<string>('Gyld.Dest.Preview', '');
 export const GYLD_DEST_PREVIEW_TAP =
   defineGrip<AtomTapHandle<string>>('Gyld.Dest.Preview.Tap');

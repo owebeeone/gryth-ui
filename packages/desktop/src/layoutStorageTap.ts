@@ -18,24 +18,10 @@ import {
 import { timeoutSchedule, type Schedule } from './attention';
 
 // ---------------------------------------------------------------------------
-// INTERIM demo persistence — the storage side. Read ./layoutDocument's header
-// first: this whole pair is get-the-demo-working code and is NOT definitive.
-//
-// Environ state is meant to be held by a GLIAL value instance — persisted and
-// roamed across a user's instances, per gryth-dev's GrythVision.md and the
-// scope comments in ./grips.desktop.ts. Glial cannot do it yet; persistence is
-// one of its two recorded gaps
-// (/Users/owebeeone/limbo/glade-wz/dev-docs/glial/GlialFitAssessment-2026-09-15.md).
-// So until it can, one debounced JSON blob in `localStorage` stands in.
-//
-// What that costs and why it is acceptable for a demo: one writer, one
-// browser, last-write-wins over the WHOLE document, no roaming, no merge, no
-// history. What will MOVE when glial lands is the document SHAPE, not this
-// plumbing — see ./layoutDocument.
-//
-// Absence, quota and private mode all mean "no persistence" and never a broken
-// desk: every read and write is inside a try/catch and a failure leaves the
-// desk exactly as the entry's own defaults built it.
+// Browser-local persistence for the full desktop and unnamed users. Named
+// Gyld sessions select ./sessionLayout through DesktopSetup.persistence; both
+// paths share the versioned document codec and injected desk ports below.
+// LocalStorage failure keeps the desk usable with the entry's defaults.
 // ---------------------------------------------------------------------------
 
 /** The desk's clock, re-exported where this module's own callers look for
@@ -266,6 +252,8 @@ export interface LayoutPersistence {
   /** Whether a stored document seeded the desk. When it did, the entry's own
    *  `locked`/`tools` defaults must NOT be applied over it. */
   restored: boolean;
+  /** Called after the entry defaults or restored layout have settled. */
+  initialize?(): void;
   /** Forget the stored desk and come back on the entry's defaults. */
   reset(): void;
 }

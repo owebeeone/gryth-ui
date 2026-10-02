@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AtomTapHandle } from '@owebeeone/grip-react';
 import { openWindow, setTabParams, type WindowRecord } from '@grythjs/desktop';
 import {
-  legendFromParams, perspectiveFromParams, previewFromParams, streamFromParams,
+  legendFromParams, perspectiveFromParams, previewFromParams, streamFromParams, refFromParams,
 } from '../grips';
 import { LegendPanel } from '../lens/legendPanel';
 import { PreviewPerspective } from '../preview/neighbourhood';
@@ -48,6 +48,7 @@ function onDesk(params: Record<string, unknown>) {
     perspective: atom(perspectiveFromParams(params)),
     preview: atom(previewFromParams(params)),
     legend: atom(legendFromParams(params)),
+    ref: atom(refFromParams(params)),
     retarget: (id, next) => { list = setTabParams(list, id, next); },
   };
   return {
@@ -128,11 +129,14 @@ describe('a pick in the browser chrome', () => {
     expect(legendFromParams({ legend: 7 })).toBe(LegendPanel.SHRUNK);
   });
 
-  it('does not carry the selected record across a reload', () => {
-    // camera-side state: a restored window comes back on the destination, not
-    // on the box that happened to be clicked in it
+  it('SS-06: preserves the live record focus across perspective and legend picks', () => {
     const win = onDesk({ ...SEEDED, focus: 'alpha/q3' });
-    pickStream(win.handles, 'beta');
-    expect(win.record().focus).toBe('');
+    win.handles.ref?.set('alpha/q4');
+    pickPerspective(win.handles, OPTIONS, 'ownership');
+    expect(refFromParams(win.record())).toBe('alpha/q4');
+    win.handles.legend?.set(LegendPanel.OPEN);
+    rememberDestination(win.handles);
+    expect(refFromParams(win.record())).toBe('alpha/q4');
+    expect(onDesk(win.record()).handles.ref?.get()).toBe('alpha/q4');
   });
 });

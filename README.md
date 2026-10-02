@@ -134,3 +134,32 @@ recorded gaps, per
 that lands is the document SHAPE — one versioned blob, one all-or-nothing
 write — which lives in `packages/desktop/src/layoutDocument.ts` and is known
 to nothing outside it and `packages/desktop/src/layoutStorageTap.ts`.
+
+## Named Gyld desk sessions
+
+Open the Gyld entry with `?principal=owner&session=review` to mirror one desk
+across pages. Settings shows the session name and an **Open this session** link
+that preserves the entry URL and its other options. Without `session`, the
+browser keeps a generated name per entry and principal. An unnamed user and
+the full desktop keep their existing browser-local layout.
+
+Appearance follows the principal across sessions. Layout, current desktop,
+tab destinations, Gyld roots and semantic focus follow the session. Keyboard
+focus, reveal cues, cameras and drafts stay on each page. **Reset layout**
+resets the shared session's layout and preserves appearance and Gyld inputs.
+The first visit can migrate the existing browser layout after successful node
+replay; an existing remote desk takes precedence. Layout writes debounce for
+300 ms and replace the whole document, so concurrent unrelated moves can
+overwrite one another. Local engine state supplies first paint, and edits made
+before replay succeeds remain cached for retry on the next successful replay.
+
+The delivery contract is in
+[`GladeSettingsSessionPlan.md`](../dev-docs/GladeSettingsSessionPlan.md).
+Directory roots persist their names; directory handles need reacquisition on
+another page. Promotion into team documents remains deferred.
+
+A dedicated real-node check is available through
+`pnpm exec vitest run --config vite.session-check.config.ts`, with
+`SESSION_NODE_A` and `SESSION_NODE_B` pointing at isolated nodes. See the plan
+for peer grants and declaration prerequisites; the normal `pnpm test` stays
+independent of running nodes.

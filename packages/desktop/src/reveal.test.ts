@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { grok } from '@grythjs/plugin-api';
 import {
-  DesktopFocusedTap, DesktopWindowsTap, OpenToolTap, OpenWiredTap, RetargetTabTap,
+  DesktopAttentionTap, DesktopFocusedTap, DesktopWindowsTap, OpenToolTap, OpenWiredTap, RetargetTabTap,
   registerDesktopTaps,
 } from './taps.desktop';
 import { frameStack, mergeWindows, openWindow, raiseWindow } from './ops';
@@ -22,6 +22,7 @@ const SIZE = { w: 400, h: 300 };
 /** A browser plus an inspector holding Ask and decide wired to it, with the
  *  DECIDE tab showing — the Ask window is open and out of sight. */
 function seed() {
+  DesktopAttentionTap.set(null);
   const browser = openWindow([], 'gyld.browser', SIZE);
   const browserTab = browser.list[0].tabs[0].id;
   const ask = openWindow(browser.list, 'gyld.ask', SIZE, 1, undefined, browserTab);
@@ -40,6 +41,11 @@ function seed() {
   };
 }
 
+function cue(frameId: string) {
+  const mark = DesktopAttentionTap.get();
+  return mark?.frameId === frameId ? mark.stamp : undefined;
+}
+
 function frames() {
   return DesktopWindowsTap.get();
 }
@@ -55,7 +61,7 @@ describe('an act delivered to a window that is already open', () => {
     const inspector = list.find((w) => w.id === desk.inspector)!;
     expect(list).toHaveLength(desk.frames);          // the wire is reused, not respawned
     expect(inspector.activeTab).toBe(desk.askTab);   // ...and now on screen
-    expect(inspector.attention).toBe(1);             // wearing the cue
+    expect(cue(inspector.id)).toBe(1);             // wearing the cue
     expect(DesktopFocusedTap.get()).toBe(desk.inspector);
     expect(list[list.length - 1].id).toBe(desk.inspector); // topmost
   });
@@ -70,7 +76,7 @@ describe('an act delivered to a window that is already open', () => {
     expect(list).toHaveLength(desk.frames);
     expect(inspector.activeTab).toBe(desk.decideTab);
     // a NEW number, which is what replays the animation on a repeat act
-    expect(inspector.attention).toBe(2);
+    expect(cue(inspector.id)).toBe(2);
     expect(DesktopFocusedTap.get()).toBe(desk.inspector);
   });
 
@@ -78,7 +84,7 @@ describe('an act delivered to a window that is already open', () => {
     const desk = seed();
     OpenWiredTap.get()!(desk.browserTab, { toolId: 'gyld.ask' });
     OpenWiredTap.get()!(desk.browserTab, { toolId: 'gyld.ask' });
-    expect(frames().find((w) => w.id === desk.inspector)!.attention).toBe(2);
+    expect(cue(desk.inspector)).toBe(2);
   });
 
   it('a retarget reveals the window it was sent to', () => {
@@ -89,7 +95,7 @@ describe('an act delivered to a window that is already open', () => {
     const inspector = list.find((w) => w.id === desk.inspector)!;
     expect(inspector.activeTab).toBe(desk.askTab);
     expect(inspector.tabs[0].params).toEqual({ stream: 'base', focus: 'key_custody' });
-    expect(inspector.attention).toBe(1);
+    expect(cue(inspector.id)).toBe(1);
     expect(DesktopFocusedTap.get()).toBe(desk.inspector);
   });
 
@@ -99,9 +105,8 @@ describe('an act delivered to a window that is already open', () => {
     RetargetTabTap.get()!(desk.browserTab, { stream: 'base', focus: 'key_custody' });
     OpenWiredTap.get()!(desk.browserTab, { toolId: 'gyld.ask' });
 
-    const list = frames();
-    expect(list.find((w) => w.id === desk.browser)!.attention).toBeUndefined();
-    expect(list.filter((w) => w.attention !== undefined).map((w) => w.id))
+    expect(cue(desk.browser)).toBeUndefined();
+    expect([DesktopAttentionTap.get()?.frameId])
       .toEqual([desk.inspector]);
   });
 
@@ -114,7 +119,7 @@ describe('an act delivered to a window that is already open', () => {
     const opened = list[list.length - 1];
     expect(opened.tabs[0].facet).toBe('gyld.detail');
     expect(opened.activeTab).toBe(opened.tabs[0].id);
-    expect(opened.attention).toBe(1);
+    expect(cue(opened.id)).toBe(1);
     expect(DesktopFocusedTap.get()).toBe(opened.id);
   });
 });
@@ -152,6 +157,6 @@ describe('the frames keep their place in the document', () => {
     expect(after.order.map((w) => w.id)).toEqual(before);
     // the reveal still happened: the browser is on top and wears the mark
     expect(after.z.get(desk.browser)).toBe(frames().length);
-    expect(frames().find((w) => w.id === desk.browser)!.attention).toBe(1);
+    expect(cue(desk.browser)).toBe(1);
   });
 });

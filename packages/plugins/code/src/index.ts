@@ -1,5 +1,5 @@
 import { createAtomValueTap } from '@owebeeone/grip-react';
-import { addEntry, defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
+import { addEntry, tabLinkField, defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
 import { FileViewer } from './FileViewer';
 import { Explorer } from './Explorer';
 import { Diff } from './Diff';
@@ -27,6 +27,7 @@ addEntry(CODE_PLUGIN, {
       defaultSize: { w: 280, h: 480 },
       role: 'explorer',
       windowComponent: Explorer,
+      linkFields: [tabLinkField(WTA, WTA_TAP, wtaFromParams, (v) => v === null ? { workspace: '', path: '', ref: '' } : { ...v }, { inherited: true })],
       // an explorer is a WTA SOURCE: its selection (the WTA) and its
       // identity hue live per-tab, published for any wired sink to inherit.
       // The WTA seeds from the opening link, so an explorer can open AT a

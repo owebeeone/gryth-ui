@@ -9,15 +9,8 @@ import type { PerspectiveOption } from './perspectives';
 // tree's pick, so both places that move a browser move it the same way and
 // both are asserted without a click (this package dispatches no events).
 //
-// A window's live destination lives in its TAB CONTEXT (`browserTabTaps`),
-// seeded from the tab record's params when the tab was created. So a pick made
-// here leaves the RECORD on whatever the window was opened with, and a desk
-// restored from that record reopens the window somewhere the reader has not
-// been for an hour. Each act therefore folds the new destination back into the
-// record through `Desktop.RetargetTab` — the same intent the stream tree calls
-// for the same reason, and the reason no new desktop intent is added here:
-// these four params ARE a browser link (`./links`, `browserLink`), so
-// replacing them wholesale loses nothing.
+// Session link fields mirror these atoms automatically. Explicit retargets
+// remain useful to standalone consumers and MUST keep the live semantic ref.
 
 export interface DestinationHandles {
   /** This window's own tab, so a pick can be folded back into its record. */
@@ -25,6 +18,7 @@ export interface DestinationHandles {
   stream?: AtomTapHandle<string>;
   perspective?: AtomTapHandle<string>;
   preview?: AtomTapHandle<string>;
+  ref?: AtomTapHandle<string>;
   /** How the picture's legend overlay is left. Not a destination, and folded
    *  in here all the same: it rides the same record, for the same reason —
    *  a reader who opened the legend should find it open after a reload. */
@@ -39,9 +33,8 @@ export interface DestinationHandles {
  * can land inside one notification cycle and the second would otherwise record
  * the destination the first one left (CodingRules.md).
  *
- * The focus record is NOT among them. It is camera-side state — what is
- * selected in the picture — and a restored window comes back on the
- * destination it was left on, not on the box that was clicked in it.
+ * Semantic record focus belongs to the session destination. Read it from the
+ * live handle so a perspective or legend change does not clear it.
  */
 export function destinationParams(on: DestinationHandles): Record<string, unknown> {
   return {
@@ -49,7 +42,7 @@ export function destinationParams(on: DestinationHandles): Record<string, unknow
     perspective: on.perspective?.get() ?? '',
     preview: on.preview?.get() ?? '',
     legend: (on.legend?.get() ?? LegendPanel.SHRUNK).param,
-    focus: '',
+    focus: on.ref?.get() ?? '',
   };
 }
 

@@ -8,7 +8,7 @@ import {
   DESKTOP_RESET_LAYOUT,
   THEMES, THEME_IDS,
 } from '@grythjs/desktop';
-import { APPEARANCE_FOLLOWS } from './grips';
+import { APPEARANCE_FOLLOWS, DESK_SESSION } from './grips';
 
 // The desktop appearance editor. A thin projection over the environ
 // appearance grips: read the value, write through the handle. It edits the
@@ -28,6 +28,7 @@ export function Settings() {
   const resetLayout = useGrip(DESKTOP_RESET_LAYOUT);
   // the user the appearance follows, when it follows one (./surfaceTaps)
   const follows = useGrip(APPEARANCE_FOLLOWS);
+  const session = useGrip(DESK_SESSION);
   return (
     <div className="facet-pad settings-facet">
       <h3>Display</h3>
@@ -91,9 +92,11 @@ export function Settings() {
       ) : (
         <p className="settings-hint">
           Everything above follows {follows}: every tab and session of {follows} shows
-          it. This desk&apos;s windows and where they are docked are remembered in
-          this browser only, and Reset layout resets only those.
+          it. {session === undefined ? 'This layout is remembered in this browser.' : `This layout follows session ${session.name}.`} Reset layout resets only the layout.
         </p>
+      )}
+      {session !== undefined && (
+        <p className="settings-hint">Session: {session.name}. <a href={session.href} target="_blank" rel="noreferrer">Open this session</a></p>
       )}
       <button type="button" className="settings-reset" onClick={() => resetLayout?.()}>
         Reset layout

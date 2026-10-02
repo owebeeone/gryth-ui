@@ -1,5 +1,6 @@
 import { addEntry, grok } from '@grythjs/plugin-api';
 import { GYLD_PLUGIN } from './grips';
+import { gyldLinkFields } from './sessionLinks';
 import { GyldBrowser } from './GyldBrowser';
 import { browserTabTaps } from './browser/browserTabTaps';
 import { DecideNowList } from './decidenow/DecideNowList';
@@ -79,6 +80,7 @@ addEntry(GYLD_PLUGIN, {
       // leaves the desktop document. `params` is the opening link, so a
       // reopened window comes back on the same destination.
       tabTaps: browserTabTaps,
+      linkFields: gyldLinkFields('gyld.browser'),
     },
     [GYLD_DETAIL_TOOL]: {
       label: 'Details',
@@ -89,6 +91,7 @@ addEntry(GYLD_PLUGIN, {
       // opened wired to a browser must resolve the browser's record through
       // the graph, and a seed of its own would shadow it.
       tabTaps: detailTabTaps,
+      linkFields: gyldLinkFields('gyld.detail'),
     },
     [GYLD_DECIDE_NOW_TOOL]: {
       label: 'Next up',
@@ -96,6 +99,7 @@ addEntry(GYLD_PLUGIN, {
       role: DECIDE_NOW_ROLE,
       windowComponent: DecideNowList,
       tabTaps: decideNowTabTaps,
+      linkFields: gyldLinkFields('gyld.decidenow'),
     },
     [GYLD_STREAMS_TOOL]: {
       label: 'Streams',
@@ -106,6 +110,7 @@ addEntry(GYLD_PLUGIN, {
       // its own, so a window opened wired to a browser resolves that
       // browser's and can retarget it.
       tabTaps: streamsTabTaps,
+      linkFields: gyldLinkFields('gyld.streams'),
     },
     [GYLD_DECIDE_TOOL]: {
       label: 'Gyld decide',
@@ -116,6 +121,7 @@ addEntry(GYLD_PLUGIN, {
       // link carries one, so a window opened wired to a browser answers the
       // question that browser is on.
       tabTaps: decideTabTaps,
+      linkFields: gyldLinkFields('gyld.decide'),
     },
     [GYLD_COMPARE_TOOL]: {
       label: 'Gyld compare',
@@ -125,6 +131,7 @@ addEntry(GYLD_PLUGIN, {
       // A RUN and one PROPOSAL of it, plus the run URL draft. Each side's own
       // state is seeded on its own child context instead.
       tabTaps: compareTabTaps,
+      linkFields: gyldLinkFields('gyld.compare'),
     },
     [GYLD_ASK_TOOL]: {
       label: 'Ask',
@@ -135,6 +142,7 @@ addEntry(GYLD_PLUGIN, {
       // when the opening link carries one, so a window opened wired to a
       // browser asks about the record that browser is on.
       tabTaps: askTabTaps,
+      linkFields: gyldLinkFields('gyld.ask'),
     },
     [GYLD_DIFF_TOOL]: {
       label: 'Gyld diff',
@@ -144,6 +152,7 @@ addEntry(GYLD_PLUGIN, {
       // A PAIR and a perspective, plus the record in hand the two panes share.
       // Each pane's own state is seeded on its own child context instead.
       tabTaps: diffTabTaps,
+      linkFields: gyldLinkFields('gyld.diff'),
     },
   },
 });
@@ -305,3 +314,5 @@ export {
   BOOT_RUN, ROOT_WAITING, WAITING_REASON, anyWaiting, bootRunOf, isWaiting,
   rootLine, waitingSays,
 } from './store/waiting';
+
+export { gyldSessionFields } from './sessionState';

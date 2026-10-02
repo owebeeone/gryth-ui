@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { createAtomValueTap, type AtomTapHandle, type Grip, type Tap } from '@owebeeone/grip-react';
 import { defineGrip } from './runtime';
+import type { TabLinkField } from './tabLink';
 
 // The plugin registry is GRIP-KEYED (see dev-docs/GrythPluginContract.md):
 // each plugin's identity is its own typed grip, used as the KEY into one
@@ -126,6 +127,8 @@ export interface ToolDef {
   // `params` is the tab's opening LINK, so a seed can rehydrate from it
   // (e.g. an explorer opened AT a file seeds its WTA from the link).
   tabTaps?: (tabId: string, params?: Record<string, unknown>) => Tap[];
+  /** Session destinations, mirrored bidirectionally through the tab record. */
+  linkFields?: readonly TabLinkField[];
 }
 
 // The plugin object a plugin publishes under its grip. Window-instantiable

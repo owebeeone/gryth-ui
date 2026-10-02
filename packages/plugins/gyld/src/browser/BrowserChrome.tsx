@@ -4,7 +4,7 @@ import {
 } from '@grythjs/plugin-api';
 import {
   GYLD_BUNDLE, GYLD_DEST_PERSPECTIVE, GYLD_DEST_PERSPECTIVE_TAP, GYLD_DEST_PREVIEW,
-  GYLD_DEST_PREVIEW_TAP, GYLD_DEST_REF, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
+  GYLD_DEST_PREVIEW_TAP, GYLD_DEST_REF, GYLD_DEST_REF_TAP, GYLD_DEST_STREAM, GYLD_DEST_STREAM_TAP,
   GYLD_FOCUS, GYLD_STORE_RELOAD, GYLD_STORE_STATUS, GYLD_STREAMS, GYLD_TAB_DIMMED,
   GYLD_TAB_DIMMED_TAP, GYLD_TAB_SEARCH, GYLD_TAB_SEARCH_TAP,
 } from '../grips';
@@ -65,6 +65,7 @@ export function BrowserChrome({ tabId, search, nextUp }: {
     stream: streamTap,
     perspective: perspectiveTap,
     preview: previewTap,
+    ref: useGrip(GYLD_DEST_REF_TAP),
     retarget: useGrip(DESKTOP_RETARGET_TAB),
   };
 

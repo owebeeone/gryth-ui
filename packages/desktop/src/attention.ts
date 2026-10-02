@@ -1,19 +1,6 @@
-import type { WindowRecord } from './grips.desktop';
-import { clearAttention } from './ops';
+import type { AttentionCue } from './grips.desktop';
 
-// The ATTENTION sweep: the CLOCK half of `ops.revealFrame`'s mark.
-//
-// The mark says "the act you just asked for landed HERE" and must go by
-// itself a moment later — a cue that stayed would burn in, and a desk
-// document written back with one on it would come back from a reload looking
-// like something had just happened.
-//
-// The chrome does not own this timer. A React effect is banned here
-// (dev-docs/CodingRules.md) and would be the wrong owner anyway: the mark is
-// part of the desk document, so it is cleared through the same handle every
-// other desk transform is written through. Instance-scope module state, the
-// ./tickerBleed pattern, with the clock injected so a suite asserts the
-// interval instead of waiting for it.
+// Page-local reveal expiry; it never writes a shared window record.
 
 /** How long a frame wears its cue. `desktop.css`'s `win-attention` animation
  *  runs for the same time — keep the two in sync. */
@@ -29,9 +16,8 @@ export function timeoutSchedule(fn: () => void, ms: number): () => void {
   return () => clearTimeout(id);
 }
 
-/** The slice of the desk-document handle the sweep writes back through. */
 export interface AttentionDoc {
-  update(next: (list: WindowRecord[]) => WindowRecord[]): void;
+  set(value: AttentionCue | null): void;
 }
 
 export class AttentionSweep {
@@ -53,7 +39,7 @@ export class AttentionSweep {
     this.cancel?.();
     this.cancel = this.schedule(() => {
       this.cancel = null;
-      doc?.update(clearAttention);
+      doc?.set(null);
     }, this.ms);
   }
 }
