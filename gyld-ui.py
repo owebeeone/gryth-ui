@@ -50,7 +50,7 @@ import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import MISSING, dataclass, fields
+from dataclasses import MISSING, dataclass, field, fields
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
@@ -330,6 +330,10 @@ class InstanceState:
     # a whole for an instance recorded before this existed, whose restart
     # carries its own shell's as it always did — only `start` records.
     agent: Optional[Dict[str, Optional[str]]] = None
+    # Network and additional app declarations belong to this instance. Keep
+    # them on restart; old single-node state files intentionally carry neither.
+    node_config: Optional[str] = None
+    node_apps: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, object]:
         return {field.name: getattr(self, field.name) for field in fields(self)}
@@ -472,14 +476,14 @@ def read_lock_state(path: Path, is_alive: Callable[[int], bool]) -> LockState:
 
 class ReadinessLine:
     """One of the six lines that say the composition came up, and the exact
-    text to look for in grazel's log."""
+    alternative texts to look for in grazel's log."""
 
-    def __init__(self, label: str, needle: str) -> None:
+    def __init__(self, label: str, needle: str, *alternatives: str) -> None:
         self.label = label
-        self.needle = needle
+        self.needles = (needle,) + alternatives
 
     def seen_in(self, text: str) -> bool:
-        return self.needle in text
+        return any(needle in text for needle in self.needles)
 
 
 def readiness_lines(node_port: int) -> List[ReadinessLine]:
@@ -489,7 +493,11 @@ def readiness_lines(node_port: int) -> List[ReadinessLine]:
     return [
         ReadinessLine("node registered app grazel", "[node] app grazel registered"),
         ReadinessLine("node registered app gyld", "[node] app gyld registered"),
-        ReadinessLine("node serving ws-razel", "[node] workspace ws-razel serving"),
+        ReadinessLine(
+            "node configured ws-razel",
+            "[node] workspace ws-razel serving\n",
+            "[node] workspace ws-razel following existing owner\n",
+        ),
         ReadinessLine(
             "node listening on {}".format(node_port),
             "[node] listening {}\n".format(node_port),
@@ -1131,6 +1139,27 @@ def supplier_python() -> Path:
 # --------------------------------------------------------------------------
 
 
+def node_input_checks(config: Optional[str], apps: Sequence[str]) -> List[CheckResult]:
+    """Refuse missing or exposed network inputs before stopping a live desk.
+
+    Glade remains the authority for file syntax and peer/grant semantics.
+    These checks never print the file contents or change its permissions.
+    """
+    checks = []
+    for name, text in [("node config", config)] + [("node app", app) for app in apps]:
+        if text is None:
+            continue
+        path = Path(text)
+        ok = path.is_absolute() and path.is_file() and os.access(path, os.R_OK)
+        if ok and name == "node config":
+            ok = path.stat().st_mode & 0o077 == 0
+        why = str(path) if ok else "requires an absolute readable file"
+        if not ok and name == "node config":
+            why += " private to its owner (mode 0600)"
+        checks.append(CheckResult(name, ok, why))
+    return checks
+
+
 def prerequisite_checks(layout: Layout) -> List[CheckResult]:
     """Everything that has to be true before a start is worth attempting, each
     with the fix beside it."""
@@ -1531,7 +1560,13 @@ def wait_for_port(port: int, timeout: float, pid: Optional[int] = None) -> bool:
 
 
 def grazel_argv(
-    layout: Layout, data: Path, ports: Ports, mode: RunMode, principal: str
+    layout: Layout,
+    data: Path,
+    ports: Ports,
+    mode: RunMode,
+    principal: str,
+    node_config: Optional[str] = None,
+    node_apps: Sequence[str] = (),
 ) -> List[str]:
     """grazel's command line for one instance. The principal always rides it:
     grazel serves it in `/bootstrap.json` (glade-wz grazel, appearance Step
@@ -1558,6 +1593,10 @@ def grazel_argv(
     ]
     if not mode.runs_vite:
         argv += ["--ui", str(layout.dist_gyld)]
+    if node_config is not None:
+        argv += ["--node-config", node_config]
+    for app in node_apps:
+        argv += ["--node-app", app]
     return argv
 
 
@@ -1604,6 +1643,7 @@ def start_command(args: argparse.Namespace) -> int:
 
     print("prerequisites")
     prereqs = prerequisite_checks(layout)
+    prereqs.extend(node_input_checks(args.node_config, args.node_app or []))
     for check in prereqs:
         print(check.line())
     if not Verdict(prereqs).working:
@@ -1669,7 +1709,9 @@ def start_command(args: argparse.Namespace) -> int:
     grazel_log = logs / "grazel.log"
     vite_log = logs / "vite.log"
 
-    argv = grazel_argv(layout, data, ports, mode, principal)
+    argv = grazel_argv(
+        layout, data, ports, mode, principal, args.node_config, args.node_app or []
+    )
 
     print("grazel: {}".format(" ".join(argv)))
     print("  log: {}".format(grazel_log))
@@ -1709,6 +1751,8 @@ def start_command(args: argparse.Namespace) -> int:
         url=mode.url(ports),
         principal=principal,
         agent=agent,
+        node_config=args.node_config,
+        node_apps=args.node_app or [],
     )
     write_state(data, state)
 
@@ -1950,6 +1994,10 @@ def replayed_args(args: argparse.Namespace, state: InstanceState) -> argparse.Na
     again.glade_wz = args.glade_wz if args.glade_wz is not None else state.glade_wz
     again.gryth_ui = args.gryth_ui if args.gryth_ui is not None else state.gryth_ui
     again.principal = args.principal if args.principal is not None else state.principal
+    again.node_config = (
+        args.node_config if args.node_config is not None else state.node_config
+    )
+    again.node_app = args.node_app if args.node_app is not None else state.node_apps
     # No flag overrides it: a different endpoint is a `stop`, then a `start`.
     again.agent = state.agent
     return again
@@ -1964,6 +2012,16 @@ def restart_command(args: argparse.Namespace) -> int:
         state = read_state(data)
         if state is not None:
             remembered.append(state)
+
+    # Do not take down a healthy instance for missing peer inputs. Validate
+    # recorded paths too: the files may have moved since the last start.
+    launches = [replayed_args(args, state) for state in remembered] or [args]
+    for launch in launches:
+        checks = node_input_checks(launch.node_config, launch.node_app or [])
+        if checks and not Verdict(checks).working:
+            for check in checks:
+                print(check.line())
+            return 1
 
     for data in found:
         stop_instance(data, purge=False)
@@ -2030,6 +2088,18 @@ def add_common(parser: argparse.ArgumentParser, with_port_default: bool) -> None
     )
     parser.add_argument("--glade-wz", default=None, help="the glade workzone")
     parser.add_argument("--gryth-ui", default=None, help="this repository")
+    parser.add_argument(
+        "--node-config",
+        default=None,
+        help="absolute private Glade network config (preserved on restart)",
+    )
+    parser.add_argument(
+        "--node-app",
+        action="append",
+        default=None,
+        help="absolute additional .glade declaration, e.g. peer grants; repeatable "
+        "(restart replaces the recorded list when supplied)",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:

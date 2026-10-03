@@ -50,6 +50,30 @@ python3 gyld-ui.py restart --port 5180
 python3 gyld-ui.py stop [--purge]           # no --port: every instance
 ```
 
+Connected local instances may additionally take `--node-config /absolute/network.conf`
+and repeated `--node-app /absolute/peer-grants.glade`. These MUST be readable
+files; the network config MUST be private to its owner (mode 0600). The launcher
+records these paths and preserves them on `restart`; explicitly supplied
+`--node-app` flags replace the recorded list. A missing file or exposed network
+config refuses restart before the running instance is stopped. Glade itself
+validates their syntax and grants at boot.
+
+Two instances alone are not a connected pair: each network config MUST admit the
+other endpoint identity, and the relevant share MUST grant the peer's **node**
+identity the required read/write/service verbs. For a local-only pair use fixed
+loopback binds and `relay off`; start the accepting instance before the dialing
+instance. After restarting the accepting node, restart the dialing node too to
+re-establish the link. Use the same `?session=<name>` on both UI URLs to mirror a
+desk. `status` checks each composition, not cross-node convergence.
+
+A workspace declared on both nodes does not authorize a cold takeover: a node
+that knows an existing remote owner follows it. The launcher accepts either
+`workspace ws-razel serving` or `workspace ws-razel following existing owner`
+as configured, without claiming that either line proves replication or peer
+availability. A lapsed lease does not prove the follower has all application
+data. Keep both instances' data when restarting; this is not a transfer or
+automatic repair mechanism.
+
 | verb | what it does |
 |---|---|
 | `start` | prerequisites, then grazel, then a wait for the supplier to publish a build (it lays the bundle root and makes the first one itself, as run `boot-<session>`), then the desktop, then the same checks `status` runs. Idempotent: an instance already running is reported, not restarted. |

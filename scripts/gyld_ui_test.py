@@ -21,6 +21,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 # The script's name is not an importable module name (a hyphen), and it lives
@@ -240,6 +241,18 @@ class ReadinessTest(unittest.TestCase):
 
     def test_all_six_lines_are_detected(self):
         self.assertEqual(gu.missing_readiness(self.SIX, 9099), [])
+
+    def test_a_following_node_is_configured_without_claiming_local_ownership(self):
+        following = self.SIX.replace(
+            "workspace ws-razel serving", "workspace ws-razel following existing owner"
+        )
+        self.assertEqual(gu.missing_readiness(following, 9099), [])
+
+    def test_an_incomplete_workspace_status_is_not_ready(self):
+        partial = self.SIX.replace(
+            "workspace ws-razel serving", "workspace ws-razel following"
+        )
+        self.assertEqual(len(gu.missing_readiness(partial, 9099)), 1)
 
     def test_an_empty_log_is_missing_all_six(self):
         self.assertEqual(len(gu.missing_readiness("", 9099)), 6)
@@ -1117,6 +1130,131 @@ class GrazelArgvTest(unittest.TestCase):
             ["--principal", "owner", "--ui", "/w/gryth-wz/gryth-ui/dist-gyld"],
         )
         self.assertEqual(argv.count("--principal"), 1)
+
+
+class NodeNetworkLaunchTest(unittest.TestCase):
+    """Peer setup belongs to the recorded composition, not an ad-hoc child."""
+
+    def test_peer_inputs_reach_grazel_and_survive_state_roundtrip_and_restart(self):
+        args = gu.build_parser().parse_args(
+            [
+                "start",
+                "--node-config",
+                "/data/network.conf",
+                "--node-app",
+                "/data/peer-grants.glade",
+                "--node-app",
+                "/data/extra.glade",
+            ]
+        )
+        state = _recorded(node_config=args.node_config, node_apps=args.node_app)
+        with tempfile.TemporaryDirectory() as tmp:
+            gu.write_state(Path(tmp), state)
+            state = gu.read_state(Path(tmp))
+        restart = gu.build_parser().parse_args(["restart"])
+        restart.mode_given = False
+        again = gu.replayed_args(restart, state)
+        self.assertEqual(again.node_config, "/data/network.conf")
+        self.assertEqual(
+            again.node_app, ["/data/peer-grants.glade", "/data/extra.glade"]
+        )
+        argv = gu.grazel_argv(
+            GrazelArgvTest.LAYOUT,
+            Path("/d"),
+            gu.Ports(5190, 8097, 9116),
+            gu.DEV,
+            "owner",
+            again.node_config,
+            again.node_app,
+        )
+        self.assertEqual(
+            argv[-6:],
+            [
+                "--node-config",
+                "/data/network.conf",
+                "--node-app",
+                "/data/peer-grants.glade",
+                "--node-app",
+                "/data/extra.glade",
+            ],
+        )
+
+    def test_older_state_has_no_peer_configuration(self):
+        body = _recorded().to_dict()
+        body.pop("node_config", None)
+        body.pop("node_apps", None)
+        state = gu.InstanceState.from_dict(body)
+        self.assertIsNone(state.node_config)
+        self.assertEqual(state.node_apps, [])
+
+    def test_restart_can_replace_both_recorded_inputs(self):
+        args = gu.build_parser().parse_args(
+            [
+                "restart",
+                "--node-config",
+                "/new/network.conf",
+                "--node-app",
+                "/new/grants.glade",
+            ]
+        )
+        args.mode_given = False
+        again = gu.replayed_args(
+            args,
+            _recorded(
+                node_config="/old/network.conf",
+                node_apps=["/old/grants.glade"],
+            ),
+        )
+        self.assertEqual(again.node_config, "/new/network.conf")
+        self.assertEqual(again.node_app, ["/new/grants.glade"])
+
+    def test_preflight_refuses_missing_or_nonprivate_network_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / "network.conf"
+            self.assertFalse(gu.Verdict(gu.node_input_checks(str(config), [])).working)
+            config.write_text("relay off\nbind 127.0.0.1:19201\n")
+            config.chmod(0o644)
+            self.assertFalse(gu.Verdict(gu.node_input_checks(str(config), [])).working)
+            config.chmod(0o600)
+            self.assertTrue(gu.Verdict(gu.node_input_checks(str(config), [])).working)
+            self.assertFalse(
+                gu.Verdict(
+                    gu.node_input_checks(
+                        str(config),
+                        [str(Path(tmp) / "missing.glade")],
+                    )
+                ).working
+            )
+
+    def test_missing_recorded_input_does_not_stop_the_running_desk(self):
+        args = gu.build_parser().parse_args(["restart", "--port", "5190"])
+        args.mode_given = False
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            gu.write_state(data, _recorded(node_config=str(data / "missing.conf")))
+            with (
+                patch.object(gu, "recorded_instances", return_value=[data]),
+                patch.object(gu, "stop_instance") as stop,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                self.assertEqual(gu.restart_command(args), 1)
+                stop.assert_not_called()
+
+    def test_restart_without_network_inputs_still_starts(self):
+        args = gu.build_parser().parse_args(["restart", "--port", "5190"])
+        args.mode_given = False
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            gu.write_state(data, _recorded())
+            with (
+                patch.object(gu, "recorded_instances", return_value=[data]),
+                patch.object(gu, "stop_instance", return_value=True) as stop,
+                patch.object(gu, "start_command", return_value=0) as start,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                self.assertEqual(gu.restart_command(args), 0)
+                stop.assert_called_once_with(data, purge=False)
+                start.assert_called_once()
 
 
 class PrincipalStatusTest(unittest.TestCase):
