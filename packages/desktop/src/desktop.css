@@ -61,6 +61,8 @@
 
 .sidebar-head { display: flex; align-items: center; }
 .sidebar-brand { font-weight: 700; padding: 0 0.25rem; }
+.sidebar-debug-switch { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8em; flex-shrink: 0; }
+.application-sidebar > nav { display: flex; flex-direction: column; gap: 0.35rem; }
 .sidebar-toggle {
   margin-left: auto;
   width: 1.6rem;
@@ -78,6 +80,12 @@
   padding-bottom: 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 }
+.sidebar-desktops.vertical {
+  flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  align-items: center;
+}
+.sidebar-desktops.vertical .desk-btn { width: min(100%, 9rem); height: auto; aspect-ratio: 1.5; }
+.sidebar-desktops.vertical .desk-btn:not([data-desktop-target]) { height: 2rem; aspect-ratio: auto; }
 /* Desktop thumbnails: flat mini-canvases, not native push buttons. */
 .desk-btn {
   flex-shrink: 0;

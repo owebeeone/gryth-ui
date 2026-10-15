@@ -3,6 +3,7 @@ import { useGrip } from '@owebeeone/grip-react';
 import { PLUGIN_REGISTRY, allTools, DESKTOP_OPEN_TOOL, WORKSPACE_NAME } from '@grythjs/plugin-api';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
+  DESKTOP_APPLICATION_SIDEBAR, DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP,
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
   DESKTOP_CURRENT, DESKTOP_CURRENT_TAP, DESKTOP_LIST, DESKTOP_LIST_TAP,
   DESKTOP_OVERVIEW, DESKTOP_OVERVIEW_TAP,
@@ -83,6 +84,7 @@ function canvasSize(): { w: number; h: number } {
 // Stable ref callback (module scope) so React runs it once on mount instead
 // of stealing focus on every render.
 const focusOnMount = (el: HTMLDivElement | null) => el?.focus();
+const revealSelectedDesktop = (el: HTMLButtonElement | null) => el?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
 // The half of an area an edge-drop would split off (preview + intent).
 const splitHalf = (r: Rect, edge: AreaEdge): Rect => (
@@ -94,6 +96,11 @@ const splitHalf = (r: Rect, edge: AreaEdge): Rect => (
 const EDGE_BAND = 28;
 
 export default function Desktop() {
+  const applicationSidebar = useGrip(DESKTOP_APPLICATION_SIDEBAR);
+  const debugSidebar = useGrip(DESKTOP_DEBUG_SIDEBAR) ?? false;
+  const debugSidebarTap = useGrip(DESKTOP_DEBUG_SIDEBAR_TAP);
+  const ApplicationContent = applicationSidebar?.Content;
+  const applicationMode = !!ApplicationContent && !debugSidebar;
   const windows = useGrip(DESKTOP_WINDOWS) ?? [];
   const windowsTap = useGrip(DESKTOP_WINDOWS_TAP);
   const focused = useGrip(DESKTOP_FOCUSED) ?? null;
@@ -611,14 +618,14 @@ export default function Desktop() {
     : { w: (viewAspect / THUMB_ASPECT) * 100, h: 100 };
   const pct = (v: number, axis: number) => `${Math.min(95, Math.max(0, (v / axis) * 100))}%`;
   const desktopIcons = (
-    <nav className="sidebar-desktops" aria-label="Desktops">
+    <nav className={`sidebar-desktops${sidebarOpen && applicationMode && applicationSidebar?.verticalDesktops ? ' vertical' : ''}`} aria-label="Desktops">
       {desktops.map((d) => (
         <button
           key={d}
           data-desktop-target={d}
           aria-label={`Desktop ${d}`}
           aria-current={d === current ? 'page' : undefined}
-          ref={d === current ? (el) => el?.scrollIntoView({ block: 'nearest', inline: 'nearest' }) : undefined}
+          ref={d === current ? revealSelectedDesktop : undefined}
           title={`Desktop ${d} (${windows.filter((w) => isOnDesktop(hostOf(windows, w), d)).length} windows)`}
           className={`desk-btn${d === current ? ' current' : ''}${drag?.dropDesktop === d ? ' drop' : ''}`}
           onClick={() => switchDesktop(d)}
@@ -680,10 +687,12 @@ export default function Desktop() {
         <aside className="sidebar" style={{ width: sidebarWidth }}>
           <div className="sidebar-resize" onMouseDown={startSidebarDrag} />
           <div className="sidebar-head">
-            <span className="sidebar-brand">gryth</span>
+            <span className="sidebar-brand">{applicationMode ? applicationSidebar!.brand : 'gryth'}</span>
             <button className="sidebar-toggle" title="Collapse sidebar" onClick={() => sidebarTap?.set(false)}>&lt;</button>
           </div>
-          <nav className="sidebar-launcher">
+          {ApplicationContent && <label className="sidebar-debug-switch"><input type="checkbox"
+            checked={debugSidebar} onChange={(e) => debugSidebarTap?.set(e.currentTarget.checked)} /> Gryth debug sidebar</label>}
+          {applicationMode ? <div className="sidebar-launcher application-sidebar"><ApplicationContent /></div> : <nav className="sidebar-launcher">
             {Object.keys(defs).filter((kind) => kind !== 'grid').map((kind) => {
               // tool ids are open strings at the contract; the desktop's
               // window records keep the FacetKind union until Phase 4
@@ -695,9 +704,9 @@ export default function Desktop() {
                 </button>
               );
             })}
-          </nav>
+          </nav>}
           {desktopIcons}
-          <nav className="sidebar-windows">
+          {(!applicationMode || applicationSidebar?.showWindowList !== false) && <nav className="sidebar-windows">
             {windowGroups.map((g) => (
               <div key={g.key} className="side-group">
                 <div className="side-group-head">
@@ -729,18 +738,20 @@ export default function Desktop() {
                     >
                       <span className="side-title">{resolveTool(defs, active.facet).label}</span>
                       {w.tabs.length > 1 && <span className="side-count">{w.tabs.length}</span>}
-                      <span className="gwin-id">{w.dock ? w.dock.area : w.id}</span>
+                      {!applicationMode && <span className="gwin-id">{w.dock ? w.dock.area : w.id}</span>}
                     </button>
                   );
                 })}
               </div>
             ))}
-          </nav>
+          </nav>}
           <div className="sidebar-workspace">{workspace}</div>
         </aside>
       ) : (
         <aside className="sidebar closed">
           <button className="sidebar-toggle" title="Expand sidebar" onClick={() => sidebarTap?.set(true)}>&gt;</button>
+          {ApplicationContent && <label className="sidebar-debug-switch" title="Gryth debug sidebar"><input type="checkbox"
+            aria-label="Gryth debug sidebar" checked={debugSidebar} onChange={(e) => debugSidebarTap?.set(e.currentTarget.checked)} /></label>}
           {desktopIcons}
         </aside>
       )}

@@ -6,7 +6,8 @@ import {
   type TabLinkInfo, type ToolId, type ToolLink,
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
-import { DESKTOP_BUILTINS_PLUGIN, DESKTOP_RESET_LAYOUT, type FoundationDef } from './grips.desktop';
+import { DESKTOP_BUILTINS_PLUGIN, DESKTOP_RESET_LAYOUT, DESKTOP_APPLICATION_SIDEBAR,
+  DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP, type ApplicationSidebar, type FoundationDef } from './grips.desktop';
 import { HUB } from './foundations';
 import {
   DEFAULT_ENTRY, deskPorts, startLayoutPersistence, type LayoutPersistence, type DeskPorts,
@@ -44,6 +45,8 @@ import { attentionSweep } from './attention';
 // First-run desktop: one welcome window. (Size literal duplicates the facet
 // registry default to keep this module free of React imports.)
 const FIRST_RUN = openWindow([], 'welcome', { w: 520, h: 280 });
+const ApplicationSidebarTap = createAtomValueTap(DESKTOP_APPLICATION_SIDEBAR, { initial: null });
+const DebugSidebarTap = createAtomValueTap(DESKTOP_DEBUG_SIDEBAR, { initial: false, handleGrip: DESKTOP_DEBUG_SIDEBAR_TAP });
 
 export const DesktopWindowsTap = createAtomValueTap(DESKTOP_WINDOWS, {
   initial: FIRST_RUN.list,
@@ -288,6 +291,8 @@ export const DesktopTabLinksTap = new TabLinksTap();
 // composes the shell. Both are optional and both default to the full
 // desktop's behavior: preset HUB, first desk floating.
 export interface DesktopSetup {
+  /** Optional application chrome, with the standard Gryth sidebar available for debugging. */
+  sidebar?: ApplicationSidebar;
   /**
    * This target's name, which is what its INTERIM stored desk is keyed by, so
    * the Gyld target and the full desktop keep separate desks in one browser
@@ -389,6 +394,9 @@ function startPersistence(
 }
 
 export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
+  grok.registerTap(ApplicationSidebarTap);
+  grok.registerTap(DebugSidebarTap);
+  ApplicationSidebarTap.set(setup?.sidebar ?? null);
   // publish the not-yet-converted builtin tools at the desktop's own
   // plugin grip — the chrome consumes that grip like any plugin consumer
   addEntry(DESKTOP_BUILTINS_PLUGIN, DESKTOP_BUILTINS);

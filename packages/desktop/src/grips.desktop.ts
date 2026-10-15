@@ -1,4 +1,5 @@
 import type { AtomTapHandle } from '@owebeeone/grip-react';
+import type { ComponentType } from 'react';
 import { defineGrip, type GrythPlugin, type ToolId } from '@grythjs/plugin-api';
 import type { ThemeId } from './themes';
 import type { GridStash, Rect } from './ops';
@@ -8,6 +9,16 @@ import { HUB } from './foundations';
 // at this grip like any other plugin (the chrome hard-codes ITS grip — the
 // desktop holds no plugin directory).
 export const DESKTOP_BUILTINS_PLUGIN = defineGrip<GrythPlugin>('Desktop.BuiltinTools.Plugin');
+
+/** Composition-owned chrome; runtime debug preference is local to this client. */
+export interface ApplicationSidebar {
+  brand: string; Content: ComponentType;
+  showWindowList?: boolean;
+  verticalDesktops?: boolean;
+}
+export const DESKTOP_APPLICATION_SIDEBAR = defineGrip<ApplicationSidebar | null>('Desktop.ApplicationSidebar', null);
+export const DESKTOP_DEBUG_SIDEBAR = defineGrip<boolean>('Desktop.DebugSidebar', false);
+export const DESKTOP_DEBUG_SIDEBAR_TAP = defineGrip<AtomTapHandle<boolean>>('Desktop.DebugSidebar.Tap');
 
 // The desktop document — session scope. This is the serializable class-1
 // atom map that persists and roams across the user's instances, and the

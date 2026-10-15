@@ -138,6 +138,16 @@ lint, the vitest include and the no-React-state scan.
 
 ## Desk layout persistence — INTERIM
 
+Applications can supply `DesktopSetup.sidebar` with a `brand` and a `Content`
+component. The optional `showWindowList: false` hides the generic window list;
+`verticalDesktops: true` uses the available sidebar height for desktop previews.
+Gryth retains sidebar resizing, collapse and desktop management. The **Gryth
+debug sidebar** checkbox switches back to the generic launcher without changing
+the desk, and remains reachable when collapsed. Compositions without a sidebar
+override retain their existing generic shell. The override is published through
+`DESKTOP_APPLICATION_SIDEBAR`; `DESKTOP_DEBUG_SIDEBAR` and its tap hold the
+client-local debug preference, initially false.
+
 Virtual desktops are a session-scoped list in `DESKTOP_LIST`, with changes
 made through `DESKTOP_LIST_TAP`; its length gives the desktop count. Four
 desktops are initial defaults, rather than a limit. The thumbnail selector
