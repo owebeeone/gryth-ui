@@ -31,6 +31,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   gap: 0.6rem;
   padding: 0.6rem 0.5rem;
   border-right: 1px solid color-mix(in srgb, currentColor 20%, transparent);
@@ -129,14 +130,20 @@
 .sidebar-launcher {
   display: flex;
   flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 40%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   gap: 0.25rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 }
-.sidebar-launcher button { text-align: left; }
+.sidebar-launcher button { flex-shrink: 0; text-align: left; }
 
 .sidebar-windows {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
