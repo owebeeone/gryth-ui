@@ -54,6 +54,13 @@ function stored(entry: string, state: DeskState): Record<string, unknown> {
 }
 
 describe('the interim desk document', () => {
+  it('preserves dynamic empty desktops without changing older desk documents', () => {
+    expect(roundTrip('gyld', { ...STATE, desktopIds: [1, 2, 5, 8] })?.desktopIds).toEqual([1, 2, 5, 8]);
+    expect(roundTrip('gyld', STATE)?.desktopIds).toBeUndefined();
+    const doc = stored('gyld', STATE);
+    (doc.desks as Record<string, unknown>).ids = [1, -2, 'bad'];
+    expect(seedFrom(doc, 'gyld')?.desktopIds).toBeUndefined();
+  });
   it('comes back as the values it was folded from', () => {
     expect(roundTrip('gyld', STATE)).toEqual(STATE);
   });

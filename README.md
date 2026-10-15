@@ -138,6 +138,14 @@ lint, the vitest include and the no-React-state scan.
 
 ## Desk layout persistence — INTERIM
 
+Virtual desktops are a session-scoped list in `DESKTOP_LIST`, with changes
+made through `DESKTOP_LIST_TAP`; its length gives the desktop count. Four
+desktops are initial defaults, rather than a limit. The thumbnail selector
+scrolls and reveals the selected desktop. **+** creates a desktop; **−**
+removes the current desktop only when it contains no tool windows. Remaining
+desktop numbers stay unchanged. The saved desk includes empty desktops, and
+older layouts restore without losing their windows.
+
 The desk survives a reload: the windows and where they are docked, which
 virtual desktop you were on, the sidebar, the pane preset and the grid memory,
 and the appearance settings (theme, wallpaper, UI zoom, font scale). A Gyld

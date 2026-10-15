@@ -14,7 +14,7 @@ import {
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP, DESKTOP_ATTENTION, DESKTOP_ATTENTION_TAP,
-  DESKTOP_CURRENT, DESKTOP_CURRENT_TAP,
+  DESKTOP_CURRENT, DESKTOP_CURRENT_TAP, DESKTOP_LIST, DESKTOP_LIST_TAP,
   SIDEBAR_OPEN, SIDEBAR_OPEN_TAP,
   SIDEBAR_WIDTH, SIDEBAR_WIDTH_TAP,
   WINDOW_DRAG, WINDOW_DRAG_TAP,
@@ -29,7 +29,7 @@ import {
   TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
 import {
-  findWiredTab, foundationOn, freezeTab, nextTabId,
+  findWiredTab, foundationOn, freezeTab, nextTabId, DESKTOP_IDS,
   openFoundation, openToolWindow, openWindow, revealFrame, setTabParams, setTabSource,
 } from './ops';
 import { attentionSweep } from './attention';
@@ -64,6 +64,9 @@ export const WindowDragTap = createAtomValueTap(WINDOW_DRAG, {
 export const DesktopCurrentTap = createAtomValueTap(DESKTOP_CURRENT, {
   initial: 1,
   handleGrip: DESKTOP_CURRENT_TAP,
+});
+export const DesktopListTap = createAtomValueTap(DESKTOP_LIST, {
+  initial: [...DESKTOP_IDS], handleGrip: DESKTOP_LIST_TAP,
 });
 export const SidebarOpenTap = createAtomValueTap(SIDEBAR_OPEN, {
   initial: true,
@@ -364,7 +367,7 @@ function startPersistence(
 ): LayoutPersistence {
   if (persistence === null) {
     const ports = deskPorts(grok, {
-      current: DesktopCurrentTap, windows: DesktopWindowsTap,
+      current: DesktopCurrentTap, windows: DesktopWindowsTap, desktopIds: DesktopListTap,
       gridMemory: DesktopGridMemoryTap, preset: DesktopFoundationPresetTap,
       sidebarOpen: SidebarOpenTap, sidebarWidth: SidebarWidthTap,
     }, persistAppearance);
@@ -372,6 +375,7 @@ function startPersistence(
       ? startLayoutPersistence(ports, { entry })
       : setup.persistence(ports, () => {
         DesktopCurrentTap.set(1);
+        DesktopListTap.set([...DESKTOP_IDS]);
         DesktopWindowsTap.set(FIRST_RUN.list);
         DesktopGridMemoryTap.set({});
         SidebarOpenTap.set(true);
@@ -393,6 +397,7 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   grok.registerTap(DesktopAttentionTap);
   grok.registerTap(WindowDragTap);
   grok.registerTap(DesktopCurrentTap);
+  grok.registerTap(DesktopListTap);
   grok.registerTap(SidebarOpenTap);
   grok.registerTap(SidebarWidthTap);
   grok.registerTap(WindowMenuTap);

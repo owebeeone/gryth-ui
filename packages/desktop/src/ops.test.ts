@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  MIN_W, MIN_H, TITLEBAR_H, DESKTOP_IDS,
+  MIN_W, MIN_H, TITLEBAR_H, DESKTOP_IDS, desktopIds, nextDesktopId, desktopIsEmpty,
   openWindow, closeWindow, raiseWindow, minimizeWindow,
   moveWindow, resizeWindow,
   mergeWindows, selectTab, closeTab, hitTitlebar,
@@ -15,6 +15,22 @@ import {
 import type { FacetKind, LayoutNode, WindowDrag, WindowRecord } from './grips.desktop';
 
 const SIZE = { w: 400, h: 300 };
+
+describe('dynamic desktops', () => {
+  it('retains empty identities and restores desktops referenced by windows', () => {
+    const windows = openWindow([], 'welcome', SIZE, 9).list;
+    expect(desktopIds([1, 5, 5], windows, 7)).toEqual([1, 5, 7, 9]);
+    expect(desktopIds(undefined, windows)).toEqual([1, 2, 3, 4, 9]);
+  });
+  it('allocates beyond existing identities without renumbering gaps', () => {
+    expect(nextDesktopId([1, 3, 5])).toBe(6);
+  });
+  it('allows empty desktops but protects desktops containing tools', () => {
+    const windows = openWindow([], 'welcome', SIZE, 5).list;
+    expect(desktopIsEmpty(windows, 5)).toBe(false);
+    expect(desktopIsEmpty(windows, 6)).toBe(true);
+  });
+});
 
 function openMany(kinds: FacetKind[]): WindowRecord[] {
   let list: WindowRecord[] = [];

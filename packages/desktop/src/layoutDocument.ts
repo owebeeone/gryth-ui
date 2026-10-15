@@ -31,6 +31,7 @@ export interface DeskAppearance {
  *  is anything a Gyld window holds in its own tab context except what its tab
  *  record already carries. */
 export interface DeskState extends Partial<DeskAppearance> {
+  desktopIds?: number[];
   current: number;
   windows: WindowRecord[];
   gridMemory: Record<number, GridStash>;
@@ -45,6 +46,7 @@ export interface DeskDocument {
   version: number;
   entry: string;
   desks: {
+    ids?: number[];
     current: number;
     windows: WindowRecord[];
     gridMemory: Record<number, GridStash>;
@@ -65,6 +67,7 @@ export function foldDocument(entry: string, state: DeskState): DeskDocument {
     version: LAYOUT_DOCUMENT_VERSION,
     entry,
     desks: {
+      ...(state.desktopIds === undefined ? {} : { ids: state.desktopIds }),
       current: state.current,
       windows: state.windows,
       gridMemory: state.gridMemory,
@@ -337,6 +340,10 @@ export function seedFrom(raw: unknown, entry?: string): Partial<DeskState> | nul
   }
   const state: Partial<DeskState> = {};
   const desks = isObject(raw.desks) ? raw.desks : {};
+  if (Array.isArray(desks.ids) && desks.ids.length > 0
+    && desks.ids.every((id) => typeof id === 'number' && Number.isSafeInteger(id) && id > 0)) {
+    state.desktopIds = [...new Set(desks.ids as number[])].sort((a, b) => a - b);
+  }
   const current = num(desks.current);
   if (current !== undefined) {
     state.current = current;

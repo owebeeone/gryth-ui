@@ -10,9 +10,22 @@ export const MIN_H = 140;
 // Titlebar hit-band height for header-drop tabbing. CSS pins
 // .gwin-titlebar to this same height — keep them in sync.
 export const TITLEBAR_H = 32;
-// Fixed virtual-desktop set for now; dynamic desktops when the desktop
-// document earns a schema of its own.
+// Initial desktops for new or legacy documents; not a runtime limit.
 export const DESKTOP_IDS = [1, 2, 3, 4];
+
+/** Keep restored windows reachable even if an older document omitted its list. */
+export function desktopIds(ids: readonly number[] | undefined, windows: readonly WindowRecord[], current = 1): number[] {
+  return [...new Set([...(ids?.length ? ids : DESKTOP_IDS), current, ...windows.map((w) => w.desktop)]
+    .filter((id) => Number.isSafeInteger(id) && id > 0))].sort((a, b) => a - b);
+}
+
+export function nextDesktopId(ids: readonly number[]): number {
+  return Math.max(0, ...ids) + 1;
+}
+
+export function desktopIsEmpty(windows: readonly WindowRecord[], desktop: number): boolean {
+  return !windows.some((w) => w.desktop === desktop && !w.foundation);
+}
 const CASCADE = 28;
 const ORIGIN = 48;
 

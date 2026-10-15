@@ -1,6 +1,6 @@
 import type { AtomTapHandle, Grip, Grok } from '@owebeeone/grip-react';
 import {
-  DESKTOP_CURRENT, DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP,
+  DESKTOP_CURRENT, DESKTOP_LIST, DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP,
   DESKTOP_FOUNDATION_PRESET, DESKTOP_GRID_MEMORY, DESKTOP_THEME, DESKTOP_THEME_TAP,
   DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_TAP, DESKTOP_WALLPAPER_THEMED,
   DESKTOP_WALLPAPER_THEMED_TAP, DESKTOP_WINDOWS, DESKTOP_ZOOM, DESKTOP_ZOOM_TAP,
@@ -9,6 +9,7 @@ import {
 } from './grips.desktop';
 import { HUB } from './foundations';
 import type { GridStash } from './ops';
+import { desktopIds } from './ops';
 import type { ThemeId } from './themes';
 import {
   foldDocument, seedFrom, type DeskAppearance, type DeskDocument, type DeskState,
@@ -91,6 +92,7 @@ export interface DeskAtom<T> {
 }
 
 export interface DeskAtoms {
+  desktopIds?: DeskAtom<number[]>;
   current: DeskAtom<number>;
   windows: DeskAtom<WindowRecord[]>;
   gridMemory: DeskAtom<Record<number, GridStash>>;
@@ -197,6 +199,7 @@ function appearancePorts(grok: Grok) {
  *  changed. */
 export function deskPorts(grok: Grok, atoms: DeskAtoms, persistAppearance = true): DeskPorts {
   const current = ownSlot(grok, DESKTOP_CURRENT, atoms.current, 1);
+  const ids = atoms.desktopIds ? ownSlot(grok, DESKTOP_LIST, atoms.desktopIds, [1, 2, 3, 4]) : undefined;
   const windows = ownSlot(grok, DESKTOP_WINDOWS, atoms.windows, []);
   const gridMemory = ownSlot(grok, DESKTOP_GRID_MEMORY, atoms.gridMemory, {});
   const preset = ownSlot(grok, DESKTOP_FOUNDATION_PRESET, atoms.preset, HUB);
@@ -204,11 +207,12 @@ export function deskPorts(grok: Grok, atoms: DeskAtoms, persistAppearance = true
   const sidebarWidth = ownSlot(grok, SIDEBAR_WIDTH, atoms.sidebarWidth, 200);
   const appearance = persistAppearance ? appearancePorts(grok) : undefined;
   const all = [
-    current, windows, gridMemory, preset, sidebarOpen, sidebarWidth,
+    current, windows, gridMemory, preset, sidebarOpen, sidebarWidth, ...(ids ? [ids] : []),
     ...(appearance?.slots ?? []),
   ];
   return {
     read: () => ({
+      ...(ids ? { desktopIds: desktopIds(ids.value(), windows.value(), current.value()) } : {}),
       current: current.value(),
       windows: windows.value(),
       gridMemory: gridMemory.value(),
@@ -218,6 +222,7 @@ export function deskPorts(grok: Grok, atoms: DeskAtoms, persistAppearance = true
       ...appearance?.read(),
     }),
     seed(state) {
+      if (ids) ids.seed(desktopIds(state.desktopIds ?? ids.value(), state.windows ?? windows.value(), state.current ?? current.value()));
       if (state.current !== undefined) { current.seed(state.current); }
       if (state.windows !== undefined) { windows.seed(state.windows); }
       if (state.gridMemory !== undefined) { gridMemory.seed(state.gridMemory); }

@@ -96,6 +96,9 @@ export const DESKTOP_FOCUSED_TAP = defineGrip<AtomTapHandle<string | null>>('Des
 // Current virtual desktop (session): pages on one session switch together.
 export const DESKTOP_CURRENT = defineGrip<number>('Desktop.Current', 1);
 export const DESKTOP_CURRENT_TAP = defineGrip<AtomTapHandle<number>>('Desktop.Current.Tap');
+// Session document: explicit desktop identities, including empty desktops.
+export const DESKTOP_LIST = defineGrip<number[]>('Desktop.List', [1, 2, 3, 4]);
+export const DESKTOP_LIST_TAP = defineGrip<AtomTapHandle<number[]>>('Desktop.List.Tap');
 
 // Sidebar collapsed/expanded (session — desk geometry).
 export const SIDEBAR_OPEN = defineGrip<boolean>('Desktop.SidebarOpen', true);

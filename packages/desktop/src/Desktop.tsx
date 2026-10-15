@@ -4,7 +4,7 @@ import { PLUGIN_REGISTRY, allTools, DESKTOP_OPEN_TOOL, WORKSPACE_NAME } from '@g
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   DESKTOP_FOCUSED, DESKTOP_FOCUSED_TAP,
-  DESKTOP_CURRENT, DESKTOP_CURRENT_TAP,
+  DESKTOP_CURRENT, DESKTOP_CURRENT_TAP, DESKTOP_LIST, DESKTOP_LIST_TAP,
   DESKTOP_OVERVIEW, DESKTOP_OVERVIEW_TAP,
   DESK_SLIDE, DESK_SLIDE_TAP,
   SIDEBAR_OPEN, SIDEBAR_OPEN_TAP,
@@ -20,7 +20,7 @@ import {
   type AreaEdge, type FacetKind, type SnapTarget, type WindowRecord,
 } from './grips.desktop';
 import {
-  DESKTOP_IDS,
+  desktopIds, nextDesktopId, desktopIsEmpty,
   areaOccupants, captureGrid, childLeafIds, closeArea, closeFoundation,
   detachTab, dockOrMerge, foundationOn, frameStack,
   hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
@@ -100,6 +100,9 @@ export default function Desktop() {
   const focusedTap = useGrip(DESKTOP_FOCUSED_TAP);
   const current = useGrip(DESKTOP_CURRENT) ?? 1;
   const currentTap = useGrip(DESKTOP_CURRENT_TAP);
+  const configuredDesktops = useGrip(DESKTOP_LIST);
+  const desktopsTap = useGrip(DESKTOP_LIST_TAP);
+  const desktops = desktopIds(configuredDesktops, windows, current);
   const sidebarOpen = useGrip(SIDEBAR_OPEN) ?? true;
   const sidebarTap = useGrip(SIDEBAR_OPEN_TAP);
   const sidebarWidth = useGrip(SIDEBAR_WIDTH) ?? 200;
@@ -144,7 +147,7 @@ export default function Desktop() {
   // slides by that surplus (wallpaper.ts). Both numbers travel as custom
   // properties, because the element that reads them is a pseudo-element.
   const effectiveWallpaper = wallpaper || (wallpaperThemed ? SCHEME_WALLPAPERS[theme.scheme] : '');
-  const pan = wallpaperPan(current, DESKTOP_IDS);
+  const pan = wallpaperPan(current, desktops);
   const wallpaperStyle: CSSProperties | undefined = effectiveWallpaper
     ? {
       '--wallpaper-image': `url("${effectiveWallpaper.replace(/"/g, '%22')}")`,
@@ -557,8 +560,8 @@ export default function Desktop() {
       e.preventDefault();
       const desk = currentTap?.get() ?? 1;
       const next = e.key === 'ArrowRight'
-        ? Math.min(DESKTOP_IDS[DESKTOP_IDS.length - 1], desk + 1)
-        : Math.max(DESKTOP_IDS[0], desk - 1);
+        ? desktops[Math.min(desktops.length - 1, desktops.indexOf(desk) + 1)]
+        : desktops[Math.max(0, desktops.indexOf(desk) - 1)];
       if (next !== desk) switchDesktop(next);
       return;
     }
@@ -590,7 +593,7 @@ export default function Desktop() {
   const windowGroups: { key: string; label: string; desk: number | null; wins: WindowRecord[] }[] = [];
   const stickyWins = topFirst.filter((w) => w.sticky && !w.dock);
   if (stickyWins.length) windowGroups.push({ key: 'all', label: 'All desktops', desk: null, wins: stickyWins });
-  for (const d of DESKTOP_IDS) {
+  for (const d of desktops) {
     const wins = topFirst.filter((w) => !(w.sticky && !w.dock) && hostOf(windows, w).desktop === d);
     // a gridded desktop shows its group even when empty (the lock lives there)
     if (wins.length || foundationOn(windows, d)) windowGroups.push({ key: `d${d}`, label: `Desktop ${d}`, desk: d, wins });
@@ -608,11 +611,14 @@ export default function Desktop() {
     : { w: (viewAspect / THUMB_ASPECT) * 100, h: 100 };
   const pct = (v: number, axis: number) => `${Math.min(95, Math.max(0, (v / axis) * 100))}%`;
   const desktopIcons = (
-    <nav className="sidebar-desktops">
-      {DESKTOP_IDS.map((d) => (
+    <nav className="sidebar-desktops" aria-label="Desktops">
+      {desktops.map((d) => (
         <button
           key={d}
           data-desktop-target={d}
+          aria-label={`Desktop ${d}`}
+          aria-current={d === current ? 'page' : undefined}
+          ref={d === current ? (el) => el?.scrollIntoView({ block: 'nearest', inline: 'nearest' }) : undefined}
           title={`Desktop ${d} (${windows.filter((w) => isOnDesktop(hostOf(windows, w), d)).length} windows)`}
           className={`desk-btn${d === current ? ' current' : ''}${drag?.dropDesktop === d ? ' drop' : ''}`}
           onClick={() => switchDesktop(d)}
@@ -637,6 +643,21 @@ export default function Desktop() {
           <span className="desk-num">{d}</span>
         </button>
       ))}
+      <button className="desk-btn" aria-label="Add desktop" title="Add desktop" onClick={() => {
+        const ids = desktopIds(desktopsTap?.get(), windowsTap?.get() ?? [], currentTap?.get());
+        const added = nextDesktopId(ids);
+        desktopsTap?.set([...ids, added]); switchDesktop(added);
+      }}>+</button>
+      <button className="desk-btn" aria-label="Remove empty desktop" title="Remove current desktop (only when empty)"
+        disabled={desktops.length <= 1 || !desktopIsEmpty(windows, current)} onClick={() => {
+          const target = currentTap?.get() ?? current;
+          const list = windowsTap?.get() ?? [];
+          const ids = desktopIds(desktopsTap?.get(), list, target);
+          if (ids.length <= 1 || !desktopIsEmpty(list, target)) return;
+          const remaining = ids.filter((d) => d !== target);
+          windowsTap?.set(list.filter((w) => w.desktop !== target));
+          desktopsTap?.set(remaining); switchDesktop(remaining[0]);
+        }}>−</button>
     </nav>
   );
 
@@ -842,7 +863,7 @@ export default function Desktop() {
                   <hr />
                 </>
               )}
-              {DESKTOP_IDS.map((d) => (
+              {desktops.map((d) => (
                 <button key={d} disabled={menuFrame.desktop === d && !menuFrame.sticky} onClick={() => sendFromMenu(d)}>
                   Send to Desktop {d}{menuFrame.desktop === d ? ' •' : ''}
                 </button>

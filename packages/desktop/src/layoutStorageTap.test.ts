@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GripRegistry, Grok, createAtomValueTap } from '@owebeeone/grip-react';
 import { HUB } from './foundations';
 import {
-  DESKTOP_CURRENT, DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP, DESKTOP_FOUNDATION_PRESET,
+  DESKTOP_CURRENT, DESKTOP_LIST, DESKTOP_FONT_SCALE, DESKTOP_FONT_SCALE_TAP, DESKTOP_FOUNDATION_PRESET,
   DESKTOP_GRID_MEMORY, DESKTOP_THEME, DESKTOP_THEME_TAP, DESKTOP_WINDOWS, SIDEBAR_OPEN,
   SIDEBAR_WIDTH, type WindowRecord,
 } from './grips.desktop';
@@ -198,6 +198,7 @@ describe('the interim layout store', () => {
 function restoredDesk(persistAppearance?: boolean) {
   const grok = new Grok(new GripRegistry());
   const atoms = {
+    desktopIds: createAtomValueTap(DESKTOP_LIST, { initial: [1, 2, 3, 4] }),
     current: createAtomValueTap(DESKTOP_CURRENT, { initial: 1 }),
     windows: createAtomValueTap<WindowRecord[]>(DESKTOP_WINDOWS, { initial: [] }),
     gridMemory: createAtomValueTap<Record<number, GridStash>>(DESKTOP_GRID_MEMORY, { initial: {} }),
@@ -231,6 +232,14 @@ function restoredDesk(persistAppearance?: boolean) {
 }
 
 describe('the desk ports, over a composed page', () => {
+  it('writes desktop additions even when the new desktops contain no windows', () => {
+    const desk = restoredDesk(false);
+    desk.atoms.desktopIds.set([1, 2, 3, 4, 5, 8]);
+    desk.grok.flush();
+    expect(desk.clock.waiting).toBe(true);
+    desk.clock.tick();
+    expect((desk.written().desks as Record<string, unknown>).ids).toEqual([1, 2, 3, 4, 5, 8]);
+  });
   it('with persistAppearance false, seed no stored appearance and write none', () => {
     const desk = restoredDesk(false);
     expect(desk.held.restored).toBe(true);
