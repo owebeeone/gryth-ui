@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { createAtomValueTap, type Grip } from '@owebeeone/grip-react';
 import { grok, defineGrip, type ToolDef } from '@grythjs/plugin-api';
 import { registerDesktopTaps } from './taps.desktop';
-import { hasTabContext, tabContextFor, unwireTab, wireTabSource } from './tabContexts';
+import { hasTabContext, tabContextFor, tabContextsOn, unwireTab, wireTabSource } from './tabContexts';
 import { DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP } from './grips.desktop';
-import { closeWindow, openWindow } from './ops';
+import { closeWindow, openWindow, sendToDesktop } from './ops';
 
 registerDesktopTaps(grok);
 const consume = grok.mainPresentationContext;
@@ -161,5 +161,29 @@ describe('SS-06 live tab-link fields', () => {
     sourceTap.set('next'); grok.flush();
     await expect.poll(() => read.get()).toBe('next');
     expect(handle.get()[1].tabs[0].params).toBeUndefined();
+  });
+
+  // G-6: the read-only view of one desktop's contexts — the tabs there that
+  // the desktop holds a context for, with their link, and nothing from
+  // another desktop or without a context yet.
+  it('tabContextsOn lists that desktop\'s held contexts, read-only', async () => {
+    const windowsTap = drip(DESKTOP_WINDOWS_TAP);
+    await expect.poll(() => windowsTap.get()).toBeDefined();
+    const handle = windowsTap.get()!;
+    const a = openWindow(handle.get() ?? [], 'chat', { w: 10, h: 10 }, 7, { k: 1 });
+    const b = openWindow(a.list, 'code', { w: 10, h: 10 }, 7);
+    const c = openWindow(b.list, 'chat', { w: 10, h: 10 }, 8);
+    handle.set(sendToDesktop(c.list, c.id, 8));
+    const tabA = a.list.find((w) => w.id === a.id)!.tabs[0].id;
+    const tabC = c.list.find((w) => w.id === c.id)!.tabs[0].id;
+    const BARE: ToolDef = { label: 'B', defaultSize: { w: 1, h: 1 }, windowComponent: DEF.windowComponent };
+    const ctxA = tabContextFor(grok, tabA, BARE, { k: 1 });
+    tabContextFor(grok, tabC, BARE);
+    const on7 = tabContextsOn(7);
+    expect(on7).toHaveLength(1); // the 'code' tab has no context yet
+    expect(on7[0]).toMatchObject({ tabId: tabA, toolId: 'chat', params: { k: 1 } });
+    expect(on7[0].context).toBe(ctxA);
+    expect(tabContextsOn(8).map((t) => t.tabId)).toEqual([tabC]);
+    expect(tabContextsOn(99)).toEqual([]);
   });
 });

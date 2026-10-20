@@ -1,13 +1,14 @@
 import { BaseTap, createAtomValueTap, type Grip, type GripContext, type Grok } from '@owebeeone/grip-react';
 import {
   addEntry, allTools, PluginRegistryTap,
-  DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_OPEN_WIRED_PAIR, DESKTOP_PIN_TAB,
+  DESKTOP_OPEN_ON_DESKTOP, DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_OPEN_WIRED_PAIR, DESKTOP_PIN_TAB,
   DESKTOP_RETARGET_TAB, DESKTOP_SET_TAB_SOURCE, DESKTOP_TAB_LINKS,
-  type TabLinkInfo, type ToolId, type ToolLink,
+  type DesktopTarget, type TabLinkInfo, type ToolId, type ToolLink,
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
 import { DESKTOP_BUILTINS_PLUGIN, DESKTOP_RESET_LAYOUT, DESKTOP_APPLICATION_SIDEBAR,
-  DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP, type ApplicationSidebar, type FoundationDef } from './grips.desktop';
+  DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP, DESKTOP_NAMES, DESKTOP_RESERVED_HOTKEYS,
+  type ApplicationSidebar, type FoundationDef } from './grips.desktop';
 import { HUB } from './foundations';
 import {
   DEFAULT_ENTRY, deskPorts, startLayoutPersistence, type LayoutPersistence, type DeskPorts,
@@ -30,7 +31,7 @@ import {
   TICKER_BLEED, TICKER_BLEED_TAP,
 } from './grips.desktop';
 import {
-  findWiredTab, foundationOn, freezeTab, nextTabId, DESKTOP_IDS,
+  desktopIds, findWiredTab, foundationOn, freezeTab, nextDesktopId, nextTabId, DESKTOP_IDS,
   openFoundation, openToolWindow, openWindow, revealFrame, setTabParams, setTabSource,
 } from './ops';
 import { attentionSweep } from './attention';
@@ -47,6 +48,8 @@ import { attentionSweep } from './attention';
 const FIRST_RUN = openWindow([], 'welcome', { w: 520, h: 280 });
 const ApplicationSidebarTap = createAtomValueTap(DESKTOP_APPLICATION_SIDEBAR, { initial: null });
 const DebugSidebarTap = createAtomValueTap(DESKTOP_DEBUG_SIDEBAR, { initial: false, handleGrip: DESKTOP_DEBUG_SIDEBAR_TAP });
+const ReservedHotkeysTap = createAtomValueTap(DESKTOP_RESERVED_HOTKEYS, { initial: [] as readonly string[] });
+const DesktopNamesTap = createAtomValueTap(DESKTOP_NAMES, { initial: {} as Readonly<Record<string, number>> });
 
 export const DesktopWindowsTap = createAtomValueTap(DESKTOP_WINDOWS, {
   initial: FIRST_RUN.list,
@@ -144,7 +147,7 @@ function reveal(frameId: string, tabId?: string): void {
 // tool's default size (v1 policy — always a new window), docking home on a
 // gridded desktop. Published as a grip value, so the launcher, plugins,
 // and agents all open views through this one surface.
-function openToolAt(link: ToolLink, source?: string): void {
+function openToolAt(link: ToolLink, source?: string, desktop: number = DesktopCurrentTap.get()): void {
   const defs = allTools(PluginRegistryTap.get());
   const def = resolveTool(defs, link.toolId);
   const list = DesktopWindowsTap.get();
@@ -156,7 +159,7 @@ function openToolAt(link: ToolLink, source?: string): void {
     list,
     link.toolId,
     def.defaultSize,
-    DesktopCurrentTap.get(),
+    desktop,
     link.params,
     source,
     toolRoles(defs),
@@ -170,6 +173,34 @@ const openToolIntent = (link: ToolLink) => {
 };
 export const OpenToolTap = createAtomValueTap(DESKTOP_OPEN_TOOL, {
   initial: openToolIntent,
+});
+
+// Desktop.OpenOnDesktop intent (G-7): resolve the target desktop — an existing
+// number, a remembered name, or a fresh one (which a name then remembers) —
+// switch to it, and open the link there through the same path as OpenTool.
+const openOnDesktopIntent = (link: ToolLink, target?: DesktopTarget): number => {
+  const ids = desktopIds(DesktopListTap.get(), DesktopWindowsTap.get(), DesktopCurrentTap.get());
+  const named = target?.name === undefined ? undefined : DesktopNamesTap.get()[target.name];
+  let desk: number;
+  if (target?.desktop !== undefined && Number.isSafeInteger(target.desktop) && target.desktop > 0) {
+    desk = target.desktop;
+  } else if (named !== undefined && ids.includes(named)) {
+    desk = named;
+  } else {
+    desk = nextDesktopId(ids);
+    if (target?.name !== undefined) {
+      DesktopNamesTap.update((names) => ({ ...names, [target.name as string]: desk }));
+    }
+  }
+  if (!ids.includes(desk)) {
+    DesktopListTap.set([...ids, desk].sort((a, b) => a - b));
+  }
+  DesktopCurrentTap.set(desk);
+  openToolAt(link, undefined, desk);
+  return desk;
+};
+export const OpenOnDesktopTap = createAtomValueTap(DESKTOP_OPEN_ON_DESKTOP, {
+  initial: openOnDesktopIntent,
 });
 
 // Desktop.RetargetTab intent: replace an existing tab's link params — the
@@ -324,6 +355,13 @@ export interface DesktopSetup {
   persistAppearance?: boolean;
   /** Injected session persistence; omitted keeps browser-local persistence. */
   persistence?: (ports: DeskPorts, resetDefaults: () => void) => LayoutPersistence;
+  /**
+   * Hotkey chords this composition binds itself (G-5), in the plugin command
+   * spelling (`Mod+Shift+I`). A plugin command on one of these, or on one of
+   * the shell's own (`SHELL_HOTKEYS`), is listed but not bound: the host wins,
+   * and the shell logs the conflict once.
+   */
+  reservedHotkeys?: readonly string[];
 }
 
 /**
@@ -396,7 +434,10 @@ function startPersistence(
 export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   grok.registerTap(ApplicationSidebarTap);
   grok.registerTap(DebugSidebarTap);
+  grok.registerTap(ReservedHotkeysTap);
+  grok.registerTap(DesktopNamesTap);
   ApplicationSidebarTap.set(setup?.sidebar ?? null);
+  ReservedHotkeysTap.set(setup?.reservedHotkeys ?? []);
   // publish the not-yet-converted builtin tools at the desktop's own
   // plugin grip — the chrome consumes that grip like any plugin consumer
   addEntry(DESKTOP_BUILTINS_PLUGIN, DESKTOP_BUILTINS);
@@ -419,6 +460,7 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   grok.registerTap(TickerBleedTap);
   grok.registerTap(ResetLayoutTap);
   grok.registerTap(OpenToolTap);
+  grok.registerTap(OpenOnDesktopTap);
   grok.registerTap(RetargetTabTap);
   grok.registerTap(OpenWiredTap);
   grok.registerTap(OpenWiredPairTap);

@@ -20,6 +20,16 @@ export const DESKTOP_APPLICATION_SIDEBAR = defineGrip<ApplicationSidebar | null>
 export const DESKTOP_DEBUG_SIDEBAR = defineGrip<boolean>('Desktop.DebugSidebar', false);
 export const DESKTOP_DEBUG_SIDEBAR_TAP = defineGrip<AtomTapHandle<boolean>>('Desktop.DebugSidebar.Tap');
 
+// Hotkey chords the COMPOSITION binds itself (G-5), beyond the shell's own
+// (`SHELL_HOTKEYS`): a plugin command on one of these is listed but not bound.
+export const DESKTOP_RESERVED_HOTKEYS = defineGrip<readonly string[]>('Desktop.ReservedHotkeys', []);
+
+// Desktops opened under a NAME by `Desktop.OpenOnDesktop` (G-7): name → id,
+// so a later call under the same name lands on the same desktop. Instance
+// scope — a name is the caller's handle for this client's desk, not a label
+// the reader sees, and it is not persisted with the desk.
+export const DESKTOP_NAMES = defineGrip<Readonly<Record<string, number>>>('Desktop.Names', {});
+
 // The desktop document — session scope. This is the serializable class-1
 // atom map that persists and roams across the user's instances, and the
 // surface a delegated agent writes to drive the UI.

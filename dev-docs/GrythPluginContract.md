@@ -124,7 +124,9 @@ interface GrythPlugin {
     windowComponent: GripComponentFactory;  // mounts in the TAB context
     tabTaps?: (tabId: string) => Tap[];     // seeded into the tab context
     linkFields?: readonly TabLinkField[];  // bidirectional serializable inputs
+    replay?: 'full' | 'inspect-only';      // G-4, see "General additions"
   }>;
+  commands?: Record<CommandId, CommandDef>; // G-5, see "General additions"
 }
 
 // bootstrap (module init): the special setter — copy, mutate, set
@@ -258,6 +260,175 @@ own dogfood.
 - The terminal tool itself: `Terminal.Output` (source tap keyed by
   `Tool.SourceRef`), `Terminal.Command.Write/Resize/CloseSource` (handles),
   `Tab.Title` fed from the session's cwd, `Tool.Status` for liveness.
+
+## General additions (G-1 to G-7)
+
+Seven small, general-purpose surfaces, added as one change set with their own
+tests. Each is useful to any gryth client; none changes the behaviour of a
+client that does not use it. The shell side lives in `@grythjs/desktop`; the
+contract side in `@grythjs/plugin-api`.
+
+**G-1 — Stable DOM anchors.** The shell marks its structure with data
+attributes, so a capture, test, e2e driver or accessibility tool finds frames
+without depending on CSS classes:
+
+- the desktop root (`.desktop`): `data-gryth-desktop="<n>"`, the current
+  virtual desktop's number;
+- every window frame (`section.gwin`) AND its body (`.gwin-body`):
+  `data-gryth-window="<windowId>"`, `data-gryth-tab="<tabId>"` and
+  `data-gryth-tool="<toolId>"`, naming the frame's ACTIVE tab and its tool;
+- a foundation frame (`section.gwin.foundation`): `data-gryth-window` only; it
+  has no tab.
+
+The attributes are the contract; the class names remain presentation.
+
+**G-2 — `ToolBody`.** The chrome-free tool mount:
+
+```tsx
+import { ToolBody } from '@grythjs/desktop';
+<ToolBody grok={grok} context={ctx} def={toolDef} tabId="t3" params={params} />
+// or, with the view directly:  windowComponent={toolDef.windowComponent}
+```
+
+It renders `<GripProvider grok context><Facet tabId params/></GripProvider>`
+and nothing else. `Window.tsx` mounts its own tabs through it. `ToolBody` takes
+a READY context: it creates no tab context, seeds no `tabTaps` and registers
+nothing. `tabContextFor` stays in the desktop (`Window.tsx` calls it); a
+replay, preview, documentation page or test hands `ToolBody` its own context
+in its own `Grok`, and no live tab entry is made for it.
+
+**G-3 — `GRYTH_READ_ONLY`.** A boolean grip in plugin-api, default `false`:
+
+```ts
+import { GRYTH_READ_ONLY, GRYTH_READ_ONLY_TAP, grythReadOnlyTap } from '@grythjs/plugin-api';
+grok.registerTap(grythReadOnlyTap(true));          // a host: the whole desk
+replayRoot.getGripHomeContext().registerTap(grythReadOnlyTap()); // a replay root
+```
+
+With no producer, every client behaves as before. A host (a kiosk or
+presentation mode, a tab that is not the writer) or a replay root registers
+`grythReadOnlyTap(initial = true)` in the context its tools mount under; its
+handle is advertised at `GRYTH_READ_ONLY_TAP`, so the mode can be flipped at
+runtime. Controls read it with `useGrip(GRYTH_READ_ONLY) ?? false`.
+
+What honours it today:
+
+- `@grythjs/plugin-settings` — the Settings panel: every control (scale, font
+  scale, theme cards, the wallpaper checkbox and URL field, Reset layout) is
+  disabled;
+- `@grythjs/desktop` window chrome — the frame's close and minimize buttons
+  are disabled, the resize grip is not rendered, and a titlebar drag (move) or
+  resize drag does not start. Raise/focus and the context menu are not edits
+  and still work.
+
+What does not: opening tools (launcher, intents), desktop switching, the
+sidebar's add/remove desktop and lock controls, and any plugin's own controls
+unless that plugin reads the grip. It is advice to controls, not an
+enforcement boundary: a tool that writes through a grip it does not guard is
+not stopped by it.
+
+**G-4 — `ToolDef.replay`.**
+
+```ts
+replay?: 'full' | 'inspect-only';   // type ToolReplay
+```
+
+A tool's declaration of whether it can render from FROZEN grip data, outside
+a live desk. `'full'`: it reads everything it shows through grips and has no
+side effect at mount that bypasses them, so a snapshot, preview or
+documentation renderer may mount it (through `ToolBody`). `'inspect-only'`:
+it must not be mounted there; the renderer shows its captured values instead.
+**Undeclared means inspect-only to any renderer that mounts tools outside a
+live desk** (fail-closed), unless that renderer's host policy says otherwise.
+The live desktop ignores the field.
+
+**G-5 — Commands.** A plugin declares app-level commands beside its tools:
+
+```ts
+import type { CommandDef, CommandContext } from '@grythjs/plugin-api';
+addEntry(MY_PLUGIN, {
+  tools: { ... },
+  commands: {
+    'my.export': { label: 'Export', hotkey: 'Mod+Shift+E', run: (ctx: CommandContext) => { ... } },
+  },
+});
+```
+
+`CommandDef` is `{ label, hotkey?, run(ctx) }`. `ctx` is `{ grok, context }`:
+the shell's runtime and the context the command was invoked from (the
+desktop's own, for the sidebar and hotkeys), from which a command resolves
+the intents it needs. `context` is a `GripContextLike`, so the consumer comes
+from its consumer context:
+`ctx.context.getGripConsumerContext().getOrCreateConsumer(DESKTOP_OPEN_TOOL).get()`.
+`allCommands(registry)` flattens every entry's commands as `allTools` does
+(later entry wins a collision).
+
+The shell lists every command in the sidebar — below the launcher, and below
+the application sidebar's content when a composition supplies one — as a
+`nav.sidebar-commands` of buttons, and binds the hotkeys in its own keyboard
+handler (`Desktop.tsx`'s `onKeyDown`: no effect, no window listener).
+
+Hotkey specs are modifiers joined with `+` and one key: `Mod+Shift+Y`,
+`Ctrl+K`, `F2`, `Alt+ArrowUp`. `Mod` is Cmd on macOS and Ctrl elsewhere
+(either matches). Key names are DOM `KeyboardEvent.key` names; letters are
+case-insensitive. A letter or digit also matches by `KeyboardEvent.code`
+(`KeyY`, `Digit1`), so `Mod+Shift+1` fires although the event's `key` is `!`,
+and `Alt+I` fires on macOS although `key` is a diacritic. Parsing and matching
+are exported (`parseHotkey`, `hotkeyMatches`, `hotkeyCollides`, `hotkeyKey`).
+
+Two shell behaviours a host should know: a hotkey does **not** fire while
+focus is in an `<input>`, `<textarea>` or contenteditable element (the shell's
+existing guard, so typing is never hijacked), and it fires only while focus is
+inside the `.desktop` element, because the shell binds in `Desktop.tsx`'s own
+`onKeyDown` rather than on `window`. A held chord fires its command **once**:
+auto-repeats are swallowed, not run (`keydownCommand` in `@grythjs/desktop`).
+Avoid chords the browser takes before the page sees them (`Ctrl+Shift+I/J/C`
+are DevTools on Windows and Linux; `Ctrl+Shift+N/T/W` are window and tab
+chords): `preventDefault` cannot suppress those.
+
+**The host wins.** A command whose hotkey collides with a chord the host
+binds — the shell's own (`SHELL_HOTKEYS`: Shift+Arrows and Escape) or any the
+composition names in `registerDesktopTaps(grok, { reservedHotkeys: [...] })`
+(published at `DESKTOP_RESERVED_HOTKEYS`) — is listed but not bound, and the
+conflict is logged once (`console.warn`). `Mod+K` collides with both `Ctrl+K`
+and `Cmd+K`. Two commands on one chord: the first declared is bound. The
+binding is the pure `bindCommands(commands, reserved)` in `@grythjs/desktop`,
+with `commandFor(bound, chord)` resolving a key event.
+
+**G-6 — `tabContextsOn(desktop)`.** A read-only view of the chrome-held tab
+contexts on one virtual desktop:
+
+```ts
+import { tabContextsOn, type TabContextInfo } from '@grythjs/desktop';
+const tabs: TabContextInfo[] = tabContextsOn(3);
+// [{ tabId, toolId, params, source, context }, ...]
+```
+
+Every tab of a frame on that desktop (a sticky frame counts on all desktops;
+a docked frame is where its foundation is) that the desktop currently holds a
+context for. A tab never yet rendered has no context and is not listed. The
+map itself stays module-private: nothing here can add, replace or retire an
+entry.
+
+**G-7 — `Desktop.OpenOnDesktop`.** A shell intent beside `Desktop.OpenTool`:
+
+```ts
+import { DESKTOP_OPEN_ON_DESKTOP, type DesktopTarget } from '@grythjs/plugin-api';
+const open = useGrip(DESKTOP_OPEN_ON_DESKTOP);
+open({ toolId: 'viewer', params }, { name: 'session:42' });  // -> desktop number
+```
+
+`(link: ToolLink, target?: DesktopTarget) => number`, opening the link on
+another desktop and switching there — "open this in its own workspace". With
+no target, a NEW desktop is added and used. `target.desktop` names an existing
+desktop by number (a positive integer the desk does not have yet is added).
+`target.name` is a caller-chosen handle for a desktop this intent opened
+earlier: the first call under a name adds a desktop and remembers it
+(`DESKTOP_NAMES`, instance scope, not persisted), later calls land on the same
+one, so several windows open onto one new workspace without the caller
+tracking its number. `desktop` wins when both are given. The window is opened
+through the same path `Desktop.OpenTool` takes (docked by role on a locked
+desk) and revealed the same way. The return value is the desktop it landed on.
 
 ## Open questions
 

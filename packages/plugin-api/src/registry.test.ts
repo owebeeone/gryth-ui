@@ -3,7 +3,7 @@ import type { Grip } from '@owebeeone/grip-react';
 import { grok, defineGrip } from './runtime';
 import {
   PluginRegistryTap, PLUGIN_REGISTRY, PLUGIN_REGISTRY_TAP,
-  addEntry, removeEntry, pluginFrom,
+  addEntry, allTools, removeEntry, pluginFrom,
   type GripComponentFactory, type GrythPlugin,
 } from './registry';
 
@@ -69,6 +69,20 @@ describe('plugin registry (atom tap with a special setter)', () => {
       return next;
     });
     await expect.poll(() => lookup(PLUG)?.tools?.ee).toBeDefined();
+    removeEntry(PLUG as Grip<unknown>);
+  });
+
+  // G-4: a tool's replay declaration rides the def through the flattened
+  // lookup; an undeclared one reads as undefined, which a renderer outside a
+  // live desk treats as inspect-only.
+  it('carries ToolDef.replay through allTools, undefined when undeclared', async () => {
+    const PLUG = defineGrip<GrythPlugin>('Test.PluginReplay');
+    const base = plugin('plain').tools!.plain;
+    addEntry(PLUG, { tools: { plain: base, live: { ...base, replay: 'full' }, frozen: { ...base, replay: 'inspect-only' } } });
+    await expect.poll(() => allTools(drip(PLUGIN_REGISTRY).get()).live?.replay).toBe('full');
+    const tools = allTools(drip(PLUGIN_REGISTRY).get());
+    expect(tools.frozen.replay).toBe('inspect-only');
+    expect(tools.plain.replay).toBeUndefined();
     removeEntry(PLUG as Grip<unknown>);
   });
 });

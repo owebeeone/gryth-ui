@@ -5,5 +5,6 @@
 export { registry, defineGrip, grok, main } from './runtime';
 export * from './grips';
 export * from './registry';
+export * from './commands';
 
 export { tabLinkField, type TabLinkField } from './tabLink';

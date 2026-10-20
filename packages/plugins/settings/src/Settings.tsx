@@ -1,4 +1,5 @@
 import { useGrip } from '@owebeeone/grip-react';
+import { GRYTH_READ_ONLY } from '@grythjs/plugin-api';
 import {
   DESKTOP_THEME, DESKTOP_THEME_TAP,
   DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_TAP,
@@ -29,20 +30,23 @@ export function Settings() {
   // the user the appearance follows, when it follows one (./surfaceTaps)
   const follows = useGrip(APPEARANCE_FOLLOWS);
   const session = useGrip(DESK_SESSION);
+  // Read-only mode (G-3): every control here edits the desk, so all of them
+  // stand down together.
+  const readOnly = useGrip(GRYTH_READ_ONLY) ?? false;
   return (
     <div className="facet-pad settings-facet">
       <h3>Display</h3>
       <div className="settings-row">
         <span>Scale</span>
-        <button onClick={() => zoomTap?.update((v) => Math.max(0.7, Math.round((v - 0.05) * 20) / 20))}>−</button>
+        <button disabled={readOnly} onClick={() => zoomTap?.update((v) => Math.max(0.7, Math.round((v - 0.05) * 20) / 20))}>−</button>
         <span className="settings-val">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => zoomTap?.update((v) => Math.min(1.5, Math.round((v + 0.05) * 20) / 20))}>+</button>
+        <button disabled={readOnly} onClick={() => zoomTap?.update((v) => Math.min(1.5, Math.round((v + 0.05) * 20) / 20))}>+</button>
       </div>
       <div className="settings-row">
         <span>Font scale</span>
-        <button onClick={() => fontScaleTap?.update((v) => Math.max(5, Math.round((v - 0.5) * 2) / 2))}>−</button>
+        <button disabled={readOnly} onClick={() => fontScaleTap?.update((v) => Math.max(5, Math.round((v - 0.5) * 2) / 2))}>−</button>
         <span className="settings-val">{fontScale % 1 === 0 ? fontScale : fontScale.toFixed(1)}</span>
-        <button onClick={() => fontScaleTap?.update((v) => Math.min(15, Math.round((v + 0.5) * 2) / 2))}>+</button>
+        <button disabled={readOnly} onClick={() => fontScaleTap?.update((v) => Math.min(15, Math.round((v + 0.5) * 2) / 2))}>+</button>
       </div>
       <h3>Theme</h3>
       <div className="theme-grid">
@@ -52,6 +56,7 @@ export function Settings() {
             <button
               key={id}
               className={`theme-card${theme === id ? ' selected' : ''}`}
+              disabled={readOnly}
               onClick={() => themeTap?.set(id)}
             >
               <span className="theme-swatch" style={{ background: t.vars['--bg'] }}>
@@ -71,6 +76,7 @@ export function Settings() {
         <input
           type="checkbox"
           checked={wallpaperThemed}
+          disabled={readOnly}
           onChange={(e) => wallpaperThemedTap?.set(e.target.checked)}
         />
         Use the theme&apos;s wallpaper
@@ -80,6 +86,7 @@ export function Settings() {
         className="settings-input"
         placeholder="https://… custom image URL (overrides the theme wallpaper)"
         value={wallpaper}
+        disabled={readOnly}
         onChange={(e) => wallpaperTap?.set(e.target.value)}
       />
       <h3>Desk</h3>
@@ -98,7 +105,7 @@ export function Settings() {
       {session !== undefined && (
         <p className="settings-hint">Session: {session.name}. <a href={session.href} target="_blank" rel="noreferrer">Open this session</a></p>
       )}
-      <button type="button" className="settings-reset" onClick={() => resetLayout?.()}>
+      <button type="button" className="settings-reset" disabled={readOnly} onClick={() => resetLayout?.()}>
         Reset layout
       </button>
     </div>

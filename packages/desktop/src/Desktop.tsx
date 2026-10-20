@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { useGrip } from '@owebeeone/grip-react';
-import { PLUGIN_REGISTRY, allTools, DESKTOP_OPEN_TOOL, WORKSPACE_NAME } from '@grythjs/plugin-api';
+import { PLUGIN_REGISTRY, allCommands, allTools, grok, DESKTOP_OPEN_TOOL, WORKSPACE_NAME, type CommandDef } from '@grythjs/plugin-api';
 import {
   DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP,
   DESKTOP_APPLICATION_SIDEBAR, DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP,
@@ -18,6 +18,7 @@ import {
   AREA_MENU, AREA_MENU_TAP,
   CANVAS_SIZE, CANVAS_SIZE_TAP,
   TICKER_BLEED, TICKER_BLEED_TAP,
+  DESKTOP_RESERVED_HOTKEYS,
   type AreaEdge, type FacetKind, type SnapTarget, type WindowRecord,
 } from './grips.desktop';
 import {
@@ -42,6 +43,7 @@ import Window from './Window';
 import FoundationWindow from './FoundationWindow';
 import TickerStrip from './TickerStrip';
 import { tickerNaturals } from './tickerDom';
+import { SHELL_HOTKEYS, bindCommands, keydownCommand } from './commands';
 
 // The desktop shell: collapsible zen-style LHS sidebar (launcher, virtual
 // desktops, vertical window list — topmost first) and the window canvas.
@@ -141,7 +143,18 @@ export default function Desktop() {
   // Tool resolution enumerates registry DATA — the chrome imports no
   // plugin. Tool defs are stable within a gesture (plugins don't churn
   // mid-drag), so handlers may read the render value.
-  const defs = allTools(useGrip(PLUGIN_REGISTRY));
+  const registry = useGrip(PLUGIN_REGISTRY);
+  const defs = allTools(registry);
+  // Commands (G-5): registry data too. Their hotkeys are bound here, in the
+  // same keyboard handler as the shell's own, which is why the shell's chords
+  // (and the composition's reserved ones) are what a command yields to.
+  const commands = allCommands(registry);
+  const reservedHotkeys = useGrip(DESKTOP_RESERVED_HOTKEYS) ?? [];
+  const boundCommands = bindCommands(commands, [...SHELL_HOTKEYS, ...reservedHotkeys]);
+  const runCommand = (def: CommandDef) => {
+    def.run({ grok, context: grok.mainPresentationContext });
+    overviewTap?.set(null);
+  };
 
   const theme = THEMES[themeId];
   // Wallpaper: cover semantics, so the image's aspect ratio survives any
@@ -557,6 +570,16 @@ export default function Desktop() {
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const t = e.target as HTMLElement;
     if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
+    // a bound command's chord: never one of the shell's (bindCommands), so the
+    // shell's own handling below is untouched; a held chord fires once
+    const command = keydownCommand(boundCommands, e);
+    if (command.swallow) {
+      e.preventDefault();
+      if (command.run !== undefined) {
+        runCommand(command.run.def);
+      }
+      return;
+    }
     const cur = overviewTap?.get() ?? null;
     if (e.key === 'Escape' && cur) {
       overviewTap?.set(null);
@@ -671,6 +694,7 @@ export default function Desktop() {
   return (
     <div
       className="desktop"
+      data-gryth-desktop={current}
       tabIndex={0}
       ref={focusOnMount}
       onKeyDown={onKeyDown}
@@ -705,6 +729,15 @@ export default function Desktop() {
               );
             })}
           </nav>}
+          {Object.keys(commands).length > 0 && (
+            <nav className="sidebar-launcher sidebar-commands" aria-label="Commands">
+              {Object.entries(commands).map(([id, def]) => (
+                <button key={id} title={def.hotkey === undefined ? def.label : `${def.label} (${def.hotkey})`} onClick={() => runCommand(def)}>
+                  ▸ {def.label}
+                </button>
+              ))}
+            </nav>
+          )}
           {desktopIcons}
           {(!applicationMode || applicationSidebar?.showWindowList !== false) && <nav className="sidebar-windows">
             {windowGroups.map((g) => (

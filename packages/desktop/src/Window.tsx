@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
-import { GripProvider, useGrip } from '@owebeeone/grip-react';
-import { PLUGIN_REGISTRY, allTools, grok } from '@grythjs/plugin-api';
+import { useGrip } from '@owebeeone/grip-react';
+import { GRYTH_READ_ONLY, PLUGIN_REGISTRY, allTools, grok } from '@grythjs/plugin-api';
 import {
   DESKTOP_ATTENTION, DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP, DESKTOP_FOCUSED_TAP,
   WINDOW_DRAG_TAP, WINDOW_MENU_TAP, DESKTOP_FONT_SCALE,
@@ -14,6 +14,7 @@ import TickerStrip from './TickerStrip';
 import { canvasOrigin } from './tickerDom';
 import { resolveTool } from './facets';
 import { tabContextFor, wireTabSource, unwireTab } from './tabContexts';
+import { ToolBody } from './ToolBody';
 
 // Overview presentation handed down by the desktop: a placement transform
 // for members of the grid, dimming for non-members (App Exposé), and the
@@ -50,11 +51,13 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
   const dragTap = useGrip(WINDOW_DRAG_TAP);
   const menuTap = useGrip(WINDOW_MENU_TAP);
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
+  // Read-only mode (G-3): the chrome's own desk edits — close, minimize, move,
+  // resize — stand down. The context menu and raise/focus are not edits.
+  const readOnly = useGrip(GRYTH_READ_ONLY) ?? false;
   // tool resolution enumerates registry DATA — the chrome imports no plugin
   const defs = allTools(useGrip(PLUGIN_REGISTRY));
   const active = win.tabs.find((t) => t.id === win.activeTab) ?? win.tabs[0];
   const activeDef = resolveTool(defs, active.facet);
-  const Facet = activeDef.windowComponent;
   // the tab's CHROME-HELD context: lifetime = the tab record's, so
   // instance state survives unmount/remount (desktop switch, minimize)
   const tabCtx = tabContextFor(grok, active.id, activeDef, active.params);
@@ -86,7 +89,9 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
   // drag — the overlay would mount over the header and swallow the
   // contextmenu event before our menu (and preventDefault) could run.
   const startFrameDrag = (e: MouseEvent, kind: 'move' | 'resize') => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || readOnly) {
+      return;
+    }
     const origin = canvasOrigin(e);
     dragTap?.set({
       kind, id: win.id,
@@ -111,14 +116,26 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
 
   // × closes the CURRENT tab; the frame goes only when its last tab does.
   const close = () => {
+    if (readOnly) {
+      return;
+    }
     const next = closeTab(windows, win.id, active.id);
     windowsTap?.set(next);
     if (!next.some((w) => w.id === win.id)) focusedTap?.set(next[next.length - 1]?.id ?? null);
   };
 
   const place = overview?.placement;
+  // Stable DOM anchors (G-1): the frame and its body say which window, tab and
+  // tool they show, so a capture, test or e2e driver finds them without
+  // depending on CSS classes.
+  const anchors = {
+    'data-gryth-window': win.id,
+    'data-gryth-tab': active.id,
+    'data-gryth-tool': active.facet,
+  };
   return (
     <section
+      {...anchors}
       className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attention === undefined ? '' : ' attention'}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
       style={{
         left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex: z,
@@ -146,19 +163,18 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
           {!docked && (
             <button
               title="Minimize"
+              disabled={readOnly}
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => windowsTap?.update((list) => minimizeWindow(list, win.id, true))}
             >–</button>
           )}
-          <button title="Close tab" onMouseDown={(e) => e.stopPropagation()} onClick={close}>×</button>
+          <button title="Close tab" disabled={readOnly} onMouseDown={(e) => e.stopPropagation()} onClick={close}>×</button>
         </span>
       </header>
-      <div className="gwin-body">
-        <GripProvider grok={grok} context={tabCtx}>
-          <Facet tabId={active.id} params={active.params} />
-        </GripProvider>
+      <div className="gwin-body" {...anchors}>
+        <ToolBody grok={grok} context={tabCtx} def={activeDef} tabId={active.id} params={active.params} />
       </div>
-      {!docked && (
+      {!docked && !readOnly && (
         <div className="gwin-resize" onMouseDown={(e) => { e.stopPropagation(); startFrameDrag(e, 'resize'); }} />
       )}
       {attention !== undefined && (

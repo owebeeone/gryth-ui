@@ -1,6 +1,7 @@
 import type { AtomTapHandle, Drip, Grok, MatchingContext, Tap } from '@owebeeone/grip-react';
 import type { TabLinkField, ToolDef } from '@grythjs/plugin-api';
 import { DESKTOP_WINDOWS, DESKTOP_WINDOWS_TAP, type TabRecord, type WindowRecord } from './grips.desktop';
+import { isOnDesktop } from './ops';
 
 // Chrome-held per-tab grip contexts — the contract's "the desktop creates a
 // child context per tab; that context IS the instance". The desktop holds
@@ -63,6 +64,39 @@ function startReaper(grok: Grok) {
 // Whether the desktop currently holds a context for this tab (tests, devtools).
 export function hasTabContext(tabId: string): boolean {
   return entries.has(tabId);
+}
+
+/** One tab's context, as `tabContextsOn` reports it. */
+export interface TabContextInfo {
+  tabId: string;
+  toolId: string;
+  params?: Record<string, unknown>;
+  source?: string;
+  context: MatchingContext;
+}
+
+// A READ-ONLY view of the chrome-held contexts on one desktop (G-6): every
+// tab of a frame on that desktop (sticky frames count on all; a docked frame
+// is where its foundation is) that the desktop holds a context for. Tabs that
+// have never been rendered have no context yet and are not listed. The map
+// itself stays private: nothing here can add, replace or retire an entry.
+export function tabContextsOn(desktop: number): TabContextInfo[] {
+  const windows = windowsDrip?.get() ?? [];
+  const out: TabContextInfo[] = [];
+  for (const w of windows) {
+    const host = w.dock === undefined ? w : (windows.find((f) => f.id === w.dock?.foundation) ?? w);
+    if (!isOnDesktop(host, desktop)) {
+      continue;
+    }
+    for (const t of w.tabs) {
+      const entry = entries.get(t.id);
+      if (entry === undefined) {
+        continue;
+      }
+      out.push({ tabId: t.id, toolId: t.facet, params: t.params, source: t.source, context: entry.ctx });
+    }
+  }
+  return out;
 }
 
 export function tabContextFor(

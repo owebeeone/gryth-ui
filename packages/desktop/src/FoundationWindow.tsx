@@ -100,6 +100,7 @@ export default function FoundationWindow({ win, rect }: {
   return (
     <section
       className="gwin foundation"
+      data-gryth-window={win.id}
       style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
     >
       {[...rects.entries()].map(([areaId, r]) => {

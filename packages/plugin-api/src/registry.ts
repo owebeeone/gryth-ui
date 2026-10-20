@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { createAtomValueTap, type AtomTapHandle, type Grip, type Tap } from '@owebeeone/grip-react';
 import { defineGrip } from './runtime';
 import type { TabLinkField } from './tabLink';
+import type { CommandDef, CommandId } from './commands';
 
 // The plugin registry is GRIP-KEYED (see dev-docs/GrythPluginContract.md):
 // each plugin's identity is its own typed grip, used as the KEY into one
@@ -112,6 +113,23 @@ export const DESKTOP_OPEN_WIRED_PAIR = defineGrip<OpenWiredPair>('Desktop.OpenWi
 export type PinTab = (tabId: string, params: Record<string, unknown>) => void;
 export const DESKTOP_PIN_TAB = defineGrip<PinTab>('Desktop.PinTab');
 
+// Shell-provided intent (G-7): open a tool on ANOTHER desktop and switch to
+// it — "open this in its own workspace". With no target a NEW desktop is
+// added and used. `desktop` names an existing desktop by number (a number the
+// desk does not have yet is added). `name` is a caller-chosen label for a
+// desktop this intent opened earlier: the first call under a name adds a
+// desktop and remembers it, later calls land on the same one, so several
+// windows can be opened onto one new workspace without the caller tracking
+// its number. `desktop` wins when both are given. The window is opened
+// through the same path `Desktop.OpenTool` takes (docked by role on a locked
+// desk) and revealed the same way. Returns the desktop the window landed on.
+export interface DesktopTarget {
+  desktop?: number;
+  name?: string;
+}
+export type OpenOnDesktop = (link: ToolLink, target?: DesktopTarget) => number;
+export const DESKTOP_OPEN_ON_DESKTOP = defineGrip<OpenOnDesktop>('Desktop.OpenOnDesktop');
+
 export interface ToolDef {
   label: string;                     // canonical text: measurement, a11y, agents
   defaultSize: { w: number; h: number };
@@ -129,13 +147,29 @@ export interface ToolDef {
   tabTaps?: (tabId: string, params?: Record<string, unknown>) => Tap[];
   /** Session destinations, mirrored bidirectionally through the tab record. */
   linkFields?: readonly TabLinkField[];
+  /**
+   * Whether this tool can render from FROZEN grip data, outside a live desk
+   * (G-4). `'full'`: the tool reads everything it shows through grips and has
+   * no side effect at mount that bypasses them, so a snapshot, preview or
+   * documentation renderer may mount it. `'inspect-only'`: it must not be
+   * mounted there; the renderer shows its captured values instead.
+   * Undeclared means inspect-only to any renderer that mounts tools outside a
+   * live desk (fail-closed), unless that renderer's host policy says
+   * otherwise. The live desktop ignores this field.
+   */
+  replay?: ToolReplay;
 }
+
+/** A tool's replay declaration (see `ToolDef.replay`). */
+export type ToolReplay = 'full' | 'inspect-only';
 
 // The plugin object a plugin publishes under its grip. Window-instantiable
 // tools are advertised here; root taps are REGISTERED (the ordinary way,
 // into the context graph), not advertised.
 export interface GrythPlugin {
   tools?: Record<ToolId, ToolDef>;
+  /** App-level commands (G-5): the shell lists them and binds their hotkeys. */
+  commands?: Record<CommandId, CommandDef>;
 }
 
 export type PluginRegistry = ReadonlyMap<Grip<unknown>, unknown>;
@@ -186,6 +220,22 @@ export function allTools(registry: PluginRegistry | undefined): Record<ToolId, T
   for (const entry of registry.values()) {
     const tools = (entry as GrythPlugin | undefined)?.tools;
     if (tools) Object.assign(out, tools);
+  }
+  return out;
+}
+
+// Flatten every entry's commands into one CommandId → CommandDef lookup — the
+// same shape and the same collision rule as `allTools`.
+export function allCommands(registry: PluginRegistry | undefined): Record<CommandId, CommandDef> {
+  const out: Record<CommandId, CommandDef> = {};
+  if (!registry) {
+    return out;
+  }
+  for (const entry of registry.values()) {
+    const commands = (entry as GrythPlugin | undefined)?.commands;
+    if (commands) {
+      Object.assign(out, commands);
+    }
   }
   return out;
 }
