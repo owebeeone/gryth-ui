@@ -12,7 +12,7 @@ import {
   SIDEBAR_WIDTH, SIDEBAR_WIDTH_TAP,
   DESKTOP_THEME, DESKTOP_WALLPAPER, DESKTOP_WALLPAPER_THEMED,
   DESKTOP_ZOOM, DESKTOP_FONT_SCALE,
-  DESKTOP_GRID_MEMORY_TAP, DESKTOP_FOUNDATION_PRESET,
+  DESKTOP_TOGGLE_LAYOUT,
   WINDOW_DRAG, WINDOW_DRAG_TAP,
   WINDOW_MENU, WINDOW_MENU_TAP,
   AREA_MENU, AREA_MENU_TAP,
@@ -23,19 +23,18 @@ import {
 } from './grips.desktop';
 import {
   desktopIds, nextDesktopId, desktopIsEmpty,
-  areaOccupants, captureGrid, childLeafIds, closeArea, closeFoundation,
+  areaOccupants, childLeafIds, closeArea,
   detachTab, dockOrMerge, foundationOn, frameStack,
   hitTitlebar, isOnDesktop, mergeWindows, minimizeWindow, moveTab,
-  moveWindow, moveWindowFree, openFoundation, overviewLayout,
+  moveWindow, moveWindowFree, overviewLayout,
   placeWindows, probeArea, raiseWindow, resizeWindow, selectTab, sendToDesktop,
   setSplitSizes, setSticky, snapWindow, splitArea, undockWindow, unsnapWindow,
   dragOverlayClass,
   type Rect,
 } from './ops';
-import { resolveTool, toolRoles } from './facets';
+import { resolveTool } from './facets';
 import { SCHEME_WALLPAPERS, THEMES } from './themes';
 import { wallpaperPan } from './wallpaper';
-import { HUB } from './foundations';
 import { observeCanvas } from './canvasGuard';
 import { bleedRect, tickerWidths } from './ticker';
 import { bleedCancel, bleedHold, bleedLeave } from './tickerBleed';
@@ -99,10 +98,13 @@ const EDGE_BAND = 28;
 
 export default function Desktop() {
   const applicationSidebar = useGrip(DESKTOP_APPLICATION_SIDEBAR);
-  const debugSidebar = useGrip(DESKTOP_DEBUG_SIDEBAR) ?? false;
+  const requestedDebugSidebar = useGrip(DESKTOP_DEBUG_SIDEBAR) ?? false;
+  const allowDebugSidebar = applicationSidebar?.allowDebugSidebar !== false;
+  const debugSidebar = allowDebugSidebar && requestedDebugSidebar;
   const debugSidebarTap = useGrip(DESKTOP_DEBUG_SIDEBAR_TAP);
   const ApplicationContent = applicationSidebar?.Content;
   const applicationMode = !!ApplicationContent && !debugSidebar;
+  const ApplicationNavigation = applicationMode ? applicationSidebar?.Navigation : undefined;
   const windows = useGrip(DESKTOP_WINDOWS) ?? [];
   const windowsTap = useGrip(DESKTOP_WINDOWS_TAP);
   const focused = useGrip(DESKTOP_FOCUSED) ?? null;
@@ -131,9 +133,7 @@ export default function Desktop() {
   const wallpaperThemed = useGrip(DESKTOP_WALLPAPER_THEMED) ?? true;
   const uiZoom = useGrip(DESKTOP_ZOOM) ?? 1;
   const fontScale = useGrip(DESKTOP_FONT_SCALE) ?? 10;
-  const gridMemoryTap = useGrip(DESKTOP_GRID_MEMORY_TAP);
-  // The pane preset a lock opens: the target's, when it named one.
-  const preset = useGrip(DESKTOP_FOUNDATION_PRESET) ?? HUB;
+  const toggleLayout = useGrip(DESKTOP_TOGGLE_LAYOUT);
   const canvas = useGrip(CANVAS_SIZE) ?? { w: 0, h: 0 };
   const canvasTap = useGrip(CANVAS_SIZE_TAP);
   const bleed = useGrip(TICKER_BLEED) ?? null;
@@ -542,21 +542,8 @@ export default function Desktop() {
   // assignments (grid memory); re-locking restores them, with newcomers
   // adopted by designation, then by the tool's own role, then the fallback.
   const toggleGrid = (desk: number) => {
-    const wins = windowsTap?.get() ?? [];
-    const f = foundationOn(wins, desk);
-    if (f) {
-      const stash = captureGrid(wins, desk);
-      if (stash) gridMemoryTap?.update((m) => ({ ...m, [desk]: stash }));
-      const next = closeFoundation(wins, f.id);
-      windowsTap?.set(next);
-      focusTopVisible(next, currentTap?.get() ?? 1);
-    } else {
-      const stash = (gridMemoryTap?.get() ?? {})[desk];
-      const out = openFoundation(wins, desk, stash?.def ?? preset, stash?.assignments ?? {}, toolRoles(defs));
-      windowsTap?.set(out.list);
-      focusTopVisible(out.list, currentTap?.get() ?? 1);
-    }
-    overviewTap?.set(null);
+    toggleLayout?.(desk);
+    focusTopVisible(windowsTap?.get() ?? [], currentTap?.get() ?? 1);
   };
 
   const splitFromMenu = (foundationId: string, areaId: string, direction: 'row' | 'column') => {
@@ -693,7 +680,7 @@ export default function Desktop() {
 
   return (
     <div
-      className="desktop"
+      className={`desktop${ApplicationNavigation ? ' application-navigation' : ''}`}
       data-gryth-desktop={current}
       tabIndex={0}
       ref={focusOnMount}
@@ -707,14 +694,14 @@ export default function Desktop() {
         fontSize: `${(fontScale * 15) / 10}px`,
       } as CSSProperties}
     >
-      {sidebarOpen ? (
+      {ApplicationNavigation ? <ApplicationNavigation /> : sidebarOpen ? (
         <aside className="sidebar" style={{ width: sidebarWidth }}>
           <div className="sidebar-resize" onMouseDown={startSidebarDrag} />
           <div className="sidebar-head">
             <span className="sidebar-brand">{applicationMode ? applicationSidebar!.brand : 'gryth'}</span>
             <button className="sidebar-toggle" title="Collapse sidebar" onClick={() => sidebarTap?.set(false)}>&lt;</button>
           </div>
-          {ApplicationContent && <label className="sidebar-debug-switch"><input type="checkbox"
+          {ApplicationContent && allowDebugSidebar && <label className="sidebar-debug-switch"><input type="checkbox"
             checked={debugSidebar} onChange={(e) => debugSidebarTap?.set(e.currentTarget.checked)} /> Gryth debug sidebar</label>}
           {applicationMode ? <div className="sidebar-launcher application-sidebar"><ApplicationContent /></div> : <nav className="sidebar-launcher">
             {Object.keys(defs).filter((kind) => kind !== 'grid').map((kind) => {
@@ -783,7 +770,7 @@ export default function Desktop() {
       ) : (
         <aside className="sidebar closed">
           <button className="sidebar-toggle" title="Expand sidebar" onClick={() => sidebarTap?.set(true)}>&gt;</button>
-          {ApplicationContent && <label className="sidebar-debug-switch" title="Gryth debug sidebar"><input type="checkbox"
+          {ApplicationContent && allowDebugSidebar && <label className="sidebar-debug-switch" title="Gryth debug sidebar"><input type="checkbox"
             aria-label="Gryth debug sidebar" checked={debugSidebar} onChange={(e) => debugSidebarTap?.set(e.currentTarget.checked)} /></label>}
           {desktopIcons}
         </aside>

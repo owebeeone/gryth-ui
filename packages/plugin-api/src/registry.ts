@@ -134,6 +134,9 @@ export interface ToolDef {
   label: string;                     // canonical text: measurement, a11y, agents
   defaultSize: { w: number; h: number };
   role?: string;                     // foundations map roles → areas
+  /** Opt in to an overlaid handle/close control for a single docked view.
+   * Floating and tabbed frames retain full shell chrome and tab navigation. */
+  compactChrome?: boolean;
   menuTitle?: GripComponentFactory;  // launcher entry; label renders when absent
   tabTitle?: GripComponentFactory;   // ticker segment; label renders when absent
   windowComponent: ToolView;         // prop-less components remain assignable
