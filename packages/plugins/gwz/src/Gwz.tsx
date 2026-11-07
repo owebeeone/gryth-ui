@@ -1,6 +1,6 @@
-import { useGrip } from '@owebeeone/grip-react';
+import { GripInput, useGrip } from '@owebeeone/grip-react';
 import { GLADE_STATUS, principal } from '@grythjs/glade';
-import { GWZ_RESULT, GWZ_RUN_ID, GWZ_STREAM, GWZ_VERB, GWZ_VERB_TAP, GWZ_VERBS } from './grips';
+import { GWZ_ARGS, GWZ_ARGS_TAP, GWZ_RESULT, GWZ_RUN_ID, GWZ_STREAM, GWZ_VERB, GWZ_VERB_TAP, GWZ_VERBS } from './grips';
 import { runGwz } from './live';
 
 // Gwz panel (GLP-0006 P1.S4) — a thin projection over grips, no React state
@@ -8,7 +8,7 @@ import { runGwz } from './live';
 // answer is GWZ_RESULT; the run is GWZ_STREAM (a live glial mount on
 // gwz.output). ONE run button, and it streams: the exchange only accepts or
 // refuses, and the run's output and its done marker arrive on the log. The args
-// box is uncontrolled (read on run). Failure is data: a disallowed verb comes
+// box uses a per-tab buffered grip (read on run). Failure is data: a disallowed verb comes
 // back {ok:false,error}, surfaced, never a hang.
 
 /** Split the args box into an argv (whitespace-separated, empties dropped). */
@@ -52,7 +52,7 @@ export function Gwz() {
           void runGwz(verb, readArgs(e.currentTarget));
         }}
       >
-        <input name="args" placeholder={`args for ${verb} (optional)…`} autoComplete="off" />
+        <GripInput grip={GWZ_ARGS} tapGrip={GWZ_ARGS_TAP} name="args" placeholder={`args for ${verb} (optional)…`} autoComplete="off" />
         <button type="submit">run</button>
         <button
           type="button"

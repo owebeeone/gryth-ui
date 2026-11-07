@@ -5,6 +5,10 @@ import { defineGrip, type GrythPlugin } from '@grythjs/plugin-api';
 // The plugin's identity grip (the registry key).
 export const GWZ_PLUGIN = defineGrip<GrythPlugin>('Gwz.Plugin');
 
+// Command arguments are an instance draft owned by this tool window.
+export const GWZ_ARGS = defineGrip<string>('Gwz.Args', '');
+export const GWZ_ARGS_TAP = defineGrip<AtomTapHandle<string>>('Gwz.Args.Tap');
+
 /** The stage-1 read-only allow-list the glade-gwz supplier honors (exec.rs). The
  *  picker is limited to these; anything else the supplier refuses AS DATA. */
 export const GWZ_VERBS = ['status', 'ls', 'diff'] as const;

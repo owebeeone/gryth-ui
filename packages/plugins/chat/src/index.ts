@@ -1,6 +1,6 @@
 import { createAtomValueTap } from '@owebeeone/grip-react';
 import { addEntry, tabLinkField } from '@grythjs/plugin-api';
-import { CHAT_PLUGIN, CHAT_GROUP, CHAT_GROUP_TAP } from './grips';
+import { CHAT_PLUGIN, CHAT_GROUP, CHAT_GROUP_TAP, CHAT_DRAFT, CHAT_DRAFT_TAP } from './grips';
 import { CHAT_GROUPS } from './groups';
 import { registerChatLive } from './live';
 import { Chat } from './Chat';
@@ -26,6 +26,7 @@ addEntry(CHAT_PLUGIN, {
       // per-tab: which group THIS window is viewing.
       tabTaps: () => [
         createAtomValueTap(CHAT_GROUP, { initial: CHAT_GROUPS[0]!.id, handleGrip: CHAT_GROUP_TAP }),
+        createAtomValueTap(CHAT_DRAFT, { initial: '', handleGrip: CHAT_DRAFT_TAP }),
       ],
     },
   },

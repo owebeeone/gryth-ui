@@ -1,4 +1,4 @@
-import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import { GripInput, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import {
   DESKTOP_OPEN_TOOL, DESKTOP_OPEN_WIRED, DESKTOP_RETARGET_TAB,
 } from '@grythjs/plugin-api';
@@ -114,11 +114,12 @@ export function BrowserChrome({ tabId, search, nextUp }: {
         </label>
         <label className="gyld-chrome-field gyld-chrome-search">
           search
-          <input
+          <GripInput
             type="text"
             className="gyld-search"
             placeholder="label or qualified slot"
-            value={query}
+            grip={GYLD_TAB_SEARCH} tapGrip={GYLD_TAB_SEARCH_TAP}
+          format={() => query} parse={() => undefined}
             onChange={(event) => searchTap?.set(event.target.value)}
           />
         </label>

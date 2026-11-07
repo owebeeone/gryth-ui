@@ -1,4 +1,4 @@
-import { useGrip } from '@owebeeone/grip-react';
+import { GripInput, useGrip } from '@owebeeone/grip-react';
 import { GRYTH_READ_ONLY } from '@grythjs/plugin-api';
 import {
   DESKTOP_THEME, DESKTOP_THEME_TAP,
@@ -18,8 +18,6 @@ import { APPEARANCE_FOLLOWS, DESK_SESSION } from './grips';
 export function Settings() {
   const theme = useGrip(DESKTOP_THEME) ?? 'light';
   const themeTap = useGrip(DESKTOP_THEME_TAP);
-  const wallpaper = useGrip(DESKTOP_WALLPAPER) ?? '';
-  const wallpaperTap = useGrip(DESKTOP_WALLPAPER_TAP);
   const wallpaperThemed = useGrip(DESKTOP_WALLPAPER_THEMED) ?? true;
   const wallpaperThemedTap = useGrip(DESKTOP_WALLPAPER_THEMED_TAP);
   const zoom = useGrip(DESKTOP_ZOOM) ?? 1;
@@ -81,13 +79,13 @@ export function Settings() {
         />
         Use the theme&apos;s wallpaper
       </label>
-      <input
+      <GripInput
         type="text"
         className="settings-input"
         placeholder="https://… custom image URL (overrides the theme wallpaper)"
-        value={wallpaper}
+        grip={DESKTOP_WALLPAPER}
+        tapGrip={DESKTOP_WALLPAPER_TAP}
         disabled={readOnly}
-        onChange={(e) => wallpaperTap?.set(e.target.value)}
       />
       <h3>Desk</h3>
       {follows === undefined ? (

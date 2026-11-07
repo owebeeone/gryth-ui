@@ -1,5 +1,6 @@
 import { addEntry } from '@grythjs/plugin-api';
-import { GWZ_PLUGIN } from './grips';
+import { createAtomValueTap } from '@owebeeone/grip-react';
+import { GWZ_PLUGIN, GWZ_ARGS, GWZ_ARGS_TAP } from './grips';
 import { registerGwzLive } from './live';
 import { Gwz } from './Gwz';
 import './gwz.css';
@@ -19,6 +20,7 @@ addEntry(GWZ_PLUGIN, {
       defaultSize: { w: 560, h: 460 },
       role: 'crew',
       windowComponent: Gwz,
+      tabTaps: () => [createAtomValueTap(GWZ_ARGS, { initial: '', handleGrip: GWZ_ARGS_TAP })],
     },
   },
 });

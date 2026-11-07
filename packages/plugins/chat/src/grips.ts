@@ -11,3 +11,7 @@ export const CHAT_PLUGIN = defineGrip<GrythPlugin>('Chat.Plugin');
 // this handle; the panel then reads that group's shared line-list grip.
 export const CHAT_GROUP = defineGrip<string>('Chat.Group', 'general');
 export const CHAT_GROUP_TAP = defineGrip<AtomTapHandle<string>>('Chat.Group.Tap');
+
+// The message being composed belongs to this window, not the shared chat log.
+export const CHAT_DRAFT = defineGrip<string>('Chat.Draft', '');
+export const CHAT_DRAFT_TAP = defineGrip<AtomTapHandle<string>>('Chat.Draft.Tap');

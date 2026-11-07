@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useGrip } from '@owebeeone/grip-react';
+import { GripInput, useGrip } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_WIRED, type ToolViewProps } from '@grythjs/plugin-api';
 import { WTA, WTA_TAP, SOURCE_ACCENT, WORKSPACES, MOCK_TREE } from './grips';
 
@@ -34,9 +34,10 @@ export function Explorer({ tabId }: ToolViewProps) {
         <select value={workspace} onChange={(e) => setWorkspace(e.target.value)}>
           {WORKSPACES.map((ws) => <option key={ws} value={ws}>{ws}</option>)}
         </select>
-        <input
+        <GripInput
           className="src-ref"
-          value={ref}
+          grip={WTA} tapGrip={WTA_TAP}
+          format={() => ref} parse={() => undefined}
           spellCheck={false}
           onChange={(e) => setRef(e.target.value)}
           title="branch / tag / commit"

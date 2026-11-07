@@ -1,4 +1,4 @@
-import { GripProvider, createAtomValueTap, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import { GripInput, GripProvider, createAtomValueTap, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import { grok, type ToolViewProps } from '@grythjs/plugin-api';
 import type { GyldValidation } from '../contract';
 import {
@@ -234,11 +234,12 @@ function NewStreamForm({ parents }: { parents: string[] }) {
         </label>
         <label className="gyld-chrome-field">
           name
-          <input
+          <GripInput
             type="text"
             className="gyld-stream-name"
             placeholder="keys-2026-09-13"
-            value={draft.name}
+            grip={GYLD_STREAM_DRAFT} tapGrip={GYLD_STREAM_DRAFT_TAP}
+          format={() => draft.name} parse={() => undefined}
             onChange={(event) => draftTap?.update((held) => ({
               ...held, name: event.target.value,
             }))}

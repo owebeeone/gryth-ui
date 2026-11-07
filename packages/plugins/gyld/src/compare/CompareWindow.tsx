@@ -1,4 +1,4 @@
-import { GripProvider, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import { GripInput, GripProvider, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import { grok, type ToolViewProps } from '@grythjs/plugin-api';
 import type {
   CostReport, EvaluationFuture, EvaluationSide, EvidenceRecord, GyldComparison,
@@ -59,11 +59,12 @@ function CompareChrome({ run }: { run: GyldEvaluatorRun | undefined }) {
     <div className="gyld-chrome-row">
       <label className="gyld-chrome-field gyld-compare-run">
         run
-        <input
+        <GripInput
           type="text"
           className="gyld-run-url"
           placeholder="the URL an evaluator run directory is served from"
-          value={draft}
+          grip={GYLD_RUN_DRAFT} tapGrip={GYLD_RUN_DRAFT_TAP}
+          format={() => draft} parse={() => undefined}
           onChange={(event) => draftTap?.set(event.target.value)}
         />
       </label>

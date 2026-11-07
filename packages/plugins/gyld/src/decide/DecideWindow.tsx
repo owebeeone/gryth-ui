@@ -1,4 +1,4 @@
-import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import { GripInput, GripTextarea, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import type { DecideNowQuestion, GyldValidation, ValidationFinding } from '../contract';
 import {
   GYLD_ANSWER_DRAFT, GYLD_ANSWER_DRAFT_TAP, GYLD_ANSWER_EXPORT, GYLD_ANSWER_EXPORT_TAP,
@@ -221,11 +221,12 @@ function AnswerForm({ target, rows, reason }: {
       )}
       <label className="gyld-chrome-field">
         principal
-        <input
+        <GripInput
           type="text"
           className="gyld-answer-principal"
           placeholder="who this ruling is recorded for"
-          value={draft.principal}
+          grip={GYLD_ANSWER_DRAFT} tapGrip={GYLD_ANSWER_DRAFT_TAP}
+          format={() => draft.principal} parse={() => undefined}
           onChange={(event) => draftTap?.update((held) => ({
             ...held, principal: event.target.value,
           }))}
@@ -233,11 +234,12 @@ function AnswerForm({ target, rows, reason }: {
       </label>
       <label className="gyld-chrome-field">
         stamp
-        <input
+        <GripInput
           type="text"
           className="gyld-answer-stamp"
           placeholder="2026-09-13T01:00:00Z"
-          value={draft.stamp}
+          grip={GYLD_ANSWER_DRAFT} tapGrip={GYLD_ANSWER_DRAFT_TAP}
+          format={() => draft.stamp} parse={() => undefined}
           onChange={(event) => draftTap?.update((held) => ({
             ...held, stamp: event.target.value,
           }))}
@@ -245,10 +247,11 @@ function AnswerForm({ target, rows, reason }: {
       </label>
       <label className="gyld-chrome-field gyld-decide-wide">
         sources, one per line
-        <textarea
+        <GripTextarea
           className="gyld-answer-sources"
           rows={2}
-          value={draft.sources}
+          grip={GYLD_ANSWER_DRAFT} tapGrip={GYLD_ANSWER_DRAFT_TAP}
+          format={() => draft.sources} parse={() => undefined}
           onChange={(event) => draftTap?.update((held) => ({
             ...held, sources: event.target.value,
           }))}
@@ -273,11 +276,12 @@ function AnswerForm({ target, rows, reason }: {
       )}
       <label className="gyld-chrome-field gyld-decide-wide">
         ruling
-        <textarea
+        <GripTextarea
           className="gyld-answer-text"
           rows={3}
           placeholder="what was ruled, and on what evidence"
-          value={draft.text}
+          grip={GYLD_ANSWER_DRAFT} tapGrip={GYLD_ANSWER_DRAFT_TAP}
+          format={() => draft.text} parse={() => undefined}
           // The reader's own words from here on: the mark goes the moment
           // they change what the agent wrote (section 8).
           onChange={(event) => draftTap?.update((held) => edited(held, {
@@ -399,11 +403,12 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
       <h4>Ask a new question</h4>
       <label className="gyld-chrome-field">
         class
-        <input
+        <GripInput
           type="text"
           className="gyld-ask-symbol"
           placeholder="PinAudit"
-          value={draft.symbol}
+          grip={GYLD_ASK_DRAFT} tapGrip={GYLD_ASK_DRAFT_TAP}
+          format={() => draft.symbol} parse={() => undefined}
           onChange={(event) => draftTap?.update((held) => ({
             ...held, symbol: event.target.value,
           }))}
@@ -411,11 +416,12 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
       </label>
       <label className="gyld-chrome-field">
         member
-        <input
+        <GripInput
           type="text"
           className="gyld-ask-label"
           placeholder="pin_audit"
-          value={draft.label}
+          grip={GYLD_ASK_DRAFT} tapGrip={GYLD_ASK_DRAFT_TAP}
+          format={() => draft.label} parse={() => undefined}
           onChange={(event) => draftTap?.update((held) => ({
             ...held, label: event.target.value,
           }))}
@@ -423,11 +429,12 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
       </label>
       <label className="gyld-chrome-field gyld-decide-wide">
         docstring
-        <textarea
+        <GripTextarea
           className="gyld-ask-docstring"
           rows={2}
           placeholder="the question itself, in one line"
-          value={draft.docstring}
+          grip={GYLD_ASK_DRAFT} tapGrip={GYLD_ASK_DRAFT_TAP}
+          format={() => draft.docstring} parse={() => undefined}
           onChange={(event) => draftTap?.update((held) => ({
             ...held, docstring: event.target.value,
           }))}
@@ -473,25 +480,28 @@ function AskForm({ target, rows }: { target: OverlayTarget | undefined; rows: De
             the row is. */}
         {draft.alternatives.map((alternative, index) => (
           <div key={`alternative-${index}`} className="gyld-ask-alternative">
-            <input
+            <GripInput
               type="text"
               className="gyld-ask-alt-symbol"
               placeholder="AuditOnBump"
-              value={alternative.symbol}
+              grip={GYLD_ASK_DRAFT} tapGrip={GYLD_ASK_DRAFT_TAP}
+          format={() => alternative.symbol} parse={() => undefined}
               onChange={(event) => setAlternative(index, { symbol: event.target.value })}
             />
-            <input
+            <GripInput
               type="text"
               className="gyld-ask-alt-label"
               placeholder="audit_on_bump"
-              value={alternative.label}
+              grip={GYLD_ASK_DRAFT} tapGrip={GYLD_ASK_DRAFT_TAP}
+          format={() => alternative.label} parse={() => undefined}
               onChange={(event) => setAlternative(index, { label: event.target.value })}
             />
-            <input
+            <GripInput
               type="text"
               className="gyld-ask-alt-description"
               placeholder="one line"
-              value={alternative.description}
+              grip={GYLD_ASK_DRAFT} tapGrip={GYLD_ASK_DRAFT_TAP}
+          format={() => alternative.description} parse={() => undefined}
               onChange={(event) => setAlternative(index, { description: event.target.value })}
             />
             <label className="gyld-decide-offer">

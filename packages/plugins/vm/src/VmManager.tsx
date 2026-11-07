@@ -1,4 +1,4 @@
-import { useGrip } from '@owebeeone/grip-react';
+import { GripInput, useGrip } from '@owebeeone/grip-react';
 import { DESKTOP_OPEN_TOOL } from '@grythjs/plugin-api';
 import {
   VM_BASES, VM_BASES_TAP,
@@ -115,9 +115,10 @@ export function VmManager() {
       <section className="vm-section">
         <h3>Create machine</h3>
         <div className="vm-form">
-          <input
+          <GripInput
             placeholder="machine name"
-            value={name}
+            grip={VM_FORM_NAME} tapGrip={VM_FORM_NAME_TAP}
+          format={() => name} parse={() => undefined}
             onChange={(e) => nameTap?.set(e.target.value)}
           />
           <select value={profile} onChange={(e) => profileTap?.set(e.target.value)}>
@@ -152,9 +153,10 @@ export function VmManager() {
           </div>
         ))}
         <div className="vm-form">
-          <input
+          <GripInput
             placeholder="new base name"
-            value={baseName}
+            grip={VM_FORM_BASE_NAME} tapGrip={VM_FORM_BASE_NAME_TAP}
+          format={() => baseName} parse={() => undefined}
             onChange={(e) => baseNameTap?.set(e.target.value)}
           />
           <button onClick={build}>Build base</button>

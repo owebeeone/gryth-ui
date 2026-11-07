@@ -1,13 +1,13 @@
-import { useGrip } from '@owebeeone/grip-react';
+import { GripInput, useGrip } from '@owebeeone/grip-react';
 import { GLADE_STATUS, principal } from '@grythjs/glade';
-import { CHAT_GROUP, CHAT_GROUP_TAP } from './grips';
+import { CHAT_GROUP, CHAT_GROUP_TAP, CHAT_DRAFT, CHAT_DRAFT_TAP } from './grips';
 import { CHAT_GROUPS, groupLabel, groupListGrip } from './groups';
 import { postToGroup } from './live';
 
 // Chat panel (GLP-0006 P1.S4) — a thin projection over grips, no React state
 // hook. The selected group is a PER-TAB grip atom (seeded via tabTaps); the
 // message list is the selected group's GLOBAL glial log mount (live.ts); the
-// compose box is uncontrolled (posting is a client append — postToGroup stamps
+// compose box is a per-tab buffered grip (posting is a client append — postToGroup stamps
 // the ChatLine attributed to the acting principal). Two participants converge
 // on the same keyed commons log: two `?principal=` names, or two browser
 // contexts where no grazel names the desk's principal.
@@ -15,6 +15,7 @@ import { postToGroup } from './live';
 export function Chat() {
   const group = useGrip(CHAT_GROUP) ?? CHAT_GROUPS[0]!.id;
   const groupTap = useGrip(CHAT_GROUP_TAP);
+  const draftTap = useGrip(CHAT_DRAFT_TAP);
   const lines = useGrip(groupListGrip(group)) ?? [];
   const status = useGrip(GLADE_STATUS);
 
@@ -55,12 +56,18 @@ export function Chat() {
           const input = e.currentTarget.elements.namedItem('msg') as HTMLInputElement;
           const text = input.value.trim();
           if (text) {
+            input.blur();
             postToGroup(group, text);
-            input.value = '';
+            draftTap?.set('');
+            requestAnimationFrame(() => {
+              if (input.isConnected) {
+                input.focus();
+              }
+            });
           }
         }}
       >
-        <input name="msg" type="text" placeholder={`Message ${groupLabel(group)}…`} autoComplete="off" />
+        <GripInput grip={CHAT_DRAFT} tapGrip={CHAT_DRAFT_TAP} name="msg" type="text" placeholder={`Message ${groupLabel(group)}…`} autoComplete="off" />
         <button type="submit">Send</button>
       </form>
     </div>

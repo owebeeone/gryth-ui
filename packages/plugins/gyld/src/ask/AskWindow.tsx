@@ -1,4 +1,4 @@
-import { useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
+import { GripTextarea, useGrip, type AtomTapHandle } from '@owebeeone/grip-react';
 import type { GyldSources } from '../contract';
 import {
   GYLD_ASK_STREAM, GYLD_BUNDLE, GYLD_DECIDE_NOW, GYLD_DEST_PERSPECTIVE, GYLD_DEST_REF,
@@ -334,16 +334,15 @@ export function AskWindow() {
             jump to latest ↓
           </button>
         )}
-        <textarea
+        <GripTextarea
           className="gyld-ask-draft"
           rows={2}
-          value={question}
+          grip={GYLD_TAB_ASK_DRAFT} tapGrip={GYLD_TAB_ASK_DRAFT_TAP}
           // One box for the first question and every follow-up, and it is shut
           // while a turn is in flight with the reason where the reader is
           // looking.
           disabled={draftTap === undefined || busy !== undefined}
           placeholder={composerSays(busy, answered)}
-          onChange={(event) => draftTap?.set(event.target.value)}
           onKeyDown={(event) => {
             const sends = sendsOnKey({
               key: event.key,
@@ -358,6 +357,7 @@ export function AskWindow() {
             }
             // Never a newline as well as a send.
             event.preventDefault();
+            event.currentTarget.blur();
             send();
           }}
         />

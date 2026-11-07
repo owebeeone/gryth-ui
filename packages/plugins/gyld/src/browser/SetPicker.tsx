@@ -1,4 +1,4 @@
-import { useGrip } from '@owebeeone/grip-react';
+import { GripInput, useGrip } from '@owebeeone/grip-react';
 import {
   GYLD_LANDING, GYLD_PICKER_ERROR, GYLD_PICKER_ERROR_TAP, GYLD_PICKER_URL,
   GYLD_PICKER_URL_TAP, GYLD_SET, GYLD_SET_TAP, GYLD_STORE_STATUS,
@@ -144,14 +144,16 @@ export function SetPicker() {
         className="gyld-picker-row"
         onSubmit={(event) => {
           event.preventDefault();
+          event.currentTarget.querySelector<HTMLInputElement>('.gyld-picker-url')?.blur();
           addUrl();
         }}
       >
-        <input
+        <GripInput
           type="text"
           className="gyld-picker-url"
           placeholder="http://localhost:8000"
-          value={url}
+          grip={GYLD_PICKER_URL} tapGrip={GYLD_PICKER_URL_TAP}
+          format={() => url} parse={() => undefined}
           onChange={(event) => urlTap?.set(event.target.value)}
         />
         <button type="submit" disabled={setTap === undefined}>Add static root</button>

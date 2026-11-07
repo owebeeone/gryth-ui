@@ -14,6 +14,17 @@ const bannedHookRules = BANNED_HOOKS.flatMap((hook) => [
   { selector: `ImportSpecifier[imported.name='${hook}']`, message: `Do not import ${hook} — model state with grips/taps (see dev-docs/CodingRules.md).` },
 ])
 
+const bufferedInputRules = [
+  {
+    selector: "JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value=/^(checkbox|radio|range|file|color|button|submit|reset|hidden)$/]))",
+    message: 'Use GripInput, BufferedField or NumberField for editable text and numbers so GRIP updates preserve the caret.',
+  },
+  {
+    selector: "JSXOpeningElement[name.name='textarea']:not(:has(JSXAttribute[name.name='readOnly'][value=null]))",
+    message: 'Use GripTextarea so GRIP updates preserve the focused edit buffer and caret.',
+  },
+]
+
 export default tseslint.config([
   globalIgnores(['dist', 'dist-gyld']),
   {
@@ -29,7 +40,7 @@ export default tseslint.config([
       globals: globals.browser,
     },
     rules: {
-      'no-restricted-syntax': ['error', ...bannedHookRules],
+      'no-restricted-syntax': ['error', ...bannedHookRules, ...bufferedInputRules],
     },
   },
 ])
