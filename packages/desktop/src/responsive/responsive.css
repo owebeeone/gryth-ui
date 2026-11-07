@@ -1,0 +1,25 @@
+.responsive-workspace { position: absolute; inset: 0; overflow: hidden; }
+.responsive-group { position: absolute; box-sizing: border-box; border: 2px solid var(--border, #8886); border-radius: 5px; background: var(--surface, Canvas); }
+.responsive-group.focused { border-color: var(--accent, #3679d0); }
+.responsive-header { height: 36px; display: flex; align-items: stretch; gap: 2px; padding: 0 2px; min-width: 0; }
+.responsive-header button, .responsive-header select { min-width: 30px; min-height: 34px; color: inherit; background: transparent; border: 0; border-radius: 3px; font: inherit; }
+.responsive-header button:hover { background: #8883; }
+.responsive-handle { touch-action: none; cursor: grab; }
+.responsive-tabs { display: flex; flex: 1; min-width: 0; overflow: hidden; }
+.responsive-tabs button { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-inline: 8px; }
+.responsive-tabs button[aria-selected=true] { background: #708ab82b; border-bottom: 3px solid var(--accent, #3679d0); font-weight: bold; }
+.responsive-body { position: absolute; box-sizing: border-box; overflow: auto; background: var(--surface, Canvas); min-width: 0; min-height: 0; }
+.responsive-body[hidden] { display: none !important; }
+.responsive-splitter { position: absolute; z-index: 5; touch-action: none; }
+.responsive-splitter.row { cursor: col-resize; }
+.responsive-splitter.column { cursor: row-resize; }
+.responsive-splitter:hover, .responsive-splitter:focus-visible { background: #3679d055; }
+.responsive-empty { padding: 12px; opacity: .7; }
+.responsive-drop-preview { position: absolute; pointer-events: none; z-index: 6; background: #3679d044; border: 3px solid #3679d0; box-sizing: border-box; }
+.responsive-menu { position: absolute; z-index: 10; inset: 42px 8px auto auto; max-width: min(440px, calc(100% - 16px)); max-height: calc(100% - 50px); overflow: auto; padding: 12px; background: var(--surface, Canvas); color: var(--text, CanvasText); border: 1px solid #888; border-radius: 6px; box-shadow: 0 4px 18px #0004; }
+.responsive-menu fieldset { margin-block: 8px; }
+.responsive-menu button { min-height: 36px; margin: 2px; }
+@media (pointer: coarse) {
+  .responsive-header button, .responsive-header select { min-width: 34px; }
+  .responsive-tabs button { min-width: 0; }
+}

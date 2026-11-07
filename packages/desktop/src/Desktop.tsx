@@ -1,3 +1,5 @@
+import ResponsiveWorkspace from './responsive/ResponsiveWorkspace';
+import { RESPONSIVE_ACTIONS } from './responsive/runtime';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { useGrip } from '@owebeeone/grip-react';
 import { PLUGIN_REGISTRY, allCommands, allTools, grok, DESKTOP_OPEN_TOOL, WORKSPACE_NAME, type CommandDef } from '@grythjs/plugin-api';
@@ -97,6 +99,7 @@ const splitHalf = (r: Rect, edge: AreaEdge): Rect => (
 const EDGE_BAND = 28;
 
 export default function Desktop() {
+  const responsive = useGrip(RESPONSIVE_ACTIONS);
   const applicationSidebar = useGrip(DESKTOP_APPLICATION_SIDEBAR);
   const requestedDebugSidebar = useGrip(DESKTOP_DEBUG_SIDEBAR) ?? false;
   const allowDebugSidebar = applicationSidebar?.allowDebugSidebar !== false;
@@ -784,6 +787,7 @@ export default function Desktop() {
             a frame is dragged over the sidebar, and the panning layer inside
             here is wider than the canvas, so it needs a box that never does. */}
         <div className="desktop-wallpaper" style={wallpaperStyle} aria-hidden="true" />
+        {responsive ? <ResponsiveWorkspace /> : <>
         {exiting.map((w) => (
           <Window key={w.id} win={w} rect={rectOf(w)} z={0} focused={false} dropTarget={false} overview={null} deskAnim={deskAnimFor(w)} />
         ))}
@@ -806,6 +810,7 @@ export default function Desktop() {
             />
           ))}
         </div>
+        </>}
         {drag?.kind === 'tab' && drag.moved && (
           <div className="tab-ghost" style={{ left: drag.ghostX, top: drag.ghostY }}>
             {resolveTool(defs, drag.facet).label}

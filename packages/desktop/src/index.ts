@@ -26,3 +26,9 @@ export { layoutKey, readStoredLayout, type LayoutStore } from './layoutStorageTa
 
 export { startSessionLayout, sessionLayoutKey, type DeskZone, type SessionFields } from './sessionLayout';
 export type { DeskPorts, LayoutPersistence } from './layoutStorageTap';
+
+export { LayoutVariant, type LayoutFamily } from './responsive/model';
+export { PointerInteraction, PinchTransform, cancelPointerInteractions } from './pointerInteraction';
+export { SurfacePointers } from './pointerInteraction';
+
+export { RESPONSIVE_ACTIONS } from './responsive/runtime';

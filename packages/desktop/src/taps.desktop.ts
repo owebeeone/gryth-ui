@@ -1,3 +1,5 @@
+import { registerResponsive } from './responsive/runtime';
+import type { LayoutFamily } from './responsive/model';
 import { BaseTap, createAtomValueTap, type Grip, type GripContext, type Grok } from '@owebeeone/grip-react';
 import {
   addEntry, allTools, PluginRegistryTap,
@@ -337,6 +339,8 @@ export const DesktopTabLinksTap = new TabLinksTap();
 // composes the shell. Both are optional and both default to the full
 // desktop's behavior: preset HUB, first desk floating.
 export interface DesktopSetup {
+  /** Optional container-responsive presentation; canonical desk records stay intact. */
+  responsive?: LayoutFamily;
   /** Optional application chrome, with the standard Gryth sidebar available for debugging. */
   sidebar?: ApplicationSidebar;
   /**
@@ -499,6 +503,12 @@ export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
     applySetup(setup);
   }
   persisted.initialize?.();
+  const responsive = registerResponsive(grok, setup?.responsive, setup?.entry ?? DEFAULT_ENTRY,
+    { windows: DesktopWindowsTap, focus: DesktopFocusedTap }, setup?.foundation);
+  if (responsive) {
+    const reset = ResetLayoutTap.get();
+    ResetLayoutTap.set(() => { reset(); responsive.reset(true); });
+  }
 }
 
 function applySetup(setup?: DesktopSetup): void {

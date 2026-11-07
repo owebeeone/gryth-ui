@@ -1,6 +1,6 @@
 # Responsive layouts and touch interaction
 
-Status: **Design proposal for review**. Written 7 November 2026. No responsive-layout or gesture implementation has been made for this proposal.
+Status: **Reviewed and implemented locally**, 7 November 2026. See [implementation and validation](ResponsiveLayoutsAndTouch-Implementation.md) for the shipped scope and remaining validation limits.
 
 Gryth should choose a usable arrangement from application-declared layouts as its available space changes. Open views remain the same instances: resizing a browser, rotating a device, or regrouping tabs must preserve their content, selections and unfinished edits. Users must still be able to move, dock, merge and split panels themselves.
 
@@ -19,7 +19,7 @@ The user agreed the following behavior during the design discussion:
 - Use a small touch vocabulary: taps for controls, normal list scrolling, one finger for the selected canvas tool, and two fingers for canvas navigation. A second finger must not accidentally commit an edit.
 - Rely primarily on Chrome responsive and touch emulation plus automated tests. Physical-device testing is optional follow-up work.
 
-The current deliverable is this design document. Runtime implementation should follow review of the proposal, especially the arrangement-persistence model. Numeric breakpoints and the proposed internal structures below are engineering proposals, not additional user requirements.
+The proposal was reviewed and the user subsequently authorised implementation in one continuous pass. The arrangement-persistence feasibility checks and runtime results are recorded in the implementation note. Numeric breakpoints and the proposed internal structures below are engineering proposals, not additional user requirements.
 
 | Component | Permitted responsibility in the proposed implementation |
 |---|---|

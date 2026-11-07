@@ -1,3 +1,4 @@
+import { responsiveConfigured } from './responsive/runtime';
 import { grok } from '@grythjs/plugin-api';
 import { CANVAS_SIZE_TAP, DESKTOP_WINDOWS_TAP } from './grips.desktop';
 import { clampAllWindows } from './ops';
@@ -19,15 +20,15 @@ let observer: ResizeObserver | null = null;
 export function observeCanvas(el: HTMLDivElement | null): (() => void) | undefined {
   observer?.disconnect();
   observer = null;
-  if (!el) return undefined;
+  if (!el) { return undefined; }
   const handleDrip = grok.mainPresentationContext.getOrCreateConsumer(DESKTOP_WINDOWS_TAP);
   const sizeDrip = grok.mainPresentationContext.getOrCreateConsumer(CANVAS_SIZE_TAP);
 
   let lastSize = { w: 0, h: 0 };
   const publish = () => {
-    if (lastSize.w <= 0) return;
+    if (lastSize.w <= 0) { return; }
     sizeDrip.get()?.set(lastSize);
-    handleDrip.get()?.update((list) => clampAllWindows(list, lastSize));
+    if (!responsiveConfigured()) { handleDrip.get()?.update((list) => clampAllWindows(list, lastSize)); }
   };
   // handle arrival can postdate the first measurement — republish then
   const unsubscribe = handleDrip.subscribe(() => publish());
