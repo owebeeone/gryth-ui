@@ -66,13 +66,21 @@ export default function ResponsiveWorkspace() {
   const extent = areaRects(arrangement.tree, { x: 0, y: 0, w: 1, h: 1 });
   const width = Math.max(0, ...[...rects.values()].map(r => r.x + r.w));
   const height = Math.max(0, ...[...rects.values()].map(r => r.y + r.h));
+  const overflow = state.overflowGroup && rects.has(state.overflowGroup) ? state.overflowGroup : undefined;
+  const overflowRect = overflow ? rects.get(overflow)! : undefined;
+  const listWidth = Math.min(360, Math.max(0, width - 16));
+  const listTop = Math.min((overflowRect?.y ?? 0) + 40, Math.max(8, height - 240));
+  const closeViews = () => {
+    actions.showViews();
+    if (overflow) { queueMicrotask(() => document.getElementById(`responsive-more-${overflow}`)?.focus()); }
+  };
   return <div className="responsive-workspace" data-layout-variant={state.variant.id}
     onPointerMove={e => actions.pointerMove(e)} onPointerUp={e => actions.pointerUp(e)}
-    onKeyDown={e => { if (e.key === 'Escape') { actions.cancelDrag(); actions.showMenu(); } }}>
+    onKeyDown={e => { if (e.key === 'Escape') { actions.cancelDrag(); if (overflow) { closeViews(); } else { actions.showMenu(); } } }}>
     {[...rects].map(([group, rect]) => {
       const ids = arrangement.groups[group];
       const selected = arrangement.selected[group];
-      const maxTabs = Math.max(1, Math.floor((rect.w - 140) / 110));
+      const maxTabs = Math.max(1, Math.floor((rect.w - 160) / 110));
       const shown = ids.slice(0, maxTabs);
       if (selected && !shown.includes(selected)) { shown[shown.length - 1] = selected; }
       return <section key={group} className={`responsive-group${ids.includes(state.focused ?? '') ? ' focused' : ''}`}
@@ -96,9 +104,10 @@ export default function ResponsiveWorkspace() {
               aria-controls={`responsive-body-${id}`} tabIndex={id === selected ? 0 : -1}
               title={label(id)} onClick={() => actions.select(id)}>{label(id)}</button>)}
           </div>
-          {ids.length > shown.length && <select aria-label="More views" title="More views" value="" onChange={e => actions.select(e.currentTarget.value)}>
-            <option value="" disabled>⋯</option>{ids.map(id => <option key={id} value={id}>{label(id)}</option>)}
-          </select>}
+          {ids.length > shown.length && <button className="responsive-more" id={`responsive-more-${group}`}
+            aria-label="More views" title="More views" aria-haspopup="menu" aria-expanded={overflow === group}
+            aria-controls={overflow === group ? 'responsive-view-list' : undefined}
+            onClick={() => actions.showViews(overflow === group ? undefined : group)}>⋯</button>}
           <button disabled={!selected} aria-label={`${label(selected)} panel actions`} title="Move, split or reset layout" onClick={() => actions.showMenu(state.menu === selected ? undefined : selected)}>⋮</button>
           <button disabled={readOnly || !selected} aria-label={`Close ${label(selected)}`} title="Close view" onClick={() => actions.close(selected)}>×</button>
         </header>
@@ -137,6 +146,27 @@ export default function ResponsiveWorkspace() {
         const canvas = e.currentTarget.closest<HTMLElement>('.responsive-workspace')!;
         actions.startResize(e, e.currentTarget, s.id, s.index, s.axis, s.a, s.b, s.span, canvas.getBoundingClientRect().width / canvas.offsetWidth);
       }} />)}
+    {overflow && <>
+      <button className="responsive-menu-backdrop" tabIndex={-1} aria-label="Close more views" onClick={closeViews} />
+      <div id="responsive-view-list" className="responsive-view-list" role="menu" aria-label="More views"
+        style={{ left: Math.max(8, Math.min((overflowRect?.x ?? 0) + (overflowRect?.w ?? 0) - listWidth, width - listWidth - 8)), top: listTop,
+          width: listWidth, maxHeight: Math.max(0, height - listTop - 8) }}
+        ref={element => { element?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus(); }}
+        onKeyDown={e => {
+          if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) { return; }
+          e.preventDefault();
+          const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')];
+          const index = items.indexOf(document.activeElement as HTMLButtonElement);
+          const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : (index + (e.key === 'ArrowUp' ? -1 : 1) + items.length) % items.length;
+          items[next]?.focus();
+        }}>
+        {arrangement.groups[overflow].map(id => <button key={id} role="menuitemradio" aria-checked={id === arrangement.selected[overflow]}
+          onClick={() => {
+            actions.select(id); actions.showViews();
+            queueMicrotask(() => document.getElementById(`responsive-tab-${id}`)?.focus());
+          }}><span aria-hidden="true">{id === arrangement.selected[overflow] ? '✓' : ''}</span>{label(id)}</button>)}
+      </div>
+    </>}
     {state.preview && <div className="responsive-drop-preview" style={{ left: state.preview.x, top: state.preview.y, width: state.preview.w, height: state.preview.h }} aria-label="Panel drop preview" />}
     {state.menu && <div className="responsive-menu" role="dialog" aria-label={`Move or split ${label(state.menu)}`}>
       <strong>{label(state.menu)}</strong><button aria-label="Close panel actions" onClick={() => actions.showMenu()}>×</button>

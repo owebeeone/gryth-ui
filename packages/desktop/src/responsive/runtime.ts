@@ -18,6 +18,7 @@ export interface ResponsiveSnapshot {
   focused?: string;
   family: LayoutFamily;
   menu?: string;
+  overflowGroup?: string;
   preview?: Rect;
 }
 interface Ports {
@@ -35,6 +36,7 @@ export class ResponsiveController extends BaseTap {
   private lastSize = '';
   private snapshot: ResponsiveSnapshot | null = null;
   private menu?: string;
+  private overflowGroup?: string;
   private preview?: Rect;
   private drag?: PanelDrag | SplitDrag;
   private resizePreview?: Arrangement;
@@ -68,7 +70,7 @@ export class ResponsiveController extends BaseTap {
     const resized = this.lastSize && dimensions !== this.lastSize;
     this.lastSize = dimensions;
     if (resized) {
-      cancelPointerInteractions(); this.preview = undefined; this.menu = undefined;
+      cancelPointerInteractions(); this.preview = undefined; this.menu = undefined; this.overflowGroup = undefined;
     }
 
     const defs = allTools(this.value(PLUGIN_REGISTRY));
@@ -118,7 +120,7 @@ export class ResponsiveController extends BaseTap {
     const fitted = fittedArrangement(this.resizePreview ?? a, size.w, size.h, this.family, this.focused);
     this.snapshot = { variant: nextVariant, arrangement: fitted,
       rects: areaRects(fitted.tree, { x: 0, y: 0, w: size.w, h: size.h }), views: this.views,
-      focused: this.focused, family: this.family, menu: this.menu, preview: this.preview };
+      focused: this.focused, family: this.family, menu: this.menu, overflowGroup: this.overflowGroup, preview: this.preview };
     if (changed) { this.save(); }
     this.publish(new Map<Grip<unknown>, unknown>([[RESPONSIVE_LAYOUT, this.snapshot], [RESPONSIVE_ACTIONS, this]]), opts?.destContext);
   }
@@ -144,7 +146,8 @@ export class ResponsiveController extends BaseTap {
     this.ports.focus.set(view.frameId);
     this.save(); this.produce();
   }
-  showMenu(id?: string): void { this.menu = id; this.produce(); }
+  showMenu(id?: string): void { this.overflowGroup = undefined; this.menu = id; this.produce(); }
+  showViews(group?: string): void { this.menu = undefined; this.overflowGroup = group; this.produce(); }
   showPreview(rect?: Rect): void { this.preview = rect; this.produce(); }
   move(id: string, target: string, placement: PanelPlacement): void {
     const r = this.snapshot?.rects.get(target);

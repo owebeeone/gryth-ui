@@ -35,6 +35,28 @@ it('preserves a mounted GripInput, draft and caret across layouts and custom spl
   const root = createRoot(container);
   try {
     await act(async () => { root.render(<GripProvider grok={grok}><ResponsiveWorkspace /></GripProvider>); grok.flush(); });
+    await act(async () => { CanvasSizeTap.set({ w: 280, h: 800 }); grok.flush(); });
+    const more = container.querySelector<HTMLButtonElement>('button[aria-label="More views"]')!;
+    expect(more).not.toBeNull();
+    await act(async () => { more.click(); grok.flush(); });
+    expect(more.getAttribute('aria-expanded')).toBe('true');
+    expect(container.querySelector('select[aria-label="More views"]')).toBeNull();
+    const choices = [...container.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')];
+    expect(choices.map(c => c.textContent?.replace('✓', ''))).toEqual(['Editor', 'Help']);
+    const selectedChoice = choices.findIndex(c => c.getAttribute('aria-checked') === 'true');
+    expect(document.activeElement).toBe(choices[selectedChoice]);
+    choices[selectedChoice].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    const nextChoice = choices[(selectedChoice + 1) % choices.length];
+    expect(document.activeElement).toBe(nextChoice);
+    const nextLabel = nextChoice.textContent;
+    await act(async () => { nextChoice.click(); grok.flush(); });
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe(nextLabel);
+    await act(async () => { more.click(); grok.flush(); });
+    await act(async () => { document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); grok.flush(); });
+    expect(document.activeElement).toBe(more);
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    await act(async () => { CanvasSizeTap.set({ w: 1200, h: 800 }); grok.flush(); });
     const input = container.querySelector<HTMLInputElement>('[aria-label="Fixture number"]')!;
     expect(input).not.toBeNull();
     await act(async () => {

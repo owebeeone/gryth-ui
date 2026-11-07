@@ -32,3 +32,5 @@ export { PointerInteraction, PinchTransform, cancelPointerInteractions } from '.
 export { SurfacePointers } from './pointerInteraction';
 
 export { RESPONSIVE_ACTIONS } from './responsive/runtime';
+
+export { ChoiceMenu, type ChoiceMenuOption } from "./ChoiceMenu";
