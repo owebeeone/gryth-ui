@@ -12,6 +12,7 @@ grok.registerTap(PluginRegistryTap);
 addEntry(defineGrip('CompactChromeTest'), { tools: {
   compact: { label: 'Inspector', compactChrome: true, defaultSize: { w: 400, h: 600 }, windowComponent: () => <p>Inspector fields</p> },
   standard: { label: 'Other application', defaultSize: { w: 400, h: 600 }, windowComponent: () => null },
+  titled: { label: 'Titled panel', compactChrome: false, defaultSize: { w: 400, h: 600 }, windowComponent: () => null },
 } });
 const record: WindowRecord = { id: 'compact-frame', tabs: [{ id: 'compact-tab', facet: 'compact' }], activeTab: 'compact-tab',
   desktop: 1, x: 0, y: 0, w: 400, h: 600, minimized: false, sticky: false, dock: { foundation: 'f', area: 'setup' } };
@@ -24,9 +25,19 @@ it('offers an accessible handle and close action without a duplicate docked titl
   expect(html).toContain('compact-chrome'); expect(html).toContain('Close Inspector');
   expect(html).toContain('Inspector panel actions'); expect(html).not.toContain('gwin-title"');
 });
-it('retains normal chrome for floating and tabbed frames and hosts that did not opt in', () => {
+it('defaults to compact chrome for a single docked panel without an explicit preference', () => {
+  const html = render({ ...record, tabs: [{ id: 'standard-tab', facet: 'standard' }], activeTab: 'standard-tab' });
+  expect(html).toContain('compact-chrome');
+  expect(html).toContain('Other application panel actions');
+  expect(html).toContain('Close Other application');
+  expect(html).not.toContain('gwin-title"');
+});
+it('retains normal chrome for floating and tabbed frames and explicit opt-outs', () => {
   expect(render({ ...record, dock: undefined })).not.toContain('compact-chrome');
   const tabbed = render({ ...record, tabs: [...record.tabs, { id: 'second', facet: 'standard' }] });
   expect(tabbed).not.toContain('compact-chrome'); expect(tabbed).toContain('Tab navigation');
-  expect(render({ ...record, tabs: [{ id: 'standard-tab', facet: 'standard' }] })).not.toContain('compact-chrome');
+  const titled = render({ ...record, tabs: [{ id: 'titled-tab', facet: 'titled' }], activeTab: 'titled-tab' });
+  expect(titled).not.toContain('compact-chrome');
+  expect(titled).toContain('gwin-title');
+  expect(titled).toContain('Titled panel');
 });

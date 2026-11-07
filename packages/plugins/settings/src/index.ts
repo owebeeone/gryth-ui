@@ -14,6 +14,7 @@ import './settings.css';
 addEntry(SETTINGS_PLUGIN, {
   tools: {
     settings: {
+      compactChrome: false,
       label: 'Settings',
       defaultSize: { w: 460, h: 440 },
       role: 'crew',

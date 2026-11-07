@@ -74,7 +74,7 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
     unwireTab(active.id);
   }
   const docked = !!win.dock;
-  const compact = docked && win.tabs.length === 1 && activeDef.compactChrome === true;
+  const compact = docked && win.tabs.length === 1 && activeDef.compactChrome !== false;
 
   // The ticker strip fills the titlebar minus the chrome reserve; its
   // segment widths are solved purely from that width (see ticker.ts).
