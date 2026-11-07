@@ -275,7 +275,8 @@ span.side-group-label { cursor: default; }
   flex-direction: column;
   border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
   border-radius: 8px;
-  overflow: hidden;
+  /* Only the body scrolls. Focus/scrollIntoView must not scroll chrome away. */
+  overflow: clip;
   background: var(--win, Canvas);
   box-shadow: 0 4px 16px color-mix(in srgb, currentColor 15%, transparent);
   /* overview is the only transform user; entering AND exiting animate */
@@ -344,11 +345,12 @@ span.side-group-label { cursor: default; }
 
 .gwin-titlebar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 0.5rem;
+  gap: min(0.5rem, 2%);
   height: 32px; /* = ops.TITLEBAR_H: the header-drop hit band */
   box-sizing: border-box;
-  padding: 0 0.6rem;
+  padding: 0 min(0.6rem, 2%);
   cursor: grab;
   user-select: none;
   background: color-mix(in srgb, currentColor 8%, transparent);
@@ -393,10 +395,21 @@ span.side-group-label { cursor: default; }
   transition: transform 0.18s ease;
 }
 
+/* The close control keeps its width. Everything before it may shrink to zero,
+   including a single long title, the dock/id chip and a multi-tab ticker.
+   Proportional header insets above also leave room in sliver-width panes. */
+.gwin-title, .gwin-id, .gwin-sticky {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .gwin-title { font-weight: 600; font-size: 0.85em; }
 .gwin-id { opacity: 0.45; font-size: 0.75em; }
-.gwin-controls { margin-left: auto; display: flex; gap: 0.25rem; }
+.gwin-titlebar > .tk-strip { flex-shrink: 1; }
+.gwin-controls { margin-left: auto; display: flex; flex-shrink: 0; gap: 0.25rem; }
 .gwin-controls button {
+  flex-shrink: 0;
   width: 1.5rem;
   line-height: 1.1rem;
   padding: 0;
