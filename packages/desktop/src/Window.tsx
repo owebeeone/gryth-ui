@@ -74,6 +74,7 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
     unwireTab(active.id);
   }
   const docked = !!win.dock;
+  const compact = docked && win.tabs.length === 1 && activeDef.compactChrome === true;
 
   // The ticker strip fills the titlebar minus the chrome reserve; its
   // segment widths are solved purely from that width (see ticker.ts).
@@ -136,7 +137,8 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
   return (
     <section
       {...anchors}
-      className={`gwin${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attention === undefined ? '' : ' attention'}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
+      aria-label={activeDef.label}
+      className={`gwin${compact ? ' compact-chrome' : ''}${focused ? ' focused' : ''}${dropTarget ? ' drop-target' : ''}${docked ? ' docked' : ''}${attention === undefined ? '' : ' attention'}${overview ? (place ? ' overview' : ' overview dimmed') : ''}${deskAnim ? ` desk-${deskAnim}` : ''}`}
       style={{
         left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex: z,
         transform: place
@@ -152,13 +154,14 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
         onMouseDown={(e) => startFrameDrag(e, 'move')}
         onContextMenu={openMenu}
       >
-        {win.tabs.length === 1 ? (
+        {compact ? <button className="gwin-panel-menu" aria-label={`${activeDef.label} panel actions`}
+          title="Drag to move panel; right-click for panel actions" onClick={openMenu}>⠿</button> : win.tabs.length === 1 ? (
           <span className="gwin-title">{activeDef.label}</span>
         ) : (
           <TickerStrip win={win} width={stripW} height={24} bleed={false} />
         )}
-        {win.sticky && <span className="gwin-sticky" title="Visible on all desktops">◎</span>}
-        <span className="gwin-id">{win.dock ? win.dock.area : win.id}</span>
+        {!compact && win.sticky && <span className="gwin-sticky" title="Visible on all desktops">◎</span>}
+        {!compact && <span className="gwin-id">{win.dock ? win.dock.area : win.id}</span>}
         <span className="gwin-controls">
           {!docked && (
             <button
@@ -168,7 +171,7 @@ export default function Window({ win, rect, z, focused, dropTarget, overview, de
               onClick={() => windowsTap?.update((list) => minimizeWindow(list, win.id, true))}
             >–</button>
           )}
-          <button title="Close tab" disabled={readOnly} onMouseDown={(e) => e.stopPropagation()} onClick={close}>×</button>
+          <button title="Close tab" disabled={readOnly} aria-label={`Close ${activeDef.label}`} onMouseDown={(e) => e.stopPropagation()} onClick={close}>×</button>
         </span>
       </header>
       <div className="gwin-body" {...anchors}>

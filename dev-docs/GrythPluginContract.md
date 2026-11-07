@@ -8,6 +8,20 @@ Instance-ness comes from contexts, not from registries.)
 
 ## Core position
 
+### Optional compact docked chrome
+
+`ToolDef.compactChrome: true` opts a tool into a compact shell presentation
+when its frame is docked and contains a single tab. The shell removes the
+redundant title/area text and overlays a visible move/menu handle and Close
+action in the upper-right corner. Tool content must reserve that corner
+(68 CSS pixels on pointer desktops; 88 on coarse-pointer devices). The frame
+and its content retain accessible tool names and stable capture anchors.
+
+This is a presentation preference, not a new window lifecycle. Close, drag,
+context menus, focus, read-only restrictions and tab wires use the existing
+desktop actions. Floating or multi-tab frames retain full shell chrome.
+Absent/false keeps the original rendering for other applications.
+
 All plugin communication is grips, resolved through the **context graph**.
 There is no plugin method surface. The shell never imports a tool; a tool
 never imports the shell — enforced by packaging: the contract lives in
@@ -429,6 +443,30 @@ one, so several windows open onto one new workspace without the caller
 tracking its number. `desktop` wins when both are given. The window is opened
 through the same path `Desktop.OpenTool` takes (docked by role on a locked
 desk) and revealed the same way. The return value is the desktop it landed on.
+
+## Application navigation
+
+`DesktopSetup.sidebar` retains its existing `brand`, `Content`, `showWindowList`
+and `verticalDesktops` behaviour. Two optional composition capabilities extend it:
+
+- `Navigation?: ComponentType` replaces the entire rail with an application-owned
+  component above the canvas. The canvas receives the remaining full width and
+  height. The shell continues to own desktop windows, commands, docking and tabs.
+- `allowDebugSidebar?: boolean` defaults to true for existing hosts. When false,
+  neither form of the stock/custom sidebar switch is rendered, and a true
+  `Desktop.DebugSidebar` value is ignored. This is composition policy, not a saved
+  user preference. Hosts must separately omit their diagnostic plugins/services
+  from release builds.
+
+With debug access allowed, enabling the stock sidebar temporarily replaces the
+application navigation; clearing that preference restores it. Compositions that
+do not supply either option retain the previous sidebar.
+
+`DESKTOP_TOGGLE_LAYOUT` exposes `(desktop?: number) => void` from
+`@grythjs/desktop`. It uses the current desktop by default, stashes/restores the
+same foundation and assignments as the stock lock action, and closes overview.
+Invalid desktop numbers are ignored. Both stock navigation and application
+navigation invoke this intent; they do not maintain separate docking logic.
 
 ## Open questions
 

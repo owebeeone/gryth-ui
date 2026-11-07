@@ -16,6 +16,15 @@
   background: var(--bg, #e6e7ea);
   color: var(--text, #2b2e33);
 }
+.desktop.application-navigation { flex-direction: column; }
+.gwin.compact-chrome { position: absolute; }
+.gwin.compact-chrome > .gwin-titlebar { position: absolute; z-index: 5; top: 3px; right: 3px; width: auto; height: 36px; min-height: 36px; padding: 0; gap: 0; border: 0; background: var(--panel); border-radius: 6px; }
+.gwin.compact-chrome > .gwin-body { height: 100%; }
+.gwin.compact-chrome .gwin-controls { flex: none; }
+.gwin.compact-chrome .gwin-titlebar button { width: 34px; min-width: 34px; height: 36px; padding: 0; border: 0; color: inherit; background: transparent; }
+.gwin.compact-chrome .gwin-panel-menu { cursor: grab; }
+@media (pointer: coarse) { .gwin.compact-chrome .gwin-titlebar, .gwin.compact-chrome .gwin-titlebar button { min-height: 44px; height: 44px; } .gwin.compact-chrome .gwin-titlebar button { min-width: 44px; width: 44px; } }
+.desktop.application-navigation > .desktop-canvas { min-height: 0; width: 100%; }
 
 /* While a frame is being moved it may travel over the sidebar (drop targets
    live there): un-clip the canvas and raise it into an explicit stacking

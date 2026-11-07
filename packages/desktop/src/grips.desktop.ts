@@ -13,12 +13,18 @@ export const DESKTOP_BUILTINS_PLUGIN = defineGrip<GrythPlugin>('Desktop.BuiltinT
 /** Composition-owned chrome; runtime debug preference is local to this client. */
 export interface ApplicationSidebar {
   brand: string; Content: ComponentType;
+  /** Replace the entire rail with application-owned navigation above the canvas. */
+  Navigation?: ComponentType;
+  /** Host capability, not a saved user preference. Defaults to true for existing hosts. */
+  allowDebugSidebar?: boolean;
   showWindowList?: boolean;
   verticalDesktops?: boolean;
 }
 export const DESKTOP_APPLICATION_SIDEBAR = defineGrip<ApplicationSidebar | null>('Desktop.ApplicationSidebar', null);
 export const DESKTOP_DEBUG_SIDEBAR = defineGrip<boolean>('Desktop.DebugSidebar', false);
 export const DESKTOP_DEBUG_SIDEBAR_TAP = defineGrip<AtomTapHandle<boolean>>('Desktop.DebugSidebar.Tap');
+/** Instance command: toggle the current (or specified) desktop's saved docking layout. */
+export const DESKTOP_TOGGLE_LAYOUT = defineGrip<(desktop?: number) => void>('Desktop.ToggleLayout');
 
 // Hotkey chords the COMPOSITION binds itself (G-5), beyond the shell's own
 // (`SHELL_HOTKEYS`): a plugin command on one of these is listed but not bound.

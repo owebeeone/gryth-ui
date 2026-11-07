@@ -7,7 +7,7 @@ import {
 } from '@grythjs/plugin-api';
 import { DESKTOP_BUILTINS, resolveTool, toolRoles } from './facets';
 import { DESKTOP_BUILTINS_PLUGIN, DESKTOP_RESET_LAYOUT, DESKTOP_APPLICATION_SIDEBAR,
-  DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP, DESKTOP_NAMES, DESKTOP_RESERVED_HOTKEYS,
+  DESKTOP_DEBUG_SIDEBAR, DESKTOP_DEBUG_SIDEBAR_TAP, DESKTOP_NAMES, DESKTOP_RESERVED_HOTKEYS, DESKTOP_TOGGLE_LAYOUT,
   type ApplicationSidebar, type FoundationDef } from './grips.desktop';
 import { HUB } from './foundations';
 import {
@@ -32,7 +32,7 @@ import {
 } from './grips.desktop';
 import {
   desktopIds, findWiredTab, foundationOn, freezeTab, nextDesktopId, nextTabId, DESKTOP_IDS,
-  openFoundation, openToolWindow, openWindow, revealFrame, setTabParams, setTabSource,
+  openFoundation, openToolWindow, openWindow, revealFrame, setTabParams, setTabSource, captureGrid, closeFoundation,
 } from './ops';
 import { attentionSweep } from './attention';
 
@@ -48,6 +48,21 @@ import { attentionSweep } from './attention';
 const FIRST_RUN = openWindow([], 'welcome', { w: 520, h: 280 });
 const ApplicationSidebarTap = createAtomValueTap(DESKTOP_APPLICATION_SIDEBAR, { initial: null });
 const DebugSidebarTap = createAtomValueTap(DESKTOP_DEBUG_SIDEBAR, { initial: false, handleGrip: DESKTOP_DEBUG_SIDEBAR_TAP });
+const ToggleLayoutTap = createAtomValueTap(DESKTOP_TOGGLE_LAYOUT, { initial: (desktop?: number) => {
+  const desk = desktop ?? DesktopCurrentTap.get();
+  if (!Number.isSafeInteger(desk) || desk < 1) return;
+  const windows = DesktopWindowsTap.get(), foundation = foundationOn(windows, desk);
+  if (foundation) {
+    const stash = captureGrid(windows, desk);
+    if (stash) DesktopGridMemoryTap.update(memory => ({ ...memory, [desk]: stash }));
+    DesktopWindowsTap.set(closeFoundation(windows, foundation.id));
+  } else {
+    const stash = DesktopGridMemoryTap.get()[desk];
+    DesktopWindowsTap.set(openFoundation(windows, desk, stash?.def ?? DesktopFoundationPresetTap.get(),
+      stash?.assignments ?? {}, toolRoles(allTools(PluginRegistryTap.get()))).list);
+  }
+  DesktopOverviewTap.set(null);
+} });
 const ReservedHotkeysTap = createAtomValueTap(DESKTOP_RESERVED_HOTKEYS, { initial: [] as readonly string[] });
 const DesktopNamesTap = createAtomValueTap(DESKTOP_NAMES, { initial: {} as Readonly<Record<string, number>> });
 
@@ -434,6 +449,7 @@ function startPersistence(
 export function registerDesktopTaps(grok: Grok, setup?: DesktopSetup) {
   grok.registerTap(ApplicationSidebarTap);
   grok.registerTap(DebugSidebarTap);
+  grok.registerTap(ToggleLayoutTap);
   grok.registerTap(ReservedHotkeysTap);
   grok.registerTap(DesktopNamesTap);
   ApplicationSidebarTap.set(setup?.sidebar ?? null);
